@@ -114,7 +114,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 		# @param pk [ID] (optional) the primary key of the path in the database
 		# @param points [Array of P.Point] (optional) the points of the controlPath, the points must fit on the control path (the control path is stored in @data.points)
 		# @param lock [Lock] the lock which contains this RPath (if any)
-		constructor: (@date=null, @data=null, @pk=null, points=null, @lock=null) ->
+		constructor: (@date=null, @data=null, @pk=null, points=null, @lock=null, @owner=null, @drawingPk=null) ->
 			if not @lock
 				super(@data, @pk, @date, R.sidebar.pathListJ, R.sortedPaths)
 			else
@@ -239,6 +239,9 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 		# @return whether the ritem was selected or not
 		select: (updateOptions=true)->
 			if R.me != @owner then return null
+			if @drawingPk? and R.items[@drawingPk]?
+				R.items[@drawingPk].select()
+				return null
 			if not super(updateOptions) or not @controlPath? then return false
 			# if not @drawing? then @draw()
 			return true
@@ -493,6 +496,8 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			R.loader.checkError(result)
 			if not result.pk? then return 		# if @pk is null, the path was not saved, do not set pk nor rasterize
 			@setPK(result.pk)
+			@owner = result.owner
+
 			# if not @data?.animate
 			# 	R.rasterizeArea(@getDrawingBounds())
 			if @updateAfterSave?

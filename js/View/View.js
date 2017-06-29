@@ -389,7 +389,7 @@
       };
 
       View.prototype.mousemove = function(event) {
-        var base, paperEvent, ref, ref1;
+        var base, paperEvent, ref, ref1, ref2;
         this.mousePosition.x = event.pageX;
         this.mousePosition.y = event.pageY;
         if (((ref = R.selectedTool) != null ? ref.name : void 0) === 'Move' && R.selectedTool.dragging) {
@@ -399,6 +399,9 @@
         Div.updateHiddenDivs(event);
         if ((ref1 = R.codeEditor) != null) {
           ref1.onMouseMove(event);
+        }
+        if ((ref2 = R.drawingPanel) != null) {
+          ref2.onMouseMove(event);
         }
         if (R.currentDiv != null) {
           paperEvent = Utils.Event.jEventToPaperEvent(event, this.previousMousePosition, this.initialMousePosition, 'mousemove');
@@ -410,18 +413,21 @@
       };
 
       View.prototype.mouseup = function(event) {
-        var base, paperEvent, ref, ref1, ref2;
+        var base, paperEvent, ref, ref1, ref2, ref3;
         if (R.stageJ.hasClass("has-tool-box") && !$(event.target).parents('.tool-box').length > 0) {
           R.hideToolBox();
         }
         if ((ref = R.codeEditor) != null) {
           ref.onMouseUp(event);
         }
-        if (((ref1 = R.selectedTool) != null ? ref1.name : void 0) === 'Move') {
+        if ((ref1 = R.drawingPanel) != null) {
+          ref1.onMouseUp(event);
+        }
+        if (((ref2 = R.selectedTool) != null ? ref2.name : void 0) === 'Move') {
           R.selectedTool.endNative(event);
           if (event.which === 2) {
-            if ((ref2 = R.previousTool) != null) {
-              ref2.select();
+            if ((ref3 = R.previousTool) != null) {
+              ref3.select();
             }
           }
           return;

@@ -116,16 +116,17 @@
 
       PrecisePath.createTool(PrecisePath);
 
-      function PrecisePath(date, data, pk, points, lock, owner) {
+      function PrecisePath(date, data, pk, points, lock, owner, drawingPk) {
         this.date = date != null ? date : null;
         this.data = data != null ? data : null;
         this.pk = pk != null ? pk : null;
         if (points == null) {
           points = null;
         }
-        this.lock = lock;
-        this.owner = owner;
-        PrecisePath.__super__.constructor.call(this, this.date, this.data, this.pk, points, this.lock);
+        this.lock = lock != null ? lock : null;
+        this.owner = owner != null ? owner : null;
+        this.drawingPk = drawingPk != null ? drawingPk : null;
+        PrecisePath.__super__.constructor.call(this, this.date, this.data, this.pk, points, this.lock, this.owner, this.drawingPk);
         if (this.constructor.polygonMode) {
           this.data.polygonMode = R.polygonMode;
         }

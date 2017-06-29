@@ -98,57 +98,7 @@
         console.log('Item.initializeParameters');
         parameters = {
           'Items': {
-            align: R.parameters.align,
             "delete": R.parameters["delete"]
-          },
-          'Style': {
-            strokeWidth: R.parameters.strokeWidth,
-            strokeColor: R.parameters.strokeColor,
-            fillColor: R.parameters.fillColor
-          },
-          'Position & size': {
-            position: {
-              "default": '',
-              initializeController: function(controller) {
-                var averagePosition, i, item, len, n, ref;
-                averagePosition = new P.Point();
-                n = 0;
-                ref = R.selectedItems;
-                for (i = 0, len = ref.length; i < len; i++) {
-                  item = ref[i];
-                  if (item.rectangle != null) {
-                    averagePosition = averagePosition.add(item.rectangle.topLeft);
-                    n++;
-                  }
-                }
-                averagePosition = averagePosition.divide(n);
-                controller.setValue('' + averagePosition.x.toFixed(2) + ', ' + averagePosition.y.toFixed(2));
-              },
-              label: 'Position',
-              onChange: function() {},
-              onFinishChange: this.onPositionFinishChange
-            },
-            size: {
-              "default": '',
-              initializeController: function(controller) {
-                var averageSize, i, item, len, n, ref;
-                averageSize = new P.Point();
-                n = 0;
-                ref = R.selectedItems;
-                for (i = 0, len = ref.length; i < len; i++) {
-                  item = ref[i];
-                  if (item.rectangle != null) {
-                    averageSize = averageSize.add(item.rectangle.size);
-                    n++;
-                  }
-                }
-                averageSize = averageSize.divide(n);
-                controller.setValue('' + averageSize.x.toFixed(2) + ', ' + averageSize.y.toFixed(2));
-              },
-              label: 'Size',
-              onChange: function() {},
-              onFinishChange: this.onSizeFinishChange
-            }
           }
         };
         return parameters;
@@ -381,9 +331,6 @@
         var ref;
         if (updateOptions == null) {
           updateOptions = true;
-        }
-        if (R.me !== this.owner) {
-          return null;
         }
         if (this.selected) {
           return false;

@@ -278,19 +278,11 @@
 
       function ControllerManager() {
         this.updateParametersForSelectedItemsCallback = bind(this.updateParametersForSelectedItemsCallback, this);
-        var toggleGuiButtonJ;
         dat.GUI.autoPace = false;
         R.gui = new dat.GUI();
         dat.GUI.toggleHide = function() {};
         this.folders = {};
-        R.templatesJ.find("button.dat-gui-toggle").clone().appendTo(R.gui.domElement);
-        toggleGuiButtonJ = $(R.gui.domElement).find("button.dat-gui-toggle");
-        toggleGuiButtonJ.click(this.toggleGui);
-        if ((localStorage.optionsBarPosition != null) && localStorage.optionsBarPosition === 'sidebar') {
-          $(".dat-gui.dg-sidebar").append(R.gui.domElement);
-        } else {
-          $(".dat-gui.dg-right").append(R.gui.domElement);
-        }
+        $(".dat-gui.dg-sidebar").append(R.gui.domElement);
         return;
       }
 

@@ -4,7 +4,7 @@
     hasProp = {}.hasOwnProperty,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  define(['Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Lock', 'Items/Divs/Div', 'Items/Divs/Media', 'Items/Divs/Text'], function(Command, Item, ModuleLoader, Spinner) {
+  define(['Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Lock', 'Items/Divs/Div', 'Items/Divs/Media', 'Items/Drawing', 'Items/Divs/Text'], function(Command, Item, ModuleLoader, Spinner) {
     var Loader, RasterizerLoader;
     Loader = (function() {
       function Loader() {
@@ -338,13 +338,13 @@
       };
 
       Loader.prototype.createPath = function(args) {
-        var path, ref;
-        path = new R.tools[args.path.object_type].Path(args.date, args.data, args.pk, args.points, args.lock, args.owner);
-        path.lastUpdateDate = (ref = args.path.lastUpdate) != null ? ref.$date : void 0;
+        var path, ref, ref1;
+        path = new R.tools[args.path.object_type].Path(args.date, args.data, args.pk, args.points, args.lock, args.owner, (ref = args.drawing) != null ? ref.$oid : void 0);
+        path.lastUpdateDate = (ref1 = args.path.lastUpdate) != null ? ref1.$date : void 0;
       };
 
       Loader.prototype.createNewItems = function(itemsToLoad) {
-        var args, box, data, date, div, item, k, len, len1, lock, m, path, pk, planet, point, points, rdiv, ref, ref1, ref2, ref3, ref4, ref5, rpath;
+        var args, box, data, date, div, drawing, item, k, len, len1, lock, m, path, pk, planet, point, points, rdiv, ref, ref1, ref2, ref3, ref4, ref5, rpath;
         for (k = 0, len = itemsToLoad.length; k < len; k++) {
           item = itemsToLoad[k];
           pk = item._id.$oid;
@@ -411,7 +411,8 @@
                 pk: pk,
                 points: points,
                 lock: lock,
-                owner: path.owner
+                owner: path.owner,
+                drawing: path.drawing
               };
               if (R.tools[path.object_type] != null) {
                 this.createPath(args);
@@ -421,6 +422,12 @@
               break;
             case 'AreaToUpdate':
               R.rasterizer.addAreaToUpdate(Utils.CS.rectangleFromBox(item));
+              break;
+            case 'Drawing':
+              if (item.box.coordinates[0].length < 5) {
+                console.log("Error: drawing has less than 5 points");
+              }
+              drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, item._id.$oid, item.owner, date);
               break;
             default:
               continue;

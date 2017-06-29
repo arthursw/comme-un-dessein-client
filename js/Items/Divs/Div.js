@@ -22,6 +22,9 @@
         strokeWidth["default"] = 1;
         strokeColor = $.extend(true, {}, R.parameters.strokeColor);
         strokeColor["default"] = 'black';
+        if (parameters['Style'] == null) {
+          parameters['Style'] = {};
+        }
         parameters['Style'].strokeWidth = strokeWidth;
         parameters['Style'].strokeColor = strokeColor;
         return parameters;

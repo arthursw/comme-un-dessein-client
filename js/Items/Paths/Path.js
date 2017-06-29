@@ -55,7 +55,7 @@
         return copy;
       };
 
-      function Path(date, data1, pk1, points, lock) {
+      function Path(date, data1, pk1, points, lock, owner, drawingPk) {
         this.date = date != null ? date : null;
         this.data = data1 != null ? data1 : null;
         this.pk = pk1 != null ? pk1 : null;
@@ -63,6 +63,8 @@
           points = null;
         }
         this.lock = lock != null ? lock : null;
+        this.owner = owner != null ? owner : null;
+        this.drawingPk = drawingPk != null ? drawingPk : null;
         this.sendToSpacebrew = bind(this.sendToSpacebrew, this);
         this.update = bind(this.update, this);
         this.saveCallback = bind(this.saveCallback, this);
@@ -186,6 +188,10 @@
           updateOptions = true;
         }
         if (R.me !== this.owner) {
+          return null;
+        }
+        if ((this.drawingPk != null) && (R.items[this.drawingPk] != null)) {
+          R.items[this.drawingPk].select();
           return null;
         }
         if (!Path.__super__.select.call(this, updateOptions) || (this.controlPath == null)) {
@@ -406,6 +412,7 @@
           return;
         }
         this.setPK(result.pk);
+        this.owner = result.owner;
         if (this.updateAfterSave != null) {
           this.update(this.updateAfterSave);
         }

@@ -1,4 +1,4 @@
-define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Lock', 'Items/Divs/Div', 'Items/Divs/Media', 'Items/Divs/Text' ], (Command, Item, ModuleLoader, Spinner) ->
+define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Lock', 'Items/Divs/Div', 'Items/Divs/Media', 'Items/Drawing', 'Items/Divs/Text' ], (Command, Item, ModuleLoader, Spinner) ->
 
 	# --- load --- #
 
@@ -298,7 +298,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 			return
 
 		createPath: (args)->
-			path = new R.tools[args.path.object_type].Path(args.date, args.data, args.pk, args.points, args.lock, args.owner)
+			path = new R.tools[args.path.object_type].Path(args.date, args.data, args.pk, args.points, args.lock, args.owner, args.drawing?.$oid)
 			path.lastUpdateDate = args.path.lastUpdate?.$date
 			return
 
@@ -369,6 +369,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 							points: points
 							lock: lock
 							owner: path.owner
+							drawing: path.drawing
 						if R.tools[path.object_type]?
 							@createPath(args)
 						else
@@ -384,6 +385,12 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 						# areaToUpdate.getBounds = ()-> return areaToUpdate.bounds
 						# R.view.areasToUpdateLayer.addChild(areaToUpdate)
 						# R.view.mainLayer.activate()
+
+					when 'Drawing'
+						if item.box.coordinates[0].length<5
+							console.log "Error: drawing has less than 5 points"
+
+						drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, item._id.$oid, item.owner, date)
 					else
 						continue
 			return

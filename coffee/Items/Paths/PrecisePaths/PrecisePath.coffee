@@ -107,8 +107,8 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 		@createTool(@)
 
 		# overload {RPath#constructor}
-		constructor: (@date=null, @data=null, @pk=null, points=null, @lock, @owner) ->
-			super(@date, @data, @pk, points, @lock)
+		constructor: (@date=null, @data=null, @pk=null, points=null, @lock=null, @owner=null, @drawingPk=null) ->
+			super(@date, @data, @pk, points, @lock, @owner, @drawingPk)
 			if @constructor.polygonMode then @data.polygonMode = R.polygonMode
 			@rotation = @data.rotation = 0
 			# @data.showSelectionRectangle = true

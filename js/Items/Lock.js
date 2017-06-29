@@ -199,6 +199,9 @@
         fillColor["default"] = 'white';
         fillColor.defaultCheck = true;
         fillColor.defaultFunction = null;
+        if (parameters['Style'] == null) {
+          parameters['Style'] = {};
+        }
         parameters['Style'].strokeWidth = strokeWidth;
         parameters['Style'].strokeColor = strokeColor;
         parameters['Style'].fillColor = fillColor;

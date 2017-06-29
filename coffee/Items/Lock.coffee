@@ -191,6 +191,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			fillColor.defaultCheck = true
 			fillColor.defaultFunction = null
 
+			parameters['Style'] ?= {}
 			parameters['Style'].strokeWidth = strokeWidth
 			parameters['Style'].strokeColor = strokeColor
 			parameters['Style'].fillColor = fillColor

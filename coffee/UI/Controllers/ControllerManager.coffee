@@ -359,16 +359,17 @@ define [ 'UI/Controllers/Controller', 'UI/Controllers/ColorController', 'UI/Cont
 			R.gui = new dat.GUI()
 			dat.GUI.toggleHide = ()-> return
 			@folders = {}
+			$(".dat-gui.dg-sidebar").append(R.gui.domElement)
 
-			R.templatesJ.find("button.dat-gui-toggle").clone().appendTo(R.gui.domElement)
-			toggleGuiButtonJ = $(R.gui.domElement).find("button.dat-gui-toggle")
+			# R.templatesJ.find("button.dat-gui-toggle").clone().appendTo(R.gui.domElement)
+			# toggleGuiButtonJ = $(R.gui.domElement).find("button.dat-gui-toggle")
 
-			toggleGuiButtonJ.click(@toggleGui)
+			# toggleGuiButtonJ.click(@toggleGui)
 
-			if localStorage.optionsBarPosition? and localStorage.optionsBarPosition == 'sidebar'
-				$(".dat-gui.dg-sidebar").append(R.gui.domElement)
-			else
-				$(".dat-gui.dg-right").append(R.gui.domElement)
+			# if localStorage.optionsBarPosition? and localStorage.optionsBarPosition == 'sidebar'
+			# 	$(".dat-gui.dg-sidebar").append(R.gui.domElement)
+			# else
+			# 	$(".dat-gui.dg-right").append(R.gui.domElement)
 
 			return
 

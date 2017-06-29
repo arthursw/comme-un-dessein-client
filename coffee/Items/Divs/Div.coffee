@@ -28,6 +28,7 @@ define [ 'Items/Item', 'Items/Content' ], (Item, Content) ->
 			strokeColor = $.extend(true, {}, R.parameters.strokeColor)
 			strokeColor.default = 'black'
 
+			parameters['Style'] ?= {}
 			parameters['Style'].strokeWidth = strokeWidth
 			parameters['Style'].strokeColor = strokeColor
 

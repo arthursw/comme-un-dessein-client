@@ -9,6 +9,7 @@ define [
 	'UI/Sidebar'
 	'UI/Code'
 	'UI/Editor'
+	'UI/DrawingPanel'
 	'UI/Modal'
 	'UI/AlertManager'
 	'UI/Controllers/ControllerManager'
@@ -16,7 +17,7 @@ define [
 	'View/View'
 	'Tools/ToolManager'
 	'RasterizerBot'
-], (Utils, Global, FontManager, Loader, Socket, CityManager, RasterizerManager, Sidebar, FileManager, CodeEditor, Modal, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot) ->
+], (Utils, Global, FontManager, Loader, Socket, CityManager, RasterizerManager, Sidebar, FileManager, CodeEditor, DrawingPanel, Modal, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot) ->
 
 	console.log 'Main CommeUnDessein Repository'
 
@@ -272,6 +273,7 @@ define [
 		R.toolManager = new ToolManager()
 		# R.fileManager = new FileManager()
 		# R.codeEditor = new CodeEditor()
+		R.drawingPanel = new DrawingPanel()
 		R.fontManager = new FontManager()
 		R.view.initializePosition()
 		R.sidebar.initialize()
@@ -279,7 +281,8 @@ define [
 		window.setPageFullyLoaded?(true)
 		return
 
-	R.fi = ()-> return R.selectedItems?[0]
+	R.fsi = ()-> return R.selectedItems?[0]
+	R.fi = ()-> return R.items?[0]
 
 	# R.showCodeEditor = (fileNode)->
 	# 	if not R.codeEditor?

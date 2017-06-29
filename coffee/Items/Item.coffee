@@ -160,44 +160,44 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			console.log 'Item.initializeParameters'
 			parameters =
 				'Items':
-					align: R.parameters.align
+					# align: R.parameters.align
 					# distribute: R.parameters.distribute
 					delete: R.parameters.delete
-				'Style':
-					strokeWidth: R.parameters.strokeWidth
-					strokeColor: R.parameters.strokeColor
-					fillColor: R.parameters.fillColor
-				'Position & size':
-					position:
-						default: ''
-						initializeController: (controller)->
-							averagePosition = new P.Point()
-							n = 0
-							for item in R.selectedItems
-								if item.rectangle?
-									averagePosition = averagePosition.add(item.rectangle.topLeft)
-									n++
-							averagePosition = averagePosition.divide(n)
-							controller.setValue('' + averagePosition.x.toFixed(2) + ', ' + averagePosition.y.toFixed(2))
-							return
-						label: 'Position'
-						onChange: ()-> return
-						onFinishChange: @onPositionFinishChange
-					size:
-						default: ''
-						initializeController: (controller)->
-							averageSize = new P.Point()
-							n = 0
-							for item in R.selectedItems
-								if item.rectangle?
-									averageSize = averageSize.add(item.rectangle.size)
-									n++
-							averageSize = averageSize.divide(n)
-							controller.setValue('' + averageSize.x.toFixed(2) + ', ' + averageSize.y.toFixed(2))
-							return
-						label: 'Size'
-						onChange: ()-> return
-						onFinishChange: @onSizeFinishChange
+				# 'Style':
+				# 	strokeWidth: R.parameters.strokeWidth
+				# 	strokeColor: R.parameters.strokeColor
+				# 	fillColor: R.parameters.fillColor
+				# 'Position & size':
+				# 	position:
+				# 		default: ''
+				# 		initializeController: (controller)->
+				# 			averagePosition = new P.Point()
+				# 			n = 0
+				# 			for item in R.selectedItems
+				# 				if item.rectangle?
+				# 					averagePosition = averagePosition.add(item.rectangle.topLeft)
+				# 					n++
+				# 			averagePosition = averagePosition.divide(n)
+				# 			controller.setValue('' + averagePosition.x.toFixed(2) + ', ' + averagePosition.y.toFixed(2))
+				# 			return
+				# 		label: 'Position'
+				# 		onChange: ()-> return
+				# 		onFinishChange: @onPositionFinishChange
+				# 	size:
+				# 		default: ''
+				# 		initializeController: (controller)->
+				# 			averageSize = new P.Point()
+				# 			n = 0
+				# 			for item in R.selectedItems
+				# 				if item.rectangle?
+				# 					averageSize = averageSize.add(item.rectangle.size)
+				# 					n++
+				# 			averageSize = averageSize.divide(n)
+				# 			controller.setValue('' + averageSize.x.toFixed(2) + ', ' + averageSize.y.toFixed(2))
+				# 			return
+				# 		label: 'Size'
+				# 		onChange: ()-> return
+				# 		onFinishChange: @onSizeFinishChange
 
 			return parameters
 
@@ -612,7 +612,6 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 		# - (optionally) update controller in the gui accordingly
 		# @return whether the ritem was selected or not
 		select: (updateOptions=true)->
-			if R.me != @owner then return null
 			if @selected then return false
 			@selected = true
 

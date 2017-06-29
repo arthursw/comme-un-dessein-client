@@ -470,6 +470,7 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 
 			# update code editor width
 			R.codeEditor?.onMouseMove(event)
+			R.drawingPanel?.onMouseMove(event)
 
 			if R.currentDiv?
 				paperEvent = Utils.Event.jEventToPaperEvent(event, @previousMousePosition, @initialMousePosition, 'mousemove')
@@ -485,6 +486,7 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 				R.hideToolBox()
 
 			R.codeEditor?.onMouseUp(event)
+			R.drawingPanel?.onMouseUp(event)
 
 			if R.selectedTool?.name == 'Move'
 				# R.selectedTool.end(@previousMousePosition.equals(@initialMousePosition))
