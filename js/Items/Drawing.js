@@ -24,56 +24,87 @@
 
       Drawing.parameters = Drawing.initializeParameters();
 
-      function Drawing(rectangle1, data1, pk, owner, date) {
-        var pkString, title, titleJ;
+      function Drawing(rectangle1, data1, pk1, owner, date, title1, description, status) {
+        var itemListJ, path, pk, title;
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
-        this.pk = pk != null ? pk : null;
+        this.pk = pk1 != null ? pk1 : null;
         this.owner = owner != null ? owner : null;
         this.date = date;
+        this.title = title1;
+        this.description = description;
+        this.status = status;
         this.select = bind(this.select, this);
         this.update = bind(this.update, this);
         this.saveCallback = bind(this.saveCallback, this);
+        this.onLiClick = bind(this.onLiClick, this);
         Drawing.__super__.constructor.call(this, this.data, this.pk);
-        this.sortedPaths = [];
-        this.itemListsJ = R.templatesJ.find(".layer").clone();
-        pkString = '' + (this.pk || this.id);
-        pkString = pkString.substring(pkString.length - 3);
-        title = "Drawing ..." + pkString;
-        if (this.owner) {
-          title += " of " + this.owner;
+        this.votes = [];
+        for (pk in R.paths) {
+          path = R.paths[pk];
+          if ((path.drawingPk != null) === this.pk) {
+            this.addPath(path);
+          }
         }
-        titleJ = this.itemListsJ.find(".title");
-        titleJ.text(title);
-        titleJ.click((function(_this) {
-          return function(event) {
-            _this.itemListsJ.toggleClass('closed');
-            if (!event.shiftKey) {
-              R.tools.select.deselectAll();
-            }
-            _this.select();
-          };
-        })(this));
-        this.itemListsJ.find('.rPath-list').sortable({
-          stop: Item.zIndexSortStop,
-          delay: 250
-        });
-        this.itemListsJ.mouseover((function(_this) {
+        itemListJ = null;
+        switch (this.status) {
+          case 'pending':
+            R.view.pendingLayer.addChild(this.group);
+            itemListJ = R.view.pendingListJ;
+            break;
+          case 'drawing':
+            R.view.drawingLayer.addChild(this.group);
+            itemListJ = R.view.drawingListJ;
+            break;
+          case 'drawn':
+            R.view.drawnLayer.addChild(this.group);
+            itemListJ = R.view.drawnListJ;
+            break;
+          case 'rejected':
+            R.view.rejectedLayer.addChild(this.group);
+            itemListJ = R.view.rejectedListJ;
+            break;
+          default:
+            R.alertManager.alert("Error: drawing status is invalid.", "error");
+        }
+        title = '' + this.title + ' by ' + this.owner;
+        this.liJ = $("<li>");
+        this.liJ.html(title);
+        this.liJ.attr("data-pk", this.pk);
+        this.liJ.click(this.onLiClick);
+        this.liJ.mouseover((function(_this) {
           return function(event) {
             _this.highlight();
           };
         })(this));
-        this.itemListsJ.mouseout((function(_this) {
+        this.liJ.mouseout((function(_this) {
           return function(event) {
             _this.unhighlight();
           };
         })(this));
-        R.sidebar.itemListsJ.prepend(this.itemListsJ);
-        this.itemListsJ = R.sidebar.itemListsJ.find(".layer:first");
+        this.liJ.rItem = this;
+        if (itemListJ != null) {
+          itemListJ.find('.rPath-list').prepend(this.liJ);
+        }
+        this.sortedPaths = [];
         return;
       }
 
-      Drawing.prototype.draw = function() {};
+      Drawing.prototype.onLiClick = function(event) {
+        var bounds;
+        if (!event.shiftKey) {
+          R.tools.select.deselectAll();
+          bounds = this.getBounds();
+          if (!P.view.bounds.intersects(bounds)) {
+            R.view.moveTo(bounds.center, 1000);
+          }
+        }
+        this.select();
+      };
+
+      Drawing.prototype.addPath = function(path) {
+        this.group.addChild(path.group);
+      };
 
       Drawing.prototype.setParameter = function(name, value, updateGUI, update) {
         Drawing.__super__.setParameter.call(this, name, value, updateGUI, update);
@@ -287,7 +318,7 @@
             })
           }
         }).done((function(_this) {
-          return function() {
+          return function(result) {
             return R.drawingPanel.setDrawing(_this, result);
           };
         })(this));
@@ -301,8 +332,6 @@
           path = ref[i];
           this.removeItem(path);
         }
-        this.itemListsJ.remove();
-        this.itemListsJ = null;
         Utils.Array.remove(R.drawings, this);
         Drawing.__super__.remove.apply(this, arguments);
       };

@@ -17,6 +17,9 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 
 			@mainLayer = P.project.activeLayer
 			@mainLayer.name = 'main layer'
+
+			@createLayers()
+
 			@debugLayer = new P.Layer()				# Paper layer to append debug items
 			@debugLayer.name = 'debug layer'
 			@carLayer = new P.Layer() 				# Paper layer to append all cars
@@ -71,6 +74,36 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 			@previousMousePosition = null 			# the previous position of the mouse in the mousedown/move/up
 			@initialMousePosition = null 			# the initial position of the mouse in the mousedown/move/up
 
+
+			return
+
+		createLayerListItem: (title, layer)->
+			itemListsJ = R.templatesJ.find(".layer").clone()
+
+			titleJ = itemListsJ.find(".title")
+			titleJ.text(title)
+
+			titleJ.click (event)=>
+				itemListsJ.toggleClass('closed')
+				if not event.shiftKey
+					R.tools.select.deselectAll()
+				layer.visible = !layer.visible
+				return
+
+			R.sidebar.itemListsJ.prepend(itemListsJ)
+			return itemListsJ
+
+		createLayers: ()->
+
+			@rejectedLayer = new P.Layer()
+			@pendingLayer = new P.Layer()
+			@drawingLayer = new P.Layer()
+			@drawnLayer = new P.Layer()
+
+			@pendingListJ = @createLayerListItem('Pending', @pendingLayer)
+			@drawingListJ = @createLayerListItem('Drawing', @drawingLayer)
+			@drawnListJ = @createLayerListItem('Drawn', @drawnLayer)
+			@rejectedListJ = @createLayerListItem('Rejected', @rejectedLayer)
 
 			return
 

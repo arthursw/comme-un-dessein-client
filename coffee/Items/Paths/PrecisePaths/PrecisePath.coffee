@@ -167,7 +167,6 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 			return
 
 		performHitTest: (point)->
-			if R.me != @owner then return null
 			@controlPath.visible = true
 			hitResult = @controlPath.hitTest(point, @constructor.hitOptions)
 			@controlPath.visible = false
@@ -177,7 +176,6 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 		# @param point [P.Point] the point to test
 		# @param hitOptions [Object] the [paper hit test options](http://paperjs.org/reference/item/#hittest-point)
 		hitTest: (event)->
-			if R.me != @owner then return null
 
 			@deselectPoint()
 
@@ -530,10 +528,10 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 		# - call RPath.select
 		# @param updateOptions [Boolean] whether to update gui parameters with this RPath or not
 		select: (updateOptions=true)->
-			if R.me != @owner then return null
 			if not super(updateOptions) then return
 			@controlPath.selected = true
 			if not @data.smooth then @controlPath.fullySelected = true
+			R.drawingPanel.showSubmitDrawing()
 			return true
 
 		# @see RPath.deselect

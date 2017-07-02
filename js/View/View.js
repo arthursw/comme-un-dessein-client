@@ -30,6 +30,7 @@
         R.project = P.project;
         this.mainLayer = P.project.activeLayer;
         this.mainLayer.name = 'main layer';
+        this.createLayers();
         this.debugLayer = new P.Layer();
         this.debugLayer.name = 'debug layer';
         this.carLayer = new P.Layer();
@@ -79,6 +80,35 @@
         this.initialMousePosition = null;
         return;
       }
+
+      View.prototype.createLayerListItem = function(title, layer) {
+        var itemListsJ, titleJ;
+        itemListsJ = R.templatesJ.find(".layer").clone();
+        titleJ = itemListsJ.find(".title");
+        titleJ.text(title);
+        titleJ.click((function(_this) {
+          return function(event) {
+            itemListsJ.toggleClass('closed');
+            if (!event.shiftKey) {
+              R.tools.select.deselectAll();
+            }
+            layer.visible = !layer.visible;
+          };
+        })(this));
+        R.sidebar.itemListsJ.prepend(itemListsJ);
+        return itemListsJ;
+      };
+
+      View.prototype.createLayers = function() {
+        this.rejectedLayer = new P.Layer();
+        this.pendingLayer = new P.Layer();
+        this.drawingLayer = new P.Layer();
+        this.drawnLayer = new P.Layer();
+        this.pendingListJ = this.createLayerListItem('Pending', this.pendingLayer);
+        this.drawingListJ = this.createLayerListItem('Drawing', this.drawingLayer);
+        this.drawnListJ = this.createLayerListItem('Drawn', this.drawnLayer);
+        this.rejectedListJ = this.createLayerListItem('Rejected', this.rejectedLayer);
+      };
 
       View.prototype.moveTo = function(pos, delay, addCommand) {
         var initialPosition, somethingToLoad, tween;

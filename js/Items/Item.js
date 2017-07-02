@@ -52,10 +52,8 @@
         parent = lock || R.sidebar;
         if (Item.Div.prototype.isPrototypeOf(item)) {
           item.sortedItems = parent.sortedDivs;
-          parent.itemListsJ.find(".rDiv-list").append(item.liJ);
         } else if (Item.Path.prototype.isPrototypeOf(item)) {
           item.sortedItems = parent.sortedPaths;
-          parent.itemListsJ.find(".rPath-list").append(item.liJ);
         } else {
           console.error("Error: the item is neither an Div nor an RPath");
         }
@@ -188,9 +186,6 @@
       Item.prototype.finishHitTest = function() {};
 
       Item.prototype.performHitTest = function(point) {
-        if (R.me !== this.owner) {
-          return null;
-        }
         if (this.rectangle.contains(point)) {
           return true;
         } else {
@@ -200,9 +195,6 @@
 
       Item.prototype.hitTest = function(event) {
         var hitResult;
-        if (R.me !== this.owner) {
-          return null;
-        }
         hitResult = this.performHitTest(event.point);
         if ((hitResult != null) && !this.selected) {
           R.tools.select.deselectAll();
@@ -477,15 +469,22 @@
       };
 
       Item.prototype.rasterize = function() {
+        console.log('rasterize: ' + this.constructor.label);
+        console.log('@group.parent: ', this.group.parent);
+        console.log('@raster', this.raster);
+        console.log('@drawing', this.drawing);
         if ((this.raster != null) || (this.drawing == null)) {
           return;
         }
+        console.log('R.rasterizer.rasterizeItems: ' + R.rasterizer.rasterizeItems);
         if (!R.rasterizer.rasterizeItems) {
           return;
         }
+        console.log('@drawing.bounds.area == 0: ' + this.drawing.bounds.area === 0);
         if (this.drawing.bounds.area === 0) {
           return;
         }
+        console.log('rasterize.');
         this.raster = this.drawing.rasterize();
         this.group.addChild(this.raster);
         this.raster.sendToBack();

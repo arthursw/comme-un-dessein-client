@@ -25,41 +25,89 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 		@parameters = @initializeParameters()
 
-		constructor: (@rectangle, @data=null, @pk=null, @owner=null, @date) ->
+		constructor: (@rectangle, @data=null, @pk=null, @owner=null, @date, @title, @description, @status) ->
 			super(@data, @pk)
+
+			@votes = [] # { positive: boolean, author: string, authorPk: pk }
+
+			for pk of R.paths
+				path = R.paths[pk]
+				if path.drawingPk? == @pk
+					@addPath(path)
+
+			itemListJ = null
+			switch @status
+				when 'pending'
+					R.view.pendingLayer.addChild(@group)
+					itemListJ = R.view.pendingListJ
+				when 'drawing'
+					R.view.drawingLayer.addChild(@group)
+					itemListJ = R.view.drawingListJ
+				when 'drawn'
+					R.view.drawnLayer.addChild(@group)
+					itemListJ = R.view.drawnListJ
+				when 'rejected'
+					R.view.rejectedLayer.addChild(@group)
+					itemListJ = R.view.rejectedListJ
+				else
+					R.alertManager.alert "Error: drawing status is invalid.", "error"
+
+			title = '' + @title + ' by ' + @owner
+			@liJ = $("<li>")
+			@liJ.html(title)
+			@liJ.attr("data-pk", @pk)
+			@liJ.click(@onLiClick)
+			@liJ.mouseover (event)=>
+				@highlight()
+				return
+			@liJ.mouseout (event)=>
+				@unhighlight()
+				return
+			@liJ.rItem = @
+			itemListJ?.find('.rPath-list').prepend(@liJ)
 
 			# create special list to contains children paths
 			@sortedPaths = []
 
-			@itemListsJ = R.templatesJ.find(".layer").clone()
-			pkString = '' + (@pk or @id)
-			pkString = pkString.substring(pkString.length-3)
-			title = "Drawing ..." + pkString
-			if @owner then title += " of " + @owner
-			titleJ = @itemListsJ.find(".title")
-			titleJ.text(title)
-			titleJ.click (event)=>
-				@itemListsJ.toggleClass('closed')
-				if not event.shiftKey
-					R.tools.select.deselectAll()
-				@select()
-				return
+			# @itemListsJ = R.templatesJ.find(".layer").clone()
+			# pkString = '' + (@pk or @id)
+			# pkString = pkString.substring(pkString.length-3)
+			# title = '' + @title + ' by ' + @owner
+			# # if @owner then title += " of " + @owner
+			# titleJ = @itemListsJ.find(".title")
+			# titleJ.text(title)
+			# titleJ.click (event)=>
+			# 	@itemListsJ.toggleClass('closed')
+			# 	if not event.shiftKey
+			# 		R.tools.select.deselectAll()
+			# 	@select()
+			# 	return
 
-			@itemListsJ.find('.rPath-list').sortable( stop: Item.zIndexSortStop, delay: 250 )
+			# @itemListsJ.find('.rPath-list').sortable( stop: Item.zIndexSortStop, delay: 250 )
 
-			@itemListsJ.mouseover (event)=>
-				@highlight()
-				return
-			@itemListsJ.mouseout (event)=>
-				@unhighlight()
-				return
+			# @itemListsJ.mouseover (event)=>
+			# 	@highlight()
+			# 	return
+			# @itemListsJ.mouseout (event)=>
+			# 	@unhighlight()
+			# 	return
 
-			R.sidebar.itemListsJ.prepend(@itemListsJ)
-			@itemListsJ = R.sidebar.itemListsJ.find(".layer:first")
+			# R.sidebar.itemListsJ.prepend(@itemListsJ)
+			# @itemListsJ = R.sidebar.itemListsJ.find(".layer:first")
 
 			return
 
-		draw: ()->
+		onLiClick: (event)=>
+			if not event.shiftKey
+				R.tools.select.deselectAll()
+				bounds = @getBounds()
+				if not P.view.bounds.intersects(bounds)
+					R.view.moveTo(bounds.center, 1000)
+			@select()
+			return
+
+		addPath: (path)->
+			@group.addChild(path.group)
 			return
 
 		# @param name [String] the name of the value to change
@@ -204,7 +252,9 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			args =
 				pk: @pk
 
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done(()=>R.drawingPanel.setDrawing(@, result))
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+				R.drawingPanel.setDrawing(@, result)
+			)
 
 			return true
 
@@ -212,8 +262,8 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			for path in @children()
 				@removeItem(path)
 
-			@itemListsJ.remove()
-			@itemListsJ = null
+			# @itemListsJ.remove()
+			# @itemListsJ = null
 			Utils.Array.remove(R.drawings, @)
 			super
 			return

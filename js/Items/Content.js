@@ -30,21 +30,6 @@
           this.date = Date.now();
         }
         this.rotation = this.data.rotation || 0;
-        this.liJ = $("<li>");
-        this.liJ.attr("data-pk", this.pk);
-        this.liJ.click(this.onLiClick);
-        this.liJ.mouseover((function(_this) {
-          return function(event) {
-            _this.highlight();
-          };
-        })(this));
-        this.liJ.mouseout((function(_this) {
-          return function(event) {
-            _this.unhighlight();
-          };
-        })(this));
-        this.liJ.rItem = this;
-        itemListJ.prepend(this.liJ);
         $("#RItems .mCustomScrollbar").mCustomScrollbar("scrollTo", "bottom");
         this.updateZindex();
         return;
@@ -114,7 +99,6 @@
         if (dateLabel.length > 0) {
           zindexLabel += ' - ' + dateLabel;
         }
-        this.liJ.text(zindexLabel);
       };
 
       Content.prototype.updateZindex = function() {
@@ -152,7 +136,6 @@
           index = this.sortedItems.indexOf(item) + 1;
         }
         this.sortedItems.splice(index, 0, this);
-        this.liJ.insertBefore(item.liJ);
         if (update) {
           if (this.sortedItems[index + 1] == null) {
             this.date = Date.now();
@@ -180,7 +163,6 @@
           index = this.sortedItems.indexOf(item);
         }
         this.sortedItems.splice(index, 0, this);
-        this.liJ.insertAfter(item.liJ);
         if (update) {
           if (this.sortedItems[index - 1] == null) {
             this.date = this.sortedItems[index + 1].date - 1000;
@@ -195,11 +177,7 @@
       };
 
       Content.prototype.setPK = function(pk) {
-        var ref;
         Content.__super__.setPK.apply(this, arguments);
-        if ((ref = this.liJ) != null) {
-          ref.attr("data-pk", this.pk);
-        }
       };
 
       Content.prototype.select = function(updateOptions) {
@@ -209,7 +187,6 @@
         if (!Content.__super__.select.call(this, updateOptions)) {
           return false;
         }
-        this.liJ.addClass('selected');
         return true;
       };
 
@@ -220,7 +197,6 @@
         if (!Content.__super__.deselect.call(this, updateOptions)) {
           return false;
         }
-        this.liJ.removeClass('selected');
         return true;
       };
 
@@ -252,13 +228,9 @@
       };
 
       Content.prototype.remove = function() {
-        var ref;
         Content.__super__.remove.call(this);
         if (this.sortedItems != null) {
           Utils.Array.remove(this.sortedItems, this);
-        }
-        if ((ref = this.liJ) != null) {
-          ref.remove();
         }
       };
 

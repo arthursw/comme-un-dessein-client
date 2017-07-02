@@ -28,17 +28,17 @@ define [ 'Items/Item' ], (Item) ->
 
 			@rotation = @data.rotation or 0
 
-			@liJ = $("<li>")
-			@liJ.attr("data-pk", @pk)
-			@liJ.click(@onLiClick)
-			@liJ.mouseover (event)=>
-				@highlight()
-				return
-			@liJ.mouseout (event)=>
-				@unhighlight()
-				return
-			@liJ.rItem = @
-			itemListJ.prepend(@liJ)
+			# @liJ = $("<li>")
+			# @liJ.attr("data-pk", @pk)
+			# @liJ.click(@onLiClick)
+			# @liJ.mouseover (event)=>
+			# 	@highlight()
+			# 	return
+			# @liJ.mouseout (event)=>
+			# 	@unhighlight()
+			# 	return
+			# @liJ.rItem = @
+			# itemListJ.prepend(@liJ)
 			$("#RItems .mCustomScrollbar").mCustomScrollbar("scrollTo", "bottom")
 
 			@updateZindex()
@@ -150,7 +150,7 @@ define [ 'Items/Item' ], (Item) ->
 			dateLabel = dateLabel.substring(dateLabel.length-7, dateLabel.length-3)
 			zindexLabel = @constructor.label
 			if dateLabel.length>0 then zindexLabel += ' - ' + dateLabel
-			@liJ.text(zindexLabel)
+			# @liJ.text(zindexLabel)
 			return
 
 		# update the z index (i.e. move the item to the right position)
@@ -182,7 +182,7 @@ define [ 'Items/Item' ], (Item) ->
 				Utils.Array.remove(@sortedItems, @)
 				index = @sortedItems.indexOf(item) + 1
 			@sortedItems.splice(index, 0, @)
-			@liJ.insertBefore(item.liJ)
+			# @liJ.insertBefore(item.liJ)
 			if update
 				if not @sortedItems[index+1]?
 					@date = Date.now()
@@ -203,7 +203,7 @@ define [ 'Items/Item' ], (Item) ->
 				Utils.Array.remove(@sortedItems, @)
 				index = @sortedItems.indexOf(item)
 			@sortedItems.splice(index, 0, @)
-			@liJ.insertAfter(item.liJ)
+			# @liJ.insertAfter(item.liJ)
 			if update
 				if not @sortedItems[index-1]?
 					@date = @sortedItems[index+1].date - 1000
@@ -217,7 +217,7 @@ define [ 'Items/Item' ], (Item) ->
 
 		setPK: (pk)->
 			super
-			@liJ?.attr("data-pk", @pk)
+			# @liJ?.attr("data-pk", @pk)
 			return
 
 		# select the Item: (only if it has no selection rectangle i.e. not already selected)
@@ -225,7 +225,7 @@ define [ 'Items/Item' ], (Item) ->
 		select: (updateOptions=true)->
 			if not super(updateOptions) then return false
 
-			@liJ.addClass('selected')
+			# @liJ.addClass('selected')
 
 			# update the global selection group (i.e. add this RPath to the group)
 			# if @group.parent != R.view.selectionLayer then @zindex = @group.index
@@ -236,7 +236,7 @@ define [ 'Items/Item' ], (Item) ->
 		deselect: (updateOptions=true)->
 			if not super(updateOptions) then return false
 
-			@liJ.removeClass('selected')
+			# @liJ.removeClass('selected')
 
 			# if @group?
 			# 	if not @lock
@@ -271,7 +271,7 @@ define [ 'Items/Item' ], (Item) ->
 		remove: ()->
 			super()
 			if @sortedItems? then Utils.Array.remove(@sortedItems, @)
-			@liJ?.remove()
+			# @liJ?.remove()
 			return
 
 		delete: ()->

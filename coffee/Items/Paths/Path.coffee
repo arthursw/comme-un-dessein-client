@@ -120,12 +120,19 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			else
 				super(@data, @pk, @date, @lock.itemListsJ.find('.rPath-list'), @lock.sortedPaths)
 
+			if @drawingPk? and R.items[@drawingPk]?
+				drawing = R.items[@drawingPk]
+				drawing.addPath(@)
+
 			@selectionHighlight = null
 
 			if points?
 				@loadPath(points)
 
 			return
+
+		getDrawing: ()->
+			return if @drawingPk? then R.items[@drawingPK] else null
 
 		getDuplicateData: ()->
 			data = super()
@@ -219,7 +226,6 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			return
 
 		hitTest: (event)->
-			if R.me != @owner then return null
 			wasSelected = @selected
 			hitResult = super(event)
 			if not hitResult? then return
@@ -238,7 +244,8 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 		# @param updateOptions [Boolean] whether to update controllers in gui or not
 		# @return whether the ritem was selected or not
 		select: (updateOptions=true)->
-			if R.me != @owner then return null
+			if R.me != @owner && not @drawingPk? then return false
+
 			if @drawingPk? and R.items[@drawingPk]?
 				R.items[@drawingPk].select()
 				return null
@@ -358,11 +365,27 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 
 			@controlPath.strokeWidth = 10
 
+			d = @getDrawing()
+			color = 'black'
+
+			if d?
+				switch d.status
+					when 'pending'
+						color = 'blue'
+					when 'drawing'
+						color = 'green'
+					when 'drawn'
+						color = 'black'
+					when 'rejected'
+						color = 'red'
+					else
+						color = 'pink'
+
 			# create drawing group and initialize it with @data
 			@drawing?.remove()
 			@drawing = new P.Group()
 			@drawing.name = "drawing"
-			@drawing.strokeColor = 'black' # @data.strokeColor
+			@drawing.strokeColor = color # @data.strokeColor
 			@drawing.strokeWidth = 2 # @data.strokeWidth
 			@drawing.fillColor = null # @data.fillColor
 			@drawing.insertBelow(@controlPath)

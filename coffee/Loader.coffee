@@ -251,8 +251,8 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 		setMe: (user)->
 			if not R.me? and user?
 				R.me = user
-				if R.chatJ? and R.chatJ.find("#chatUserNameInput").length==0
-					R.startChatting( R.me )
+				if R.socket.chatJ? and R.socket.chatJ.find("#chatUserNameInput").length==0
+					R.socket.startChatting( R.me )
 			return
 
 		removeDeletedItems: (deletedItems)->
@@ -390,7 +390,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 						if item.box.coordinates[0].length<5
 							console.log "Error: drawing has less than 5 points"
 
-						drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, item._id.$oid, item.owner, date)
+						drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, item._id.$oid, item.owner, date, item.title, item.description, item.status)
 					else
 						continue
 			return

@@ -26,6 +26,8 @@ define [ 'Tools/Tool', 'UI/Button' ], (Tool, Button) ->
 		# @param [Boolean] whether the tool was just created (with the code editor) or not
 		constructor: (@Path, justCreated=false) ->
 			@name = @Path.label
+			@constructor.label = @name
+			
 			if @Path.description then @constructor.description = @Path.rdescription
 			if @Path.iconURL then @constructor.iconURL = @Path.iconURL
 			if @Path.category then @constructor.category = @Path.category

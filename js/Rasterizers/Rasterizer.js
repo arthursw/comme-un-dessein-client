@@ -5,7 +5,7 @@
     hasProp = {}.hasOwnProperty,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  define(['Items/Lock'], function(Lock) {
+  define(['Items/Lock', 'Items/Drawing'], function(Lock, Drawing) {
     var CanvasTileRasterizer, InstantPaperTileRasterizer, PaperTileRasterizer, Rasterizer, TileRasterizer;
     Rasterizer = (function() {
       Rasterizer.TYPE = 'default';
@@ -156,7 +156,7 @@
           item = ref[i];
           if ((item.controller != null) && P.Group.prototype.isPrototypeOf(item)) {
             sortedItems.push(item.controller);
-            if (Lock.prototype.isPrototypeOf(item.controller)) {
+            if (Drawing.prototype.isPrototypeOf(item.controller)) {
               this.addChildren(item, sortedItems);
             }
           }

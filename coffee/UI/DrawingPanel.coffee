@@ -25,10 +25,25 @@ define [ 'coffee', 'typeahead' ], (CoffeeScript) -> 			# 'ace/ext-language_tools
 			closeBtnJ.click @close
 
 			# footer
-			@footerJ = @drawingPanelJ.find(".footer")
+			@votesJ = @drawingPanelJ.find('.votes')
+			# @footerJ = @drawingPanelJ.find(".footer")
 			
 			runBtnJ = @drawingPanelJ.find("button.submit.run")
 			runBtnJ.click @runFile
+
+			@voteUpBtnJ = @drawingPanelJ.find('.vote-up')
+			@voteUpBtnJ.click(@voteUp)
+
+			@voteDownBtnJ = @drawingPanelJ.find('.vote-down')
+			@voteDownBtnJ.click(@voteDown)
+
+			@submitBtnJ = @drawingPanelJ.find('form.create button.submit')
+			@modifyBtnJ = @drawingPanelJ.find('form.create button.modify')
+			@cancelBtnJ = @drawingPanelJ.find('form.create button.cancel')
+
+			@submitBtnJ.click(@submitDrawing)
+			@modifyBtnJ.click(@modifyDrawing)
+			@cancelBtnJ.click(@cancelDrawing)
 
 			return
 
@@ -87,12 +102,194 @@ define [ 'coffee', 'typeahead' ], (CoffeeScript) -> 			# 'ace/ext-language_tools
 			@drawingPanelJ.find('.content').children('.loading-animation').hide()
 			return
 
-		setDrawing: (@currentDrawing, drawingData)=>
+		showSubmitDrawing: ()->
+			@open()
 			@hideLoadAnimation()
+			@currentDrawing = null
+			contentJ = @drawingPanelJ.find('.content')
+			contentJ.find('.read').hide()
+			contentJ.find('.modify').show()
+			contentJ.find('#drawing-title').val('')
+			contentJ.find('#drawing-description').val('')
+			@submitBtnJ.show()
+			@modifyBtnJ.hide()
+			@cancelBtnJ.hide()
+			@votesJ.hide()
+			return
+
+		setDrawing: (@currentDrawing, drawingData)->
+			@open()
+			@hideLoadAnimation()
+			
+			contentJ = @drawingPanelJ.find('.content')
+			@currentDrawing.votes = drawingData.votes
+
+			if @currentDrawing.owner == R.me
+				contentJ.find('.read').hide()
+				contentJ.find('.modify').show()
+				contentJ.find('#drawing-title').val(@currentDrawing.title)
+				contentJ.find('#drawing-description').val(@currentDrawing.description)
+				@submitBtnJ.hide()
+				@modifyBtnJ.show()
+				@cancelBtnJ.show()
+			else
+				contentJ.find('.read').show()
+				contentJ.find('.modify').hide()
+				contentJ.find('.title').html(@currentDrawing.title)
+				contentJ.find('.description').html(@currentDrawing.description)
+				contentJ.find('.author').html(@currentDrawing.owner)
+
+			@votesJ.show()
+			@voteUpBtnJ.removeClass('voted')
+			@voteDownBtnJ.removeClass('voted')
+			positiveVoteListJ = @drawingPanelJ.find('.vote-list.positive')
+			negativeVoteListJ = @drawingPanelJ.find('.vote-list.negative')
+			positiveVoteListJ.empty()
+			negativeVoteListJ.empty()
+			nPositiveVotes = 0
+			nNegativeVotes = 0
 			for vote in drawingData.votes
-				vote.vote
-				vote.author
-				vote.authorPk
+				v = JSON.parse(vote.vote)
+				liJ = $('<li data-author-pk="'+vote.authorPk+'">'+vote.author+'</li>')
+				if v.positive
+					nPositiveVotes++
+					positiveVoteListJ.append(liJ)
+					if vote.author == R.me
+						@voteUpBtnJ.addClass('voted')
+				else
+					nNegativeVotes++
+					negativeVoteListJ.append(liJ)
+					if vote.author == R.me
+						@voteDownBtnJ.addClass('voted')
+
+			@votesJ.find('.n-votes.positive').html(nPositiveVotes)
+			@votesJ.find('.n-votes.negative').html(nNegativeVotes)
+			nVotes = nPositiveVotes+nNegativeVotes
+			@votesJ.find('.n-votes.total').html(nVotes)
+			@votesJ.find('.percentage-votes').html(if nVotes > 0 then 100*nPositiveVotes/nVotes else 0)
+			return
+
+		### votes ###
+
+		hasAlreadyVoted: ()->
+			for vote in @currentDrawing.votes
+				if vote.vote.author == R.me
+					return true
+			return false
+
+		voteCallback: (result)=>
+			if not R.loader.checkError(result) then return
+			R.alertManager.alert 'You successfuly voted', 'success'
+			return
+
+		vote: (positive)=>
+			if @currentDrawing.owner == R.me
+				R.alertManager.alert 'You cannot vote for your own drawing', 'error'
+				return
+
+			if @hasAlreadyVoted()
+				R.alertManager.alert 'You already voted for this drawing', 'error'
+				return
+
+			args =
+				pk: @currentDrawing.pk
+				date: Date.now()
+				positive: positive
+
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'vote', args: args } ).done(@voteCallback)
+
+			return
+
+		voteUp: ()=>
+			@vote(true)
+			return
+
+		voteDown: ()=>
+			@vote(false)
+			return
+
+		### submit modify cancel drawing ###
+
+		submitDrawingCallback: (result)=>
+			if not R.loader.checkError(result) then return
+			R.alertManager.alert "Drawing successfully submitted. It will be drawn if it gets 100 votes.", "success"
+			return
+
+		submitDrawing: ()=>
+
+			if not R.me? or not _.isString(R.me)
+				R.alertManager.alert "You must be logged in to submit a drawing.", "error"
+				return
+
+			if R.selectedItems.length == 0
+				R.alertManager.alert "You must select some drawings first.", "error"
+				return
+
+			ids = []
+			for item in R.selectedItems
+				ids.push(item.pk)
+
+			contentJ = @drawingPanelJ.find('.content')
+
+			args = {
+				date: Date.now()
+				pathPks: ids
+				title: contentJ.find('#drawing-title').val()
+				description: contentJ.find('#drawing-description').val()
+			}
+
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'saveDrawing', args: args } ).done(@submitDrawingCallback)
+
+			return
+
+		modifyDrawingCallback: (result)=>
+			if not R.loader.checkError(result) then return
+			R.alertManager.alert "Drawing successfully modified.", "success"
+			return
+
+		modifyDrawing: ()=>
+
+			if not R.me? or not _.isString(R.me)
+				R.alertManager.alert "You must be logged in to modify a drawing.", "error"
+				return
+
+			if not @currentDrawing?
+				R.alertManager.alert "You must select a drawing first.", "error"
+				return
+
+			contentJ = @drawingPanelJ.find('.content')
+
+			args = {
+				pk: @currentDrawing.pk
+				title: contentJ.find('#drawing-title').val()
+				description: contentJ.find('#drawing-description').val()
+			}
+
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawing', args: args } ).done(@modifyDrawingCallback)
+
+			return
+
+		cancelDrawingCallback: (result)=>
+			if not R.loader.checkError(result) then return
+			R.alertManager.alert "Drawing successfully cancelled.", "success"
+			return
+
+		cancelDrawing: ()=>
+
+			if not R.me? or not _.isString(R.me)
+				R.alertManager.alert "You must be logged in to cancel a drawing.", "error"
+				return
+
+			if not @currentDrawing?
+				R.alertManager.alert "You must select a drawing first.", "error"
+				return
+
+			args = {
+				pk: @currentDrawing.pk
+			}
+
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteDrawing', args: args } ).done(@deleteDrawingCallback)
+
 			return
 
 	return DrawingPanel

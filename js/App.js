@@ -62,7 +62,6 @@
   requirejs.config({
     baseUrl: baseUrl,
     paths: {
-      'ace': ['//cdnjs.cloudflare.com/ajax/libs/ace/1.1.9/', libs + 'ace/src-min-noconflict/'],
       'domReady': [libs + 'domReady'],
       'aceTools': [libs + 'ace/ext-language_tools'],
       'underscore': [libs + 'underscore-min'],

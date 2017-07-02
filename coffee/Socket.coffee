@@ -284,7 +284,7 @@ define [ 'socketio' ], (ioo) ->
 						return
 					rFunction = tool?[data.function]
 					if rFunction?
-						data.arguments[0] = Event.prototype.fromJSON(data.arguments[0])
+						# data.arguments[0] = Event.prototype.fromJSON(data.arguments[0])
 						rFunction.apply(tool, data.arguments)
 				else if data.itemPk?
 					item = R.items[data.itemPk]

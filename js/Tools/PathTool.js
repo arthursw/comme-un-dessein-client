@@ -30,6 +30,7 @@
           justCreated = false;
         }
         this.name = this.Path.label;
+        this.constructor.label = this.name;
         if (this.Path.description) {
           this.constructor.description = this.Path.rdescription;
         }

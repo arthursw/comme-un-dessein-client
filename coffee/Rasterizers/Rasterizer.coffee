@@ -1,4 +1,4 @@
-define [ 'Items/Lock' ], (Lock) ->
+define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 
 	#  values: ['one raster per shape', 'paper.js only', 'tiled canvas', 'hide inactives', 'single canvas']
 
@@ -131,7 +131,7 @@ define [ 'Items/Lock' ], (Lock) ->
 			for item in parent.children
 				if item.controller? and P.Group.prototype.isPrototypeOf(item)
 					sortedItems.push(item.controller)
-					if Lock.prototype.isPrototypeOf(item.controller)
+					if Drawing.prototype.isPrototypeOf(item.controller) # Lock.prototype.isPrototypeOf(item.controller)
 						@addChildren(item, sortedItems)
 			return
 

@@ -212,7 +212,6 @@
             }
             rFunction = tool != null ? tool[data["function"]] : void 0;
             if (rFunction != null) {
-              data["arguments"][0] = Event.prototype.fromJSON(data["arguments"][0]);
               rFunction.apply(tool, data["arguments"]);
             }
           } else if (data.itemPk != null) {

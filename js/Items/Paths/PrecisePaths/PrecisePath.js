@@ -181,9 +181,6 @@
 
       PrecisePath.prototype.performHitTest = function(point) {
         var hitResult;
-        if (R.me !== this.owner) {
-          return null;
-        }
         this.controlPath.visible = true;
         hitResult = this.controlPath.hitTest(point, this.constructor.hitOptions);
         this.controlPath.visible = false;
@@ -192,9 +189,6 @@
 
       PrecisePath.prototype.hitTest = function(event) {
         var hitResult, modifyPoint, specialKey, wasSelected;
-        if (R.me !== this.owner) {
-          return null;
-        }
         this.deselectPoint();
         wasSelected = this.selected;
         hitResult = PrecisePath.__super__.hitTest.call(this, event);
@@ -485,9 +479,6 @@
         if (updateOptions == null) {
           updateOptions = true;
         }
-        if (R.me !== this.owner) {
-          return null;
-        }
         if (!PrecisePath.__super__.select.call(this, updateOptions)) {
           return;
         }
@@ -495,6 +486,7 @@
         if (!this.data.smooth) {
           this.controlPath.fullySelected = true;
         }
+        R.drawingPanel.showSubmitDrawing();
         return true;
       };
 

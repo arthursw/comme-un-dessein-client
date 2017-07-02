@@ -56,6 +56,7 @@
       };
 
       function Path(date, data1, pk1, points, lock, owner, drawingPk) {
+        var drawing;
         this.date = date != null ? date : null;
         this.data = data1 != null ? data1 : null;
         this.pk = pk1 != null ? pk1 : null;
@@ -73,12 +74,24 @@
         } else {
           Path.__super__.constructor.call(this, this.data, this.pk, this.date, this.lock.itemListsJ.find('.rPath-list'), this.lock.sortedPaths);
         }
+        if ((this.drawingPk != null) && (R.items[this.drawingPk] != null)) {
+          drawing = R.items[this.drawingPk];
+          drawing.addPath(this);
+        }
         this.selectionHighlight = null;
         if (points != null) {
           this.loadPath(points);
         }
         return;
       }
+
+      Path.prototype.getDrawing = function() {
+        if (this.drawingPk != null) {
+          return R.items[this.drawingPK];
+        } else {
+          return null;
+        }
+      };
 
       Path.prototype.getDuplicateData = function() {
         var data;
@@ -162,9 +175,6 @@
 
       Path.prototype.hitTest = function(event) {
         var hitResult, wasSelected;
-        if (R.me !== this.owner) {
-          return null;
-        }
         wasSelected = this.selected;
         hitResult = Path.__super__.hitTest.call(this, event);
         if (hitResult == null) {
@@ -187,8 +197,8 @@
         if (updateOptions == null) {
           updateOptions = true;
         }
-        if (R.me !== this.owner) {
-          return null;
+        if (R.me !== this.owner && (this.drawingPk == null)) {
+          return false;
         }
         if ((this.drawingPk != null) && (R.items[this.drawingPk] != null)) {
           R.items[this.drawingPk].select();
@@ -275,7 +285,7 @@
       };
 
       Path.prototype.initializeDrawing = function(createCanvas) {
-        var bounds, canvas, position, ref, ref1, ref2;
+        var bounds, canvas, color, d, position, ref, ref1, ref2;
         if (createCanvas == null) {
           createCanvas = false;
         }
@@ -284,12 +294,32 @@
         }
         this.raster = null;
         this.controlPath.strokeWidth = 10;
+        d = this.getDrawing();
+        color = 'black';
+        if (d != null) {
+          switch (d.status) {
+            case 'pending':
+              color = 'blue';
+              break;
+            case 'drawing':
+              color = 'green';
+              break;
+            case 'drawn':
+              color = 'black';
+              break;
+            case 'rejected':
+              color = 'red';
+              break;
+            default:
+              color = 'pink';
+          }
+        }
         if ((ref1 = this.drawing) != null) {
           ref1.remove();
         }
         this.drawing = new P.Group();
         this.drawing.name = "drawing";
-        this.drawing.strokeColor = 'black';
+        this.drawing.strokeColor = color;
         this.drawing.strokeWidth = 2;
         this.drawing.fillColor = null;
         this.drawing.insertBelow(this.controlPath);

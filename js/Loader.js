@@ -271,8 +271,8 @@
       Loader.prototype.setMe = function(user) {
         if ((R.me == null) && (user != null)) {
           R.me = user;
-          if ((R.chatJ != null) && R.chatJ.find("#chatUserNameInput").length === 0) {
-            R.startChatting(R.me);
+          if ((R.socket.chatJ != null) && R.socket.chatJ.find("#chatUserNameInput").length === 0) {
+            R.socket.startChatting(R.me);
           }
         }
       };
@@ -427,7 +427,7 @@
               if (item.box.coordinates[0].length < 5) {
                 console.log("Error: drawing has less than 5 points");
               }
-              drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, item._id.$oid, item.owner, date);
+              drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, item._id.$oid, item.owner, date, item.title, item.description, item.status);
               break;
             default:
               continue;

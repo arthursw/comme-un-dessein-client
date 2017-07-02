@@ -72,10 +72,10 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			parent = lock or R.sidebar
 			if Item.Div.prototype.isPrototypeOf(item)
 				item.sortedItems = parent.sortedDivs
-				parent.itemListsJ.find(".rDiv-list").append(item.liJ)
+				# parent.itemListsJ.find(".rDiv-list").append(item.liJ)
 			else if Item.Path.prototype.isPrototypeOf(item)
 				item.sortedItems = parent.sortedPaths
-				parent.itemListsJ.find(".rPath-list").append(item.liJ)
+				# parent.itemListsJ.find(".rPath-list").append(item.liJ)
 			else
 				console.error "Error: the item is neither an Div nor an RPath"
 			item.updateZindex()
@@ -284,11 +284,9 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			return
 
 		performHitTest: (point)->
-			if R.me != @owner then return null
 			return if @rectangle.contains(point) then true else null
 
 		hitTest: (event)->
-			if R.me != @owner then return null
 
 			hitResult = @performHitTest(event.point)
 			if hitResult? and not @selected
@@ -732,9 +730,16 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			return
 
 		rasterize: ()->
+			console.log('rasterize: ' + @constructor.label)
+			console.log('@group.parent: ', @group.parent)
+			console.log('@raster', @raster)
+			console.log('@drawing', @drawing)
 			if @raster? or not @drawing? then return
+			console.log('R.rasterizer.rasterizeItems: ' + R.rasterizer.rasterizeItems)
 			if not R.rasterizer.rasterizeItems then return
+			console.log('@drawing.bounds.area == 0: ' + @drawing.bounds.area == 0)
 			if @drawing.bounds.area == 0 then return
+			console.log('rasterize.')
 			@raster = @drawing.rasterize()
 			@group.addChild(@raster)
 			@raster.sendToBack() 	# the raster (of a lock) must be send behind other items

@@ -35,6 +35,7 @@ define [ 'Tools/Tool', 'Items/Lock', 'Commands/Command', 'View/SelectionRectangl
 				@selectionRectangle?.remove()
 				@selectionRectangle = null
 			P.project.activeLayer.selected = false
+			R.drawingPanel.close()
 			return
 
 		setSelectionRectangleVisibility: (value)=>
