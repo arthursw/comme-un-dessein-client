@@ -96,9 +96,13 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 		createLayers: ()->
 
 			@rejectedLayer = new P.Layer()
+			@rejectedLayer.name  = 'rejectedLayer'
 			@pendingLayer = new P.Layer()
+			@pendingLayer.name  = 'pendingLayer'
 			@drawingLayer = new P.Layer()
+			@drawingLayer.name  = 'drawingLayer'
 			@drawnLayer = new P.Layer()
+			@drawnLayer.name  = 'drawnLayer'
 
 			@pendingListJ = @createLayerListItem('Pending', @pendingLayer)
 			@drawingListJ = @createLayerListItem('Drawing', @drawingLayer)

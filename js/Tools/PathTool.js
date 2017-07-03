@@ -116,10 +116,18 @@
       };
 
       PathTool.prototype.update = function(event, from) {
+        var ref;
         if (from == null) {
           from = R.me;
         }
         R.currentPaths[from].updateCreate(event.point, event, false);
+        console.log('update:');
+        console.log(R.currentPaths[from].group.visible);
+        console.log(R.currentPaths[from].group.parent.visible);
+        console.log(R.currentPaths[from].group.parent.name);
+        console.log(R.currentPaths[from].group.parent.parent);
+        console.log((ref = R.currentPaths[from].group.parent.parent) != null ? ref.visible : void 0);
+        R.huh = R.currentPaths[from];
         if ((R.me != null) && from === R.me) {
           R.socket.emit("bounce", {
             tool: this.name,

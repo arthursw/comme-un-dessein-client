@@ -41,7 +41,7 @@ define [ 'Items/Item' ], (Item) ->
 			# itemListJ.prepend(@liJ)
 			$("#RItems .mCustomScrollbar").mCustomScrollbar("scrollTo", "bottom")
 
-			@updateZindex()
+			# @updateZindex()
 
 			return
 

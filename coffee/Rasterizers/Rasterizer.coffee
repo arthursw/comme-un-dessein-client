@@ -138,7 +138,12 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 		@getSortedItems: ()->
 			sortedItems = []
 			@addChildren(R.view.mainLayer, sortedItems)
-			@addChildren(R.view.lockLayer, sortedItems)
+			@addChildren(R.view.pendingLayer, sortedItems)
+			@addChildren(R.view.drawnLayer, sortedItems)
+			@addChildren(R.view.drawingLayer, sortedItems)
+			@addChildren(R.view.rejectedLayer, sortedItems)
+
+			# @addChildren(R.view.lockLayer, sortedItems)
 			# @addChildrenToParent(R.view.selectionLayer, sortedItems) # the selection layer is never rasterized (should it be?)
 			return sortedItems
 

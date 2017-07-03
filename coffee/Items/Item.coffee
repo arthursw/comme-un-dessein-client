@@ -569,7 +569,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			return @rectangle
 
 		getDrawingBounds: ()->
-			return @rectangle.expand(@data.strokeWidth)
+			return @rectangle.expand(if @data.strokeWidth then @data.strokeWidth else 10)
 
 		# highlight this Item by drawing a blue rectangle around it
 		highlight: ()->
@@ -630,6 +630,8 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			R.rasterizer.selectItem(@)
 
 			@zindex = @group.index
+
+			@parentBeforeSelection = @group.parent
 			R.view.selectionLayer.addChild(@group)
 
 			return true
@@ -651,10 +653,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 
 				R.rasterizer.deselectItem(@)
 
-				if not @lock
-					@group = R.view.mainLayer.insertChild(@zindex, @group)
-				else
-					@group = @lock.group.insertChild(@zindex, @group)
+				@parentBeforeSelection.insertChild(@zindex, @group)
 
 			return true
 
@@ -730,17 +729,18 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			return
 
 		rasterize: ()->
-			console.log('rasterize: ' + @constructor.label)
-			console.log('@group.parent: ', @group.parent)
-			console.log('@raster', @raster)
-			console.log('@drawing', @drawing)
+			if @drawingPk? then return
 			if @raster? or not @drawing? then return
-			console.log('R.rasterizer.rasterizeItems: ' + R.rasterizer.rasterizeItems)
 			if not R.rasterizer.rasterizeItems then return
-			console.log('@drawing.bounds.area == 0: ' + @drawing.bounds.area == 0)
 			if @drawing.bounds.area == 0 then return
-			console.log('rasterize.')
+
+			# background = new P.Path.Rectangle(@drawing.bounds)
+			# background.fillColor = 'blue'
+			# @drawing.addChild(background)
+			# background.sendToBack()
+
 			@raster = @drawing.rasterize()
+
 			@group.addChild(@raster)
 			@raster.sendToBack() 	# the raster (of a lock) must be send behind other items
 			@removeDrawing()

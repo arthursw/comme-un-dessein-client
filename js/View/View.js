@@ -101,9 +101,13 @@
 
       View.prototype.createLayers = function() {
         this.rejectedLayer = new P.Layer();
+        this.rejectedLayer.name = 'rejectedLayer';
         this.pendingLayer = new P.Layer();
+        this.pendingLayer.name = 'pendingLayer';
         this.drawingLayer = new P.Layer();
+        this.drawingLayer.name = 'drawingLayer';
         this.drawnLayer = new P.Layer();
+        this.drawnLayer.name = 'drawnLayer';
         this.pendingListJ = this.createLayerListItem('Pending', this.pendingLayer);
         this.drawingListJ = this.createLayerListItem('Drawing', this.drawingLayer);
         this.drawnListJ = this.createLayerListItem('Drawn', this.drawnLayer);

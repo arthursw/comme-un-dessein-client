@@ -122,7 +122,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 
 			if @drawingPk? and R.items[@drawingPk]?
 				drawing = R.items[@drawingPk]
-				drawing.addPath(@)
+				drawing.addChild(@)
 
 			@selectionHighlight = null
 

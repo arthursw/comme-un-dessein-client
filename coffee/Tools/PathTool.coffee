@@ -117,6 +117,15 @@ define [ 'Tools/Tool', 'UI/Button' ], (Tool, Button) ->
 		# @param [String] author (username) of the event
 		update: (event, from=R.me) ->
 			R.currentPaths[from].updateCreate(event.point, event, false)
+
+			console.log('update:')
+			console.log(R.currentPaths[from].group.visible)
+			console.log(R.currentPaths[from].group.parent.visible)
+			console.log(R.currentPaths[from].group.parent.name)
+			console.log(R.currentPaths[from].group.parent.parent)
+			console.log(R.currentPaths[from].group.parent.parent?.visible)
+			R.huh = R.currentPaths[from]
+
 			# R.currentPaths[from].group.visible = true
 			# if R.me? and from==R.me then R.socket.emit( "update", R.me, R.eventToObject(event), @name)
 			if R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "update", arguments: [event, R.me]

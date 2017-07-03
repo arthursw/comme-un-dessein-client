@@ -46,7 +46,6 @@
           position: 'relative'
         };
         target = document.getElementById('spinner');
-        this.spinner = new Spinner(opts).spin(target);
       };
 
       Loader.prototype.showDrawingBar = function() {
@@ -59,7 +58,6 @@
 
       Loader.prototype.showLoadingBarCallback = function() {
         $("#loadingBar").show();
-        this.spinner.spin(document.getElementById('loadingBar'));
       };
 
       Loader.prototype.showLoadingBar = function(timeout) {
@@ -73,7 +71,6 @@
       Loader.prototype.hideLoadingBar = function() {
         clearTimeout(this.showLoadingBarTimeoutID);
         $("#loadingBar").hide();
-        this.spinner.stop();
       };
 
       Loader.prototype.areaIsLoaded = function(pos, planet, qZoom) {
@@ -421,7 +418,7 @@
               }
               break;
             case 'AreaToUpdate':
-              R.rasterizer.addAreaToUpdate(Utils.CS.rectangleFromBox(item));
+              R.rasterizer.addAreaToUpdate(Utils.CS.rectangleFromBox(item).expand(5));
               break;
             case 'Drawing':
               if (item.box.coordinates[0].length < 5) {

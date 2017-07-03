@@ -76,7 +76,7 @@
         }
         if ((this.drawingPk != null) && (R.items[this.drawingPk] != null)) {
           drawing = R.items[this.drawingPk];
-          drawing.addPath(this);
+          drawing.addChild(this);
         }
         this.selectionHighlight = null;
         if (points != null) {

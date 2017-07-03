@@ -35,7 +35,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 				hwaccel: false
 				position: 'relative'
 			target = document.getElementById('spinner')
-			@spinner = new Spinner(opts).spin(target)
+			# @spinner = new Spinner(opts).spin(target)
 			return
 
 		showDrawingBar: ()->
@@ -48,7 +48,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 
 		showLoadingBarCallback: ()=>
 			$("#loadingBar").show()
-			@spinner.spin(document.getElementById('loadingBar'))
+			# @spinner.spin(document.getElementById('loadingBar'))
 			return
 
 		showLoadingBar: (timeout)=>
@@ -61,7 +61,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 		hideLoadingBar: ()=>
 			clearTimeout(@showLoadingBarTimeoutID)
 			$("#loadingBar").hide()
-			@spinner.stop()
+			# @spinner.stop()
 			return
 
 		# @return [Boolean] true if the area was already loaded, false otherwise
@@ -294,7 +294,8 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 
 		loadModuleAndCreatePath: (args)->
 			@pathsToCreate[args.pk] = true
-			ModuleLoader.load(args.path.object_type, ()=>@moduleLoaded(args))
+			ModuleLoader.load(args.path.object_type, ()=> @moduleLoaded(args))
+			# ModuleLoader.load(args.path.object_type, ()=> setTimeout((()=> @moduleLoaded(args)), 0))
 			return
 
 		createPath: (args)->
@@ -376,7 +377,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 							@loadModuleAndCreatePath(args)
 
 					when 'AreaToUpdate'
-						R.rasterizer.addAreaToUpdate(Utils.CS.rectangleFromBox(item))
+						R.rasterizer.addAreaToUpdate(Utils.CS.rectangleFromBox(item).expand(5)) # expand because of stroke path
 
 						# areaToUpdate = new P.Path.Rectangle(Utils.CS.rectangleFromBox(item))
 						# areaToUpdate.fillColor = 'rgba(255,50,50,0.25)'

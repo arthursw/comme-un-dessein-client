@@ -28,12 +28,16 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 		constructor: (@rectangle, @data=null, @pk=null, @owner=null, @date, @title, @description, @status) ->
 			super(@data, @pk)
 
+			@drawing = new P.Group()
+
+			@group.addChild(@drawing)
+
 			@votes = [] # { positive: boolean, author: string, authorPk: pk }
 
 			for pk of R.paths
 				path = R.paths[pk]
 				if path.drawingPk? == @pk
-					@addPath(path)
+					@addChild(path)
 
 			itemListJ = null
 			switch @status
@@ -106,8 +110,11 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			@select()
 			return
 
-		addPath: (path)->
-			@group.addChild(path.group)
+		addChild: (path)->
+			@drawing.addChild(path.group)
+			@drawn = false
+			if @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
+				@replaceDrawing()
 			return
 
 		# @param name [String] the name of the value to change
@@ -288,6 +295,18 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 				@highlightRectangle.strokeColor = color
 				@highlightRectangle.dashArray = []
 			return
-	
+
+		# disable rasterize if no children
+		rasterize: ()->	
+			if @drawing.children.length == 0 then return
+
+			# make sure children are drawn BEFORE this, otherwise this can be rasterized before children are drawn, see Rasterizer.drawItems()
+			
+			for child in @drawing.children
+				child.controller.draw?()
+
+			super()
+			return
+
 	Item.Drawing = Drawing
 	return Drawing

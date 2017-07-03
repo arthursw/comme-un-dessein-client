@@ -269,7 +269,7 @@
       };
 
       Item.prototype.getDrawingBounds = function() {
-        return this.rectangle.expand(this.data.strokeWidth);
+        return this.rectangle.expand(this.data.strokeWidth ? this.data.strokeWidth : 10);
       };
 
       Item.prototype.highlight = function() {
@@ -342,6 +342,7 @@
         }
         R.rasterizer.selectItem(this);
         this.zindex = this.group.index;
+        this.parentBeforeSelection = this.group.parent;
         R.view.selectionLayer.addChild(this.group);
         return true;
       };
@@ -361,11 +362,7 @@
         }
         if (this.group != null) {
           R.rasterizer.deselectItem(this);
-          if (!this.lock) {
-            this.group = R.view.mainLayer.insertChild(this.zindex, this.group);
-          } else {
-            this.group = this.lock.group.insertChild(this.zindex, this.group);
-          }
+          this.parentBeforeSelection.insertChild(this.zindex, this.group);
         }
         return true;
       };
@@ -469,22 +466,18 @@
       };
 
       Item.prototype.rasterize = function() {
-        console.log('rasterize: ' + this.constructor.label);
-        console.log('@group.parent: ', this.group.parent);
-        console.log('@raster', this.raster);
-        console.log('@drawing', this.drawing);
+        if (this.drawingPk != null) {
+          return;
+        }
         if ((this.raster != null) || (this.drawing == null)) {
           return;
         }
-        console.log('R.rasterizer.rasterizeItems: ' + R.rasterizer.rasterizeItems);
         if (!R.rasterizer.rasterizeItems) {
           return;
         }
-        console.log('@drawing.bounds.area == 0: ' + this.drawing.bounds.area === 0);
         if (this.drawing.bounds.area === 0) {
           return;
         }
-        console.log('rasterize.');
         this.raster = this.drawing.rasterize();
         this.group.addChild(this.raster);
         this.raster.sendToBack();

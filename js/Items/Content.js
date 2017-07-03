@@ -31,7 +31,6 @@
         }
         this.rotation = this.data.rotation || 0;
         $("#RItems .mCustomScrollbar").mCustomScrollbar("scrollTo", "bottom");
-        this.updateZindex();
         return;
       }
 

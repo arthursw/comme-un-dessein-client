@@ -39,11 +39,13 @@
         this.saveCallback = bind(this.saveCallback, this);
         this.onLiClick = bind(this.onLiClick, this);
         Drawing.__super__.constructor.call(this, this.data, this.pk);
+        this.drawing = new P.Group();
+        this.group.addChild(this.drawing);
         this.votes = [];
         for (pk in R.paths) {
           path = R.paths[pk];
           if ((path.drawingPk != null) === this.pk) {
-            this.addPath(path);
+            this.addChild(path);
           }
         }
         itemListJ = null;
@@ -102,8 +104,12 @@
         this.select();
       };
 
-      Drawing.prototype.addPath = function(path) {
-        this.group.addChild(path.group);
+      Drawing.prototype.addChild = function(path) {
+        this.drawing.addChild(path.group);
+        this.drawn = false;
+        if ((this.raster != null) && this.raster.parent !== null) {
+          this.replaceDrawing();
+        }
       };
 
       Drawing.prototype.setParameter = function(name, value, updateGUI, update) {
@@ -357,6 +363,21 @@
           this.highlightRectangle.strokeColor = color;
           this.highlightRectangle.dashArray = [];
         }
+      };
+
+      Drawing.prototype.rasterize = function() {
+        var base, child, i, len, ref;
+        if (this.drawing.children.length === 0) {
+          return;
+        }
+        ref = this.drawing.children;
+        for (i = 0, len = ref.length; i < len; i++) {
+          child = ref[i];
+          if (typeof (base = child.controller).draw === "function") {
+            base.draw();
+          }
+        }
+        Drawing.__super__.rasterize.call(this);
       };
 
       return Drawing;

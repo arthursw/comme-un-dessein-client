@@ -167,7 +167,10 @@
         var sortedItems;
         sortedItems = [];
         this.addChildren(R.view.mainLayer, sortedItems);
-        this.addChildren(R.view.lockLayer, sortedItems);
+        this.addChildren(R.view.pendingLayer, sortedItems);
+        this.addChildren(R.view.drawnLayer, sortedItems);
+        this.addChildren(R.view.drawingLayer, sortedItems);
+        this.addChildren(R.view.rejectedLayer, sortedItems);
         return sortedItems;
       };
 
