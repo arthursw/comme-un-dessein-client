@@ -39,7 +39,7 @@ define [ 'Items/Item' ], (Item) ->
 			# 	return
 			# @liJ.rItem = @
 			# itemListJ.prepend(@liJ)
-			$("#RItems .mCustomScrollbar").mCustomScrollbar("scrollTo", "bottom")
+			# $("#RItems .mCustomScrollbar").mCustomScrollbar("scrollTo", "bottom")
 
 			# @updateZindex()
 
@@ -49,6 +49,40 @@ define [ 'Items/Item' ], (Item) ->
 			data = super()
 			data.lock = @lock?.getPk()
 			return data
+
+		getListItem: ()->
+			return R.view.draftListJ
+
+		addToListItem: (@itemListJ)->
+
+			title = '' + @title + ' by ' + @owner
+			@liJ = $("<li>")
+			@liJ.html(title)
+			@liJ.attr("data-pk", @pk)
+			@liJ.click(@onLiClick)
+			@liJ.mouseover (event)=>
+				@highlight()
+				return
+			@liJ.mouseout (event)=>
+				@unhighlight()
+				return
+			@liJ.rItem = @
+
+			@itemListJ?.find('.rPath-list').prepend(@liJ)
+
+			nItemsJ = @itemListJ?.find(".n-items")
+			
+			if nItemsJ? and nItemsJ.length>0
+				nItemsJ.html(@itemListJ.find('.rPath-list').children().length)
+
+			return
+
+		removeFromListItem: ()->
+			@liJ.remove()
+			nItemsJ = @itemListJ?.find(".n-items")
+			if nItemsJ? and nItemsJ.length>0
+				nItemsJ.html(@itemListJ.find('.rPath-list').children().length)
+			return
 
 		onLiClick: (event)=>
 			if not event.shiftKey

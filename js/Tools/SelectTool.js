@@ -4,7 +4,7 @@
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['Tools/Tool', 'Items/Lock', 'Commands/Command', 'View/SelectionRectangle'], function(Tool, Lock, Command, SelectionRectangle) {
+  define(['Tools/Tool', 'Items/Lock', 'Items/Drawing', 'Commands/Command', 'View/SelectionRectangle'], function(Tool, Lock, Drawing, Command, SelectionRectangle) {
     var SelectTool;
     SelectTool = (function(superClass) {
       extend(SelectTool, superClass);
@@ -154,8 +154,10 @@
         for (name in ref) {
           item = ref[name];
           if (item.getBounds().intersects(rectangle)) {
-            if (Lock.prototype.isPrototypeOf(item)) {
-              locksToSelect.push(item);
+            if (Drawing.prototype.isPrototypeOf(item)) {
+              itemsToSelect.length = 0;
+              itemsToSelect.push(item);
+              return;
             } else {
               itemsToSelect.push(item);
             }
@@ -199,10 +201,6 @@
           itemsToSelect = locksToSelect;
         }
         if (itemsToSelect.length > 0) {
-          if (!this.itemsAreSiblings(itemsToSelect)) {
-            this.removeLocksChildren(itemsToSelect, locksToSelect);
-            itemsToSelect = itemsToSelect.concat(locksToSelect);
-          }
           if (rectangle.area === 0) {
             itemsToSelect = [itemsToSelect[0]];
           }

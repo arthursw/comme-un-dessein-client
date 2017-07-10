@@ -148,6 +148,9 @@
 
       TileRasterizer.addChildren = function(parent, sortedItems) {
         var i, item, len, ref;
+        if (!parent.visible) {
+          return;
+        }
         if (parent.children == null) {
           return;
         }
@@ -509,14 +512,16 @@
       };
 
       TileRasterizer.prototype.restoreView = function() {
-        var ref;
+        var ref, ref1;
         if ((ref = this.rasterLayer) != null) {
           ref.visible = true;
         }
         P.view.onFrame = this.viewOnFrame;
         R.view.carLayer.visible = true;
         R.view.selectionLayer.visible = true;
-        R.grid.visible = true;
+        if ((ref1 = R.grid) != null) {
+          ref1.visible = true;
+        }
       };
 
       TileRasterizer.prototype.rasterizeCallback = function(step) {
@@ -574,6 +579,10 @@
         this.stopLoading();
         R.stopTimer('Time to rasterize path: ');
         Utils.logElapsedTime();
+        if (typeof this.postRasterizationCallback === "function") {
+          this.postRasterizationCallback();
+        }
+        this.postRasterizationCallback = null;
       };
 
       TileRasterizer.prototype.rasterize = function(items, excludeItems) {
@@ -655,7 +664,7 @@
       };
 
       TileRasterizer.prototype.drawItems = function(showItems) {
-        var item, pk, ref;
+        var i, item, len, sortedItems;
         if (showItems == null) {
           showItems = false;
         }
@@ -665,9 +674,9 @@
         if (this.itemsAreDrawn) {
           return;
         }
-        ref = R.items;
-        for (pk in ref) {
-          item = ref[pk];
+        sortedItems = this.constructor.getSortedItems();
+        for (i = 0, len = sortedItems.length; i < len; i++) {
+          item = sortedItems[i];
           if (item.drawing == null) {
             if (typeof item.draw === "function") {
               item.draw();
@@ -703,6 +712,15 @@
 
       TileRasterizer.prototype.enableRasterization = function() {
         this.rasterizationDisabled = false;
+        this.rasterizeView();
+      };
+
+      TileRasterizer.prototype.refresh = function(callback) {
+        var sortedItems;
+        this.clearRasters();
+        sortedItems = this.constructor.getSortedItems();
+        this.rasterize(sortedItems);
+        this.postRasterizationCallback = callback;
         this.rasterizeView();
       };
 

@@ -81,22 +81,51 @@
         return;
       }
 
-      View.prototype.createLayerListItem = function(title, layer) {
-        var itemListsJ, titleJ;
-        itemListsJ = R.templatesJ.find(".layer").clone();
-        titleJ = itemListsJ.find(".title");
+      View.prototype.createLayerListItem = function(title, layer, noArrow) {
+        var itemListJ, nItemsJ, showBtnJ, titleJ;
+        if (noArrow == null) {
+          noArrow = false;
+        }
+        itemListJ = R.templatesJ.find(".layer").clone();
+        nItemsJ = itemListJ.find(".n-items");
+        nItemsJ.addClass(title.toLowerCase() + '-color');
+        titleJ = itemListJ.find(".title");
         titleJ.text(title);
+        if (noArrow) {
+          titleJ.addClass('no-arrow');
+        }
         titleJ.click((function(_this) {
           return function(event) {
-            itemListsJ.toggleClass('closed');
+            itemListJ.toggleClass('closed');
             if (!event.shiftKey) {
               R.tools.select.deselectAll();
             }
-            layer.visible = !layer.visible;
           };
         })(this));
-        R.sidebar.itemListsJ.prepend(itemListsJ);
-        return itemListsJ;
+        showBtnJ = itemListJ.find(".show-btn");
+        showBtnJ.mousedown((function(_this) {
+          return function(event) {
+            var eyeIconJ;
+            layer.visible = !layer.visible;
+            R.rasterizer.refresh(function() {
+              var p;
+              p = new P.Path();
+              R.view.selectionLayer.addChild(p);
+              p.remove();
+            });
+            eyeIconJ = itemListJ.find("span.eye");
+            if (layer.visible) {
+              eyeIconJ.removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open');
+            } else {
+              eyeIconJ.removeClass('glyphicon-eye-open').addClass('glyphicon-eye-close');
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            return -1;
+          };
+        })(this));
+        R.sidebar.itemListsJ.prepend(itemListJ);
+        return itemListJ;
       };
 
       View.prototype.createLayers = function() {
@@ -108,6 +137,7 @@
         this.drawingLayer.name = 'drawingLayer';
         this.drawnLayer = new P.Layer();
         this.drawnLayer.name = 'drawnLayer';
+        this.draftListJ = this.createLayerListItem('Draft', this.mainLayer);
         this.pendingListJ = this.createLayerListItem('Pending', this.pendingLayer);
         this.drawingListJ = this.createLayerListItem('Drawing', this.drawingLayer);
         this.drawnListJ = this.createLayerListItem('Drawn', this.drawnLayer);

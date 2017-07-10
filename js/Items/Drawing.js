@@ -25,7 +25,7 @@
       Drawing.parameters = Drawing.initializeParameters();
 
       function Drawing(rectangle1, data1, pk1, owner, date, title1, description, status) {
-        var itemListJ, path, pk, title;
+        var path, pk;
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
         this.pk = pk1 != null ? pk1 : null;
@@ -48,6 +48,13 @@
             this.addChild(path);
           }
         }
+        this.sortedPaths = [];
+        this.addToListItem(this.getListItem());
+        return;
+      }
+
+      Drawing.prototype.getListItem = function() {
+        var itemListJ;
         itemListJ = null;
         switch (this.status) {
           case 'pending':
@@ -69,6 +76,12 @@
           default:
             R.alertManager.alert("Error: drawing status is invalid.", "error");
         }
+        return itemListJ;
+      };
+
+      Drawing.prototype.addToListItem = function(itemListJ1) {
+        var nItemsJ, ref, ref1, title;
+        this.itemListJ = itemListJ1;
         title = '' + this.title + ' by ' + this.owner;
         this.liJ = $("<li>");
         this.liJ.html(title);
@@ -85,27 +98,37 @@
           };
         })(this));
         this.liJ.rItem = this;
-        if (itemListJ != null) {
-          itemListJ.find('.rPath-list').prepend(this.liJ);
+        if ((ref = this.itemListJ) != null) {
+          ref.find('.rPath-list').prepend(this.liJ);
         }
-        this.sortedPaths = [];
-        return;
-      }
+        nItemsJ = (ref1 = this.itemListJ) != null ? ref1.find(".n-items") : void 0;
+        if ((nItemsJ != null) && nItemsJ.length > 0) {
+          nItemsJ.html(this.itemListJ.find('.rPath-list').children().length);
+        }
+      };
+
+      Drawing.prototype.removeFromListItem = function() {
+        var nItemsJ, ref;
+        this.liJ.remove();
+        nItemsJ = (ref = this.itemListJ) != null ? ref.find(".n-items") : void 0;
+        if ((nItemsJ != null) && nItemsJ.length > 0) {
+          nItemsJ.html(this.itemListJ.find('.rPath-list').children().length);
+        }
+      };
 
       Drawing.prototype.onLiClick = function(event) {
         var bounds;
-        if (!event.shiftKey) {
-          R.tools.select.deselectAll();
-          bounds = this.getBounds();
-          if (!P.view.bounds.intersects(bounds)) {
-            R.view.moveTo(bounds.center, 1000);
-          }
+        R.tools.select.deselectAll();
+        bounds = this.getBounds();
+        if (!P.view.bounds.intersects(bounds)) {
+          R.view.moveTo(bounds.center, 1000);
         }
         this.select();
       };
 
       Drawing.prototype.addChild = function(path) {
         this.drawing.addChild(path.group);
+        path.updateStrokeColor();
         this.drawn = false;
         if ((this.raster != null) && this.raster.parent !== null) {
           this.replaceDrawing();
@@ -339,6 +362,7 @@
           this.removeItem(path);
         }
         Utils.Array.remove(R.drawings, this);
+        this.removeFromListItem();
         Drawing.__super__.remove.apply(this, arguments);
       };
 
@@ -379,6 +403,8 @@
         }
         Drawing.__super__.rasterize.call(this);
       };
+
+      Drawing.prototype.deleteCommand = function() {};
 
       return Drawing;
 

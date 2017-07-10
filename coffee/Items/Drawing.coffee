@@ -39,40 +39,11 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 				if path.drawingPk? == @pk
 					@addChild(path)
 
-			itemListJ = null
-			switch @status
-				when 'pending'
-					R.view.pendingLayer.addChild(@group)
-					itemListJ = R.view.pendingListJ
-				when 'drawing'
-					R.view.drawingLayer.addChild(@group)
-					itemListJ = R.view.drawingListJ
-				when 'drawn'
-					R.view.drawnLayer.addChild(@group)
-					itemListJ = R.view.drawnListJ
-				when 'rejected'
-					R.view.rejectedLayer.addChild(@group)
-					itemListJ = R.view.rejectedListJ
-				else
-					R.alertManager.alert "Error: drawing status is invalid.", "error"
-
-			title = '' + @title + ' by ' + @owner
-			@liJ = $("<li>")
-			@liJ.html(title)
-			@liJ.attr("data-pk", @pk)
-			@liJ.click(@onLiClick)
-			@liJ.mouseover (event)=>
-				@highlight()
-				return
-			@liJ.mouseout (event)=>
-				@unhighlight()
-				return
-			@liJ.rItem = @
-			itemListJ?.find('.rPath-list').prepend(@liJ)
-
 			# create special list to contains children paths
 			@sortedPaths = []
 
+			@addToListItem(@getListItem())
+			
 			# @itemListsJ = R.templatesJ.find(".layer").clone()
 			# pkString = '' + (@pk or @id)
 			# pkString = pkString.substring(pkString.length-3)
@@ -101,17 +72,70 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 			return
 
+		getListItem: ()->
+
+			itemListJ = null
+			switch @status
+				when 'pending'
+					R.view.pendingLayer.addChild(@group)
+					itemListJ = R.view.pendingListJ
+				when 'drawing'
+					R.view.drawingLayer.addChild(@group)
+					itemListJ = R.view.drawingListJ
+				when 'drawn'
+					R.view.drawnLayer.addChild(@group)
+					itemListJ = R.view.drawnListJ
+				when 'rejected'
+					R.view.rejectedLayer.addChild(@group)
+					itemListJ = R.view.rejectedListJ
+				else
+					R.alertManager.alert "Error: drawing status is invalid.", "error"
+
+			return itemListJ
+
+		addToListItem: (@itemListJ)->
+
+			title = '' + @title + ' by ' + @owner
+			@liJ = $("<li>")
+			@liJ.html(title)
+			@liJ.attr("data-pk", @pk)
+			@liJ.click(@onLiClick)
+			@liJ.mouseover (event)=>
+				@highlight()
+				return
+			@liJ.mouseout (event)=>
+				@unhighlight()
+				return
+			@liJ.rItem = @
+
+			@itemListJ?.find('.rPath-list').prepend(@liJ)
+
+			nItemsJ = @itemListJ?.find(".n-items")
+			
+			if nItemsJ? and nItemsJ.length>0
+				nItemsJ.html(@itemListJ.find('.rPath-list').children().length)
+
+			return
+
+		removeFromListItem: ()->
+			@liJ.remove()
+			nItemsJ = @itemListJ?.find(".n-items")
+			if nItemsJ? and nItemsJ.length>0
+				nItemsJ.html(@itemListJ.find('.rPath-list').children().length)
+			return
+
 		onLiClick: (event)=>
-			if not event.shiftKey
-				R.tools.select.deselectAll()
-				bounds = @getBounds()
-				if not P.view.bounds.intersects(bounds)
-					R.view.moveTo(bounds.center, 1000)
+			# if not event.shiftKey
+			R.tools.select.deselectAll()
+			bounds = @getBounds()
+			if not P.view.bounds.intersects(bounds)
+				R.view.moveTo(bounds.center, 1000)
 			@select()
 			return
 
 		addChild: (path)->
 			@drawing.addChild(path.group)
+			path.updateStrokeColor()
 			@drawn = false
 			if @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
 				@replaceDrawing()
@@ -272,6 +296,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			# @itemListsJ.remove()
 			# @itemListsJ = null
 			Utils.Array.remove(R.drawings, @)
+			@removeFromListItem()
 			super
 			return
 
@@ -306,6 +331,9 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 				child.controller.draw?()
 
 			super()
+			return
+		
+		deleteCommand: ()->
 			return
 
 	Item.Drawing = Drawing

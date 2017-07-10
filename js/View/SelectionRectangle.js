@@ -4,7 +4,7 @@
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Divs/Div', 'Commands/Command'], function(Tool, Item, Content, Div, Command) {
+  define(['Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Drawing', 'Items/Divs/Div', 'Commands/Command'], function(Tool, Item, Content, Drawing, Div, Command) {
     var ScreenshotRectangle, SelectionRectangle, SelectionRotationRectangle;
     SelectionRectangle = (function() {
       SelectionRectangle.indexToName = {
@@ -37,7 +37,7 @@
         switch (name) {
           case 'left':
           case 'right':
-            return point.x;
+            return point.xx;
           case 'top':
           case 'bottom':
             return point.y;
@@ -71,6 +71,9 @@
         ref = R.selectedItems;
         for (i = 0, len = ref.length; i < len; i++) {
           item = ref[i];
+          if (Drawing.prototype.isPrototypeOf(item)) {
+            return new SelectionRectangle(null, true);
+          }
           if (!Content.prototype.isPrototypeOf(item)) {
             return new SelectionRectangle();
           }
@@ -100,8 +103,9 @@
         }
       };
 
-      function SelectionRectangle(rectangle1) {
+      function SelectionRectangle(rectangle1, simple) {
         this.rectangle = rectangle1;
+        this.simple = simple != null ? simple : false;
         this.items = this.rectangle == null ? R.selectedItems : [];
         if (this.rectangle == null) {
           this.rectangle = this.getBoundingRectangle(this.items);
@@ -118,7 +122,9 @@
         this.path.strokeWidth = 1;
         this.path.selected = true;
         this.path.controller = this;
-        this.addHandles(this.rectangle);
+        if (!this.simple) {
+          this.addHandles(this.rectangle);
+        }
         this.update();
         this.group.addChild(this.path);
         R.view.selectionLayer.addChild(this.group);
@@ -185,6 +191,9 @@
 
       SelectionRectangle.prototype.hitTest = function(event) {
         var hitResult;
+        if (this.simple) {
+          return false;
+        }
         hitResult = this.path.hitTest(event.point, this.constructor.hitOptions);
         if (hitResult == null) {
           return false;
@@ -205,7 +214,9 @@
           return;
         }
         this.rectangle = this.getBoundingRectangle(this.items);
-        this.updatePath();
+        if (!this.simple) {
+          this.updatePath();
+        }
         Item.updatePositionAndSizeControllers(this.rectangle.point, new paper.Point(this.rectangle.size));
         Div.showDivs();
       };

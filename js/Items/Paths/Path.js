@@ -23,6 +23,14 @@
 
       Path.constructor.secureDistance = 2;
 
+      Path.colorMap = {
+        draft: '#00C2E0',
+        pending: '#0079BF',
+        drawing: '#61BD4F',
+        drawn: '#4d4d4d',
+        rejected: '#EB5A46'
+      };
+
       Path.initializeParameters = function() {
         var parameters;
         parameters = Path.__super__.constructor.initializeParameters.call(this);
@@ -87,7 +95,7 @@
 
       Path.prototype.getDrawing = function() {
         if (this.drawingPk != null) {
-          return R.items[this.drawingPK];
+          return R.items[this.drawingPk];
         } else {
           return null;
         }
@@ -237,7 +245,7 @@
       };
 
       Path.prototype.applyStylesToPath = function(path) {
-        path.strokeColor = 'black';
+        path.strokeColor = this.getStrokeColor();
         path.strokeWidth = 2;
         path.fillColor = null;
         if (this.data.shadowOffsetY != null) {
@@ -284,8 +292,23 @@
         this.controlPath.visible = false;
       };
 
+      Path.prototype.getStrokeColor = function() {
+        var color, d;
+        d = this.getDrawing();
+        color = new P.Color(d != null ? this.constructor.colorMap[d.status] : this.constructor.colorMap.draft);
+        color.setBrightness(this.owner === R.me ? 1 : 0.8);
+        return color;
+      };
+
+      Path.prototype.updateStrokeColor = function() {
+        var ref;
+        if ((ref = this.drawing) != null) {
+          ref.strokeColor = this.getStrokeColor();
+        }
+      };
+
       Path.prototype.initializeDrawing = function(createCanvas) {
-        var bounds, canvas, color, d, position, ref, ref1, ref2;
+        var bounds, canvas, color, position, ref, ref1, ref2;
         if (createCanvas == null) {
           createCanvas = false;
         }
@@ -294,26 +317,7 @@
         }
         this.raster = null;
         this.controlPath.strokeWidth = 10;
-        d = this.getDrawing();
-        color = 'black';
-        if (d != null) {
-          switch (d.status) {
-            case 'pending':
-              color = 'blue';
-              break;
-            case 'drawing':
-              color = 'green';
-              break;
-            case 'drawn':
-              color = 'black';
-              break;
-            case 'rejected':
-              color = 'red';
-              break;
-            default:
-              color = 'pink';
-          }
-        }
+        color = this.getStrokeColor();
         if ((ref1 = this.drawing) != null) {
           ref1.remove();
         }
@@ -344,7 +348,7 @@
           this.canvasRaster = new P.Raster(canvas, position);
           this.drawing.addChild(this.canvasRaster);
           this.context = this.canvasRaster.canvas.getContext("2d");
-          this.context.strokeStyle = 'black';
+          this.context.strokeStyle = color;
           this.context.fillStyle = null;
           this.context.lineWidth = 2;
         }

@@ -52,6 +52,14 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			name: 'crosshair'
 		@constructor.secureDistance = 2 					# the points of the flattened path must not be 5 pixels away from the recorded points
 
+		@colorMap = {
+			draft: '#00C2E0',
+			pending: '#0079BF',
+			drawing: '#61BD4F',
+			drawn: '#4d4d4d',
+			rejected: '#EB5A46'
+		}
+
 		# parameters are defined as in {RTool}
 		# The following parameters are reserved for commeUnDessein: id, polygonMode, points, planet, step, smooth, speeds, showSpeeds
 		@initializeParameters: ()->
@@ -132,7 +140,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			return
 
 		getDrawing: ()->
-			return if @drawingPk? then R.items[@drawingPK] else null
+			return if @drawingPk? then R.items[@drawingPk] else null
 
 		getDuplicateData: ()->
 			data = super()
@@ -306,7 +314,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			return
 
 		applyStylesToPath: (path)->
-			path.strokeColor = 'black' # @data.strokeColor
+			path.strokeColor = @getStrokeColor() # @data.strokeColor
 			path.strokeWidth = 2 # @data.strokeWidth
 			path.fillColor = null # @data.fillColor
 			if @data.shadowOffsetY?
@@ -347,6 +355,16 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			@controlPath.visible = false
 			return
 
+		getStrokeColor: ()->
+			d = @getDrawing()
+			color = new P.Color(if d? then @constructor.colorMap[d.status] else @constructor.colorMap.draft)
+			color.setBrightness(if @owner == R.me then 1 else 0.8)
+			return color
+
+		updateStrokeColor: ()->
+			@drawing?.strokeColor = @getStrokeColor()
+			return
+
 		# initialize the drawing group before drawing:
 		# - create drawing group and initialize it with @data (add it to group)
 		# - optionally create a child canvas to draw on it (drawn in a raster, add it to group)
@@ -365,21 +383,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 
 			@controlPath.strokeWidth = 10
 
-			d = @getDrawing()
-			color = 'black'
-
-			if d?
-				switch d.status
-					when 'pending'
-						color = 'blue'
-					when 'drawing'
-						color = 'green'
-					when 'drawn'
-						color = 'black'
-					when 'rejected'
-						color = 'red'
-					else
-						color = 'pink'
+			color = @getStrokeColor()
 
 			# create drawing group and initialize it with @data
 			@drawing?.remove()
@@ -414,7 +418,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 				@canvasRaster = new P.Raster(canvas, position)
 				@drawing.addChild(@canvasRaster)
 				@context = @canvasRaster.canvas.getContext("2d")
-				@context.strokeStyle = 'black' # @data.strokeColor
+				@context.strokeStyle = color # @data.strokeColor
 				@context.fillStyle = null # @data.fillColor
 				@context.lineWidth = 2 # @data.strokeWidth
 			return

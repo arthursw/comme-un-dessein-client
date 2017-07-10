@@ -127,6 +127,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 		@loadingBarJ = null
 
 		@addChildren: (parent, sortedItems)->
+			if not parent.visible then return
 			if not parent.children? then return
 			for item in parent.children
 				if item.controller? and P.Group.prototype.isPrototypeOf(item)
@@ -424,7 +425,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			P.view.onFrame = @viewOnFrame
 			R.view.carLayer.visible = true
 			R.view.selectionLayer.visible = true
-			R.grid.visible = true
+			R.grid?.visible = true
 			return
 
 		rasterizeCallback: (step)=>
@@ -476,6 +477,10 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 
 			R.stopTimer('Time to rasterize path: ')
 			Utils.logElapsedTime()
+
+			@postRasterizationCallback?()
+			@postRasterizationCallback = null
+
 			return
 
 		rasterize: (items, excludeItems)->
@@ -551,7 +556,9 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 
 			if @itemsAreDrawn then return
 
-			for pk, item of R.items
+			sortedItems = @constructor.getSortedItems()
+			
+			for item in sortedItems
 				if not item.drawing? then item.draw?()
 				if @rasterizeItems
 					item.rasterize?()
@@ -577,6 +584,14 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 
 		enableRasterization: ()->
 			@rasterizationDisabled = false
+			@rasterizeView()
+			return
+
+		refresh: (callback)->
+			@clearRasters()
+			sortedItems = @constructor.getSortedItems()
+			@rasterize(sortedItems)
+			@postRasterizationCallback = callback
 			@rasterizeView()
 			return
 

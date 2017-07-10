@@ -30,7 +30,6 @@
           this.date = Date.now();
         }
         this.rotation = this.data.rotation || 0;
-        $("#RItems .mCustomScrollbar").mCustomScrollbar("scrollTo", "bottom");
         return;
       }
 
@@ -39,6 +38,47 @@
         data = Content.__super__.getDuplicateData.call(this);
         data.lock = (ref = this.lock) != null ? ref.getPk() : void 0;
         return data;
+      };
+
+      Content.prototype.getListItem = function() {
+        return R.view.draftListJ;
+      };
+
+      Content.prototype.addToListItem = function(itemListJ1) {
+        var nItemsJ, ref, ref1, title;
+        this.itemListJ = itemListJ1;
+        title = '' + this.title + ' by ' + this.owner;
+        this.liJ = $("<li>");
+        this.liJ.html(title);
+        this.liJ.attr("data-pk", this.pk);
+        this.liJ.click(this.onLiClick);
+        this.liJ.mouseover((function(_this) {
+          return function(event) {
+            _this.highlight();
+          };
+        })(this));
+        this.liJ.mouseout((function(_this) {
+          return function(event) {
+            _this.unhighlight();
+          };
+        })(this));
+        this.liJ.rItem = this;
+        if ((ref = this.itemListJ) != null) {
+          ref.find('.rPath-list').prepend(this.liJ);
+        }
+        nItemsJ = (ref1 = this.itemListJ) != null ? ref1.find(".n-items") : void 0;
+        if ((nItemsJ != null) && nItemsJ.length > 0) {
+          nItemsJ.html(this.itemListJ.find('.rPath-list').children().length);
+        }
+      };
+
+      Content.prototype.removeFromListItem = function() {
+        var nItemsJ, ref;
+        this.liJ.remove();
+        nItemsJ = (ref = this.itemListJ) != null ? ref.find(".n-items") : void 0;
+        if ((nItemsJ != null) && nItemsJ.length > 0) {
+          nItemsJ.html(this.itemListJ.find('.rPath-list').children().length);
+        }
       };
 
       Content.prototype.onLiClick = function(event) {

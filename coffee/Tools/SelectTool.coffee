@@ -1,4 +1,4 @@
-define [ 'Tools/Tool', 'Items/Lock', 'Commands/Command', 'View/SelectionRectangle' ], (Tool, Lock, Command, SelectionRectangle) ->
+define [ 'Tools/Tool', 'Items/Lock', 'Items/Drawing', 'Commands/Command', 'View/SelectionRectangle' ], (Tool, Lock, Drawing, Command, SelectionRectangle) ->
 
 	# Enables to select RItems
 	class SelectTool extends Tool
@@ -111,8 +111,10 @@ define [ 'Tools/Tool', 'Items/Lock', 'Commands/Command', 'View/SelectionRectangl
 			# Add all items which have bounds intersecting with the selection rectangle (1st version)
 			for name, item of R.items
 				if item.getBounds().intersects(rectangle)
-					if Lock.prototype.isPrototypeOf(item)
-						locksToSelect.push(item)
+					if Drawing.prototype.isPrototypeOf(item)
+						itemsToSelect.length = 0
+						itemsToSelect.push(item)
+						return
 					else
 						itemsToSelect.push(item)
 			return
@@ -147,12 +149,12 @@ define [ 'Tools/Tool', 'Items/Lock', 'Commands/Command', 'View/SelectionRectangl
 
 			if itemsToSelect.length > 0
 
-				# if items have different parents, remove children from itemsToSelect and add locks
-				if not @itemsAreSiblings(itemsToSelect)
-					@removeLocksChildren(itemsToSelect, locksToSelect)
+				# # if items have different parents, remove children from itemsToSelect and add locks
+				# if not @itemsAreSiblings(itemsToSelect)
+				# 	@removeLocksChildren(itemsToSelect, locksToSelect)
 
-					# add locks to itemsToSelect
-					itemsToSelect = itemsToSelect.concat(locksToSelect)
+				# 	# add locks to itemsToSelect
+				# 	itemsToSelect = itemsToSelect.concat(locksToSelect)
 
 				# if the user just clicked (not dragged a selection rectangle): just select the first item
 				if rectangle.area == 0 then itemsToSelect = [itemsToSelect[0]]

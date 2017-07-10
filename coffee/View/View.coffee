@@ -77,21 +77,48 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 
 			return
 
-		createLayerListItem: (title, layer)->
-			itemListsJ = R.templatesJ.find(".layer").clone()
+		createLayerListItem: (title, layer, noArrow=false)->
+			itemListJ = R.templatesJ.find(".layer").clone()
 
-			titleJ = itemListsJ.find(".title")
+			nItemsJ = itemListJ.find(".n-items")
+			nItemsJ.addClass(title.toLowerCase() + '-color')
+
+			titleJ = itemListJ.find(".title")
 			titleJ.text(title)
+			
+			if noArrow
+				titleJ.addClass('no-arrow')
 
 			titleJ.click (event)=>
-				itemListsJ.toggleClass('closed')
+				itemListJ.toggleClass('closed')
 				if not event.shiftKey
 					R.tools.select.deselectAll()
-				layer.visible = !layer.visible
 				return
 
-			R.sidebar.itemListsJ.prepend(itemListsJ)
-			return itemListsJ
+			showBtnJ = itemListJ.find(".show-btn")
+			
+			showBtnJ.mousedown (event)=>
+				layer.visible = !layer.visible
+
+				R.rasterizer.refresh ()->
+					p = new P.Path()
+					R.view.selectionLayer.addChild(p)
+					p.remove()
+					return
+
+				# setTimeout((()->R.tools.select.deselectAll()), 10)
+
+				eyeIconJ = itemListJ.find("span.eye")
+				if layer.visible
+					eyeIconJ.removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open')
+				else
+					eyeIconJ.removeClass('glyphicon-eye-open').addClass('glyphicon-eye-close')
+				event.preventDefault()
+				event.stopPropagation()
+				return -1
+
+			R.sidebar.itemListsJ.prepend(itemListJ)
+			return itemListJ
 
 		createLayers: ()->
 
@@ -104,6 +131,7 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 			@drawnLayer = new P.Layer()
 			@drawnLayer.name  = 'drawnLayer'
 
+			@draftListJ = @createLayerListItem('Draft', @mainLayer)
 			@pendingListJ = @createLayerListItem('Pending', @pendingLayer)
 			@drawingListJ = @createLayerListItem('Drawing', @drawingLayer)
 			@drawnListJ = @createLayerListItem('Drawn', @drawnLayer)

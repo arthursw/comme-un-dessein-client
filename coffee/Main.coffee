@@ -282,7 +282,10 @@ define [
 		return
 
 	R.fsi = ()-> return R.selectedItems?[0]
-	R.fi = ()-> return R.items?[0]
+	R.fi = ()-> 
+		if not R.items? then return null
+		for itemPk of R.items
+			return R.items[itemPk]
 
 	# R.showCodeEditor = (fileNode)->
 	# 	if not R.codeEditor?

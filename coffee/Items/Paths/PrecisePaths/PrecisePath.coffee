@@ -112,6 +112,11 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 			if @constructor.polygonMode then @data.polygonMode = R.polygonMode
 			@rotation = @data.rotation = 0
 			# @data.showSelectionRectangle = true
+
+			if not @drawingPk?
+				@title = @pk
+				@addToListItem(@getListItem())
+
 			return
 
 		setControlPath: (points, planet)->
@@ -976,8 +981,11 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 
 		# overload {RPath#remove}, but in addition: remove the selected point highlight and the canvas raster
 		remove: ()->
+			console.log("Remove precise path")
 			@canvasRaster?.remove()
 			@canvasRaster = null
+			if @liJ?
+				@removeFromListItem()
 			super()
 			return
 

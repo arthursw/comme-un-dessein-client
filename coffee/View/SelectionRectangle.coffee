@@ -1,4 +1,4 @@
-define [ 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Divs/Div', 'Commands/Command' ], (Tool, Item, Content, Div, Command) ->
+define [ 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Drawing', 'Items/Divs/Div', 'Commands/Command' ], (Tool, Item, Content, Drawing, Div, Command) ->
 
 	class SelectionRectangle
 
@@ -28,7 +28,7 @@ define [ 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Divs/Div', 'Command
 		@valueFromName: (point, name)->
 			switch name
 				when 'left', 'right'
-					return point.x
+					return point.xx
 				when 'top', 'bottom'
 					return point.y
 				else
@@ -52,6 +52,8 @@ define [ 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Divs/Div', 'Command
 
 		@create: ()->
 			for item in R.selectedItems
+				if Drawing.prototype.isPrototypeOf(item)
+					return new SelectionRectangle(null, true)
 				if not Content.prototype.isPrototypeOf(item)
 					return new SelectionRectangle()
 			return new SelectionRotationRectangle()
@@ -77,7 +79,7 @@ define [ 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Divs/Div', 'Command
 				item.setRectangle(itemRectangle, update)
 			return
 
-		constructor: (@rectangle)->
+		constructor: (@rectangle, @simple=false)->
 			@items = if not @rectangle? then R.selectedItems else []
 			@rectangle ?= @getBoundingRectangle(@items)
 			@translation = new P.Point()
@@ -96,7 +98,9 @@ define [ 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Divs/Div', 'Command
 			@path.selected = true
 			@path.controller = @
 
-			@addHandles(@rectangle)
+			if not @simple
+				@addHandles(@rectangle)
+
 			@update()
 			@group.addChild(@path)
 
@@ -141,6 +145,7 @@ define [ 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Divs/Div', 'Command
 			return
 
 		hitTest: (event)->
+			if @simple then return false
 			hitResult = @path.hitTest(event.point, @constructor.hitOptions)
 			if not hitResult? then return false
 			@beginAction(hitResult, event)
@@ -157,7 +162,8 @@ define [ 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Divs/Div', 'Command
 				@remove()
 				return
 			@rectangle = @getBoundingRectangle(@items)
-			@updatePath()
+			if not @simple
+				@updatePath()
 			Item.updatePositionAndSizeControllers(@rectangle.point, new paper.Point(@rectangle.size))
 			Div.showDivs()
 			return

@@ -131,6 +131,10 @@
           this.data.polygonMode = R.polygonMode;
         }
         this.rotation = this.data.rotation = 0;
+        if (this.drawingPk == null) {
+          this.title = this.pk;
+          this.addToListItem(this.getListItem());
+        }
         return;
       }
 
@@ -944,10 +948,14 @@
 
       PrecisePath.prototype.remove = function() {
         var ref;
+        console.log("Remove precise path");
         if ((ref = this.canvasRaster) != null) {
           ref.remove();
         }
         this.canvasRaster = null;
+        if (this.liJ != null) {
+          this.removeFromListItem();
+        }
         PrecisePath.__super__.remove.call(this);
       };
 
