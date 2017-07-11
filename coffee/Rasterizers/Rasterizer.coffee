@@ -220,10 +220,10 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			switch @autoRasterization
 				when 'disabled'
 					@drawItemsAndHideRasters()
-					item.group.visible = true
+					item.group?.visible = true
 				when 'deferred'
 					@drawItemsAndHideRasters()
-					item.group.visible = true
+					item.group?.visible = true
 					@stopLoading()
 				when 'immediate'
 					Utils.callNextFrame(@rasterizeCallback, 'rasterize')
@@ -587,7 +587,13 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			@rasterizeView()
 			return
 
-		refresh: (callback)->
+		refresh: (callback=null)->
+			if not callback?
+				callback = ()->
+					p = new P.Path()
+					R.view.selectionLayer.addChild(p)
+					p.remove()
+					return
 			@clearRasters()
 			sortedItems = @constructor.getSortedItems()
 			@rasterize(sortedItems)

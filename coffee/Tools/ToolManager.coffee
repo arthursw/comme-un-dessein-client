@@ -3,6 +3,7 @@ define [
 	'Tools/MoveTool'
 	'Tools/SelectTool'
 	'Tools/PathTool'
+	'Tools/EraserTool'
 	'Tools/ItemTool'
 	'Tools/LockTool'
 	'Tools/MediaTool'
@@ -38,6 +39,7 @@ define [
 			R.tools.move = new R.Tools.Move()
 			# R.tools.screenshot = new R.Tools.Screenshot()
 			R.tools.select = new R.Tools.Select()
+			R.tools.eraser = new R.Tools.Eraser()
 			# R.tools.text = new R.Tools.Text()
 
 			defaultFavoriteTools = [] # [R.PrecisePath, R.ThicknessPath, R.Meander, R.GeometricLines, R.RectangleShape, R.EllipseShape, R.StarShape, R.SpiralShape]

@@ -258,16 +258,21 @@
       };
 
       TileRasterizer.prototype.selectItem = function(item) {
+        var ref, ref1;
         this.drawItems();
         this.rasterize(item, true);
         switch (this.autoRasterization) {
           case 'disabled':
             this.drawItemsAndHideRasters();
-            item.group.visible = true;
+            if ((ref = item.group) != null) {
+              ref.visible = true;
+            }
             break;
           case 'deferred':
             this.drawItemsAndHideRasters();
-            item.group.visible = true;
+            if ((ref1 = item.group) != null) {
+              ref1.visible = true;
+            }
             this.stopLoading();
             break;
           case 'immediate':
@@ -717,6 +722,17 @@
 
       TileRasterizer.prototype.refresh = function(callback) {
         var sortedItems;
+        if (callback == null) {
+          callback = null;
+        }
+        if (callback == null) {
+          callback = function() {
+            var p;
+            p = new P.Path();
+            R.view.selectionLayer.addChild(p);
+            p.remove();
+          };
+        }
         this.clearRasters();
         sortedItems = this.constructor.getSortedItems();
         this.rasterize(sortedItems);

@@ -743,6 +743,57 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 			@superUndo()
 			return
 
+	class CreateItemsCommand extends ItemsCommand
+
+		constructor: (items, name='Create items')->
+			super(name, items)
+			@superDo()
+			return
+
+		duplicateItems: ()->
+			for pk, itemResurector of @itemResurectors
+				item = itemResurector.constructor.create(itemResurector.data)
+				@items[itemResurector.data.pk] = item
+				R.commandManager.resurrectItem(itemResurector.data.pk, item)
+				item.select()
+			return
+
+		deleteItems: ()->
+			@itemResurectors = {}
+			pksToRemove = []
+			for pk, item of @items
+				@itemResurectors[pk] = data: item.getDuplicateData(), constructor: item.constructor
+				item.delete()
+				pksToRemove.push(pk)
+
+			for pk in pksToRemove
+				delete @items[pk]
+
+			return
+
+		do: ()->
+			@duplicateItems()
+			super()
+			return
+
+		undo: ()->
+			@deleteItems()
+			super()
+			return
+
+	class DeleteItemsCommand extends CreateItemsCommand
+		constructor: (items)-> super(items, 'Delete items')
+
+		do: ()->
+			@deleteItems()
+			@superDo()
+			return
+
+		undo: ()->
+			@duplicateItems()
+			@superUndo()
+			return
+
 	class DuplicateItemCommand extends CreateItemCommand
 		constructor: (item)->
 			@duplicateData = item.getDuplicateData()
@@ -933,6 +984,8 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 
 	Command.CreateItem = CreateItemCommand
 	Command.DeleteItem = DeleteItemCommand
+	Command.CreateItems = CreateItemsCommand
+	Command.DeleteItems = DeleteItemsCommand
 	Command.DuplicateItem = DuplicateItemCommand
 
 	Command.Select = SelectCommand

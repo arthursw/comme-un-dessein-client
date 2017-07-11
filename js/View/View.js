@@ -107,12 +107,7 @@
           return function(event) {
             var eyeIconJ;
             layer.visible = !layer.visible;
-            R.rasterizer.refresh(function() {
-              var p;
-              p = new P.Path();
-              R.view.selectionLayer.addChild(p);
-              p.remove();
-            });
+            R.rasterizer.refresh();
             eyeIconJ = itemListJ.find("span.eye");
             if (layer.visible) {
               eyeIconJ.removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open');

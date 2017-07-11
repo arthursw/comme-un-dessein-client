@@ -114,6 +114,18 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 				copy.save(false)
 				R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
 			return copy
+		
+		# @return [P.Point] the planet on which the path lies
+		@getPlanetFromPath: (path)->
+			return Utils.CS.projectToPlanet( path.segments[0].point )
+		
+		@pathOnPlanetFromPath: (path)->
+			points = []
+			planet = @getPlanetFromPath(path)
+			for segment in path.segments
+				p = Utils.CS.projectToPosOnPlanet(segment.point, planet)
+				points.push( Utils.CS.pointToArray(p) )
+			return points
 
 		# Create the RPath and initialize the drawing creation if a user is creating it, or draw if the path is being loaded
 		# When user creates a path, the path is given an identifier (@id); when the path is saved, the servers returns a primary key (@pk) and @id will not be used anymore
@@ -315,7 +327,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 
 		applyStylesToPath: (path)->
 			path.strokeColor = @getStrokeColor() # @data.strokeColor
-			path.strokeWidth = 2 # @data.strokeWidth
+			path.strokeWidth = 7 # @data.strokeWidth
 			path.fillColor = null # @data.fillColor
 			if @data.shadowOffsetY?
 				path.shadowOffset = new P.Point(@data.shadowOffsetX, @data.shadowOffsetY)
@@ -390,7 +402,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			@drawing = new P.Group()
 			@drawing.name = "drawing"
 			@drawing.strokeColor = color # @data.strokeColor
-			@drawing.strokeWidth = 2 # @data.strokeWidth
+			@drawing.strokeWidth = 7 # @data.strokeWidth
 			@drawing.fillColor = null # @data.fillColor
 			@drawing.insertBelow(@controlPath)
 			@drawing.controlPath = @controlPath

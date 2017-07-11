@@ -165,6 +165,12 @@ define [ 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Drawing', 'Items/Di
 			if not @simple
 				@updatePath()
 			Item.updatePositionAndSizeControllers(@rectangle.point, new paper.Point(@rectangle.size))
+			visible = true
+			for item in @items
+				if item instanceof R.Tools.Item.Item.PrecisePath
+					visible = false
+					break
+			@setVisibility(visible)
 			Div.showDivs()
 			return
 

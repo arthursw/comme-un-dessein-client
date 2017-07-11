@@ -105,7 +105,7 @@
           showSelectionRectangle: {
             type: 'checkbox',
             label: 'Selection box',
-            "default": true,
+            "default": false,
             onChange: R.tools.select.setSelectionRectangleVisibility
           }
         };
@@ -116,9 +116,38 @@
 
       PrecisePath.createTool(PrecisePath);
 
-      function PrecisePath(date, data, pk, points, lock, owner, drawingPk) {
+      PrecisePath.getPointsFromPath = function(path) {
+        var j, len, points, ref, segment;
+        points = [];
+        ref = path.segments;
+        for (j = 0, len = ref.length; j < len; j++) {
+          segment = ref[j];
+          points.push(Utils.CS.projectToPosOnPlanet(segment.point));
+          points.push(Utils.CS.pointToObj(segment.handleIn));
+          points.push(Utils.CS.pointToObj(segment.handleOut));
+          points.push(segment.rtype);
+        }
+        return points;
+      };
+
+      PrecisePath.getPointsAndPlanetFromPath = function(path) {
+        return {
+          planet: this.getPlanetFromPath(path),
+          points: this.getPointsFromPath(path)
+        };
+      };
+
+      PrecisePath.getDataFromPath = function(path) {
+        var data;
+        data = {};
+        data.planet = this.getPlanetFromPath(path);
+        data.points = this.getPointsFromPath(path);
+        return data;
+      };
+
+      function PrecisePath(date, data1, pk, points, lock, owner, drawingPk) {
         this.date = date != null ? date : null;
-        this.data = data != null ? data : null;
+        this.data = data1 != null ? data1 : null;
         this.pk = pk != null ? pk : null;
         if (points == null) {
           points = null;
@@ -264,7 +293,9 @@
         if (redrawing == null) {
           redrawing = true;
         }
-        this.updateDraw();
+        if (!redrawing) {
+          this.updateDraw();
+        }
       };
 
       PrecisePath.prototype.beginCreate = function(point, event) {
@@ -320,7 +351,7 @@
           return;
         }
         if (this.controlPath.segments.length >= 2) {
-          this.controlPath.simplify();
+          this.controlPath.simplify(10);
           ref = this.controlPath.segments;
           for (j = 0, len = ref.length; j < len; j++) {
             segment = ref[j];
@@ -962,6 +993,7 @@
       return PrecisePath;
 
     })(Path);
+    Item.PrecisePath = PrecisePath;
     return PrecisePath;
   });
 

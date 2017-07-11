@@ -208,6 +208,7 @@
       };
 
       SelectionRectangle.prototype.update = function() {
+        var i, item, len, ref, visible;
         this.items = R.selectedItems;
         if (this.items.length === 0) {
           this.remove();
@@ -218,6 +219,16 @@
           this.updatePath();
         }
         Item.updatePositionAndSizeControllers(this.rectangle.point, new paper.Point(this.rectangle.size));
+        visible = true;
+        ref = this.items;
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          if (item instanceof R.Tools.Item.Item.PrecisePath) {
+            visible = false;
+            break;
+          }
+        }
+        this.setVisibility(visible);
         Div.showDivs();
       };
 

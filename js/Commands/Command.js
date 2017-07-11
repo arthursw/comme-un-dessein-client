@@ -6,7 +6,7 @@
     slice = [].slice;
 
   define(['Utils/Utils', 'UI/Controllers/ControllerManager'], function(Utils, ControllerManager) {
-    var AddPointCommand, Command, CreateItemCommand, DeferredCommand, DeleteItemCommand, DeletePointCommand, DeselectCommand, DuplicateItemCommand, ItemCommand, ItemsCommand, ModifyControlPathCommand, ModifyPointCommand, ModifyPointTypeCommand, ModifySpeedCommand, ModifyTextCommand, MoveViewCommand, RotateCommand, ScaleCommand, SelectCommand, SelectionRectangleCommand, SetParameterCommand, TranslateCommand;
+    var AddPointCommand, Command, CreateItemCommand, CreateItemsCommand, DeferredCommand, DeleteItemCommand, DeleteItemsCommand, DeletePointCommand, DeselectCommand, DuplicateItemCommand, ItemCommand, ItemsCommand, ModifyControlPathCommand, ModifyPointCommand, ModifyPointTypeCommand, ModifySpeedCommand, ModifyTextCommand, MoveViewCommand, RotateCommand, ScaleCommand, SelectCommand, SelectionRectangleCommand, SetParameterCommand, TranslateCommand;
     Command = (function() {
       function Command(name) {
         this.click = bind(this.click, this);
@@ -833,6 +833,83 @@
       return DeleteItemCommand;
 
     })(CreateItemCommand);
+    CreateItemsCommand = (function(superClass) {
+      extend(CreateItemsCommand, superClass);
+
+      function CreateItemsCommand(items, name) {
+        if (name == null) {
+          name = 'Create items';
+        }
+        CreateItemsCommand.__super__.constructor.call(this, name, items);
+        this.superDo();
+        return;
+      }
+
+      CreateItemsCommand.prototype.duplicateItems = function() {
+        var item, itemResurector, pk, ref;
+        ref = this.itemResurectors;
+        for (pk in ref) {
+          itemResurector = ref[pk];
+          item = itemResurector.constructor.create(itemResurector.data);
+          this.items[itemResurector.data.pk] = item;
+          R.commandManager.resurrectItem(itemResurector.data.pk, item);
+          item.select();
+        }
+      };
+
+      CreateItemsCommand.prototype.deleteItems = function() {
+        var item, j, len, pk, pksToRemove, ref;
+        this.itemResurectors = {};
+        pksToRemove = [];
+        ref = this.items;
+        for (pk in ref) {
+          item = ref[pk];
+          this.itemResurectors[pk] = {
+            data: item.getDuplicateData(),
+            constructor: item.constructor
+          };
+          item["delete"]();
+          pksToRemove.push(pk);
+        }
+        for (j = 0, len = pksToRemove.length; j < len; j++) {
+          pk = pksToRemove[j];
+          delete this.items[pk];
+        }
+      };
+
+      CreateItemsCommand.prototype["do"] = function() {
+        this.duplicateItems();
+        CreateItemsCommand.__super__["do"].call(this);
+      };
+
+      CreateItemsCommand.prototype.undo = function() {
+        this.deleteItems();
+        CreateItemsCommand.__super__.undo.call(this);
+      };
+
+      return CreateItemsCommand;
+
+    })(ItemsCommand);
+    DeleteItemsCommand = (function(superClass) {
+      extend(DeleteItemsCommand, superClass);
+
+      function DeleteItemsCommand(items) {
+        DeleteItemsCommand.__super__.constructor.call(this, items, 'Delete items');
+      }
+
+      DeleteItemsCommand.prototype["do"] = function() {
+        this.deleteItems();
+        this.superDo();
+      };
+
+      DeleteItemsCommand.prototype.undo = function() {
+        this.duplicateItems();
+        this.superUndo();
+      };
+
+      return DeleteItemsCommand;
+
+    })(CreateItemsCommand);
     DuplicateItemCommand = (function(superClass) {
       extend(DuplicateItemCommand, superClass);
 
@@ -892,6 +969,8 @@
     Command.ModifyText = ModifyTextCommand;
     Command.CreateItem = CreateItemCommand;
     Command.DeleteItem = DeleteItemCommand;
+    Command.CreateItems = CreateItemsCommand;
+    Command.DeleteItems = DeleteItemsCommand;
     Command.DuplicateItem = DuplicateItemCommand;
     Command.Select = SelectCommand;
     Command.Deselect = DeselectCommand;

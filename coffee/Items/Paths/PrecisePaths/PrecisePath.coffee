@@ -98,13 +98,33 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 				showSelectionRectangle:
 					type: 'checkbox'
 					label: 'Selection box'
-					default: true
+					default: false
 					onChange: R.tools.select.setSelectionRectangleVisibility
 
 			return parameters
 
 		@parameters = @initializeParameters()
 		@createTool(@)
+
+		@getPointsFromPath: (path)->
+			points = []
+			for segment in path.segments
+				points.push(Utils.CS.projectToPosOnPlanet(segment.point))
+				points.push(Utils.CS.pointToObj(segment.handleIn))
+				points.push(Utils.CS.pointToObj(segment.handleOut))
+				points.push(segment.rtype)
+			return points
+
+		@getPointsAndPlanetFromPath: (path)->
+			return planet: @getPlanetFromPath(path), points: @getPointsFromPath(path)
+
+		# get data, usually to save the RPath (some information must be added to data)
+		# the control path is stored in @data.points and @data.planet
+		@getDataFromPath: (path)->
+			data = {}
+			data.planet = @getPlanetFromPath(path)
+			data.points = @getPointsFromPath(path)
+			return data
 
 		# overload {RPath#constructor}
 		constructor: (@date=null, @data=null, @pk=null, points=null, @lock=null, @owner=null, @drawingPk=null) ->
@@ -269,10 +289,14 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 		# default endDraw function, will be redefined by children PrecisePath
 		# @param redrawing [Boolean] (optional) whether the path is being redrawn or the user draws the path (the path is being loaded/updated or the user is drawing it with the mouse)
 		endDraw: (redrawing=false)->
+
+			# while @path.segments.length > @controlPath.segments.length
+				# @path.removeSegment(@path.segments.length-1)
 			return
 
 		checkUpdateDrawing: (segment, redrawing=true)->
-			@updateDraw()
+			if not redrawing
+				@updateDraw()
 			return
 
 		# continue drawing the path along the control path if necessary:
@@ -375,7 +399,7 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 
 			if @controlPath.segments.length>=2
 				# if @speeds? then @computeSpeed()
-				@controlPath.simplify()
+				@controlPath.simplify(10)
 				for segment in @controlPath.segments
 					if segment.handleIn.length>200
 						segment.handleIn = segment.handleIn.normalize().multiply(100)
@@ -989,4 +1013,5 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 			super()
 			return
 
+	Item.PrecisePath = PrecisePath
 	return PrecisePath

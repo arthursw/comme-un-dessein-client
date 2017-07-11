@@ -63,6 +63,23 @@
         return copy;
       };
 
+      Path.getPlanetFromPath = function(path) {
+        return Utils.CS.projectToPlanet(path.segments[0].point);
+      };
+
+      Path.pathOnPlanetFromPath = function(path) {
+        var i, len, p, planet, points, ref, segment;
+        points = [];
+        planet = this.getPlanetFromPath(path);
+        ref = path.segments;
+        for (i = 0, len = ref.length; i < len; i++) {
+          segment = ref[i];
+          p = Utils.CS.projectToPosOnPlanet(segment.point, planet);
+          points.push(Utils.CS.pointToArray(p));
+        }
+        return points;
+      };
+
       function Path(date, data1, pk1, points, lock, owner, drawingPk) {
         var drawing;
         this.date = date != null ? date : null;
@@ -246,7 +263,7 @@
 
       Path.prototype.applyStylesToPath = function(path) {
         path.strokeColor = this.getStrokeColor();
-        path.strokeWidth = 2;
+        path.strokeWidth = 7;
         path.fillColor = null;
         if (this.data.shadowOffsetY != null) {
           path.shadowOffset = new P.Point(this.data.shadowOffsetX, this.data.shadowOffsetY);
@@ -324,7 +341,7 @@
         this.drawing = new P.Group();
         this.drawing.name = "drawing";
         this.drawing.strokeColor = color;
-        this.drawing.strokeWidth = 2;
+        this.drawing.strokeWidth = 7;
         this.drawing.fillColor = null;
         this.drawing.insertBelow(this.controlPath);
         this.drawing.controlPath = this.controlPath;
