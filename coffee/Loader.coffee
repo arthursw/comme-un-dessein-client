@@ -80,7 +80,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 		# 	return false
 		unload: () ->
 			@loadedAreas = []
-			for own pk, item of R.items
+			for own id, item of R.items
 				item.remove()
 			R.items = {}
 			R.rasterizer.clearRasters()
@@ -110,7 +110,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 
 			# remove RItems which are not on within limit anymore AND in area which must be unloaded
 			# (do not remove items on an area which is not unloaded, otherwise they wont be reloaded if user comes back on it)
-			for own pk, item of R.items
+			for own id, item of R.items
 				if not item.getBounds().intersects(limit)
 					itemsOutsideLimit.push(item)
 
@@ -257,8 +257,8 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 
 		removeDeletedItems: (deletedItems)->
 			if not deletedItems? then return
-			for pk, deletedItemLastUpdate of deletedItems
-				R.items[pk]?.remove()
+			for id, deletedItemLastUpdate of deletedItems
+				R.items[id]?.remove()
 			return
 
 		mustLoadItem: (item)->
@@ -285,7 +285,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 
 		moduleLoaded: (args)->
 			@createPath(args)
-			delete @pathsToCreate[args.pk]
+			delete @pathsToCreate[args.id]
 			if Utils.isEmpty(@pathsToCreate)
 				@hideDrawingBar()
 				@hideLoadingBar()
@@ -293,13 +293,13 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 			return
 
 		loadModuleAndCreatePath: (args)->
-			@pathsToCreate[args.pk] = true
+			@pathsToCreate[args.id] = true
 			ModuleLoader.load(args.path.object_type, ()=> @moduleLoaded(args))
 			# ModuleLoader.load(args.path.object_type, ()=> setTimeout((()=> @moduleLoaded(args)), 0))
 			return
 
 		createPath: (args)->
-			path = new R.tools[args.path.object_type].Path(args.date, args.data, args.pk, args.points, args.lock, args.owner, args.drawing?.$oid)
+			path = new R.tools[args.path.object_type].Path(args.date, args.data, args.id, args.pk, args.points, args.lock, args.owner, args.drawing?.clientID)
 			path.lastUpdateDate = args.path.lastUpdate?.$date
 			return
 
@@ -307,6 +307,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 			for item in itemsToLoad
 
 				pk = item._id.$oid
+				id = item.clientID
 				date = item.date?.$date
 				data = if item.data? and item.data.length>0 then JSON.parse(item.data) else null
 				lock = if item.lock? then R.items[item.lock] else null
@@ -320,13 +321,13 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 						lock = null
 						switch box.object_type
 							when 'lock'
-								lock = new Item.Lock(Utils.CS.rectangleFromBox(box), data, box._id.$oid, box.owner, date, box.module?.$oid)
+								lock = new Item.Lock(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, box.module?.$oid)
 							when 'link'
-								lock = new Item.Link(Utils.CS.rectangleFromBox(box), data, box._id.$oid, box.owner, date, box.module?.$oid)
+								lock = new Item.Link(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, box.module?.$oid)
 							when 'website'
-								lock = new Item.Website(Utils.CS.rectangleFromBox(box), data, box._id.$oid, box.owner, date, box.module?.$oid)
+								lock = new Item.Website(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, box.module?.$oid)
 							when 'video-game'
-								lock = new Item.VideoGame(Utils.CS.rectangleFromBox(box), data, box._id.$oid, box.owner, date, box.module?.$oid)
+								lock = new Item.VideoGame(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, box.module?.$oid)
 
 						lock.lastUpdateDate = box.lastUpdate.$date
 
@@ -339,9 +340,9 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 
 						switch div.object_type
 							when 'text'
-								rdiv = new Item.Text(Utils.CS.rectangleFromBox(div), data, pk, date, lock)
+								rdiv = new Item.Text(Utils.CS.rectangleFromBox(div), data, id, pk, date, lock)
 							when 'media'
-								rdiv = new Item.Media(Utils.CS.rectangleFromBox(div), data, pk, date, lock)
+								rdiv = new Item.Media(Utils.CS.rectangleFromBox(div), data, id, pk, date, lock)
 
 						rdiv.lastUpdateDate = div.lastUpdate.$date
 
@@ -366,6 +367,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 							path: path
 							date: date
 							data: data
+							id: id
 							pk: pk
 							points: points
 							lock: lock
@@ -391,7 +393,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 						if item.box.coordinates[0].length<5
 							console.log "Error: drawing has less than 5 points"
 
-						drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, item._id.$oid, item.owner, date, item.title, item.description, item.status)
+						drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, id, item._id.$oid, item.owner, date, item.title, item.description, item.status)
 					else
 						continue
 			return
@@ -552,7 +554,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 
 		createItemsDates: ()->
 			itemsDates = {}
-			for pk, item of R.items
+			for id, item of R.items
 				# if bounds.contains(item.getBounds())
 				# type = ''
 				# if Lock.prototype.isPrototypeOf(item)
@@ -561,8 +563,8 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 				# 	type = 'Div'
 				# else if Path.prototype.isPrototypeOf(item)
 				# 	type = 'Path'
-				itemsDates[pk] = item.lastUpdateDate
-				# itemsDates.push( pk: pk, lastUpdate: item.lastUpdateDate, type: type )
+				itemsDates[id] = item.lastUpdateDate
+				# itemsDates.push( id: id, lastUpdate: item.lastUpdateDate, type: type )
 			return itemsDates
 
 		requestAreas: (rectangle, areasToLoad, qZoom)->
@@ -577,7 +579,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 		unloadItem: (item)->
 			itemToReplace = R.items[item._id.$oid]
 			if itemToReplace?
-				console.log "itemToReplace: " + itemToReplace.pk
+				console.log "itemToReplace: " + itemToReplace.id
 				itemToReplace.remove() 	# if item is loaded: remove it (it must be updated)
 			return
 

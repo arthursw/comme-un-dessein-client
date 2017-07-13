@@ -80,9 +80,9 @@ define [ 'Tools/Tool', 'UI/Button', 'Commands/Command' ], (Tool, Button, Command
 
 			refreshRasterizer = false
 
-			for itemPk of R.items
-				item = R.items[itemPk]
-				if item.controlPath? and item instanceof R.Tools.Item.Item.PrecisePath and item.owner == R.me and not item.drawingPk?
+			for itemID of R.items
+				item = R.items[itemID]
+				if item.controlPath? and item instanceof R.Tools.Item.Item.PrecisePath and item.owner == R.me and not item.drawingID?
 					if item.getBounds().intersects(@circle.bounds)
 
 						intersections = @circle.getCrossings(item.controlPath)
@@ -91,6 +91,8 @@ define [ 'Tools/Tool', 'UI/Button', 'Commands/Command' ], (Tool, Button, Command
 
 							paths = [item.controlPath]
 							console.log(intersections)
+							
+							@pathsToDeleteResurectors[item.id] = data: item.getDuplicateData(), constructor: item.constructor
 
 							for intersection in intersections
 								for p in paths
@@ -106,6 +108,7 @@ define [ 'Tools/Tool', 'UI/Button', 'Commands/Command' ], (Tool, Button, Command
 											newP.firstSegment.data = split: true
 
 							refreshRasterizer = true
+							
 							item.remove()
 							@pathsToDelete.push(item)
 
@@ -116,11 +119,12 @@ define [ 'Tools/Tool', 'UI/Button', 'Commands/Command' ], (Tool, Button, Command
 								else
 									data = R.Tools.Item.Item.PrecisePath.getDataFromPath(p)
 									points = R.Tools.Item.Item.Path.pathOnPlanetFromPath(p)
-									path = new R.Tools.Item.Item.PrecisePath(Date.now(), data, null, points, null, R.me)
+									path = new R.Tools.Item.Item.PrecisePath(Date.now(), data, null, null, points, null, R.me)
 									path.draw()
 									@pathsToCreate.push(path)
 						else
 							if @isPathInCircle(item.controlPath)
+								@pathsToDeleteResurectors[item.id] = data: item.getDuplicateData(), constructor: item.constructor
 								item.remove()
 								@pathsToDelete.push(item)
 								refreshRasterizer = true
@@ -141,6 +145,7 @@ define [ 'Tools/Tool', 'UI/Button', 'Commands/Command' ], (Tool, Button, Command
 
 			@pathsToDelete = []
 			@pathsToCreate = []
+			@pathsToDeleteResurectors = {}
 
 			R.rasterizer.disableRasterization()
 
@@ -198,14 +203,11 @@ define [ 'Tools/Tool', 'UI/Button', 'Commands/Command' ], (Tool, Button, Command
 				if @pathsToDelete.indexOf(path) < 0
 					pathsToCreate.push(path)
 
-			R.commandManager.add(new Command.DeleteItems(@pathsToDelete), false)
-			R.commandManager.add(new Command.CreateItems(pathsToCreate), false)
+			R.commandManager.add(new Command.DeleteItems(@pathsToDelete, @pathsToDeleteResurectors), false)
+			R.commandManager.add(new Command.CreateItems(pathsToCreate), true)
 
 			for path in @pathsToDelete
 				path.delete()
-
-			for path in pathsToCreate
-				path.save()
 
 			return
 

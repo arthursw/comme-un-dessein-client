@@ -108,7 +108,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 
 		@create: (duplicateData)->
 			duplicateData ?= @getDuplicateData()
-			copy = new @(duplicateData.date, duplicateData.data, null, duplicateData.points)
+			copy = new @(duplicateData.date, duplicateData.data, duplicateData.id, null, duplicateData.points)
 			copy.draw()
 			if not @socketAction
 				copy.save(false)
@@ -134,14 +134,14 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 		# @param pk [ID] (optional) the primary key of the path in the database
 		# @param points [Array of P.Point] (optional) the points of the controlPath, the points must fit on the control path (the control path is stored in @data.points)
 		# @param lock [Lock] the lock which contains this RPath (if any)
-		constructor: (@date=null, @data=null, @pk=null, points=null, @lock=null, @owner=null, @drawingPk=null) ->
+		constructor: (@date=null, @data=null, @id=null, @pk=null, points=null, @lock=null, @owner=null, @drawingID=null) ->
 			if not @lock
-				super(@data, @pk, @date, R.sidebar.pathListJ, R.sortedPaths)
+				super(@data, @id, @pk, @date, R.sidebar.pathListJ, R.sortedPaths)
 			else
-				super(@data, @pk, @date, @lock.itemListsJ.find('.rPath-list'), @lock.sortedPaths)
+				super(@data, @id, @pk, @date, @lock.itemListsJ.find('.rPath-list'), @lock.sortedPaths)
 
-			if @drawingPk? and R.items[@drawingPk]?
-				drawing = R.items[@drawingPk]
+			if @drawingID? and R.items[@drawingID]?
+				drawing = R.items[@drawingID]
 				drawing.addChild(@)
 
 			@selectionHighlight = null
@@ -152,7 +152,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			return
 
 		getDrawing: ()->
-			return if @drawingPk? then R.items[@drawingPk] else null
+			return if @drawingID? then R.items[@drawingID] else null
 
 		getDuplicateData: ()->
 			data = super()
@@ -264,10 +264,10 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 		# @param updateOptions [Boolean] whether to update controllers in gui or not
 		# @return whether the ritem was selected or not
 		select: (updateOptions=true)->
-			if R.me != @owner && not @drawingPk? then return false
+			if R.me != @owner && not @drawingID? then return false
 
-			if @drawingPk? and R.items[@drawingPk]?
-				R.items[@drawingPk].select()
+			if @drawingID? and R.items[@drawingID]?
+				R.items[@drawingID].select()
 				return null
 			if not super(updateOptions) or not @controlPath? then return false
 			# if not @drawing? then @draw()
@@ -515,9 +515,10 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 		save: (addCreateCommand=true)->
 			if not @controlPath? then return
 
-			R.paths[if @pk? then @pk else @id] = @
+			R.paths[@id] = @
 
 			args =
+				clientID: @id
 				city: R.city
 				box: Utils.CS.boxFromRectangle( @getDrawingBounds() )
 				points: @pathOnPlanet()
@@ -617,8 +618,8 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 		# @param updateRoom [updateRoom] (optional) whether to emit @pk to other users in the room
 		setPK: (pk)->
 			super
-			R.paths[pk] = @
-			delete R.paths[@id]
+			# R.paths[pk] = @
+			# delete R.paths[@id]
 			return
 
 		# common to all RItems
@@ -632,17 +633,16 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			@drawing = null
 			@raster ?= null
 			@canvasRaster ?= null
-			if @pk?
-				delete R.paths[@pk]
-			else
-				delete R.paths[@id]
+			
+			delete R.paths[@id]
 			# R.updateView()
 			super()
 			return
 
 		deleteFromDatabase: ()->
+			console.log('delete ' + @id + ' from database')
 #			Dajaxice.draw.deletePath(R.loader.checkError, { pk: @pk })
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deletePath', args: { pk: @pk } } ).done(R.loader.checkError)
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deletePath', args: { pk: @pk } } ).done(@deleteFromDatabaseCallback)
 			return
 
 		# @param controlSegments [Array<Paper P.Segment>] the control path segments to convert in planet coordinates

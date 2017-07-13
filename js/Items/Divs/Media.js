@@ -65,15 +65,16 @@
 
       Media.parameters = Media.initializeParameters();
 
-      function Media(bounds, data1, pk, date, lock) {
+      function Media(bounds, data1, id, pk, date, lock) {
         this.data = data1 != null ? data1 : null;
+        this.id = id != null ? id : null;
         this.pk = pk != null ? pk : null;
         this.date = date;
         this.lock = lock != null ? lock : null;
         this.afterEmbed = bind(this.afterEmbed, this);
         this.setURL = bind(this.setURL, this);
         this.loadMedia = bind(this.loadMedia, this);
-        Media.__super__.constructor.call(this, bounds, this.data, this.pk, this.date, this.lock);
+        Media.__super__.constructor.call(this, bounds, this.data, this.id, this.pk, this.date, this.lock);
         this.url = this.data.url;
         if ((this.url != null) && this.url.length > 0) {
           this.setURL(this.url, false);

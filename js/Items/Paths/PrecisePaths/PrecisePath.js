@@ -145,22 +145,23 @@
         return data;
       };
 
-      function PrecisePath(date, data1, pk, points, lock, owner, drawingPk) {
+      function PrecisePath(date, data1, id, pk, points, lock, owner, drawingID) {
         this.date = date != null ? date : null;
         this.data = data1 != null ? data1 : null;
+        this.id = id != null ? id : null;
         this.pk = pk != null ? pk : null;
         if (points == null) {
           points = null;
         }
         this.lock = lock != null ? lock : null;
         this.owner = owner != null ? owner : null;
-        this.drawingPk = drawingPk != null ? drawingPk : null;
-        PrecisePath.__super__.constructor.call(this, this.date, this.data, this.pk, points, this.lock, this.owner, this.drawingPk);
+        this.drawingID = drawingID != null ? drawingID : null;
+        PrecisePath.__super__.constructor.call(this, this.date, this.data, this.id, this.pk, points, this.lock, this.owner, this.drawingID);
         if (this.constructor.polygonMode) {
           this.data.polygonMode = R.polygonMode;
         }
         this.rotation = this.data.rotation = 0;
-        if (this.drawingPk == null) {
+        if (this.drawingID == null) {
           this.title = this.pk;
           this.addToListItem(this.getListItem());
         }
@@ -694,7 +695,7 @@
             this.update('point');
           }
           R.socket.emit("bounce", {
-            itemPk: this.pk,
+            itemID: this.id,
             "function": "addPoint",
             "arguments": [index, point, offset, false]
           });
@@ -743,7 +744,7 @@
             this.update('point');
           }
           R.socket.emit("bounce", {
-            itemPk: this.pk,
+            itemID: this.id,
             "function": "deletePoint",
             "arguments": [segment.index, false]
           });
@@ -791,7 +792,7 @@
             this.update('segment');
           }
           R.socket.emit("bounce", {
-            itemPk: this.pk,
+            itemID: this.id,
             "function": "modifyPoint",
             "arguments": [segment.index, position, handleIn, handleOut, fastDraw, false]
           });
@@ -902,7 +903,7 @@
             this.update('point');
           }
           R.socket.emit("bounce", {
-            itemPk: this.pk,
+            itemID: this.id,
             "function": "modifyPointType",
             "arguments": [segment.index, rtype, false]
           });
@@ -933,7 +934,7 @@
             this.update('point');
           }
           R.socket.emit("bounce", {
-            itemPk: this.pk,
+            itemID: this.id,
             "function": "modifyControlPath",
             "arguments": [pointsAndPlanet, false]
           });

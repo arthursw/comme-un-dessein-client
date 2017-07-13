@@ -22,8 +22,8 @@ define [ 'Items/Item' ], (Item) ->
 
 		@parameters = @initializeParameters()
 
-		constructor: (@data, @pk, @date, itemListJ, @sortedItems)->
-			super(@data, @pk)
+		constructor: (@data, @id, @pk, @date, itemListJ, @sortedItems)->
+			super(@data, @id, @pk)
 			@date ?= Date.now()
 
 			@rotation = @data.rotation or 0
@@ -47,7 +47,7 @@ define [ 'Items/Item' ], (Item) ->
 
 		getDuplicateData: ()->
 			data = super()
-			data.lock = @lock?.getPk()
+			data.lock = @lock?.id
 			return data
 
 		getListItem: ()->
@@ -58,7 +58,7 @@ define [ 'Items/Item' ], (Item) ->
 			title = '' + @title + ' by ' + @owner
 			@liJ = $("<li>")
 			@liJ.html(title)
-			@liJ.attr("data-pk", @pk)
+			@liJ.attr("data-id", @id)
 			@liJ.click(@onLiClick)
 			@liJ.mouseover (event)=>
 				@highlight()
@@ -154,7 +154,7 @@ define [ 'Items/Item' ], (Item) ->
 			# @selectionRectangle.rotation = rotation
 			if not @socketAction
 				if update then @update('rotation')
-				R.socket.emit "bounce", itemPk: @pk, function: "setRotation", arguments: [rotation, center, false]
+				R.socket.emit "bounce", itemID: @id, function: "setRotation", arguments: [rotation, center, false]
 			return
 
 		# updateSetRotation: (event)->

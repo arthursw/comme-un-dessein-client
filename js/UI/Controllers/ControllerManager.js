@@ -72,11 +72,11 @@
             ref = R.selectedItems;
             for (k = 0, len = ref.length; k < len; k++) {
               item = ref[k];
-              ids.push(item.pk);
+              ids.push(item.id);
             }
             args = {
               date: Date.now(),
-              pathPks: ids
+              pathIDs: ids
             };
             submitDrawingCallback = function(result) {
               if (!R.loader.checkError(result)) {

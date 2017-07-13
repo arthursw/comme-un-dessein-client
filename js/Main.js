@@ -63,12 +63,12 @@
       return (ref = R.selectedItems) != null ? ref[0] : void 0;
     };
     R.fi = function() {
-      var itemPk;
+      var itemID;
       if (R.items == null) {
         return null;
       }
-      for (itemPk in R.items) {
-        return R.items[itemPk];
+      for (itemID in R.items) {
+        return R.items[itemID];
       }
     };
   });

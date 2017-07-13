@@ -80,16 +80,20 @@
       };
 
       EraserTool.prototype.erase = function() {
-        var data, i, intersection, intersections, item, itemPk, j, k, len, len1, len2, location, newP, p, path, paths, points, refreshRasterizer;
+        var data, i, intersection, intersections, item, itemID, j, k, len, len1, len2, location, newP, p, path, paths, points, refreshRasterizer;
         refreshRasterizer = false;
-        for (itemPk in R.items) {
-          item = R.items[itemPk];
-          if ((item.controlPath != null) && item instanceof R.Tools.Item.Item.PrecisePath && item.owner === R.me && (item.drawingPk == null)) {
+        for (itemID in R.items) {
+          item = R.items[itemID];
+          if ((item.controlPath != null) && item instanceof R.Tools.Item.Item.PrecisePath && item.owner === R.me && (item.drawingID == null)) {
             if (item.getBounds().intersects(this.circle.bounds)) {
               intersections = this.circle.getCrossings(item.controlPath);
               if (intersections.length > 0) {
                 paths = [item.controlPath];
                 console.log(intersections);
+                this.pathsToDeleteResurectors[item.id] = {
+                  data: item.getDuplicateData(),
+                  constructor: item.constructor
+                };
                 for (i = 0, len = intersections.length; i < len; i++) {
                   intersection = intersections[i];
                   for (j = 0, len1 = paths.length; j < len1; j++) {
@@ -123,13 +127,17 @@
                   } else {
                     data = R.Tools.Item.Item.PrecisePath.getDataFromPath(p);
                     points = R.Tools.Item.Item.Path.pathOnPlanetFromPath(p);
-                    path = new R.Tools.Item.Item.PrecisePath(Date.now(), data, null, points, null, R.me);
+                    path = new R.Tools.Item.Item.PrecisePath(Date.now(), data, null, null, points, null, R.me);
                     path.draw();
                     this.pathsToCreate.push(path);
                   }
                 }
               } else {
                 if (this.isPathInCircle(item.controlPath)) {
+                  this.pathsToDeleteResurectors[item.id] = {
+                    data: item.getDuplicateData(),
+                    constructor: item.constructor
+                  };
                   item.remove();
                   this.pathsToDelete.push(item);
                   refreshRasterizer = true;
@@ -153,6 +161,7 @@
         this.circle.position = event.point;
         this.pathsToDelete = [];
         this.pathsToCreate = [];
+        this.pathsToDeleteResurectors = {};
         R.rasterizer.disableRasterization();
         if ((R.me != null) && from === R.me) {
           R.socket.emit("bounce", {
@@ -194,7 +203,7 @@
       };
 
       EraserTool.prototype.end = function(event, from) {
-        var i, j, k, len, len1, len2, path, pathsToCreate, ref, ref1;
+        var i, j, len, len1, path, pathsToCreate, ref, ref1;
         if (from == null) {
           from = R.me;
         }
@@ -208,16 +217,12 @@
             pathsToCreate.push(path);
           }
         }
-        R.commandManager.add(new Command.DeleteItems(this.pathsToDelete), false);
-        R.commandManager.add(new Command.CreateItems(pathsToCreate), false);
+        R.commandManager.add(new Command.DeleteItems(this.pathsToDelete, this.pathsToDeleteResurectors), false);
+        R.commandManager.add(new Command.CreateItems(pathsToCreate), true);
         ref1 = this.pathsToDelete;
         for (j = 0, len1 = ref1.length; j < len1; j++) {
           path = ref1[j];
           path["delete"]();
-        }
-        for (k = 0, len2 = pathsToCreate.length; k < len2; k++) {
-          path = pathsToCreate[k];
-          path.save();
         }
       };
 

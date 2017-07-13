@@ -214,8 +214,8 @@
             if (rFunction != null) {
               rFunction.apply(tool, data["arguments"]);
             }
-          } else if (data.itemPk != null) {
-            item = R.items[data.itemPk];
+          } else if (data.itemID != null) {
+            item = R.items[data.itemID];
             if ((item != null) && (item.currentCommand == null)) {
               allowedFunctions = ['setRectangle', 'setRotation', 'moveTo', 'setParameter', 'modifyPoint', 'modifyPointType', 'modifySpeed', 'setPK', 'delete', 'create', 'addPoint', 'deletePoint', 'modifyControlPath', 'setText'];
               if (ref1 = data["function"], indexOf.call(allowedFunctions, ref1) < 0) {
@@ -227,7 +227,7 @@
                 console.log('Error: function is not valid: ' + data["function"]);
                 return;
               }
-              id = 'rasterizeItem-' + item.pk;
+              id = 'rasterizeItem-' + item.od;
               itemMustBeRasterized = ((ref2 = data["function"]) !== 'setPK' && ref2 !== 'create') && !item.drawing.visible;
               if ((R.updateTimeout[id] == null) && itemMustBeRasterized) {
                 R.rasterizer.drawItems();

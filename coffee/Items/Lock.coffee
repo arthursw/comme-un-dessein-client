@@ -215,8 +215,8 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 		@parameters = @initializeParameters()
 
-		constructor: (@rectangle, @data=null, @pk=null, @owner=null, @date, @modulePk) ->
-			super(@data, @pk)
+		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @modulePk) ->
+			super(@data, @id, @pk)
 
 			R.locks.push(@)
 
@@ -324,6 +324,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 				loadEntireArea: data.loadEntireArea
 
 			args =
+				clientID: @id
 				city: city: R.city
 				box: Utils.CS.boxFromRectangle(@rectangle)
 				object_type: @constructor.object_type
@@ -504,8 +505,8 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 		# overload {Div#constructor}
 		# the mouse interaction is modified to enable user navigation (the user can scroll the view by dragging on the website area)
-		constructor: (@rectangle, @data=null, @pk=null, @owner=null, date=null) ->
-			super(@rectangle, @data, @pk, @owner, date)
+		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, date=null) ->
+			super(@rectangle, @data, @id, @pk, @owner, date)
 			return
 
 		# todo: remove
@@ -523,8 +524,8 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 		# overload {Div#constructor}
 		# the mouse interaction is modified to enable user navigation (the user can scroll the view by dragging on the videogame area)
-		constructor: (@rectangle, @data=null, @pk=null, @owner=null, date=null) ->
-			super(@rectangle, @data, @pk, @owner, date)
+		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, date=null) ->
+			super(@rectangle, @data, @id, @pk, @owner, date)
 			@currentCheckpoint = -1
 			@checkpoints = []
 			return
@@ -584,8 +585,8 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 		@parameters = @initializeParameters()
 
-		constructor: (@rectangle, @data=null, @pk=null, @owner=null, date=null) ->
-			super(@rectangle, @data, @pk, @owner, date)
+		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, date=null) ->
+			super(@rectangle, @data, @id, @pk, @owner, date)
 
 			@linkJ?.click (event)=>
 				if @linkJ.attr("href").indexOf("http://romanesc.co/#") == 0

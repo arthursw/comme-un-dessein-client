@@ -37,14 +37,21 @@
         $("#History .mCustomScrollbar").mCustomScrollbar("scrollTo", "bottom");
         this.currentCommand++;
         this.history.splice(this.currentCommand, this.history.length - this.currentCommand, command);
+        console.log('add command: ' + command.name);
         this.mapItemsToCommand(command);
+        console.log(this.itemToCommands);
         if (execute) {
           command["do"]();
         }
       };
 
-      CommandManager.prototype.toggleCurrentCommand = function() {
+      CommandManager.prototype.toggleCurrentCommand = function(event) {
         var deferred;
+        if ((event != null) && (event.detail != null)) {
+          if (event.detail !== this.waitingCommand) {
+            return;
+          }
+        }
         console.log("toggleCurrentCommand");
         $('#loadingMask').css({
           'visibility': 'hidden'
@@ -54,6 +61,7 @@
           return;
         }
         deferred = this.history[this.currentCommand + this.offset].toggle();
+        this.waitingCommand = this.history[this.currentCommand + this.offset];
         this.currentCommand += this.direction;
         if (deferred) {
           $('#loadingMask').css({
@@ -138,36 +146,46 @@
       };
 
       CommandManager.prototype.mapItemsToCommand = function(command) {
-        var base, item, pk, ref;
+        var base, id, item, ref;
         if (command.items == null) {
           return;
         }
         ref = command.items;
-        for (pk in ref) {
-          item = ref[pk];
-          if ((base = this.itemToCommands)[pk] == null) {
-            base[pk] = [];
+        for (id in ref) {
+          item = ref[id];
+          if ((base = this.itemToCommands)[id] == null) {
+            base[id] = [];
           }
-          this.itemToCommands[pk].push(command);
+          this.itemToCommands[id].push(command);
         }
       };
 
-      CommandManager.prototype.setItemPk = function(id, pk) {
+      CommandManager.prototype.itemSaved = function(item) {
         var command, commands, j, len;
-        commands = this.itemToCommands[id];
+        commands = this.itemToCommands[item.id];
         if (commands != null) {
           for (j = 0, len = commands.length; j < len; j++) {
             command = commands[j];
-            command.setItemPk(id, pk);
+            command.itemSaved(item);
           }
         }
-        this.itemToCommands[pk] = this.itemToCommands[id];
-        delete this.itemToCommands[id];
+      };
+
+      CommandManager.prototype.itemDeleted = function(item) {
+        var command, commands, j, len;
+        commands = this.itemToCommands[item.id];
+        if (commands != null) {
+          for (j = 0, len = commands.length; j < len; j++) {
+            command = commands[j];
+            command.itemDeleted(item);
+          }
+        }
       };
 
       CommandManager.prototype.unloadItem = function(item) {
         var command, commands, j, len;
-        commands = this.itemToCommands[item.getPk()];
+        console.log('unload item: ' + item.id, item);
+        commands = this.itemToCommands[item.id];
         if (commands != null) {
           for (j = 0, len = commands.length; j < len; j++) {
             command = commands[j];
@@ -178,7 +196,8 @@
 
       CommandManager.prototype.loadItem = function(item) {
         var command, commands, j, len;
-        commands = this.itemToCommands[item.getPk()];
+        console.log('load item: ' + item.id, item);
+        commands = this.itemToCommands[item.id];
         if (commands != null) {
           for (j = 0, len = commands.length; j < len; j++) {
             command = commands[j];
@@ -187,17 +206,16 @@
         }
       };
 
-      CommandManager.prototype.resurrectItem = function(pk, item) {
+      CommandManager.prototype.resurrectItem = function(id, item) {
         var command, commands, j, len;
-        commands = this.itemToCommands[pk];
+        console.log('resurect item ' + id + ': ' + item.id, item);
+        commands = this.itemToCommands[id];
         if (commands != null) {
           for (j = 0, len = commands.length; j < len; j++) {
             command = commands[j];
             command.resurrectItem(item);
           }
         }
-        this.itemToCommands[item.getPk()] = commands;
-        delete this.itemToCommands[pk];
       };
 
       return CommandManager;

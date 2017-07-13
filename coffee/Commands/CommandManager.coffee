@@ -23,12 +23,16 @@ define [ 'Commands/Command' ], (Command) ->
 			@currentCommand++
 			@history.splice(@currentCommand, @history.length-@currentCommand, command)
 
+			console.log('add command: ' + command.name)
 			@mapItemsToCommand(command)
+			console.log(@itemToCommands)
 
 			if execute then command.do()
 			return
 
-		toggleCurrentCommand: ()=>
+		toggleCurrentCommand: (event)=>
+			if event? and event.detail?
+				if event.detail != @waitingCommand then return
 
 			console.log "toggleCurrentCommand"
 			$('#loadingMask').css('visibility': 'hidden')
@@ -37,6 +41,8 @@ define [ 'Commands/Command' ], (Command) ->
 			if @currentCommand == @commandIndex then return
 
 			deferred = @history[@currentCommand+@offset].toggle()
+			@waitingCommand = @history[@currentCommand+@offset]
+			
 			@currentCommand += @direction
 
 			if deferred
@@ -108,42 +114,62 @@ define [ 'Commands/Command' ], (Command) ->
 
 		mapItemsToCommand: (command)->
 			if not command.items? then return
-			for pk, item of command.items
-				@itemToCommands[pk] ?= []
-				@itemToCommands[pk].push(command)
+			for id, item of command.items
+				@itemToCommands[id] ?= []
+				@itemToCommands[id].push(command)
 			return
 
-		setItemPk: (id, pk)->
-			commands = @itemToCommands[id]
+		# Called exclusively by Item.setPk()
+		# setItemPk: (id, pk)->
+		# 	console.log('Set item pk: ' + id + ', ' + pk)
+		# 	commands = @itemToCommands[id]
+		# 	if commands?
+		# 		for command in commands
+		# 			command.setItemPk(id, pk)
+		# 	@itemToCommands[pk] = @itemToCommands[id]
+		# 	delete @itemToCommands[id]
+		# 	return
+
+		itemSaved: (item)->
+			commands = @itemToCommands[item.id]
 			if commands?
 				for command in commands
-					command.setItemPk(id, pk)
-			@itemToCommands[pk] = @itemToCommands[id]
-			delete @itemToCommands[id]
+					command.itemSaved(item)
 			return
 
+		itemDeleted: (item)->
+			commands = @itemToCommands[item.id]
+			if commands?
+				for command in commands
+					command.itemDeleted(item)
+			return
+		
 		unloadItem: (item)->
-			commands = @itemToCommands[item.getPk()]
+			console.log('unload item: ' + item.id, item)
+			commands = @itemToCommands[item.id]
 			if commands?
 				for command in commands
 					command.unloadItem(item)
-			# do not delete @itemToCommands[item.getPk()], we will need it to resurect the item
+			# do not delete @itemToCommands[item.id], we will need it to resurect the item
 			return
 
 		loadItem: (item)->
-			commands = @itemToCommands[item.getPk()]
+			console.log('load item: ' + item.id, item)
+			commands = @itemToCommands[item.id]
 			if commands?
 				for command in commands
 					command.loadItem(item)
 			return
 
-		resurrectItem: (pk, item)->
-			commands = @itemToCommands[pk]
+		resurrectItem: (id, item)->
+			console.log('resurect item ' + id + ': ' + item.id, item)
+			commands = @itemToCommands[id]
 			if commands?
 				for command in commands
 					command.resurrectItem(item)
-			@itemToCommands[item.getPk()] = commands
-			delete @itemToCommands[pk]
+
+			# @itemToCommands[item.id] = commands
+			# delete @itemToCommands[id]
 			return
 
 	return CommandManager

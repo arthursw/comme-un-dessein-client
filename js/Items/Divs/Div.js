@@ -68,7 +68,7 @@
         if (duplicateData == null) {
           duplicateData = this.getDuplicateData();
         }
-        copy = new this(duplicateData.bounds, duplicateData.data, null, null, R.items[duplicateData.lock]);
+        copy = new this(duplicateData.bounds, duplicateData.data, duplicateData.id, null, null, R.items[duplicateData.lock]);
         if (!this.socketAction) {
           copy.save(false);
           R.socket.emit("bounce", {
@@ -80,9 +80,10 @@
         return copy;
       };
 
-      function Div(bounds, data, pk, date, lock) {
+      function Div(bounds, data, id, pk, date, lock) {
         var ref, separatorJ;
         this.data = data != null ? data : null;
+        this.id = id != null ? id : null;
         this.pk = pk != null ? pk : null;
         this.date = date;
         this.lock = lock != null ? lock : null;
@@ -101,9 +102,9 @@
         this.divJ = R.templatesJ.find(".custom-div").clone().insertAfter(separatorJ);
         this.divJ.mouseenter(this.onMouseEnter);
         if (!this.lock) {
-          Div.__super__.constructor.call(this, this.data, this.pk, this.date, R.sidebar.divListJ, R.sortedDivs);
+          Div.__super__.constructor.call(this, this.data, this.id, this.pk, this.date, R.sidebar.divListJ, R.sortedDivs);
         } else {
-          Div.__super__.constructor.call(this, this.data, this.pk, this.date, this.lock.itemListsJ.find('.rDiv-list'), this.lock.sortedDivs);
+          Div.__super__.constructor.call(this, this.data, this.id, this.pk, this.date, this.lock.itemListsJ.find('.rDiv-list'), this.lock.sortedDivs);
         }
         this.maskJ = this.divJ.find(".mask");
         this.divJ.css({
@@ -114,7 +115,7 @@
         if (this.owner !== R.me && (this.lock != null)) {
           this.divJ.addClass("locked");
         }
-        this.divJ.attr("data-pk", this.pk);
+        this.divJ.attr("data-id", this.id);
         this.divJ.controller = this;
         this.setCss();
         R.divs.push(this);
@@ -181,6 +182,7 @@
           return;
         }
         args = {
+          clientID: this.id,
           city: R.city,
           box: Utils.CS.boxFromRectangle(this.getBounds()),
           object_type: this.object_type,

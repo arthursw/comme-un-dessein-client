@@ -207,9 +207,10 @@
 
       Text.parameters = Text.initializeParameters();
 
-      function Text(bounds, data, pk, date, lock) {
+      function Text(bounds, data, id, pk, date, lock) {
         var lockedForMe, message;
         this.data = data != null ? data : null;
+        this.id = id != null ? id : null;
         this.pk = pk != null ? pk : null;
         this.date = date;
         this.lock = lock != null ? lock : null;
@@ -217,7 +218,7 @@
         this.textChanged = bind(this.textChanged, this);
         this.onBlur = bind(this.onBlur, this);
         this.onFocus = bind(this.onFocus, this);
-        Text.__super__.constructor.call(this, bounds, this.data, this.pk, this.date, this.lock);
+        Text.__super__.constructor.call(this, bounds, this.data, this.id, this.pk, this.date, this.lock);
         this.contentJ = $("<textarea></textarea>");
         this.contentJ.insertBefore(this.maskJ);
         this.contentJ.val(this.data.message);
@@ -278,7 +279,7 @@
             this.update('text');
           }
           R.socket.emit("bounce", {
-            itemPk: this.pk,
+            itemID: this.id,
             "function": "setText",
             "arguments": [newText, false]
           });

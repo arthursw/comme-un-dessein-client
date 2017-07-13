@@ -240,10 +240,9 @@ define [
 
 		# global variables
 		R.currentPaths = {} 					# map of username -> path id corresponding to the paths currently being created
-		R.paths = new Object() 					# a map of RPath.pk (or RPath.id) -> RPath. RPath are first added with their id, and then with their pk
+		R.paths = new Object() 					# a map of RPath.id -> RPath. RPath are added with their id
 												# (as soon as server saved it and responds)
-		R.items = new Object() 					# map Item.id or Item.pk -> Item, all loaded RItems. The key is Item.id before Item is saved
-												# in the database, and Item.pk after
+		R.items = new Object() 					# map Item.id -> Item, all loaded RItems. The key is Item.id 
 		R.locks = [] 							# array of loaded Locks
 		R.divs = [] 							# array of loaded RDivs
 		R.sortedPaths = []						# an array where paths are sorted by index (z-index)
@@ -284,8 +283,8 @@ define [
 	R.fsi = ()-> return R.selectedItems?[0]
 	R.fi = ()-> 
 		if not R.items? then return null
-		for itemPk of R.items
-			return R.items[itemPk]
+		for itemID of R.items
+			return R.items[itemID]
 
 	# R.showCodeEditor = (fileNode)->
 	# 	if not R.codeEditor?

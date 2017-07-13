@@ -90,12 +90,12 @@
       };
 
       Loader.prototype.unload = function() {
-        var item, pk, ref;
+        var id, item, ref;
         this.loadedAreas = [];
         ref = R.items;
-        for (pk in ref) {
-          if (!hasProp.call(ref, pk)) continue;
-          item = ref[pk];
+        for (id in ref) {
+          if (!hasProp.call(ref, id)) continue;
+          item = ref[id];
           item.remove();
         }
         R.items = {};
@@ -128,12 +128,12 @@
       };
 
       Loader.prototype.unloadAreas = function(area, limit, qZoom) {
-        var i, item, itemsOutsideLimit, j, pk, pos, rectangle, ref;
+        var i, id, item, itemsOutsideLimit, j, pos, rectangle, ref;
         itemsOutsideLimit = [];
         ref = R.items;
-        for (pk in ref) {
-          if (!hasProp.call(ref, pk)) continue;
-          item = ref[pk];
+        for (id in ref) {
+          if (!hasProp.call(ref, id)) continue;
+          item = ref[id];
           if (!item.getBounds().intersects(limit)) {
             itemsOutsideLimit.push(item);
           }
@@ -275,13 +275,13 @@
       };
 
       Loader.prototype.removeDeletedItems = function(deletedItems) {
-        var deletedItemLastUpdate, pk, ref;
+        var deletedItemLastUpdate, id, ref;
         if (deletedItems == null) {
           return;
         }
-        for (pk in deletedItems) {
-          deletedItemLastUpdate = deletedItems[pk];
-          if ((ref = R.items[pk]) != null) {
+        for (id in deletedItems) {
+          deletedItemLastUpdate = deletedItems[id];
+          if ((ref = R.items[id]) != null) {
             ref.remove();
           }
         }
@@ -315,7 +315,7 @@
       Loader.prototype.moduleLoaded = function(args) {
         var base;
         this.createPath(args);
-        delete this.pathsToCreate[args.pk];
+        delete this.pathsToCreate[args.id];
         if (Utils.isEmpty(this.pathsToCreate)) {
           this.hideDrawingBar();
           this.hideLoadingBar();
@@ -326,7 +326,7 @@
       };
 
       Loader.prototype.loadModuleAndCreatePath = function(args) {
-        this.pathsToCreate[args.pk] = true;
+        this.pathsToCreate[args.id] = true;
         ModuleLoader.load(args.path.object_type, (function(_this) {
           return function() {
             return _this.moduleLoaded(args);
@@ -336,15 +336,16 @@
 
       Loader.prototype.createPath = function(args) {
         var path, ref, ref1;
-        path = new R.tools[args.path.object_type].Path(args.date, args.data, args.pk, args.points, args.lock, args.owner, (ref = args.drawing) != null ? ref.$oid : void 0);
+        path = new R.tools[args.path.object_type].Path(args.date, args.data, args.id, args.pk, args.points, args.lock, args.owner, (ref = args.drawing) != null ? ref.clientID : void 0);
         path.lastUpdateDate = (ref1 = args.path.lastUpdate) != null ? ref1.$date : void 0;
       };
 
       Loader.prototype.createNewItems = function(itemsToLoad) {
-        var args, box, data, date, div, drawing, item, k, len, len1, lock, m, path, pk, planet, point, points, rdiv, ref, ref1, ref2, ref3, ref4, ref5, rpath;
+        var args, box, data, date, div, drawing, id, item, k, len, len1, lock, m, path, pk, planet, point, points, rdiv, ref, ref1, ref2, ref3, ref4, ref5, rpath;
         for (k = 0, len = itemsToLoad.length; k < len; k++) {
           item = itemsToLoad[k];
           pk = item._id.$oid;
+          id = item.clientID;
           date = (ref = item.date) != null ? ref.$date : void 0;
           data = (item.data != null) && item.data.length > 0 ? JSON.parse(item.data) : null;
           lock = item.lock != null ? R.items[item.lock] : null;
@@ -357,16 +358,16 @@
               lock = null;
               switch (box.object_type) {
                 case 'lock':
-                  lock = new Item.Lock(Utils.CS.rectangleFromBox(box), data, box._id.$oid, box.owner, date, (ref1 = box.module) != null ? ref1.$oid : void 0);
+                  lock = new Item.Lock(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, (ref1 = box.module) != null ? ref1.$oid : void 0);
                   break;
                 case 'link':
-                  lock = new Item.Link(Utils.CS.rectangleFromBox(box), data, box._id.$oid, box.owner, date, (ref2 = box.module) != null ? ref2.$oid : void 0);
+                  lock = new Item.Link(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, (ref2 = box.module) != null ? ref2.$oid : void 0);
                   break;
                 case 'website':
-                  lock = new Item.Website(Utils.CS.rectangleFromBox(box), data, box._id.$oid, box.owner, date, (ref3 = box.module) != null ? ref3.$oid : void 0);
+                  lock = new Item.Website(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, (ref3 = box.module) != null ? ref3.$oid : void 0);
                   break;
                 case 'video-game':
-                  lock = new Item.VideoGame(Utils.CS.rectangleFromBox(box), data, box._id.$oid, box.owner, date, (ref4 = box.module) != null ? ref4.$oid : void 0);
+                  lock = new Item.VideoGame(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, (ref4 = box.module) != null ? ref4.$oid : void 0);
               }
               lock.lastUpdateDate = box.lastUpdate.$date;
               break;
@@ -377,10 +378,10 @@
               }
               switch (div.object_type) {
                 case 'text':
-                  rdiv = new Item.Text(Utils.CS.rectangleFromBox(div), data, pk, date, lock);
+                  rdiv = new Item.Text(Utils.CS.rectangleFromBox(div), data, id, pk, date, lock);
                   break;
                 case 'media':
-                  rdiv = new Item.Media(Utils.CS.rectangleFromBox(div), data, pk, date, lock);
+                  rdiv = new Item.Media(Utils.CS.rectangleFromBox(div), data, id, pk, date, lock);
               }
               rdiv.lastUpdateDate = div.lastUpdate.$date;
               break;
@@ -405,6 +406,7 @@
                 path: path,
                 date: date,
                 data: data,
+                id: id,
                 pk: pk,
                 points: points,
                 lock: lock,
@@ -424,7 +426,7 @@
               if (item.box.coordinates[0].length < 5) {
                 console.log("Error: drawing has less than 5 points");
               }
-              drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, item._id.$oid, item.owner, date, item.title, item.description, item.status);
+              drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, id, item._id.$oid, item.owner, date, item.title, item.description, item.status);
               break;
             default:
               continue;
@@ -581,12 +583,12 @@
       };
 
       RasterizerLoader.prototype.createItemsDates = function() {
-        var item, itemsDates, pk, ref;
+        var id, item, itemsDates, ref;
         itemsDates = {};
         ref = R.items;
-        for (pk in ref) {
-          item = ref[pk];
-          itemsDates[pk] = item.lastUpdateDate;
+        for (id in ref) {
+          item = ref[id];
+          itemsDates[id] = item.lastUpdateDate;
         }
         return itemsDates;
       };
@@ -618,7 +620,7 @@
         var itemToReplace;
         itemToReplace = R.items[item._id.$oid];
         if (itemToReplace != null) {
-          console.log("itemToReplace: " + itemToReplace.pk);
+          console.log("itemToReplace: " + itemToReplace.id);
           itemToReplace.remove();
         }
       };

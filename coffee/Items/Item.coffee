@@ -46,14 +46,14 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 		@zIndexSortStop: (event, ui)->
 			previouslySelectedItems = R.selectedItems
 			R.tools.select.deselectAll()
-			rItem = R.items[ui.item.attr("data-pk")]
+			rItem = R.items[ui.item.attr("data-id")]
 			nextItemJ = ui.item.next()
 			if nextItemJ.length>0
-				rItem.insertAbove(R.items[nextItemJ.attr("data-pk")], null, true)
+				rItem.insertAbove(R.items[nextItemJ.attr("data-id")], null, true)
 			else
 				previousItemJ = ui.item.prev()
 				if previousItemJ.length>0
-					rItem.insertBelow(R.items[previousItemJ.attr("data-pk")], null, true)
+					rItem.insertBelow(R.items[previousItemJ.attr("data-id")], null, true)
 			for item in previouslySelectedItems
 				item.select()
 			return
@@ -205,22 +205,22 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 
 		# always overloaded
 		@create: (duplicateData)->
-			copy = new @(duplicateData)
+			copy = new @(duplicateData, duplicateData.id)
 			if not @socketAction
 				copy.save(false)
 				R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
 			return copy
 
-		constructor: (@data, @pk)->
+		constructor: (@data, @id, @pk)->
+
+			@id ?= '' + Date.now() + '-' + Math.random()
+			R.items[@id] = @
 
 			# if the RPath is being loaded: directly set pk and load path
 			if @pk?
 				@setPK(@pk, true)
 				R.commandManager.loadItem(@)
-			else
-				@id = if @data?.id? then @data.id else Math.random() 	# temporary id used until the server sends back the primary key (@pk)
-				R.items[@id] = @
-
+			
 			# creation of a new object by the user: set @data to R.gui values
 			if @data?
 				@secureData()
@@ -268,7 +268,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			if not @socketAction
 				if update
 					@update(name)
-				R.socket.emit "bounce", itemPk: @pk, function: "setParameter", arguments: [name, value, false, false]
+				R.socket.emit "bounce", itemID: @id, function: "setParameter", arguments: [name, value, false, false]
 			return
 
 		# # set path items (control path, drawing, etc.) to the right state before performing hitTest
@@ -446,7 +446,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			# if @selectionRectangle then @updateSelectionRectangle()
 			if not @socketAction
 				if update then @update('rectangle')
-				R.socket.emit "bounce", itemPk: @pk, function: "setRectangle", arguments: [rectangle, false]
+				R.socket.emit "bounce", itemID: @id, function: "setRectangle", arguments: [rectangle, false]
 			return
 
 		validatePosition: ()->
@@ -508,7 +508,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 
 			if not @socketAction
 				if update then @update('position')
-				R.socket.emit "bounce", itemPk: @pk, function: "moveTo", arguments: [position, false]
+				R.socket.emit "bounce", itemID: @id, function: "moveTo", arguments: [position, false]
 			return
 
 		translate: (delta, update)->
@@ -556,6 +556,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 
 		# @return [Object] @data along with @rectangle and @rotation
 		getData: ()->
+			@data.id = @id
 			data = jQuery.extend({}, @data)
 			data.rectangle = @rectangle.toJSON()
 			data.rotation = @rotation
@@ -591,14 +592,18 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			@highlightRectangle = null
 			return
 
-		getPk: ()->
-			return @pk or @id
-
 		setPK: (@pk, loading=false)->
-			if @id? then R.commandManager.setItemPk(@id, @pk)
-			R.items[@pk] = @
-			delete R.items[@id]
-			if not loading and not @socketAction then R.socket.emit "bounce", itemPk: @id, function: "setPK", arguments: [@pk]
+			R.commandManager.itemSaved(@)
+
+		# 	# if @id? then R.commandManager.setItemPk(@id, @pk)
+		# 	# R.items[@pk] = @
+		# 	# delete R.items[@id]
+		# 	if not loading and not @socketAction then R.socket.emit "bounce", itemID: @id, function: "setPK", arguments: [@pk]
+			return
+
+		deleteFromDatabaseCallback: ()=>
+			if not R.loader.checkError() then return
+			R.commandManager.itemDeleted(@)
 			return
 
 		# @return true if Item is selected
@@ -665,10 +670,8 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			@group = null
 			@deselect()
 			@highlightRectangle?.remove()
-			if @pk?
-				delete R.items[@pk]
-			else
-				delete R.items[@id]
+			
+			delete R.items[@id]
 
 			# @pk = null 	# pk is required to delete the path!!
 			# @id = null
@@ -699,7 +702,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			if not @pk? then return
 			if not @socketAction
 				@deleteFromDatabase()
-				R.socket.emit "bounce", itemPk: @pk, function: "delete", arguments: []
+				R.socket.emit "bounce", itemID: @id, function: "delete", arguments: []
 			@pk = null
 			return
 
@@ -708,7 +711,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			return
 
 		getDuplicateData: ()->
-			return data: @getData(), rectangle: @rectangle, pk: @getPk()
+			return data: @getData(), rectangle: @rectangle, id: @id
 
 		duplicateCommand: ()->
 			R.commandManager.add(new Command.DuplicateItem(@), true)
@@ -729,7 +732,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			return
 
 		rasterize: ()->
-			if @drawingPk? then return
+			if @drawingID? then return
 			if @raster? or not @drawing? then return
 			if not R.rasterizer.rasterizeItems then return
 			if @drawing.bounds.area == 0 then return

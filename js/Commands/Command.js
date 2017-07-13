@@ -10,6 +10,7 @@
     Command = (function() {
       function Command(name) {
         this.click = bind(this.click, this);
+        this.name = name;
         this.liJ = $("<li>").text(name);
         this.liJ.click(this.click);
         this.id = Math.random();
@@ -39,6 +40,7 @@
       };
 
       Command.prototype.toggle = function() {
+        console.log((this.done ? 'undo' : 'do') + ' command: ' + this.name);
         if (this.done) {
           return this.undo();
         } else {
@@ -75,16 +77,16 @@
         map = {};
         for (j = 0, len = items.length; j < len; j++) {
           item = items[j];
-          map[item.getPk()] = item;
+          map[item.id] = item;
         }
         return map;
       };
 
       ItemsCommand.prototype.apply = function(method, args) {
-        var item, pk, ref;
+        var id, item, ref;
         ref = this.items;
-        for (pk in ref) {
-          item = ref[pk];
+        for (id in ref) {
+          item = ref[id];
           item[method].apply(item, args);
         }
       };
@@ -106,13 +108,13 @@
       };
 
       ItemsCommand.prototype.positionIsValid = function() {
-        var item, pk, ref;
+        var id, item, ref;
         if (this.constructor.disablePositionCheck) {
           return true;
         }
         ref = this.items;
-        for (pk in ref) {
-          item = ref[pk];
+        for (id in ref) {
+          item = ref[id];
           if (!item.validatePosition()) {
             return false;
           }
@@ -121,28 +123,27 @@
       };
 
       ItemsCommand.prototype.unloadItem = function(item) {
-        delete this.items[item.pk];
+        delete this.items[item.id];
       };
 
       ItemsCommand.prototype.loadItem = function(item) {
-        this.items[item.pk] = item;
-      };
-
-      ItemsCommand.prototype.setItemPk = function(id, pk) {
-        this.items[pk] = this.items[id];
-        delete this.items[id];
+        this.items[item.id] = item;
       };
 
       ItemsCommand.prototype.resurrectItem = function(item) {
-        this.items[item.getPk()] = item;
+        this.items[item.id] = item;
       };
 
+      ItemsCommand.prototype.itemSaved = function(item) {};
+
+      ItemsCommand.prototype.itemDeleted = function(item) {};
+
       ItemsCommand.prototype["delete"] = function() {
-        var item, pk, ref;
+        var id, item, ref;
         ref = this.items;
-        for (pk in ref) {
-          item = ref[pk];
-          Utils.Array.remove(R.commandManager.itemToCommands[pk], this);
+        for (id in ref) {
+          item = ref[id];
+          Utils.Array.remove(R.commandManager.itemToCommands[id], this);
         }
         ItemsCommand.__super__["delete"].call(this);
       };
@@ -171,6 +172,7 @@
       };
 
       ItemCommand.prototype.resurrectItem = function(item) {
+        console.log('  - resurect item on command ' + this.name + ': ' + item.id, item);
         this.item = item;
         ItemCommand.__super__.resurrectItem.call(this, item);
       };
@@ -208,14 +210,14 @@
       DeferredCommand.prototype.commandChanged = function() {};
 
       DeferredCommand.prototype.updateItems = function(type) {
-        var args, item, pk, ref;
+        var args, id, item, ref;
         if (type == null) {
           type = this.updateType;
         }
         args = [];
         ref = this.items;
-        for (pk in ref) {
-          item = ref[pk];
+        for (id in ref) {
+          item = ref[id];
           item.addUpdateFunctionAndArguments(args, type);
         }
         $.ajax({
@@ -304,14 +306,14 @@
       ScaleCommand.method = 'setRectangle';
 
       ScaleCommand.prototype.getItemArray = function() {
-        var item, pk, ref;
+        var id, item, ref;
         if (this.itemsArray != null) {
           return this.itemsArray;
         }
         this.itemsArray = [];
         ref = this.items;
-        for (pk in ref) {
-          item = ref[pk];
+        for (id in ref) {
+          item = ref[id];
           this.itemsArray.push(item);
         }
         return this.itemsArray;
@@ -515,25 +517,25 @@
       extend(SetParameterCommand, superClass);
 
       function SetParameterCommand(items, args) {
-        var item, pk, ref;
+        var id, item, ref;
         this.name = args[0];
         this.previousValue = args[1];
         SetParameterCommand.__super__.constructor.call(this, 'Change item parameter "' + this.name + '"', items);
         this.updateType = 'parameters';
         this.previousValues = {};
         ref = this.items;
-        for (pk in ref) {
-          item = ref[pk];
-          this.previousValues[pk] = item.data[this.name];
+        for (id in ref) {
+          item = ref[id];
+          this.previousValues[id] = item.data[this.name];
         }
         return;
       }
 
       SetParameterCommand.prototype["do"] = function() {
-        var item, pk, ref;
+        var id, item, ref;
         ref = this.items;
-        for (pk in ref) {
-          item = ref[pk];
+        for (id in ref) {
+          item = ref[id];
           item.setParameter(this.name, this.newValue);
         }
         R.controllerManager.updateController(this.name, this.newValue);
@@ -542,11 +544,11 @@
       };
 
       SetParameterCommand.prototype.undo = function() {
-        var item, pk, ref;
+        var id, item, ref;
         ref = this.items;
-        for (pk in ref) {
-          item = ref[pk];
-          item.setParameter(this.name, this.previousValues[pk]);
+        for (id in ref) {
+          item = ref[id];
+          item.setParameter(this.name, this.previousValues[id]);
         }
         R.controllerManager.updateController(this.name, this.previousValue);
         this.updateItems(this.name);
@@ -554,11 +556,11 @@
       };
 
       SetParameterCommand.prototype.update = function(name, value) {
-        var item, pk, ref;
+        var id, item, ref;
         this.newValue = value;
         ref = this.items;
-        for (pk in ref) {
-          item = ref[pk];
+        for (id in ref) {
+          item = ref[id];
           item.setParameter(name, value);
         }
       };
@@ -723,19 +725,19 @@
       }
 
       SelectCommand.prototype.selectItems = function() {
-        var item, pk, ref;
+        var id, item, ref;
         ref = this.items;
-        for (pk in ref) {
-          item = ref[pk];
+        for (id in ref) {
+          item = ref[id];
           item.select(this.updateOptions);
         }
       };
 
       SelectCommand.prototype.deselectItems = function() {
-        var item, pk, ref;
+        var id, item, ref;
         ref = this.items;
-        for (pk in ref) {
-          item = ref[pk];
+        for (id in ref) {
+          item = ref[id];
           item.deselect(this.updateOptions);
         }
       };
@@ -790,12 +792,14 @@
 
       CreateItemCommand.prototype.duplicateItem = function() {
         this.item = this.itemConstructor.create(this.duplicateData);
-        R.commandManager.resurrectItem(this.duplicateData.pk, this.item);
+        this.waitingSaveCallback = this.item.id;
+        R.commandManager.resurrectItem(this.duplicateData.id, this.item);
         this.item.select();
       };
 
       CreateItemCommand.prototype.deleteItem = function() {
         this.duplicateData = this.item.getDuplicateData();
+        this.waitingDeleteCallback = this.item.id;
         this.item["delete"]();
         this.item = null;
       };
@@ -803,11 +807,35 @@
       CreateItemCommand.prototype["do"] = function() {
         this.duplicateItem();
         CreateItemCommand.__super__["do"].call(this);
+        return true;
       };
 
       CreateItemCommand.prototype.undo = function() {
         this.deleteItem();
         CreateItemCommand.__super__.undo.call(this);
+        return true;
+      };
+
+      CreateItemCommand.prototype.itemSaved = function(item) {
+        var event;
+        if (item.id === this.waitingSaveCallback) {
+          event = new CustomEvent('command executed', {
+            detail: this
+          });
+          document.dispatchEvent(event);
+          this.waitingSaveCallback = null;
+        }
+      };
+
+      CreateItemCommand.prototype.itemDeleted = function(item) {
+        var event;
+        if (item.id === this.waitingDeleteCallback) {
+          event = new CustomEvent('command executed', {
+            detail: this
+          });
+          document.dispatchEvent(event);
+          this.waitingDeleteCallback = null;
+        }
       };
 
       return CreateItemCommand;
@@ -823,11 +851,13 @@
       DeleteItemCommand.prototype["do"] = function() {
         this.deleteItem();
         this.superDo();
+        return true;
       };
 
       DeleteItemCommand.prototype.undo = function() {
         this.duplicateItem();
         this.superUndo();
+        return true;
       };
 
       return DeleteItemCommand;
@@ -836,7 +866,8 @@
     CreateItemsCommand = (function(superClass) {
       extend(CreateItemsCommand, superClass);
 
-      function CreateItemsCommand(items, name) {
+      function CreateItemsCommand(items, itemResurectors, name) {
+        this.itemResurectors = itemResurectors;
         if (name == null) {
           name = 'Create items';
         }
@@ -846,45 +877,85 @@
       }
 
       CreateItemsCommand.prototype.duplicateItems = function() {
-        var item, itemResurector, pk, ref;
+        var id, item, itemResurector, ref;
+        this.waitingSaveCallbacks = [];
         ref = this.itemResurectors;
-        for (pk in ref) {
-          itemResurector = ref[pk];
+        for (id in ref) {
+          itemResurector = ref[id];
           item = itemResurector.constructor.create(itemResurector.data);
-          this.items[itemResurector.data.pk] = item;
-          R.commandManager.resurrectItem(itemResurector.data.pk, item);
+          this.items[itemResurector.data.id] = item;
+          R.commandManager.resurrectItem(itemResurector.data.id, item);
           item.select();
+          this.waitingSaveCallbacks.push(item.id);
         }
       };
 
       CreateItemsCommand.prototype.deleteItems = function() {
-        var item, j, len, pk, pksToRemove, ref;
+        var id, idsToRemove, item, j, len, ref;
         this.itemResurectors = {};
-        pksToRemove = [];
+        idsToRemove = [];
+        this.waitingDeleteCallbacks = [];
         ref = this.items;
-        for (pk in ref) {
-          item = ref[pk];
-          this.itemResurectors[pk] = {
+        for (id in ref) {
+          item = ref[id];
+          this.itemResurectors[id] = {
             data: item.getDuplicateData(),
             constructor: item.constructor
           };
+          this.waitingDeleteCallbacks.push(item.id);
           item["delete"]();
-          pksToRemove.push(pk);
+          idsToRemove.push(id);
         }
-        for (j = 0, len = pksToRemove.length; j < len; j++) {
-          pk = pksToRemove[j];
-          delete this.items[pk];
+        for (j = 0, len = idsToRemove.length; j < len; j++) {
+          id = idsToRemove[j];
+          delete this.items[id];
         }
       };
 
       CreateItemsCommand.prototype["do"] = function() {
         this.duplicateItems();
         CreateItemsCommand.__super__["do"].call(this);
+        return true;
       };
 
       CreateItemsCommand.prototype.undo = function() {
         this.deleteItems();
         CreateItemsCommand.__super__.undo.call(this);
+        return true;
+      };
+
+      CreateItemsCommand.prototype.itemSaved = function(item) {
+        var event, index;
+        if (this.waitingSaveCallbacks == null) {
+          return;
+        }
+        index = this.waitingSaveCallbacks.indexOf(item.id);
+        if (index >= 0) {
+          this.waitingSaveCallbacks.splice(index, 1);
+        }
+        if (this.waitingSaveCallbacks.length === 0) {
+          event = new CustomEvent('command executed', {
+            detail: this
+          });
+          document.dispatchEvent(event);
+        }
+      };
+
+      CreateItemsCommand.prototype.itemDeleted = function(item) {
+        var event, index;
+        if (this.waitingDeleteCallbacks == null) {
+          return;
+        }
+        index = this.waitingDeleteCallbacks.indexOf(item.id);
+        if (index >= 0) {
+          this.waitingDeleteCallbacks.splice(index, 1);
+        }
+        if (this.waitingDeleteCallbacks.length === 0) {
+          event = new CustomEvent('command executed', {
+            detail: this
+          });
+          document.dispatchEvent(event);
+        }
       };
 
       return CreateItemsCommand;
@@ -893,18 +964,21 @@
     DeleteItemsCommand = (function(superClass) {
       extend(DeleteItemsCommand, superClass);
 
-      function DeleteItemsCommand(items) {
-        DeleteItemsCommand.__super__.constructor.call(this, items, 'Delete items');
+      function DeleteItemsCommand(items, itemResurectors) {
+        this.itemResurectors = itemResurectors;
+        DeleteItemsCommand.__super__.constructor.call(this, items, this.itemResurectors, 'Delete items');
       }
 
       DeleteItemsCommand.prototype["do"] = function() {
         this.deleteItems();
         this.superDo();
+        return true;
       };
 
       DeleteItemsCommand.prototype.undo = function() {
         this.duplicateItems();
         this.superUndo();
+        return true;
       };
 
       return DeleteItemsCommand;

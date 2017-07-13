@@ -144,8 +144,8 @@ define [ 'Items/Item', 'Items/Divs/Div', 'Commands/Command' ], (Item, Div, Comma
 
 		# overload {Div#constructor}
 		# initialize mouse event listeners to be able to select and edit text, bind key event listener to @textChanged
-		constructor: (bounds, @data=null, @pk=null, @date, @lock=null) ->
-			super(bounds, @data, @pk, @date, @lock)
+		constructor: (bounds, @data=null, @id=null, @pk=null, @date, @lock=null) ->
+			super(bounds, @data, @id, @pk, @date, @lock)
 
 			@contentJ = $("<textarea></textarea>")
 			@contentJ.insertBefore(@maskJ)
@@ -212,7 +212,7 @@ define [ 'Items/Item', 'Items/Divs/Div', 'Commands/Command' ], (Item, Div, Comma
 			@contentJ.val(newText)
 			if not @socketAction
 				if update then @update('text')
-				R.socket.emit "bounce", itemPk: @pk, function: "setText", arguments: [newText, false]
+				R.socket.emit "bounce", itemID: @id, function: "setText", arguments: [newText, false]
 			return
 
 		# set the font family for the text

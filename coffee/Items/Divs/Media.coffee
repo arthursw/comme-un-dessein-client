@@ -50,8 +50,8 @@ define ['Items/Item', 'Items/Divs/Div', 'UI/Modal', 'oembed'], (Item, Div, Modal
 
 		@parameters = @initializeParameters()
 
-		constructor: (bounds, @data=null, @pk=null, @date, @lock=null) ->
-			super(bounds, @data, @pk, @date, @lock)
+		constructor: (bounds, @data=null, @id=null, @pk=null, @date, @lock=null) ->
+			super(bounds, @data, @id, @pk, @date, @lock)
 			@url = @data.url
 			if @url? and @url.length>0
 				@setURL(@url, false)

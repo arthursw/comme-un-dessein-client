@@ -207,7 +207,7 @@ define [ 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor', 'paper'
 	R.requestedCallbacks = {} 				# map of id -> request id to clear the requestAnimationFrame
 
 	Utils.deferredExecutionCallbackWrapper = (callback, id, args, oThis)->
-		console.log "deferredExecutionCallbackWrapper: " + id
+		# console.log "deferredExecutionCallbackWrapper: " + id
 		delete R.updateTimeout[id]
 		if not args? then callback?() else callback?.apply(oThis, args)
 		return
@@ -221,7 +221,7 @@ define [ 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor', 'paper'
 		# id ?= callback.name # for ECMAScript 6
 		# console.log "deferredExecution: " + id + ", updateTimeout[id]: " + R.updateTimeout[id]
 		if R.updateTimeout[id]? then clearTimeout(R.updateTimeout[id])
-		console.log "deferred execution: " + id + ', ' + R.updateTimeout[id]
+		# console.log "deferred execution: " + id + ', ' + R.updateTimeout[id]
 		R.updateTimeout[id] = setTimeout(Utils.deferredExecutionCallbackWrapper, n, callback, id, args, oThis)
 		return
 

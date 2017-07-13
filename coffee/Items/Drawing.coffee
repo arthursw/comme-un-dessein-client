@@ -25,8 +25,8 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 		@parameters = @initializeParameters()
 
-		constructor: (@rectangle, @data=null, @pk=null, @owner=null, @date, @title, @description, @status) ->
-			super(@data, @pk)
+		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @title, @description, @status) ->
+			super(@data, @id, @pk)
 
 			@drawing = new P.Group()
 
@@ -34,9 +34,9 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 			@votes = [] # { positive: boolean, author: string, authorPk: pk }
 
-			for pk of R.paths
-				path = R.paths[pk]
-				if path.drawingPk? == @pk
+			for id of R.paths
+				path = R.paths[id]
+				if path.drawingID? == @id
 					@addChild(path)
 
 			# create special list to contains children paths
@@ -98,7 +98,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			title = '' + @title + ' by ' + @owner
 			@liJ = $("<li>")
 			@liJ.html(title)
-			@liJ.attr("data-pk", @pk)
+			@liJ.attr("data-id", @id)
 			@liJ.click(@onLiClick)
 			@liJ.mouseover (event)=>
 				@highlight()
@@ -166,6 +166,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 				loadEntireArea: data.loadEntireArea
 
 			args =
+				clientID: @id
 				city: city: R.city
 				box: Utils.CS.boxFromRectangle(@rectangle)
 				object_type: @constructor.object_type

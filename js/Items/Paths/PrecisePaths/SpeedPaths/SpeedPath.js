@@ -193,7 +193,7 @@
             this.update('speed');
           }
           R.socket.emit("bounce", {
-            itemPk: this.pk,
+            itemID: this.id,
             "function": "modifySpeed",
             "arguments": [this.speeds, false]
           });
@@ -439,7 +439,7 @@
         this.speedSelectionHighlight = null;
         if (!this.socketAction) {
           R.socket.emit("bounce", {
-            itemPk: this.pk,
+            itemID: this.id,
             "function": "modifySpeed",
             "arguments": [this.speeds, false]
           });

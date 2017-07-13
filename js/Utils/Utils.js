@@ -196,7 +196,6 @@
     R.updateTimeout = {};
     R.requestedCallbacks = {};
     Utils.deferredExecutionCallbackWrapper = function(callback, id, args, oThis) {
-      console.log("deferredExecutionCallbackWrapper: " + id);
       delete R.updateTimeout[id];
       if (args == null) {
         if (typeof callback === "function") {
@@ -218,7 +217,6 @@
       if (R.updateTimeout[id] != null) {
         clearTimeout(R.updateTimeout[id]);
       }
-      console.log("deferred execution: " + id + ', ' + R.updateTimeout[id]);
       R.updateTimeout[id] = setTimeout(Utils.deferredExecutionCallbackWrapper, n, callback, id, args, oThis);
     };
     Utils.callNextFrame = function(callback, id, args) {

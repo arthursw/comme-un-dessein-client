@@ -67,11 +67,11 @@ define [ 'UI/Controllers/Controller', 'UI/Controllers/ColorController', 'UI/Cont
 
 					ids = []
 					for item in R.selectedItems
-						ids.push(item.pk)
+						ids.push(item.id)
 
 					args = {
 						date: Date.now()
-						pathPks: ids
+						pathIDs: ids
 					}
 
 					submitDrawingCallback = (result)->

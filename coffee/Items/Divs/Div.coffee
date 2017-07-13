@@ -60,7 +60,7 @@ define [ 'Items/Item', 'Items/Content' ], (Item, Content) ->
 
 		@create: (duplicateData)->
 			duplicateData ?= @getDuplicateData()
-			copy = new @(duplicateData.bounds, duplicateData.data, null, null, R.items[duplicateData.lock])
+			copy = new @(duplicateData.bounds, duplicateData.data, duplicateData.id, null, null, R.items[duplicateData.lock])
 			if not @socketAction
 				copy.save(false)
 				R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
@@ -75,7 +75,7 @@ define [ 'Items/Item', 'Items/Content' ], (Item, Content) ->
 		# @param lock [Boolean] (optional) whether the pk of the lock (if locked)
 		# @param data [Object] the data of the div (containing the stroke width, colors, etc.)
 		# @param date [Number] the date of the div (used as zindex)
-		constructor: (bounds, @data=null, @pk=null, @date, @lock=null) ->
+		constructor: (bounds, @data=null, @id=null, @pk=null, @date, @lock=null) ->
 			# @rectangle is equal to bounds when creating it, and is stored in @data.rectangle when loading it
 			@rectangle = if @data?.rectangle? then new P.Rectangle(@data.rectangle) else bounds
 
@@ -89,9 +89,9 @@ define [ 'Items/Item', 'Items/Content' ], (Item, Content) ->
 			@divJ.mouseenter @onMouseEnter
 
 			if not @lock
-				super(@data, @pk, @date, R.sidebar.divListJ, R.sortedDivs)
+				super(@data, @id, @pk, @date, R.sidebar.divListJ, R.sortedDivs)
 			else
-				super(@data, @pk, @date, @lock.itemListsJ.find('.rDiv-list'), @lock.sortedDivs)
+				super(@data, @id, @pk, @date, @lock.itemListsJ.find('.rDiv-list'), @lock.sortedDivs)
 
 			@maskJ = @divJ.find(".mask")
 
@@ -102,7 +102,7 @@ define [ 'Items/Item', 'Items/Content' ], (Item, Content) ->
 			if @owner != R.me and @lock? 	# lock div it is not mine and it is locked
 				@divJ.addClass("locked")
 
-			@divJ.attr("data-pk",@pk)
+			@divJ.attr("data-id",@id)
 
 			@divJ.controller = @
 			@setCss()
@@ -154,6 +154,7 @@ define [ 'Items/Item', 'Items/Content' ], (Item, Content) ->
 				return
 
 			args =
+				clientID: @id
 				city: R.city
 				box: Utils.CS.boxFromRectangle(@getBounds())
 				object_type: @object_type

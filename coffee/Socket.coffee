@@ -286,8 +286,8 @@ define [ 'socketio' ], (ioo) ->
 					if rFunction?
 						# data.arguments[0] = Event.prototype.fromJSON(data.arguments[0])
 						rFunction.apply(tool, data.arguments)
-				else if data.itemPk?
-					item = R.items[data.itemPk]
+				else if data.itemID?
+					item = R.items[data.itemID]
 					if item? and not item.currentCommand?
 						allowedFunctions =
 							['setRectangle', 'setRotation', 'moveTo', 'setParameter', 'modifyPoint', 'modifyPointType',
@@ -300,7 +300,7 @@ define [ 'socketio' ], (ioo) ->
 							console.log 'Error: function is not valid: ' + data.function
 							return
 
-						id = 'rasterizeItem-'+item.pk
+						id = 'rasterizeItem-'+item.od
 
 						itemMustBeRasterized = data.function not in ['setPK', 'create'] and not item.drawing.visible
 

@@ -19,13 +19,14 @@
 
       Content.parameters = Content.initializeParameters();
 
-      function Content(data1, pk1, date, itemListJ, sortedItems) {
+      function Content(data1, id, pk1, date, itemListJ, sortedItems) {
         this.data = data1;
+        this.id = id;
         this.pk = pk1;
         this.date = date;
         this.sortedItems = sortedItems;
         this.onLiClick = bind(this.onLiClick, this);
-        Content.__super__.constructor.call(this, this.data, this.pk);
+        Content.__super__.constructor.call(this, this.data, this.id, this.pk);
         if (this.date == null) {
           this.date = Date.now();
         }
@@ -36,7 +37,7 @@
       Content.prototype.getDuplicateData = function() {
         var data, ref;
         data = Content.__super__.getDuplicateData.call(this);
-        data.lock = (ref = this.lock) != null ? ref.getPk() : void 0;
+        data.lock = (ref = this.lock) != null ? ref.id : void 0;
         return data;
       };
 
@@ -50,7 +51,7 @@
         title = '' + this.title + ' by ' + this.owner;
         this.liJ = $("<li>");
         this.liJ.html(title);
-        this.liJ.attr("data-pk", this.pk);
+        this.liJ.attr("data-id", this.id);
         this.liJ.click(this.onLiClick);
         this.liJ.mouseover((function(_this) {
           return function(event) {
@@ -109,7 +110,7 @@
             this.update('rotation');
           }
           R.socket.emit("bounce", {
-            itemPk: this.pk,
+            itemID: this.id,
             "function": "setRotation",
             "arguments": [rotation, center, false]
           });

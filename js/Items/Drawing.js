@@ -24,11 +24,12 @@
 
       Drawing.parameters = Drawing.initializeParameters();
 
-      function Drawing(rectangle1, data1, pk1, owner, date, title1, description, status) {
-        var path, pk;
+      function Drawing(rectangle1, data1, id1, pk, owner, date, title1, description, status) {
+        var id, path;
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
-        this.pk = pk1 != null ? pk1 : null;
+        this.id = id1 != null ? id1 : null;
+        this.pk = pk != null ? pk : null;
         this.owner = owner != null ? owner : null;
         this.date = date;
         this.title = title1;
@@ -38,13 +39,13 @@
         this.update = bind(this.update, this);
         this.saveCallback = bind(this.saveCallback, this);
         this.onLiClick = bind(this.onLiClick, this);
-        Drawing.__super__.constructor.call(this, this.data, this.pk);
+        Drawing.__super__.constructor.call(this, this.data, this.id, this.pk);
         this.drawing = new P.Group();
         this.group.addChild(this.drawing);
         this.votes = [];
-        for (pk in R.paths) {
-          path = R.paths[pk];
-          if ((path.drawingPk != null) === this.pk) {
+        for (id in R.paths) {
+          path = R.paths[id];
+          if ((path.drawingID != null) === this.id) {
             this.addChild(path);
           }
         }
@@ -85,7 +86,7 @@
         title = '' + this.title + ' by ' + this.owner;
         this.liJ = $("<li>");
         this.liJ.html(title);
-        this.liJ.attr("data-pk", this.pk);
+        this.liJ.attr("data-id", this.id);
         this.liJ.click(this.onLiClick);
         this.liJ.mouseover((function(_this) {
           return function(event) {
@@ -159,6 +160,7 @@
           loadEntireArea: data.loadEntireArea
         };
         args = {
+          clientID: this.id,
           city: {
             city: R.city
           },

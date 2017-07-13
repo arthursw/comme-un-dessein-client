@@ -101,7 +101,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 
 		rasterizeAllItems: ()->
 
-			for pk, item of R.items
+			for id, item of R.items
 				item.rasterize?()
 
 			return
@@ -365,7 +365,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			return
 
 		rasterizeCanvas: (canvas, rectangle, clearRasters=false, sourceRectangle=null)->
-			console.log "rasterize: " + rectangle.width + ", " + rectangle.height
+			# console.log "rasterize: " + rectangle.width + ", " + rectangle.height
 			qZoom = Utils.CS.quantizeZoom(1.0 / P.view.zoom)
 			scale = R.scale * qZoom
 			qBounds = @quantizeBounds(rectangle, scale)
@@ -403,7 +403,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 
 		prepareView: ()->
 			# show all items
-			for pk, item of R.items
+			for id, item of R.items
 				item.group.visible = true
 
 			# hide excluded items
@@ -460,7 +460,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 							@rasterizeCanvas(item.raster.canvas, item.raster.bounds.intersect(area), false, item.raster.bounds)
 
 			# hide all items except selected ones and the ones being created
-			for pk, item of R.items
+			for id, item of R.items
 				if item == R.currentPaths[R.me] or item.selectionRectangle? then continue
 				item.group?.visible = false
 
@@ -570,7 +570,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 		showItems: ()->
 			if @itemsAreVisible then return
 
-			for pk, item of R.items
+			for id, item of R.items
 				item.group.visible = true
 
 			@itemsAreVisible = true
@@ -612,8 +612,8 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			return
 
 		hideOthers: (itemToExclude)->
-			console.log itemToExclude.pk
-			for pk, item of R.items
+			console.log itemToExclude.id
+			for id, item of R.items
 				if item != itemToExclude
 					item.group.visible = false
 			return
@@ -631,7 +631,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 
 				if rasterizeItems
 					@rasterizeItems = true
-					for pk, item of R.items
+					for id, item of R.items
 						item.rasterize?()
 
 				if disableDrawing then @disableDrawing = true
@@ -717,11 +717,11 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 				if @updateDrawingAfterDelay
 					time = Date.now()
 					delay = 500
-					if not @itemsToDraw[item.pk]? or time-@itemsToDraw[item.pk] < delay
-						@itemsToDraw[item.pk] = time
-						Utils.deferredExecution(item.draw, 'item.draw:'+item.pk, delay, [simplified, redrawing], item)
+					if not @itemsToDraw[item.id]? or time-@itemsToDraw[item.id] < delay
+						@itemsToDraw[item.id] = time
+						Utils.deferredExecution(item.draw, 'item.draw:'+item.id, delay, [simplified, redrawing], item)
 					else
-						delete @itemsToDraw[item.pk]
+						delete @itemsToDraw[item.id]
 						return true
 			return not @disableDrawing
 
@@ -742,7 +742,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 
 			@disableDrawing = false
 
-			for pk, item of R.items
+			for id, item of R.items
 				if item.drawn? and not item.drawn and item.getDrawingBounds().intersects(@areaToRasterize)
 					item.draw?()
 					if @rasterizeItems then item.rasterize?()

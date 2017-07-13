@@ -3,13 +3,14 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 	class Command
 
 		constructor: (name)->
+			@name = name
 			@liJ = $("<li>").text(name)
 			@liJ.click(@click)
 			@id = Math.random()
 			return
 
 		# item: ()->
-		# 	return R.items[@item.pk]
+		# 	return R.items[@item.id]
 
 		superDo: ()->
 			@done = true
@@ -36,6 +37,7 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 			return
 
 		toggle: ()->
+			console.log((if @done then 'undo' else 'do') + ' command: ' + @name)
 			return if @done then @undo() else @do()
 
 		delete: ()->
@@ -63,11 +65,11 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 		mapItems: (items)->
 			map = {}
 			for item in items
-				map[item.getPk()] = item
+				map[item.id] = item
 			return map
 
 		apply: (method, args)->
-			for pk, item of @items
+			for id, item of @items
 				item[method].apply(item, args)
 			return
 
@@ -87,30 +89,31 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 
 		positionIsValid: ()->
 			if @constructor.disablePositionCheck then return true
-			for pk, item of @items
+			for id, item of @items
 				if not item.validatePosition() then return false
 			return true
 
 		unloadItem: (item)->
-			delete @items[item.pk]
+			delete @items[item.id]
 			return
 
 		loadItem: (item)->
-			@items[item.pk] = item
-			return
-
-		setItemPk: (id, pk)->
-			@items[pk] = @items[id]
-			delete @items[id]
+			@items[item.id] = item
 			return
 
 		resurrectItem: (item)->
-			@items[item.getPk()] = item
+			@items[item.id] = item
+			return
+		
+		itemSaved: (item)->
+			return
+		
+		itemDeleted: (item)->
 			return
 
 		delete: ()->
-			for pk, item of @items
-				Utils.Array.remove(R.commandManager.itemToCommands[pk], @)
+			for id, item of @items
+				Utils.Array.remove(R.commandManager.itemToCommands[id], @)
 			super()
 			return
 
@@ -133,6 +136,7 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 			return
 
 		resurrectItem: (item)->
+			console.log('  - resurect item on command ' + @name + ': ' + item.id, item)
 			@item = item
 			super(item)
 			return
@@ -166,7 +170,7 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 
 		updateItems: (type=@updateType)->
 			args = []
-			for pk, item of @items
+			for id, item of @items
 				item.addUpdateFunctionAndArguments(args, type)
 
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'multipleCalls', args: {functionsAndArguments: args} } ).done(@updateCallback)
@@ -243,7 +247,7 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 		getItemArray: ()->
 			if @itemsArray? then return @itemsArray
 			@itemsArray = []
-			for pk, item of @items
+			for id, item of @items
 				@itemsArray.push(item)
 			return @itemsArray
 
@@ -404,12 +408,12 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 			# @previousValue is used for the controller, @previousValues for each item
 			@previousValues = {} 			# each item can initially have a different value
 											# but in the end they will all have the same value @newValue
-			for pk, item of @items
-				@previousValues[pk] = item.data[@name]
+			for id, item of @items
+				@previousValues[id] = item.data[@name]
 			return
 
 		do: ()->
-			for pk, item of @items
+			for id, item of @items
 				item.setParameter(@name, @newValue)
 			R.controllerManager.updateController(@name, @newValue)
 			@updateItems(@name)
@@ -417,8 +421,8 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 			return
 
 		undo: ()->
-			for pk, item of @items
-				item.setParameter(@name, @previousValues[pk])
+			for id, item of @items
+				item.setParameter(@name, @previousValues[id])
 			R.controllerManager.updateController(@name, @previousValue)
 			@updateItems(@name)
 			super()
@@ -426,7 +430,7 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 
 		update: (name, value)->
 			@newValue = value
-			for pk, item of @items
+			for id, item of @items
 				item.setParameter(name, value)
 			return
 
@@ -533,12 +537,12 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 		# 	document.removeEventListener('command executed', @updateCommandItems)
 		# 	for command in R.commandManager.history
 		# 		if command.item?
-		# 			if not command.item.group? and R.items[command.item.pk or command.item.id]
-		# 				command.item = R.items[command.item.pk or command.item.id]
+		# 			if not command.item.group? and R.items[command.item.id or command.item.id]
+		# 				command.item = R.items[command.item.id or command.item.id]
 		# 		if command.items?
 		# 			for item, i in command.items
-		# 				if not item.group? and R.items[item.pk or item.id]
-		# 					command.items[i] = R.items[item.pk or item.id]
+		# 				if not item.group? and R.items[item.id or item.id]
+		# 					command.items[i] = R.items[item.id or item.id]
 		# 	return
 
 		do: ()->
@@ -582,12 +586,12 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 			return
 
 		selectItems: ()->
-			for pk, item of @items
+			for id, item of @items
 				item.select(@updateOptions)
 			return
 
 		deselectItems: ()->
-			for pk, item of @items
+			for id, item of @items
 				item.deselect(@updateOptions)
 			return
 
@@ -683,30 +687,32 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 			@itemConstructor = item.constructor
 			super(name, item)
 			@superDo()
+
 			return
 
 		# setDuplicatedItemToCommands: ()->
 		# 	for command in R.commandManager.history
 		# 		if command == @ then continue
-		# 		if command.item? and command.item == @itemPk then command.item = @item
+		# 		if command.item? and command.item == @itemID then command.item = @item
 		# 		if command.items?
 		# 			for item, i in command.items
-		# 				if item == @itemPk then command.items[i] = @item
+		# 				if item == @itemID then command.items[i] = @item
 		# 	return
 
 		# removeDeleteItemFromCommands: ()->
 		# 	for command in R.commandManager.history
 		# 		if command == @ then continue
-		# 		if command.item? and command.item == @item then command.item = @item.pk or @item.id
+		# 		if command.item? and command.item == @item then command.item = @item.id or @item.id
 		# 		if command.items?
 		# 			for item, i in command.items
-		# 				if item == @item then command.items[i] = @item.pk or @item.id
-		# 	@itemPk = @item.pk or @item.id
+		# 				if item == @item then command.items[i] = @item.id or @item.id
+		# 	@itemID = @item.id or @item.id
 		# 	return
 
 		duplicateItem: ()->
 			@item = @itemConstructor.create(@duplicateData)
-			R.commandManager.resurrectItem(@duplicateData.pk, @item)
+			@waitingSaveCallback = @item.id
+			R.commandManager.resurrectItem(@duplicateData.id, @item)
 			# @setDuplicatedItemToCommands()
 			@item.select()
 			return
@@ -715,19 +721,37 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 			# @removeDeleteItemFromCommands()
 
 			@duplicateData = @item.getDuplicateData()
+			@waitingDeleteCallback = @item.id
 			@item.delete()
-
 			@item = null
 			return
 
 		do: ()->
 			@duplicateItem()
 			super()
-			return
+			return true
 
 		undo: ()->
 			@deleteItem()
 			super()
+			return true
+		
+		itemSaved: (item)->
+			if item.id == @waitingSaveCallback
+				
+				event = new CustomEvent('command executed', detail: @)
+				document.dispatchEvent(event)
+
+				@waitingSaveCallback = null
+			return
+		
+		itemDeleted: (item)->
+			if item.id == @waitingDeleteCallback
+
+				event = new CustomEvent('command executed', detail: @)
+				document.dispatchEvent(event)
+
+				@waitingDeleteCallback = null
 			return
 
 	class DeleteItemCommand extends CreateItemCommand
@@ -736,63 +760,89 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 		do: ()->
 			@deleteItem()
 			@superDo()
-			return
+			return true
 
 		undo: ()->
 			@duplicateItem()
 			@superUndo()
-			return
+			return true
 
 	class CreateItemsCommand extends ItemsCommand
 
-		constructor: (items, name='Create items')->
+		constructor: (items, @itemResurectors, name='Create items')->
 			super(name, items)
 			@superDo()
 			return
 
 		duplicateItems: ()->
-			for pk, itemResurector of @itemResurectors
+			@waitingSaveCallbacks = []
+			for id, itemResurector of @itemResurectors
 				item = itemResurector.constructor.create(itemResurector.data)
-				@items[itemResurector.data.pk] = item
-				R.commandManager.resurrectItem(itemResurector.data.pk, item)
+				@items[itemResurector.data.id] = item
+				R.commandManager.resurrectItem(itemResurector.data.id, item)
 				item.select()
+				@waitingSaveCallbacks.push(item.id)
 			return
 
 		deleteItems: ()->
 			@itemResurectors = {}
-			pksToRemove = []
-			for pk, item of @items
-				@itemResurectors[pk] = data: item.getDuplicateData(), constructor: item.constructor
+			idsToRemove = []
+			@waitingDeleteCallbacks = []
+			for id, item of @items
+				@itemResurectors[id] = data: item.getDuplicateData(), constructor: item.constructor
+				@waitingDeleteCallbacks.push(item.id)
 				item.delete()
-				pksToRemove.push(pk)
+				idsToRemove.push(id)
 
-			for pk in pksToRemove
-				delete @items[pk]
+			for id in idsToRemove
+				delete @items[id]
 
 			return
 
 		do: ()->
 			@duplicateItems()
 			super()
-			return
+			return true
 
 		undo: ()->
 			@deleteItems()
 			super()
+			return true
+
+		itemSaved: (item)->
+			if not @waitingSaveCallbacks? then return
+			index = @waitingSaveCallbacks.indexOf(item.id)
+			if index >= 0
+				@waitingSaveCallbacks.splice(index, 1) # remove item
+
+			if @waitingSaveCallbacks.length == 0
+				event = new CustomEvent('command executed', detail: @)
+				document.dispatchEvent(event)
+			return
+		
+		itemDeleted: (item)->
+			if not @waitingDeleteCallbacks? then return
+			index = @waitingDeleteCallbacks.indexOf(item.id)
+			if index >= 0
+				@waitingDeleteCallbacks.splice(index, 1) # remove item
+
+			if @waitingDeleteCallbacks.length == 0
+				event = new CustomEvent('command executed', detail: @)
+				document.dispatchEvent(event)
 			return
 
 	class DeleteItemsCommand extends CreateItemsCommand
-		constructor: (items)-> super(items, 'Delete items')
+		constructor: (items, @itemResurectors)-> super(items, @itemResurectors, 'Delete items')
 
 		do: ()->
 			@deleteItems()
 			@superDo()
-			return
+			return true
 
 		undo: ()->
 			@duplicateItems()
 			@superUndo()
-			return
+			return true
 
 	class DuplicateItemCommand extends CreateItemCommand
 		constructor: (item)->

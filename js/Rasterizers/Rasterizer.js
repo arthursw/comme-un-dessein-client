@@ -114,10 +114,10 @@
       Rasterizer.prototype.drawItems = function() {};
 
       Rasterizer.prototype.rasterizeAllItems = function() {
-        var item, pk, ref;
+        var id, item, ref;
         ref = R.items;
-        for (pk in ref) {
-          item = ref[pk];
+        for (id in ref) {
+          item = ref[id];
           if (typeof item.rasterize === "function") {
             item.rasterize();
           }
@@ -455,7 +455,6 @@
         if (sourceRectangle == null) {
           sourceRectangle = null;
         }
-        console.log("rasterize: " + rectangle.width + ", " + rectangle.height);
         qZoom = Utils.CS.quantizeZoom(1.0 / P.view.zoom);
         scale = R.scale * qZoom;
         qBounds = this.quantizeBounds(rectangle, scale);
@@ -493,10 +492,10 @@
       };
 
       TileRasterizer.prototype.prepareView = function() {
-        var i, item, len, pk, ref, ref1, ref2, ref3;
+        var i, id, item, len, ref, ref1, ref2, ref3;
         ref = R.items;
-        for (pk in ref) {
-          item = ref[pk];
+        for (id in ref) {
+          item = ref[id];
           item.group.visible = true;
         }
         ref1 = this.itemsToExclude;
@@ -530,7 +529,7 @@
       };
 
       TileRasterizer.prototype.rasterizeCallback = function(step) {
-        var area, areas, i, item, j, k, len, len1, len2, pk, ref, ref1, ref2, ref3, ref4, sortedItems;
+        var area, areas, i, id, item, j, k, len, len1, len2, ref, ref1, ref2, ref3, ref4, sortedItems;
         if (!this.areaToRasterize) {
           return;
         }
@@ -559,8 +558,8 @@
           }
         }
         ref1 = R.items;
-        for (pk in ref1) {
-          item = ref1[pk];
+        for (id in ref1) {
+          item = ref1[id];
           if (item === R.currentPaths[R.me] || (item.selectionRectangle != null)) {
             continue;
           }
@@ -697,13 +696,13 @@
       };
 
       TileRasterizer.prototype.showItems = function() {
-        var item, pk, ref;
+        var id, item, ref;
         if (this.itemsAreVisible) {
           return;
         }
         ref = R.items;
-        for (pk in ref) {
-          item = ref[pk];
+        for (id in ref) {
+          item = ref[id];
           item.group.visible = true;
         }
         this.itemsAreVisible = true;
@@ -749,11 +748,11 @@
       TileRasterizer.prototype.showRasters = function() {};
 
       TileRasterizer.prototype.hideOthers = function(itemToExclude) {
-        var item, pk, ref;
-        console.log(itemToExclude.pk);
+        var id, item, ref;
+        console.log(itemToExclude.id);
         ref = R.items;
-        for (pk in ref) {
-          item = ref[pk];
+        for (id in ref) {
+          item = ref[id];
           if (item !== itemToExclude) {
             item.group.visible = false;
           }
@@ -761,7 +760,7 @@
       };
 
       TileRasterizer.prototype.extractImage = function(rectangle, redraw) {
-        var dataURL, disableDrawing, item, pk, rasterizeItems, ref;
+        var dataURL, disableDrawing, id, item, rasterizeItems, ref;
         if (redraw) {
           rasterizeItems = this.rasterizeItems;
           this.rasterizeItems = false;
@@ -772,8 +771,8 @@
           if (rasterizeItems) {
             this.rasterizeItems = true;
             ref = R.items;
-            for (pk in ref) {
-              item = ref[pk];
+            for (id in ref) {
+              item = ref[id];
               if (typeof item.rasterize === "function") {
                 item.rasterize();
               }
@@ -889,11 +888,11 @@
           if (this.updateDrawingAfterDelay) {
             time = Date.now();
             delay = 500;
-            if ((this.itemsToDraw[item.pk] == null) || time - this.itemsToDraw[item.pk] < delay) {
-              this.itemsToDraw[item.pk] = time;
-              Utils.deferredExecution(item.draw, 'item.draw:' + item.pk, delay, [simplified, redrawing], item);
+            if ((this.itemsToDraw[item.id] == null) || time - this.itemsToDraw[item.id] < delay) {
+              this.itemsToDraw[item.id] = time;
+              Utils.deferredExecution(item.draw, 'item.draw:' + item.id, delay, [simplified, redrawing], item);
             } else {
-              delete this.itemsToDraw[item.pk];
+              delete this.itemsToDraw[item.id];
               return true;
             }
           }
@@ -916,11 +915,11 @@
       };
 
       InstantPaperTileRasterizer.prototype.rasterizeCallback = function(step) {
-        var item, pk, ref;
+        var id, item, ref;
         this.disableDrawing = false;
         ref = R.items;
-        for (pk in ref) {
-          item = ref[pk];
+        for (id in ref) {
+          item = ref[id];
           if ((item.drawn != null) && !item.drawn && item.getDrawingBounds().intersects(this.areaToRasterize)) {
             if (typeof item.draw === "function") {
               item.draw();

@@ -227,13 +227,13 @@ define [ 'coffee', 'typeahead' ], (CoffeeScript) -> 			# 'ace/ext-language_tools
 
 			ids = []
 			for item in R.selectedItems
-				ids.push(item.pk)
+				ids.push(item.id)
 
 			contentJ = @drawingPanelJ.find('.content')
 
 			args = {
 				date: Date.now()
-				pathPks: ids
+				pathIDs: ids
 				title: contentJ.find('#drawing-title').val()
 				description: contentJ.find('#drawing-description').val()
 			}

@@ -273,12 +273,12 @@
         ref = R.selectedItems;
         for (i = 0, len = ref.length; i < len; i++) {
           item = ref[i];
-          ids.push(item.pk);
+          ids.push(item.id);
         }
         contentJ = this.drawingPanelJ.find('.content');
         args = {
           date: Date.now(),
-          pathPks: ids,
+          pathIDs: ids,
           title: contentJ.find('#drawing-title').val(),
           description: contentJ.find('#drawing-description').val()
         };

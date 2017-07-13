@@ -50,7 +50,7 @@
         if (duplicateData == null) {
           duplicateData = this.getDuplicateData();
         }
-        copy = new this(duplicateData.date, duplicateData.data, null, duplicateData.points);
+        copy = new this(duplicateData.date, duplicateData.data, duplicateData.id, null, duplicateData.points);
         copy.draw();
         if (!this.socketAction) {
           copy.save(false);
@@ -80,27 +80,28 @@
         return points;
       };
 
-      function Path(date, data1, pk1, points, lock, owner, drawingPk) {
+      function Path(date, data1, id, pk1, points, lock, owner, drawingID) {
         var drawing;
         this.date = date != null ? date : null;
         this.data = data1 != null ? data1 : null;
+        this.id = id != null ? id : null;
         this.pk = pk1 != null ? pk1 : null;
         if (points == null) {
           points = null;
         }
         this.lock = lock != null ? lock : null;
         this.owner = owner != null ? owner : null;
-        this.drawingPk = drawingPk != null ? drawingPk : null;
+        this.drawingID = drawingID != null ? drawingID : null;
         this.sendToSpacebrew = bind(this.sendToSpacebrew, this);
         this.update = bind(this.update, this);
         this.saveCallback = bind(this.saveCallback, this);
         if (!this.lock) {
-          Path.__super__.constructor.call(this, this.data, this.pk, this.date, R.sidebar.pathListJ, R.sortedPaths);
+          Path.__super__.constructor.call(this, this.data, this.id, this.pk, this.date, R.sidebar.pathListJ, R.sortedPaths);
         } else {
-          Path.__super__.constructor.call(this, this.data, this.pk, this.date, this.lock.itemListsJ.find('.rPath-list'), this.lock.sortedPaths);
+          Path.__super__.constructor.call(this, this.data, this.id, this.pk, this.date, this.lock.itemListsJ.find('.rPath-list'), this.lock.sortedPaths);
         }
-        if ((this.drawingPk != null) && (R.items[this.drawingPk] != null)) {
-          drawing = R.items[this.drawingPk];
+        if ((this.drawingID != null) && (R.items[this.drawingID] != null)) {
+          drawing = R.items[this.drawingID];
           drawing.addChild(this);
         }
         this.selectionHighlight = null;
@@ -111,8 +112,8 @@
       }
 
       Path.prototype.getDrawing = function() {
-        if (this.drawingPk != null) {
-          return R.items[this.drawingPk];
+        if (this.drawingID != null) {
+          return R.items[this.drawingID];
         } else {
           return null;
         }
@@ -222,11 +223,11 @@
         if (updateOptions == null) {
           updateOptions = true;
         }
-        if (R.me !== this.owner && (this.drawingPk == null)) {
+        if (R.me !== this.owner && (this.drawingID == null)) {
           return false;
         }
-        if ((this.drawingPk != null) && (R.items[this.drawingPk] != null)) {
-          R.items[this.drawingPk].select();
+        if ((this.drawingID != null) && (R.items[this.drawingID] != null)) {
+          R.items[this.drawingID].select();
           return null;
         }
         if (!Path.__super__.select.call(this, updateOptions) || (this.controlPath == null)) {
@@ -435,8 +436,9 @@
         if (this.controlPath == null) {
           return;
         }
-        R.paths[this.pk != null ? this.pk : this.id] = this;
+        R.paths[this.id] = this;
         args = {
+          clientID: this.id,
           city: R.city,
           box: Utils.CS.boxFromRectangle(this.getDrawingBounds()),
           points: this.pathOnPlanet(),
@@ -518,8 +520,6 @@
 
       Path.prototype.setPK = function(pk) {
         Path.__super__.setPK.apply(this, arguments);
-        R.paths[pk] = this;
-        delete R.paths[this.id];
       };
 
       Path.prototype.remove = function() {
@@ -535,15 +535,12 @@
         if (this.canvasRaster == null) {
           this.canvasRaster = null;
         }
-        if (this.pk != null) {
-          delete R.paths[this.pk];
-        } else {
-          delete R.paths[this.id];
-        }
+        delete R.paths[this.id];
         Path.__super__.remove.call(this);
       };
 
       Path.prototype.deleteFromDatabase = function() {
+        console.log('delete ' + this.id + ' from database');
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -555,7 +552,7 @@
               }
             })
           }
-        }).done(R.loader.checkError);
+        }).done(this.deleteFromDatabaseCallback);
       };
 
       Path.prototype.pathOnPlanet = function(controlSegments) {

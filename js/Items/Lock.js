@@ -234,10 +234,11 @@
 
       Lock.parameters = Lock.initializeParameters();
 
-      function Lock(rectangle1, data1, pk1, owner, date1, modulePk) {
+      function Lock(rectangle1, data1, id, pk1, owner, date1, modulePk) {
         var i, item, len, pk, pkString, ref, ref1, title, titleJ;
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
+        this.id = id != null ? id : null;
         this.pk = pk1 != null ? pk1 : null;
         this.owner = owner != null ? owner : null;
         this.date = date1;
@@ -245,7 +246,7 @@
         this.select = bind(this.select, this);
         this.update = bind(this.update, this);
         this.saveCallback = bind(this.saveCallback, this);
-        Lock.__super__.constructor.call(this, this.data, this.pk);
+        Lock.__super__.constructor.call(this, this.data, this.id, this.pk);
         R.locks.push(this);
         this.group.name = 'lock group';
         this.draw();
@@ -382,6 +383,7 @@
           loadEntireArea: data.loadEntireArea
         };
         args = {
+          clientID: this.id,
           city: {
             city: R.city
           },
@@ -634,15 +636,16 @@
 
       Website.object_type = 'website';
 
-      function Website(rectangle1, data1, pk1, owner, date) {
+      function Website(rectangle1, data1, id, pk1, owner, date) {
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
+        this.id = id != null ? id : null;
         this.pk = pk1 != null ? pk1 : null;
         this.owner = owner != null ? owner : null;
         if (date == null) {
           date = null;
         }
-        Website.__super__.constructor.call(this, this.rectangle, this.data, this.pk, this.owner, date);
+        Website.__super__.constructor.call(this, this.rectangle, this.data, this.id, this.pk, this.owner, date);
         return;
       }
 
@@ -658,15 +661,16 @@
 
       VideoGame.object_type = 'video-game';
 
-      function VideoGame(rectangle1, data1, pk1, owner, date) {
+      function VideoGame(rectangle1, data1, id, pk1, owner, date) {
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
+        this.id = id != null ? id : null;
         this.pk = pk1 != null ? pk1 : null;
         this.owner = owner != null ? owner : null;
         if (date == null) {
           date = null;
         }
-        VideoGame.__super__.constructor.call(this, this.rectangle, this.data, this.pk, this.owner, date);
+        VideoGame.__super__.constructor.call(this, this.rectangle, this.data, this.id, this.pk, this.owner, date);
         this.currentCheckpoint = -1;
         this.checkpoints = [];
         return;
@@ -737,16 +741,17 @@
 
       Link.parameters = Link.initializeParameters();
 
-      function Link(rectangle1, data1, pk1, owner, date) {
+      function Link(rectangle1, data1, id, pk1, owner, date) {
         var ref;
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
+        this.id = id != null ? id : null;
         this.pk = pk1 != null ? pk1 : null;
         this.owner = owner != null ? owner : null;
         if (date == null) {
           date = null;
         }
-        Link.__super__.constructor.call(this, this.rectangle, this.data, this.pk, this.owner, date);
+        Link.__super__.constructor.call(this, this.rectangle, this.data, this.id, this.pk, this.owner, date);
         if ((ref = this.linkJ) != null) {
           ref.click((function(_this) {
             return function(event) {
