@@ -133,10 +133,6 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 			@rotation = @data.rotation = 0
 			# @data.showSelectionRectangle = true
 
-			if not @drawingID?
-				@title = @pk
-				@addToListItem(@getListItem())
-
 			return
 
 		setControlPath: (points, planet)->
@@ -421,8 +417,9 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 				@controlPath.lastSegment.handleOut = null
 
 			if @controlPath.segments.length<2
-				@remove()
-				return false
+				@updateCreate(@controlPath.firstSegment.point.add(new P.Point(0.25,0.25)), null)
+				# @remove()
+				# return false
 
 			if @data.smooth then @controlPath.smooth()
 

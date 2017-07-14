@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['coffee', 'typeahead'], function(CoffeeScript) {
+  define(['Items/Item', 'coffee', 'typeahead'], function(Item, CoffeeScript) {
     var DrawingPanel;
     DrawingPanel = (function() {
       function DrawingPanel() {
@@ -11,11 +11,11 @@
         this.modifyDrawing = bind(this.modifyDrawing, this);
         this.modifyDrawingCallback = bind(this.modifyDrawingCallback, this);
         this.submitDrawing = bind(this.submitDrawing, this);
-        this.submitDrawingCallback = bind(this.submitDrawingCallback, this);
         this.voteDown = bind(this.voteDown, this);
         this.voteUp = bind(this.voteUp, this);
         this.vote = bind(this.vote, this);
         this.voteCallback = bind(this.voteCallback, this);
+        this.submitDrawingClicked = bind(this.submitDrawingClicked, this);
         this.hideLoadAnimation = bind(this.hideLoadAnimation, this);
         this.showLoadAnimation = bind(this.showLoadAnimation, this);
         this.close = bind(this.close, this);
@@ -24,7 +24,9 @@
         this.setFullSize = bind(this.setFullSize, this);
         this.setHalfSize = bind(this.setHalfSize, this);
         this.onHandleDown = bind(this.onHandleDown, this);
-        var closeBtnJ, handleJ, runBtnJ;
+        var closeBtnJ, contentJ, descriptionJ, handleJ, runBtnJ;
+        this.submitDrawingBtnJ = $('button.submit-drawing');
+        this.submitDrawingBtnJ.click(this.submitDrawingClicked);
         this.drawingPanelJ = $("#drawingPanel");
         this.drawingPanelJ.bind("transitionend webkitTransitionEnd oTransitionEnd MSTransitionEnd", this.resize);
         handleJ = this.drawingPanelJ.find(".panel-handle");
@@ -49,6 +51,18 @@
         this.submitBtnJ.click(this.submitDrawing);
         this.modifyBtnJ.click(this.modifyDrawing);
         this.cancelBtnJ.click(this.cancelDrawing);
+        contentJ = this.drawingPanelJ.find('.content');
+        descriptionJ = contentJ.find('#drawing-description');
+        descriptionJ.keydown((function(_this) {
+          return function(event) {
+            switch (Utils.specialKeys[event.keyCode]) {
+              case 'enter':
+                if (event.metaKey || event.ctrlKey) {
+                  _this.submitDrawing();
+                }
+            }
+          };
+        })(this));
         return;
       }
 
@@ -120,6 +134,18 @@
       };
 
       DrawingPanel.prototype.showSubmitDrawing = function() {
+        var contentJ;
+        this.submitDrawingBtnJ.removeClass('hidden');
+        this.submitDrawingBtnJ.show();
+        contentJ = this.drawingPanelJ.find('.content');
+        contentJ.find('#drawing-title').focus();
+      };
+
+      DrawingPanel.prototype.hideSubmitDrawing = function() {
+        this.submitDrawingBtnJ.hide();
+      };
+
+      DrawingPanel.prototype.submitDrawingClicked = function() {
         var contentJ;
         this.open();
         this.hideLoadAnimation();
@@ -252,15 +278,8 @@
 
       /* submit modify cancel drawing */
 
-      DrawingPanel.prototype.submitDrawingCallback = function(result) {
-        if (!R.loader.checkError(result)) {
-          return;
-        }
-        R.alertManager.alert("Drawing successfully submitted. It will be drawn if it gets 100 votes.", "success");
-      };
-
       DrawingPanel.prototype.submitDrawing = function() {
-        var args, contentJ, i, ids, item, len, ref;
+        var contentJ, description, drawing, drawingID, i, item, len, ref, title;
         if ((R.me == null) || !_.isString(R.me)) {
           R.alertManager.alert("You must be logged in to submit a drawing.", "error");
           return;
@@ -269,29 +288,23 @@
           R.alertManager.alert("You must select some drawings first.", "error");
           return;
         }
-        ids = [];
+        drawingID = Utils.createID();
         ref = R.selectedItems;
         for (i = 0, len = ref.length; i < len; i++) {
           item = ref[i];
-          ids.push(item.id);
+          item.drawingID = drawingID;
         }
         contentJ = this.drawingPanelJ.find('.content');
-        args = {
-          date: Date.now(),
-          pathIDs: ids,
-          title: contentJ.find('#drawing-title').val(),
-          description: contentJ.find('#drawing-description').val()
-        };
-        $.ajax({
-          method: "POST",
-          url: "ajaxCall/",
-          data: {
-            data: JSON.stringify({
-              "function": 'saveDrawing',
-              args: args
-            })
-          }
-        }).done(this.submitDrawingCallback);
+        title = contentJ.find('#drawing-title').val();
+        description = contentJ.find('#drawing-description').val();
+        drawing = new Item.Drawing(null, null, drawingID, null, R.me, Date.now(), title, description, 'pending');
+        drawing.save();
+        drawing.rasterize();
+        R.rasterizer.rasterize(drawing, false);
+        Utils.callNextFrame((function() {
+          return drawing.select(true, false);
+        }), 'select drawing');
+        this.close();
       };
 
       DrawingPanel.prototype.modifyDrawingCallback = function(result) {

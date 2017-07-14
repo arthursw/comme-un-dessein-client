@@ -55,48 +55,6 @@
             R.loader.load();
           }
         };
-        R.parameters['General'].submitDrawing = {
-          type: 'button',
-          label: 'Submit drawing',
-          "default": function() {
-            var args, ids, item, k, len, ref, submitDrawingCallback;
-            if ((R.me == null) || !_.isString(R.me)) {
-              R.alertManager.alert("You must select some drawings first.", "error");
-              return;
-            }
-            if (R.selectedItems.length === 0) {
-              R.alertManager.alert("You must select some drawings first.", "error");
-              return;
-            }
-            ids = [];
-            ref = R.selectedItems;
-            for (k = 0, len = ref.length; k < len; k++) {
-              item = ref[k];
-              ids.push(item.id);
-            }
-            args = {
-              date: Date.now(),
-              pathIDs: ids
-            };
-            submitDrawingCallback = function(result) {
-              if (!R.loader.checkError(result)) {
-                return;
-              }
-              R.alertManager.alert("Drawing successfully submitted. It will be drawn if it gets 100 votes.", "info");
-            };
-            $.ajax({
-              method: "POST",
-              url: "ajaxCall/",
-              data: {
-                data: JSON.stringify({
-                  "function": 'saveDrawing',
-                  args: args
-                })
-              }
-            }).done(submitDrawingCallback);
-          },
-          permanent: true
-        };
         R.parameters["default"] = {};
         R.parameters.strokeWidth = {
           type: 'slider',
@@ -280,6 +238,11 @@
         this.updateParametersForSelectedItemsCallback = bind(this.updateParametersForSelectedItemsCallback, this);
         dat.GUI.autoPace = false;
         R.gui = new dat.GUI();
+        R.gui.onResize = function() {};
+        R.gui.constructor.prototype.onResize = function() {};
+        $(R.gui.domElement).children().first().css({
+          height: 'auto'
+        });
         dat.GUI.toggleHide = function() {};
         this.folders = {};
         $(".dat-gui.dg-sidebar").append(R.gui.domElement);

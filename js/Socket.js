@@ -106,7 +106,6 @@
         this.chatMessageJ.val('');
         if (from === R.me) {
           $("#chatMessagesScroll").mCustomScrollbar("scrollTo", "bottom");
-          $(".sidebar-scrollbar.chatMessagesScroll").mCustomScrollbar("scrollTo", "bottom");
         } else if ($(document.activeElement).parents("#Chat").length > 0) {
           $("#chatMessagesScroll").mCustomScrollbar("scrollTo", "bottom");
         }

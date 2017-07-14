@@ -50,7 +50,7 @@
         if (duplicateData == null) {
           duplicateData = this.getDuplicateData();
         }
-        copy = new this(duplicateData.date, duplicateData.data, duplicateData.id, null, duplicateData.points);
+        copy = new this(duplicateData.date, duplicateData.data, duplicateData.id, null, duplicateData.points, duplicateData.lock, duplicateData.owner);
         copy.draw();
         if (!this.socketAction) {
           copy.save(false);
@@ -100,9 +100,14 @@
         } else {
           Path.__super__.constructor.call(this, this.data, this.id, this.pk, this.date, this.lock.itemListsJ.find('.rPath-list'), this.lock.sortedPaths);
         }
-        if ((this.drawingID != null) && (R.items[this.drawingID] != null)) {
-          drawing = R.items[this.drawingID];
-          drawing.addChild(this);
+        R.paths[this.id] = this;
+        if (this.drawingID == null) {
+          this.addToListItem(this.getListItem(), this.id.substring(0, 5));
+        } else {
+          if (R.items[this.drawingID] != null) {
+            drawing = R.items[this.drawingID];
+            drawing.addChild(this);
+          }
         }
         this.selectionHighlight = null;
         if (points != null) {
@@ -128,13 +133,14 @@
       };
 
       Path.prototype.getDrawingBounds = function() {
+        var ref;
         if (!this.canvasRaster && (this.drawing != null) && this.drawing.strokeBounds.area > 0) {
           if (this.raster != null) {
             return this.raster.bounds;
           }
           return this.drawing.strokeBounds;
         }
-        return this.getBounds().expand(this.data.strokeWidth);
+        return (ref = this.getBounds()) != null ? ref.expand(this.data.strokeWidth) : void 0;
       };
 
       Path.prototype.endSetRectangle = function() {

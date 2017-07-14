@@ -52,7 +52,6 @@
             return;
           }
         }
-        console.log("toggleCurrentCommand");
         $('#loadingMask').css({
           'visibility': 'hidden'
         });
@@ -184,7 +183,6 @@
 
       CommandManager.prototype.unloadItem = function(item) {
         var command, commands, j, len;
-        console.log('unload item: ' + item.id, item);
         commands = this.itemToCommands[item.id];
         if (commands != null) {
           for (j = 0, len = commands.length; j < len; j++) {
@@ -196,7 +194,6 @@
 
       CommandManager.prototype.loadItem = function(item) {
         var command, commands, j, len;
-        console.log('load item: ' + item.id, item);
         commands = this.itemToCommands[item.id];
         if (commands != null) {
           for (j = 0, len = commands.length; j < len; j++) {
@@ -208,7 +205,6 @@
 
       CommandManager.prototype.resurrectItem = function(id, item) {
         var command, commands, j, len;
-        console.log('resurect item ' + id + ': ' + item.id, item);
         commands = this.itemToCommands[id];
         if (commands != null) {
           for (j = 0, len = commands.length; j < len; j++) {

@@ -213,7 +213,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 
 		constructor: (@data, @id, @pk)->
 
-			@id ?= '' + Date.now() + '-' + Math.random()
+			@id ?= Utils.createID()
 			R.items[@id] = @
 
 			# if the RPath is being loaded: directly set pk and load path
@@ -678,7 +678,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			return
 
 		finish: ()->
-			if @rectangle.area == 0
+			if @rectangle.width == 0 and @rectangle.height == 0
 				@remove()
 				return false
 			return true
@@ -711,7 +711,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			return
 
 		getDuplicateData: ()->
-			return data: @getData(), rectangle: @rectangle, id: @id
+			return data: @getData(), rectangle: @rectangle, id: @id, owner: @owner
 
 		duplicateCommand: ()->
 			R.commandManager.add(new Command.DuplicateItem(@), true)
@@ -735,7 +735,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			if @drawingID? then return
 			if @raster? or not @drawing? then return
 			if not R.rasterizer.rasterizeItems then return
-			if @drawing.bounds.area == 0 then return
+			if @drawing.bounds.width == 0 and @drawing.bounds.height == 0 then return
 
 			# background = new P.Path.Rectangle(@drawing.bounds)
 			# background.fillColor = 'blue'

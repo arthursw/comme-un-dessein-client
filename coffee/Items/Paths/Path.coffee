@@ -108,7 +108,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 
 		@create: (duplicateData)->
 			duplicateData ?= @getDuplicateData()
-			copy = new @(duplicateData.date, duplicateData.data, duplicateData.id, null, duplicateData.points)
+			copy = new @(duplicateData.date, duplicateData.data, duplicateData.id, null, duplicateData.points, duplicateData.lock, duplicateData.owner)
 			copy.draw()
 			if not @socketAction
 				copy.save(false)
@@ -140,9 +140,14 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			else
 				super(@data, @id, @pk, @date, @lock.itemListsJ.find('.rPath-list'), @lock.sortedPaths)
 
-			if @drawingID? and R.items[@drawingID]?
-				drawing = R.items[@drawingID]
-				drawing.addChild(@)
+			R.paths[@id] = @
+			
+			if not @drawingID?
+				@addToListItem(@getListItem(), @id.substring(0, 5))
+			else
+				if R.items[@drawingID]?
+					drawing = R.items[@drawingID]
+					drawing.addChild(@)
 
 			@selectionHighlight = null
 
@@ -171,7 +176,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 				if @raster?
 					return @raster.bounds
 				return @drawing.strokeBounds
-			return @getBounds().expand(@data.strokeWidth)
+			return @getBounds()?.expand(@data.strokeWidth)
 
 		# updateMove: (event)->
 		# 	if @drawing?

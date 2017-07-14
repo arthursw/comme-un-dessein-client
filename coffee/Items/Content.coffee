@@ -53,9 +53,9 @@ define [ 'Items/Item' ], (Item) ->
 		getListItem: ()->
 			return R.view.draftListJ
 
-		addToListItem: (@itemListJ)->
+		addToListItem: (@itemListJ, name=@title)->
 
-			title = '' + @title + ' by ' + @owner
+			title = '' + name + ' by ' + @owner
 			@liJ = $("<li>")
 			@liJ.html(title)
 			@liJ.attr("data-id", @id)
@@ -78,6 +78,7 @@ define [ 'Items/Item' ], (Item) ->
 			return
 
 		removeFromListItem: ()->
+			if not @liJ? then return
 			@liJ.remove()
 			nItemsJ = @itemListJ?.find(".n-items")
 			if nItemsJ? and nItemsJ.length>0

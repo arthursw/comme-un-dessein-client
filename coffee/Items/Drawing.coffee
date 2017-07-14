@@ -15,6 +15,8 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 		@label = 'Drawing'
 		@object_type = 'drawing'
 
+		@pkToId = {}
+
 		@initialize: (rectangle)->
 			return
 
@@ -25,8 +27,11 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 		@parameters = @initializeParameters()
 
-		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @title, @description, @status) ->
+		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @title, @description, @status='pending') ->
 			super(@data, @id, @pk)
+
+			if @pk?
+				@constructor.pkToId[@pk] = @id
 
 			@drawing = new P.Group()
 
@@ -34,9 +39,8 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 			@votes = [] # { positive: boolean, author: string, authorPk: pk }
 
-			for id of R.paths
-				path = R.paths[id]
-				if path.drawingID? == @id
+			for id, path of R.paths
+				if path.drawingID? and (path.drawingID == @id or path.drawingID == @pk)
 					@addChild(path)
 
 			# create special list to contains children paths
@@ -134,8 +138,19 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			return
 
 		addChild: (path)->
+			path.drawingID = @id
+			@pathPks ?= []
+			if not path.pk?
+				R.alertManager.alert 'Error: a path has not been saved yet. Please wait until the path is saved before creating the drawing.', 'error'
+				return
+			@pathPks.push(path.pk)
 			@drawing.addChild(path.group)
+			bounds = path.getDrawingBounds()
+			if bounds?
+				@rectangle ?= bounds.clone()
+				@rectangle = @rectangle.unite(bounds)
 			path.updateStrokeColor()
+			path.removeFromListItem()
 			@drawn = false
 			if @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
 				@replaceDrawing()
@@ -151,36 +166,30 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 		save: (addCreateCommand=true) ->
 
 			if R.view.grid.rectangleOverlapsTwoPlanets(@rectangle)
+  				# R.alertManager.alert 'Your item overlaps with two planets.', 'error'
 				return
 
-			if @rectangle.area == 0
+			if @rectangle.with == 0 and @rectangle.height == 0 or @drawing.children.length == 0
 				@remove()
-				R.alertManager.alert "Error: your box is not valid.", "error"
+				R.alertManager.alert "Error: The drawing is empty.", "error"
 				return
 
-			data = @getData()
-
-			siteData =
-				restrictArea: data.restrictArea
-				disableToolbar: data.disableToolbar
-				loadEntireArea: data.loadEntireArea
-
-			args =
+			args = {
 				clientID: @id
-				city: city: R.city
-				box: Utils.CS.boxFromRectangle(@rectangle)
-				object_type: @constructor.object_type
-				data: JSON.stringify(data)
-				siteData: JSON.stringify(siteData)
-				siteName: data.siteName
+				date: @date
+				pathPks: @pathPks
+				title: @title
+				description: @description
+			}
 
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'saveBox', args: args } ).done(@saveCallback)
-			# Dajaxice.draw.saveBox( @saveCallback, args)
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'saveDrawing', args: args } ).done(@saveCallback)
+
 			super
 			return
 
 		# check if the save was successful and set @pk if it is
 		saveCallback: (result)=>
+
 			R.loader.checkError(result)
 			if not result.pk?  		# if @pk is null, the path was not saved, do not set pk nor rasterize
 				@remove()
@@ -188,6 +197,8 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 			@owner = result.owner
 			@setPK(result.pk)
+
+			R.alertManager.alert "Drawing successfully submitted. It will be drawn if it gets 100 votes.", "success"
 
 			if @updateAfterSave?
 				@update(@updateAfterSave)
@@ -273,20 +284,22 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			return
 
 		# can not select a drawing which the user does not own
-		select: (updateOptions=true) =>
+		select: (updateOptions=true, showPanelAndLoad=true) =>
 			if not super(updateOptions) then return false
+			
 			for item in @children()
 				item.deselect()
 
-			R.drawingPanel.showLoadAnimation()
-			R.drawingPanel.open()
+			if showPanelAndLoad
+				R.drawingPanel.showLoadAnimation()
+				R.drawingPanel.open()
 
-			args =
-				pk: @pk
+				args =
+					pk: @pk
 
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
-				R.drawingPanel.setDrawing(@, result)
-			)
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+					R.drawingPanel.setDrawing(@, result)
+				)
 
 			return true
 
@@ -302,7 +315,10 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			return
 
 		children: ()->
-			return @sortedPaths
+			paths = []
+			for child in @drawing.children
+				paths.push(child.controller)
+			return paths
 
 		addItem: (item)->
 			Item.addItemTo(item, @)
@@ -322,15 +338,17 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 				@highlightRectangle.dashArray = []
 			return
 
-		# disable rasterize if no children
-		rasterize: ()->	
+		drawChildren: ()->
 			if @drawing.children.length == 0 then return
-
-			# make sure children are drawn BEFORE this, otherwise this can be rasterized before children are drawn, see Rasterizer.drawItems()
 			
 			for child in @drawing.children
 				child.controller.draw?()
+			return
 
+		# disable rasterize if no children
+		rasterize: ()->	
+			# make sure children are drawn BEFORE this, otherwise this can be rasterized before children are drawn, see Rasterizer.drawItems()
+			@drawChildren()
 			super()
 			return
 		

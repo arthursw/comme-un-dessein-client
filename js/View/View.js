@@ -107,6 +107,7 @@
           return function(event) {
             var eyeIconJ;
             layer.visible = !layer.visible;
+            R.tools.select.deselectAll();
             R.rasterizer.refresh();
             eyeIconJ = itemListJ.find("span.eye");
             if (layer.visible) {

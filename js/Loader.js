@@ -335,8 +335,10 @@
       };
 
       Loader.prototype.createPath = function(args) {
-        var path, ref, ref1;
-        path = new R.tools[args.path.object_type].Path(args.date, args.data, args.id, args.pk, args.points, args.lock, args.owner, (ref = args.drawing) != null ? ref.clientID : void 0);
+        var drawingID, drawingPk, path, ref, ref1;
+        drawingPk = (ref = args.drawing) != null ? ref.$oid : void 0;
+        drawingID = drawingPk != null ? Item.Drawing.pkToId[drawingPk] || drawingPk : null;
+        path = new R.tools[args.path.object_type].Path(args.date, args.data, args.id, args.pk, args.points, args.lock, args.owner, drawingID);
         path.lastUpdateDate = (ref1 = args.path.lastUpdate) != null ? ref1.$date : void 0;
       };
 

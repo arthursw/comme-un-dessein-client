@@ -101,7 +101,7 @@
         }
         if (!((R.currentPaths[from] != null) && ((ref = R.currentPaths[from].data) != null ? ref.polygonMode : void 0))) {
           R.tools.select.deselectAll(false);
-          R.currentPaths[from] = new this.Path(Date.now(), data);
+          R.currentPaths[from] = new this.Path(Date.now(), data, null, null, null, null, R.me);
         }
         R.currentPaths[from].beginCreate(event.point, event, false);
         if ((R.me != null) && from === R.me) {

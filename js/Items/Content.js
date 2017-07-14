@@ -45,10 +45,13 @@
         return R.view.draftListJ;
       };
 
-      Content.prototype.addToListItem = function(itemListJ1) {
+      Content.prototype.addToListItem = function(itemListJ1, name) {
         var nItemsJ, ref, ref1, title;
         this.itemListJ = itemListJ1;
-        title = '' + this.title + ' by ' + this.owner;
+        if (name == null) {
+          name = this.title;
+        }
+        title = '' + name + ' by ' + this.owner;
         this.liJ = $("<li>");
         this.liJ.html(title);
         this.liJ.attr("data-id", this.id);
@@ -75,6 +78,9 @@
 
       Content.prototype.removeFromListItem = function() {
         var nItemsJ, ref;
+        if (this.liJ == null) {
+          return;
+        }
         this.liJ.remove();
         nItemsJ = (ref = this.itemListJ) != null ? ref.find(".n-items") : void 0;
         if ((nItemsJ != null) && nItemsJ.length > 0) {

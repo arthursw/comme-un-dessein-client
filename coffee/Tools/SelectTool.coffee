@@ -36,6 +36,7 @@ define [ 'Tools/Tool', 'Items/Lock', 'Items/Drawing', 'Commands/Command', 'View/
 				@selectionRectangle = null
 			P.project.activeLayer.selected = false
 			R.drawingPanel.close()
+			R.drawingPanel.hideSubmitDrawing()
 			return
 
 		setSelectionRectangleVisibility: (value)=>

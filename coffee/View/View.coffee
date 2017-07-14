@@ -99,7 +99,7 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 			
 			showBtnJ.mousedown (event)=>
 				layer.visible = !layer.visible
-
+				R.tools.select.deselectAll()
 				R.rasterizer.refresh()
 
 				# setTimeout((()->R.tools.select.deselectAll()), 10)

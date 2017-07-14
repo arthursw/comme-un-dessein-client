@@ -80,8 +80,8 @@ define [ 'Tools/Tool', 'UI/Button', 'Commands/Command' ], (Tool, Button, Command
 
 			refreshRasterizer = false
 
-			for itemID of R.items
-				item = R.items[itemID]
+			for itemID of R.paths
+				item = R.paths[itemID]
 				if item.controlPath? and item instanceof R.Tools.Item.Item.PrecisePath and item.owner == R.me and not item.drawingID?
 					if item.getBounds().intersects(@circle.bounds)
 
@@ -197,17 +197,35 @@ define [ 'Tools/Tool', 'UI/Button', 'Commands/Command' ], (Tool, Button, Command
 			@circle.position = event.point
 			@erase()
 
+			# remove paths to delete from paths to create
 			pathsToCreate = []
-
 			for path in @pathsToCreate
 				if @pathsToDelete.indexOf(path) < 0
 					pathsToCreate.push(path)
 
-			R.commandManager.add(new Command.DeleteItems(@pathsToDelete, @pathsToDeleteResurectors), false)
-			R.commandManager.add(new Command.CreateItems(pathsToCreate), true)
-
+			# remove paths which were not saved
+			pathsToDelete = []
+			pathsToDeleteResurectors = {}
 			for path in @pathsToDelete
+				if path.pk?
+					pathsToDelete.push(path)
+					pathsToDeleteResurectors[path.id] = @pathsToDeleteResurectors[path.id]
+
+			if pathsToDelete.length > 0
+				R.commandManager.add(new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors), false)
+			
+			if pathsToCreate.length > 0
+				R.commandManager.add(new Command.CreateItems(pathsToCreate), false)
+
+			for path in pathsToDelete
 				path.delete()
+
+			for path in pathsToCreate
+				path.save()
+				if not path.drawing? then path.draw?()
+				if R.rasterizer.rasterizeItems then path.rasterize?()
+
+			R.rasterizer.enableRasterization(false)
 
 			return
 

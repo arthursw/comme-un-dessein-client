@@ -82,8 +82,8 @@
       EraserTool.prototype.erase = function() {
         var data, i, intersection, intersections, item, itemID, j, k, len, len1, len2, location, newP, p, path, paths, points, refreshRasterizer;
         refreshRasterizer = false;
-        for (itemID in R.items) {
-          item = R.items[itemID];
+        for (itemID in R.paths) {
+          item = R.paths[itemID];
           if ((item.controlPath != null) && item instanceof R.Tools.Item.Item.PrecisePath && item.owner === R.me && (item.drawingID == null)) {
             if (item.getBounds().intersects(this.circle.bounds)) {
               intersections = this.circle.getCrossings(item.controlPath);
@@ -203,7 +203,7 @@
       };
 
       EraserTool.prototype.end = function(event, from) {
-        var i, j, len, len1, path, pathsToCreate, ref, ref1;
+        var i, j, k, l, len, len1, len2, len3, path, pathsToCreate, pathsToDelete, pathsToDeleteResurectors, ref, ref1;
         if (from == null) {
           from = R.me;
         }
@@ -217,13 +217,41 @@
             pathsToCreate.push(path);
           }
         }
-        R.commandManager.add(new Command.DeleteItems(this.pathsToDelete, this.pathsToDeleteResurectors), false);
-        R.commandManager.add(new Command.CreateItems(pathsToCreate), true);
+        pathsToDelete = [];
+        pathsToDeleteResurectors = {};
         ref1 = this.pathsToDelete;
         for (j = 0, len1 = ref1.length; j < len1; j++) {
           path = ref1[j];
+          if (path.pk != null) {
+            pathsToDelete.push(path);
+            pathsToDeleteResurectors[path.id] = this.pathsToDeleteResurectors[path.id];
+          }
+        }
+        if (pathsToDelete.length > 0) {
+          R.commandManager.add(new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors), false);
+        }
+        if (pathsToCreate.length > 0) {
+          R.commandManager.add(new Command.CreateItems(pathsToCreate), false);
+        }
+        for (k = 0, len2 = pathsToDelete.length; k < len2; k++) {
+          path = pathsToDelete[k];
           path["delete"]();
         }
+        for (l = 0, len3 = pathsToCreate.length; l < len3; l++) {
+          path = pathsToCreate[l];
+          path.save();
+          if (path.drawing == null) {
+            if (typeof path.draw === "function") {
+              path.draw();
+            }
+          }
+          if (R.rasterizer.rasterizeItems) {
+            if (typeof path.rasterize === "function") {
+              path.rasterize();
+            }
+          }
+        }
+        R.rasterizer.enableRasterization(false);
       };
 
       EraserTool.prototype.finish = function(from) {

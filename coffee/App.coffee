@@ -92,7 +92,7 @@ requirejs.config
 		# 'paper': ['//cdnjs.cloudflare.com/ajax/libs/paper.js/0.9.22/paper-full.min', libs + 'paper-full.min']
 		'paper': [libs + 'paper-full']
 		'three': [libs + 'three']
-		'gui': [libs + 'dat.gui.min']
+		'gui': [libs + 'dat.gui']
 		'typeahead': [libs + 'typeahead.bundle.min']
 		'pinit': [libs + 'pinit']
 		'howler': [libs + 'howler']

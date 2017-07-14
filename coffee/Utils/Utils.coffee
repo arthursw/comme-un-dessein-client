@@ -129,6 +129,9 @@ define [ 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor', 'paper'
 		224: 'command'
 	}
 
+	Utils.createID = ()->
+		return ('' + Math.random()).substring(2) + '-' + Date.now()
+
 	# @return [Number] sign of *x* (+1 or -1)
 	Utils.sign = (x) ->
 		(if typeof x is "number" then (if x then (if x < 0 then -1 else 1) else (if x is x then 0 else NaN)) else NaN)

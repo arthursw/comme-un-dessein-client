@@ -299,7 +299,9 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 			return
 
 		createPath: (args)->
-			path = new R.tools[args.path.object_type].Path(args.date, args.data, args.id, args.pk, args.points, args.lock, args.owner, args.drawing?.clientID)
+			drawingPk = args.drawing?.$oid
+			drawingID = if drawingPk? then (Item.Drawing.pkToId[drawingPk] or drawingPk) else null
+			path = new R.tools[args.path.object_type].Path(args.date, args.data, args.id, args.pk, args.points, args.lock, args.owner, drawingID)
 			path.lastUpdateDate = args.path.lastUpdate?.$date
 			return
 

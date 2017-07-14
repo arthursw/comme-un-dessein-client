@@ -59,6 +59,7 @@
         }
         P.project.activeLayer.selected = false;
         R.drawingPanel.close();
+        R.drawingPanel.hideSubmitDrawing();
       };
 
       SelectTool.prototype.setSelectionRectangleVisibility = function(value) {

@@ -461,7 +461,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 
 			# hide all items except selected ones and the ones being created
 			for id, item of R.items
-				if item == R.currentPaths[R.me] or item.selectionRectangle? then continue
+				if item == R.currentPaths[R.me] or R.selectedItems.indexOf(item) >= 0 then continue
 				item.group?.visible = false
 
 			# show excluded items and their children
@@ -582,12 +582,16 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			@drawItems(true)
 			return
 
-		enableRasterization: ()->
+		enableRasterization: (drawAllItems=true)->
 			@rasterizationDisabled = false
-			@rasterizeView()
+			if drawAllItems
+				@itemsAreDrawn = false
+				@drawItems()
+			sortedItems = @constructor.getSortedItems()
+			@rasterize(sortedItems)
 			return
 
-		refresh: (callback=null)->
+		refresh: (callback=null, drawAllItems=false)->
 			if not callback?
 				callback = ()->
 					p = new P.Path()
@@ -595,6 +599,9 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 					p.remove()
 					return
 			@clearRasters()
+			if drawAllItems
+				@itemsAreDrawn = false
+				@drawItems()
 			sortedItems = @constructor.getSortedItems()
 			@rasterize(sortedItems)
 			@postRasterizationCallback = callback

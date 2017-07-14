@@ -161,10 +161,6 @@
           this.data.polygonMode = R.polygonMode;
         }
         this.rotation = this.data.rotation = 0;
-        if (this.drawingID == null) {
-          this.title = this.pk;
-          this.addToListItem(this.getListItem());
-        }
         return;
       }
 
@@ -376,8 +372,7 @@
           this.controlPath.lastSegment.handleOut = null;
         }
         if (this.controlPath.segments.length < 2) {
-          this.remove();
-          return false;
+          this.updateCreate(this.controlPath.firstSegment.point.add(new P.Point(0.25, 0.25)), null);
         }
         if (this.data.smooth) {
           this.controlPath.smooth();

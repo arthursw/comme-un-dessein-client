@@ -560,7 +560,7 @@
         ref1 = R.items;
         for (id in ref1) {
           item = ref1[id];
-          if (item === R.currentPaths[R.me] || (item.selectionRectangle != null)) {
+          if (item === R.currentPaths[R.me] || R.selectedItems.indexOf(item) >= 0) {
             continue;
           }
           if ((ref2 = item.group) != null) {
@@ -714,15 +714,27 @@
         this.drawItems(true);
       };
 
-      TileRasterizer.prototype.enableRasterization = function() {
+      TileRasterizer.prototype.enableRasterization = function(drawAllItems) {
+        var sortedItems;
+        if (drawAllItems == null) {
+          drawAllItems = true;
+        }
         this.rasterizationDisabled = false;
-        this.rasterizeView();
+        if (drawAllItems) {
+          this.itemsAreDrawn = false;
+          this.drawItems();
+        }
+        sortedItems = this.constructor.getSortedItems();
+        this.rasterize(sortedItems);
       };
 
-      TileRasterizer.prototype.refresh = function(callback) {
+      TileRasterizer.prototype.refresh = function(callback, drawAllItems) {
         var sortedItems;
         if (callback == null) {
           callback = null;
+        }
+        if (drawAllItems == null) {
+          drawAllItems = false;
         }
         if (callback == null) {
           callback = function() {
@@ -733,6 +745,10 @@
           };
         }
         this.clearRasters();
+        if (drawAllItems) {
+          this.itemsAreDrawn = false;
+          this.drawItems();
+        }
         sortedItems = this.constructor.getSortedItems();
         this.rasterize(sortedItems);
         this.postRasterizationCallback = callback;

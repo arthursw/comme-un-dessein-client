@@ -73,7 +73,7 @@
       'bootstrap': [libs + 'bootstrap.min'],
       'paper': [libs + 'paper-full'],
       'three': [libs + 'three'],
-      'gui': [libs + 'dat.gui.min'],
+      'gui': [libs + 'dat.gui'],
       'typeahead': [libs + 'typeahead.bundle.min'],
       'pinit': [libs + 'pinit'],
       'howler': [libs + 'howler'],

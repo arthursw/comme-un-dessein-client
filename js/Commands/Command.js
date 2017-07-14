@@ -795,6 +795,7 @@
         this.waitingSaveCallback = this.item.id;
         R.commandManager.resurrectItem(this.duplicateData.id, this.item);
         this.item.select();
+        return true;
       };
 
       CreateItemCommand.prototype.deleteItem = function() {
@@ -802,18 +803,21 @@
         this.waitingDeleteCallback = this.item.id;
         this.item["delete"]();
         this.item = null;
+        return true;
       };
 
       CreateItemCommand.prototype["do"] = function() {
-        this.duplicateItem();
+        var deffered;
+        deffered = this.duplicateItem();
         CreateItemCommand.__super__["do"].call(this);
-        return true;
+        return deffered;
       };
 
       CreateItemCommand.prototype.undo = function() {
-        this.deleteItem();
+        var deffered;
+        deffered = this.deleteItem();
         CreateItemCommand.__super__.undo.call(this);
-        return true;
+        return deffered;
       };
 
       CreateItemCommand.prototype.itemSaved = function(item) {
@@ -849,15 +853,17 @@
       }
 
       DeleteItemCommand.prototype["do"] = function() {
-        this.deleteItem();
+        var deferred;
+        deferred = this.deleteItem();
         this.superDo();
-        return true;
+        return deferred;
       };
 
       DeleteItemCommand.prototype.undo = function() {
-        this.duplicateItem();
+        var deferred;
+        deferred = this.duplicateItem();
         this.superUndo();
-        return true;
+        return deferred;
       };
 
       return DeleteItemCommand;
@@ -888,6 +894,7 @@
           item.select();
           this.waitingSaveCallbacks.push(item.id);
         }
+        return this.waitingSaveCallbacks.length > 0;
       };
 
       CreateItemsCommand.prototype.deleteItems = function() {
@@ -910,18 +917,21 @@
           id = idsToRemove[j];
           delete this.items[id];
         }
+        return this.waitingDeleteCallbacks.length > 0;
       };
 
       CreateItemsCommand.prototype["do"] = function() {
-        this.duplicateItems();
+        var deferred;
+        deferred = this.duplicateItems();
         CreateItemsCommand.__super__["do"].call(this);
-        return true;
+        return deferred;
       };
 
       CreateItemsCommand.prototype.undo = function() {
-        this.deleteItems();
+        var deferred;
+        deferred = this.deleteItems();
         CreateItemsCommand.__super__.undo.call(this);
-        return true;
+        return deferred;
       };
 
       CreateItemsCommand.prototype.itemSaved = function(item) {

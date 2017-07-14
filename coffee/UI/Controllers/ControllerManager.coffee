@@ -52,36 +52,13 @@ define [ 'UI/Controllers/Controller', 'UI/Controllers/ColorController', 'UI/Cont
 					R.loader.load()
 					return
 
-			R.parameters['General'].submitDrawing =
-				type: 'button'
-				label: 'Submit drawing'
-				default: ()->
-
-					if not R.me? or not _.isString(R.me)
-						R.alertManager.alert "You must select some drawings first.", "error"
-						return
-
-					if R.selectedItems.length == 0
-						R.alertManager.alert "You must select some drawings first.", "error"
-						return
-
-					ids = []
-					for item in R.selectedItems
-						ids.push(item.id)
-
-					args = {
-						date: Date.now()
-						pathIDs: ids
-					}
-
-					submitDrawingCallback = (result)->
-						if not R.loader.checkError(result) then return
-						R.alertManager.alert "Drawing successfully submitted. It will be drawn if it gets 100 votes.", "info"
-						return
-
-					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'saveDrawing', args: args } ).done(submitDrawingCallback)
-					return
-				permanent: true
+			# R.parameters['General'].submitDrawing =
+			# 	type: 'button'
+			# 	label: 'Submit drawing'
+			# 	default: ()->
+			# 		R.drawingPanel.submitDrawing()
+			# 		return
+			# 	permanent: true
 
 			# R.parameters['General'].displayGrid =
 			# 	type: 'checkbox'
@@ -357,6 +334,10 @@ define [ 'UI/Controllers/Controller', 'UI/Controllers/ColorController', 'UI/Cont
 
 			dat.GUI.autoPace = false
 			R.gui = new dat.GUI()
+			R.gui.onResize = ()-> return
+			R.gui.constructor.prototype.onResize = ()-> return
+			$(R.gui.domElement).children().first().css( height: 'auto' )
+
 			dat.GUI.toggleHide = ()-> return
 			@folders = {}
 			$(".dat-gui.dg-sidebar").append(R.gui.domElement)

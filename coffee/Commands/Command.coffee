@@ -715,7 +715,7 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 			R.commandManager.resurrectItem(@duplicateData.id, @item)
 			# @setDuplicatedItemToCommands()
 			@item.select()
-			return
+			return true
 
 		deleteItem: ()->
 			# @removeDeleteItemFromCommands()
@@ -724,17 +724,17 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 			@waitingDeleteCallback = @item.id
 			@item.delete()
 			@item = null
-			return
+			return true
 
 		do: ()->
-			@duplicateItem()
+			deffered = @duplicateItem()
 			super()
-			return true
+			return deffered
 
 		undo: ()->
-			@deleteItem()
+			deffered = @deleteItem()
 			super()
-			return true
+			return deffered
 		
 		itemSaved: (item)->
 			if item.id == @waitingSaveCallback
@@ -758,14 +758,14 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 		constructor: (item)-> super(item, 'Delete item')
 
 		do: ()->
-			@deleteItem()
+			deferred = @deleteItem()
 			@superDo()
-			return true
+			return deferred
 
 		undo: ()->
-			@duplicateItem()
+			deferred = @duplicateItem()
 			@superUndo()
-			return true
+			return deferred
 
 	class CreateItemsCommand extends ItemsCommand
 
@@ -782,7 +782,7 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 				R.commandManager.resurrectItem(itemResurector.data.id, item)
 				item.select()
 				@waitingSaveCallbacks.push(item.id)
-			return
+			return @waitingSaveCallbacks.length > 0
 
 		deleteItems: ()->
 			@itemResurectors = {}
@@ -797,17 +797,17 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 			for id in idsToRemove
 				delete @items[id]
 
-			return
+			return @waitingDeleteCallbacks.length > 0
 
 		do: ()->
-			@duplicateItems()
+			deferred = @duplicateItems()
 			super()
-			return true
+			return deferred
 
 		undo: ()->
-			@deleteItems()
+			deferred = @deleteItems()
 			super()
-			return true
+			return deferred
 
 		itemSaved: (item)->
 			if not @waitingSaveCallbacks? then return

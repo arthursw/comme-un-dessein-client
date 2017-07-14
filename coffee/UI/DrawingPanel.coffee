@@ -1,8 +1,11 @@
-define [ 'coffee', 'typeahead' ], (CoffeeScript) -> 			# 'ace/ext-language_tools', required?
+define [ 'Items/Item', 'coffee', 'typeahead' ], (Item, CoffeeScript) -> 			# 'ace/ext-language_tools', required?
 
 	class DrawingPanel
 
 		constructor: ()->
+			# the button to open the panel
+			@submitDrawingBtnJ = $('button.submit-drawing')
+			@submitDrawingBtnJ.click(@submitDrawingClicked)
 
 			# editor
 			@drawingPanelJ = $("#drawingPanel")
@@ -44,6 +47,14 @@ define [ 'coffee', 'typeahead' ], (CoffeeScript) -> 			# 'ace/ext-language_tools
 			@submitBtnJ.click(@submitDrawing)
 			@modifyBtnJ.click(@modifyDrawing)
 			@cancelBtnJ.click(@cancelDrawing)
+
+			contentJ = @drawingPanelJ.find('.content')
+			descriptionJ = contentJ.find('#drawing-description')
+			descriptionJ.keydown (event)=>
+				switch Utils.specialKeys[event.keyCode]
+					when 'enter'
+						if event.metaKey or event.ctrlKey then @submitDrawing()
+				return
 
 			return
 
@@ -103,6 +114,18 @@ define [ 'coffee', 'typeahead' ], (CoffeeScript) -> 			# 'ace/ext-language_tools
 			return
 
 		showSubmitDrawing: ()->
+			@submitDrawingBtnJ.removeClass('hidden')
+			@submitDrawingBtnJ.show()
+			contentJ = @drawingPanelJ.find('.content')
+			contentJ.find('#drawing-title').focus()
+			return
+
+		hideSubmitDrawing: ()->
+			@submitDrawingBtnJ.hide()
+			return
+
+		submitDrawingClicked: ()=>
+			# @submitDrawingBtnJ.hide()
 			@open()
 			@hideLoadAnimation()
 			@currentDrawing = null
@@ -210,11 +233,6 @@ define [ 'coffee', 'typeahead' ], (CoffeeScript) -> 			# 'ace/ext-language_tools
 
 		### submit modify cancel drawing ###
 
-		submitDrawingCallback: (result)=>
-			if not R.loader.checkError(result) then return
-			R.alertManager.alert "Drawing successfully submitted. It will be drawn if it gets 100 votes.", "success"
-			return
-
 		submitDrawing: ()=>
 
 			if not R.me? or not _.isString(R.me)
@@ -225,20 +243,22 @@ define [ 'coffee', 'typeahead' ], (CoffeeScript) -> 			# 'ace/ext-language_tools
 				R.alertManager.alert "You must select some drawings first.", "error"
 				return
 
-			ids = []
+			drawingID = Utils.createID()
+
 			for item in R.selectedItems
-				ids.push(item.id)
+				item.drawingID = drawingID
 
 			contentJ = @drawingPanelJ.find('.content')
 
-			args = {
-				date: Date.now()
-				pathIDs: ids
-				title: contentJ.find('#drawing-title').val()
-				description: contentJ.find('#drawing-description').val()
-			}
-
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'saveDrawing', args: args } ).done(@submitDrawingCallback)
+			title = contentJ.find('#drawing-title').val()
+			description = contentJ.find('#drawing-description').val()
+			drawing = new Item.Drawing(null, null, drawingID, null, R.me, Date.now(), title, description, 'pending')
+			drawing.save()
+			drawing.rasterize()
+			R.rasterizer.rasterize(drawing, false)
+			Utils.callNextFrame((()-> return drawing.select(true, false)), 'select drawing')
+			
+			@close()
 
 			return
 

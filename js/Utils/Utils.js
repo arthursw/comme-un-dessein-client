@@ -99,6 +99,9 @@
       93: 'command',
       224: 'command'
     };
+    Utils.createID = function() {
+      return ('' + Math.random()).substring(2) + '-' + Date.now();
+    };
     Utils.sign = function(x) {
       if (typeof x === "number") {
         if (x) {

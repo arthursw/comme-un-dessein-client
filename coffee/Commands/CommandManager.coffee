@@ -34,7 +34,7 @@ define [ 'Commands/Command' ], (Command) ->
 			if event? and event.detail?
 				if event.detail != @waitingCommand then return
 
-			console.log "toggleCurrentCommand"
+
 			$('#loadingMask').css('visibility': 'hidden')
 			document.removeEventListener('command executed', @toggleCurrentCommand)
 
@@ -145,7 +145,6 @@ define [ 'Commands/Command' ], (Command) ->
 			return
 		
 		unloadItem: (item)->
-			console.log('unload item: ' + item.id, item)
 			commands = @itemToCommands[item.id]
 			if commands?
 				for command in commands
@@ -154,7 +153,6 @@ define [ 'Commands/Command' ], (Command) ->
 			return
 
 		loadItem: (item)->
-			console.log('load item: ' + item.id, item)
 			commands = @itemToCommands[item.id]
 			if commands?
 				for command in commands
@@ -162,7 +160,6 @@ define [ 'Commands/Command' ], (Command) ->
 			return
 
 		resurrectItem: (id, item)->
-			console.log('resurect item ' + id + ': ' + item.id, item)
 			commands = @itemToCommands[id]
 			if commands?
 				for command in commands

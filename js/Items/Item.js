@@ -126,7 +126,7 @@
         this.pk = pk;
         this.deleteFromDatabaseCallback = bind(this.deleteFromDatabaseCallback, this);
         if (this.id == null) {
-          this.id = '' + Date.now() + '-' + Math.random();
+          this.id = Utils.createID();
         }
         R.items[this.id] = this;
         if (this.pk != null) {
@@ -380,7 +380,7 @@
       };
 
       Item.prototype.finish = function() {
-        if (this.rectangle.area === 0) {
+        if (this.rectangle.width === 0 && this.rectangle.height === 0) {
           this.remove();
           return false;
         }
@@ -428,7 +428,8 @@
         return {
           data: this.getData(),
           rectangle: this.rectangle,
-          id: this.id
+          id: this.id,
+          owner: this.owner
         };
       };
 
@@ -468,7 +469,7 @@
         if (!R.rasterizer.rasterizeItems) {
           return;
         }
-        if (this.drawing.bounds.area === 0) {
+        if (this.drawing.bounds.width === 0 && this.drawing.bounds.height === 0) {
           return;
         }
         this.raster = this.drawing.rasterize();
