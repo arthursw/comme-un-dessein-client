@@ -58,17 +58,29 @@
         window.setPageFullyLoaded(true);
       }
     });
+    R.debugDatabase = function() {
+      return $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'debugDatabase',
+            args: {}
+          })
+        }
+      });
+    };
     R.fsi = function() {
       var ref;
       return (ref = R.selectedItems) != null ? ref[0] : void 0;
     };
     R.fi = function() {
-      var itemID;
+      var itemId;
       if (R.items == null) {
         return null;
       }
-      for (itemID in R.items) {
-        return R.items[itemID];
+      for (itemId in R.items) {
+        return R.items[itemId];
       }
     };
   });

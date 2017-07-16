@@ -65,10 +65,10 @@ define [ 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor', 'paper'
 	#|*|  https://developer.mozilla.org/en-US/docs/DOM/window.setInterval
 	#|*|
 	#|*|  Syntax:
-	#|*|  var timeoutID = window.setTimeout(func, delay, [param1, param2, ...]);
-	#|*|  var timeoutID = window.setTimeout(code, delay);
-	#|*|  var intervalID = window.setInterval(func, delay[, param1, param2, ...]);
-	#|*|  var intervalID = window.setInterval(code, delay);
+	#|*|  var timeoutId = window.setTimeout(func, delay, [param1, param2, ...]);
+	#|*|  var timeoutId = window.setTimeout(code, delay);
+	#|*|  var intervalId = window.setInterval(func, delay[, param1, param2, ...]);
+	#|*|  var intervalId = window.setInterval(code, delay);
 	#|*|
 	#\
 	if document.all and not window.setTimeout.isPolyfill
@@ -129,7 +129,7 @@ define [ 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor', 'paper'
 		224: 'command'
 	}
 
-	Utils.createID = ()->
+	Utils.createId = ()->
 		return ('' + Math.random()).substring(2) + '-' + Date.now()
 
 	# @return [Number] sign of *x* (+1 or -1)

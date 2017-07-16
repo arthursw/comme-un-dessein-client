@@ -693,10 +693,10 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 		# setDuplicatedItemToCommands: ()->
 		# 	for command in R.commandManager.history
 		# 		if command == @ then continue
-		# 		if command.item? and command.item == @itemID then command.item = @item
+		# 		if command.item? and command.item == @itemId then command.item = @item
 		# 		if command.items?
 		# 			for item, i in command.items
-		# 				if item == @itemID then command.items[i] = @item
+		# 				if item == @itemId then command.items[i] = @item
 		# 	return
 
 		# removeDeleteItemFromCommands: ()->
@@ -706,7 +706,7 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 		# 		if command.items?
 		# 			for item, i in command.items
 		# 				if item == @item then command.items[i] = @item.id or @item.id
-		# 	@itemID = @item.id or @item.id
+		# 	@itemId = @item.id or @item.id
 		# 	return
 
 		duplicateItem: ()->

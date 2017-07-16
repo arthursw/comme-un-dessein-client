@@ -127,8 +127,8 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 			return data
 
 		# overload {RPath#constructor}
-		constructor: (@date=null, @data=null, @id=null, @pk=null, points=null, @lock=null, @owner=null, @drawingID=null) ->
-			super(@date, @data, @id, @pk, points, @lock, @owner, @drawingID)
+		constructor: (@date=null, @data=null, @id=null, @pk=null, points=null, @lock=null, @owner=null, @drawingId=null) ->
+			super(@date, @data, @id, @pk, points, @lock, @owner, @drawingId)
 			if @constructor.polygonMode then @data.polygonMode = R.polygonMode
 			@rotation = @data.rotation = 0
 			# @data.showSelectionRectangle = true
@@ -357,6 +357,7 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 		updateCreate: (point, event)->
 			if not @data.polygonMode
 
+				# @controlPath.add(Utils.Snap.snap2D(point, 50))
 				@controlPath.add(point)
 
 				@checkUpdateDrawing(@controlPath.lastSegment, false)
@@ -423,7 +424,10 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 
 			if @data.smooth then @controlPath.smooth()
 
+			
 			@endDraw()
+			
+			@draw() # redraw to get clean path
 
 			@drawingOffset = 0
 
@@ -794,7 +798,7 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 				@selectedSegment = segment
 				@highlightSelectedPoint()
 				if update then @update('point')
-				R.socket.emit "bounce", itemID: @id, function: "addPoint", arguments: [index, point, offset, false]
+				R.socket.emit "bounce", itemId: @id, function: "addPoint", arguments: [index, point, offset, false]
 			return segment
 
 		deletePointCommand: ()->
@@ -820,7 +824,7 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 			if not @socketAction
 				R.tools.select.updateSelectionRectangle()
 				if update then @update('point')
-				R.socket.emit "bounce", itemID: @id, function: "deletePoint", arguments: [segment.index, false]
+				R.socket.emit "bounce", itemId: @id, function: "deletePoint", arguments: [segment.index, false]
 			return location
 
 		# delete the selected point (from curve) and delete curve if there are no points anymore
@@ -854,7 +858,7 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 
 			if not @socketAction
 				if update then @update('segment')
-				R.socket.emit "bounce", itemID: @id, function: "modifyPoint", arguments: [segment.index, position, handleIn, handleOut, fastDraw, false]
+				R.socket.emit "bounce", itemId: @id, function: "modifyPoint", arguments: [segment.index, position, handleIn, handleOut, fastDraw, false]
 			return
 
 		updateModifyPoint: (event)->
@@ -942,7 +946,7 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 			@highlightSelectedPoint()
 			if not @socketAction
 				if update then @update('point')
-				R.socket.emit "bounce", itemID: @id, function: "modifyPointType", arguments: [segment.index, rtype, false]
+				R.socket.emit "bounce", itemId: @id, function: "modifyPointType", arguments: [segment.index, rtype, false]
 			return
 
 		modifyControlPathCommand: (previousPointsAndPlanet, newPointsAndPlanet)->
@@ -960,7 +964,7 @@ define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Com
 			@draw()
 			if not @socketAction
 				if update then @update('point')
-				R.socket.emit "bounce", itemID: @id, function: "modifyControlPath", arguments: [pointsAndPlanet, false]
+				R.socket.emit "bounce", itemId: @id, function: "modifyControlPath", arguments: [pointsAndPlanet, false]
 			return
 
 		setSmooth: (smooth)->

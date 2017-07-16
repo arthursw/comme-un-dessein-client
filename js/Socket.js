@@ -213,8 +213,8 @@
             if (rFunction != null) {
               rFunction.apply(tool, data["arguments"]);
             }
-          } else if (data.itemID != null) {
-            item = R.items[data.itemID];
+          } else if (data.itemId != null) {
+            item = R.items[data.itemId];
             if ((item != null) && (item.currentCommand == null)) {
               allowedFunctions = ['setRectangle', 'setRotation', 'moveTo', 'setParameter', 'modifyPoint', 'modifyPointType', 'modifySpeed', 'setPK', 'delete', 'create', 'addPoint', 'deletePoint', 'modifyControlPath', 'setText'];
               if (ref1 = data["function"], indexOf.call(allowedFunctions, ref1) < 0) {

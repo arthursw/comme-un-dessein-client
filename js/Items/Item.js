@@ -126,7 +126,7 @@
         this.pk = pk;
         this.deleteFromDatabaseCallback = bind(this.deleteFromDatabaseCallback, this);
         if (this.id == null) {
-          this.id = Utils.createID();
+          this.id = Utils.createId();
         }
         R.items[this.id] = this;
         if (this.pk != null) {
@@ -178,7 +178,7 @@
             this.update(name);
           }
           R.socket.emit("bounce", {
-            itemID: this.id,
+            itemId: this.id,
             "function": "setParameter",
             "arguments": [name, value, false, false]
           });
@@ -217,7 +217,7 @@
             this.update('rectangle');
           }
           R.socket.emit("bounce", {
-            itemID: this.id,
+            itemId: this.id,
             "function": "setRectangle",
             "arguments": [rectangle, false]
           });
@@ -241,7 +241,7 @@
             this.update('position');
           }
           R.socket.emit("bounce", {
-            itemID: this.id,
+            itemId: this.id,
             "function": "moveTo",
             "arguments": [position, false]
           });
@@ -412,7 +412,7 @@
         if (!this.socketAction) {
           this.deleteFromDatabase();
           R.socket.emit("bounce", {
-            itemID: this.id,
+            itemId: this.id,
             "function": "delete",
             "arguments": []
           });
@@ -460,7 +460,7 @@
       };
 
       Item.prototype.rasterize = function() {
-        if (this.drawingID != null) {
+        if (this.drawingId != null) {
           return;
         }
         if ((this.raster != null) || (this.drawing == null)) {

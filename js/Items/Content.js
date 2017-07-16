@@ -116,7 +116,7 @@
             this.update('rotation');
           }
           R.socket.emit("bounce", {
-            itemID: this.id,
+            itemId: this.id,
             "function": "setRotation",
             "arguments": [rotation, center, false]
           });

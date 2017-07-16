@@ -92,10 +92,10 @@ define [ 'Utils/Utils' ], () ->
 				return ( not required ) or ( not inputJ.is(':visible') ) or ( data[name]? and data[name] != '' )
 
 			if label
-				inputID = 'modal-' + name + '-' + Math.random().toString()
-				inputJ.attr('id', inputID)
+				inputId = 'modal-' + name + '-' + Math.random().toString()
+				inputJ.attr('id', inputId)
 				divJ = $("<div id='#{id}' class='form-group #{className}-group'></div>")
-				labelJ = $("<label for='#{inputID}'>#{label}</label>")
+				labelJ = $("<label for='#{inputId}'>#{label}</label>")
 				divJ.append(labelJ)
 				divJ.append(inputJ)
 				inputJ = divJ

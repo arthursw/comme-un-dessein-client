@@ -213,7 +213,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 
 		constructor: (@data, @id, @pk)->
 
-			@id ?= Utils.createID()
+			@id ?= Utils.createId()
 			R.items[@id] = @
 
 			# if the RPath is being loaded: directly set pk and load path
@@ -268,7 +268,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			if not @socketAction
 				if update
 					@update(name)
-				R.socket.emit "bounce", itemID: @id, function: "setParameter", arguments: [name, value, false, false]
+				R.socket.emit "bounce", itemId: @id, function: "setParameter", arguments: [name, value, false, false]
 			return
 
 		# # set path items (control path, drawing, etc.) to the right state before performing hitTest
@@ -446,7 +446,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			# if @selectionRectangle then @updateSelectionRectangle()
 			if not @socketAction
 				if update then @update('rectangle')
-				R.socket.emit "bounce", itemID: @id, function: "setRectangle", arguments: [rectangle, false]
+				R.socket.emit "bounce", itemId: @id, function: "setRectangle", arguments: [rectangle, false]
 			return
 
 		validatePosition: ()->
@@ -508,7 +508,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 
 			if not @socketAction
 				if update then @update('position')
-				R.socket.emit "bounce", itemID: @id, function: "moveTo", arguments: [position, false]
+				R.socket.emit "bounce", itemId: @id, function: "moveTo", arguments: [position, false]
 			return
 
 		translate: (delta, update)->
@@ -598,7 +598,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 		# 	# if @id? then R.commandManager.setItemPk(@id, @pk)
 		# 	# R.items[@pk] = @
 		# 	# delete R.items[@id]
-		# 	if not loading and not @socketAction then R.socket.emit "bounce", itemID: @id, function: "setPK", arguments: [@pk]
+		# 	if not loading and not @socketAction then R.socket.emit "bounce", itemId: @id, function: "setPK", arguments: [@pk]
 			return
 
 		deleteFromDatabaseCallback: ()=>
@@ -702,7 +702,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			if not @pk? then return
 			if not @socketAction
 				@deleteFromDatabase()
-				R.socket.emit "bounce", itemID: @id, function: "delete", arguments: []
+				R.socket.emit "bounce", itemId: @id, function: "delete", arguments: []
 			@pk = null
 			return
 
@@ -732,7 +732,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			return
 
 		rasterize: ()->
-			if @drawingID? then return
+			if @drawingId? then return
 			if @raster? or not @drawing? then return
 			if not R.rasterizer.rasterizeItems then return
 			if @drawing.bounds.width == 0 and @drawing.bounds.height == 0 then return

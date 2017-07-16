@@ -164,15 +164,15 @@ define [
 
 			# # Open / close touch device connection
 
-			# touchAPI.Close(touchDeviceID)
-			# error = touchAPI.Open(touchDeviceID, passThrough) # passThrough == true: observe and pass touch data to system
+			# touchAPI.Close(touchDeviceId)
+			# error = touchAPI.Open(touchDeviceId, passThrough) # passThrough == true: observe and pass touch data to system
 			# if error != 0 then console.log "unable to establish connection to wacom plugin"
 
 			# # touch device capacities:
 
-			# deviceCapacities = touchAPI.TouchDeviceCapabilities(touchDeviceID)
+			# deviceCapacities = touchAPI.TouchDeviceCapabilities(touchDeviceId)
 			# deviceCapacities.Version
-			# deviceCapacities.DeviceID
+			# deviceCapacities.DeviceId
 			# deviceCapacities.MaxFingers
 			# deviceCapacities.ReportedSizeX
 			# deviceCapacities.ReportedSizeY
@@ -188,7 +188,7 @@ define [
 			# touchStates[touchState]
 
 			# # Get touch data for as many fingers as supported
-			# touchRawFingerData = touchAPI.TouchRawFingerData(touchDeviceID)
+			# touchRawFingerData = touchAPI.TouchRawFingerData(touchDeviceId)
 
 			# if touchRawFingerData.Status == -1 	# Bad data
 			# 	return
@@ -196,7 +196,7 @@ define [
 			# touchRawFingerData.NumFingers
 
 			# for finger in touchRawFingerData.FingerList
-			# 	finger.FingerID
+			# 	finger.FingerId
 			# 	finger.PosX
 			# 	finger.PosY
 			# 	finger.Width

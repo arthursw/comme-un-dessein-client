@@ -7,9 +7,7 @@
     DrawingPanel = (function() {
       function DrawingPanel() {
         this.cancelDrawing = bind(this.cancelDrawing, this);
-        this.cancelDrawingCallback = bind(this.cancelDrawingCallback, this);
         this.modifyDrawing = bind(this.modifyDrawing, this);
-        this.modifyDrawingCallback = bind(this.modifyDrawingCallback, this);
         this.submitDrawing = bind(this.submitDrawing, this);
         this.voteDown = bind(this.voteDown, this);
         this.voteUp = bind(this.voteUp, this);
@@ -279,7 +277,7 @@
       /* submit modify cancel drawing */
 
       DrawingPanel.prototype.submitDrawing = function() {
-        var contentJ, description, drawing, drawingID, i, item, len, ref, title;
+        var contentJ, description, drawing, drawingId, i, item, len, ref, title;
         if ((R.me == null) || !_.isString(R.me)) {
           R.alertManager.alert("You must be logged in to submit a drawing.", "error");
           return;
@@ -288,34 +286,24 @@
           R.alertManager.alert("You must select some drawings first.", "error");
           return;
         }
-        drawingID = Utils.createID();
+        drawingId = Utils.createId();
         ref = R.selectedItems;
         for (i = 0, len = ref.length; i < len; i++) {
           item = ref[i];
-          item.drawingID = drawingID;
+          item.drawingId = drawingId;
         }
         contentJ = this.drawingPanelJ.find('.content');
         title = contentJ.find('#drawing-title').val();
         description = contentJ.find('#drawing-description').val();
-        drawing = new Item.Drawing(null, null, drawingID, null, R.me, Date.now(), title, description, 'pending');
+        drawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending');
         drawing.save();
         drawing.rasterize();
         R.rasterizer.rasterize(drawing, false);
-        Utils.callNextFrame((function() {
-          return drawing.select(true, false);
-        }), 'select drawing');
         this.close();
       };
 
-      DrawingPanel.prototype.modifyDrawingCallback = function(result) {
-        if (!R.loader.checkError(result)) {
-          return;
-        }
-        R.alertManager.alert("Drawing successfully modified.", "success");
-      };
-
       DrawingPanel.prototype.modifyDrawing = function() {
-        var args, contentJ;
+        var contentJ;
         if ((R.me == null) || !_.isString(R.me)) {
           R.alertManager.alert("You must be logged in to modify a drawing.", "error");
           return;
@@ -325,32 +313,13 @@
           return;
         }
         contentJ = this.drawingPanelJ.find('.content');
-        args = {
-          pk: this.currentDrawing.pk,
+        this.currentDrawing.update({
           title: contentJ.find('#drawing-title').val(),
-          description: contentJ.find('#drawing-description').val()
-        };
-        $.ajax({
-          method: "POST",
-          url: "ajaxCall/",
-          data: {
-            data: JSON.stringify({
-              "function": 'updateDrawing',
-              args: args
-            })
-          }
-        }).done(this.modifyDrawingCallback);
-      };
-
-      DrawingPanel.prototype.cancelDrawingCallback = function(result) {
-        if (!R.loader.checkError(result)) {
-          return;
-        }
-        R.alertManager.alert("Drawing successfully cancelled.", "success");
+          data: contentJ.find('#drawing-description').val()
+        });
       };
 
       DrawingPanel.prototype.cancelDrawing = function() {
-        var args;
         if ((R.me == null) || !_.isString(R.me)) {
           R.alertManager.alert("You must be logged in to cancel a drawing.", "error");
           return;
@@ -359,19 +328,8 @@
           R.alertManager.alert("You must select a drawing first.", "error");
           return;
         }
-        args = {
-          pk: this.currentDrawing.pk
-        };
-        $.ajax({
-          method: "POST",
-          url: "ajaxCall/",
-          data: {
-            data: JSON.stringify({
-              "function": 'deleteDrawing',
-              args: args
-            })
-          }
-        }).done(this.deleteDrawingCallback);
+        this.currentDrawing.deleteCommand();
+        this.close();
       };
 
       return DrawingPanel;

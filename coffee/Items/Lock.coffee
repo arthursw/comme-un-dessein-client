@@ -324,7 +324,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 				loadEntireArea: data.loadEntireArea
 
 			args =
-				clientID: @id
+				clientId: @id
 				city: city: R.city
 				box: Utils.CS.boxFromRectangle(@rectangle)
 				object_type: @constructor.object_type

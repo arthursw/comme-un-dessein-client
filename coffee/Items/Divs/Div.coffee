@@ -71,7 +71,7 @@ define [ 'Items/Item', 'Items/Content' ], (Item, Content) ->
 		# @param bounds [Paper P.Rectangle] the bounding box of the div (@rectangle extended depending on the rotation)
 		# @param rectangle [Paper P.Rectangle]  the rectangle which defines the div position and size
 		# @param owner [String] the username of the owner of the div
-		# @param pk [ID] the primary key of the div
+		# @param pk [Id] the primary key of the div
 		# @param lock [Boolean] (optional) whether the pk of the lock (if locked)
 		# @param data [Object] the data of the div (containing the stroke width, colors, etc.)
 		# @param date [Number] the date of the div (used as zindex)
@@ -154,7 +154,7 @@ define [ 'Items/Item', 'Items/Content' ], (Item, Content) ->
 				return
 
 			args =
-				clientID: @id
+				clientId: @id
 				city: R.city
 				box: Utils.CS.boxFromRectangle(@getBounds())
 				object_type: @object_type

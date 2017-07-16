@@ -80,11 +80,11 @@
       };
 
       EraserTool.prototype.erase = function() {
-        var data, i, intersection, intersections, item, itemID, j, k, len, len1, len2, location, newP, p, path, paths, points, refreshRasterizer;
+        var data, i, intersection, intersections, item, itemId, j, k, len, len1, len2, location, newP, p, path, paths, points, refreshRasterizer;
         refreshRasterizer = false;
-        for (itemID in R.paths) {
-          item = R.paths[itemID];
-          if ((item.controlPath != null) && item instanceof R.Tools.Item.Item.PrecisePath && item.owner === R.me && (item.drawingID == null)) {
+        for (itemId in R.paths) {
+          item = R.paths[itemId];
+          if ((item.controlPath != null) && item instanceof R.Tools.Item.Item.PrecisePath && item.owner === R.me && (item.drawingId == null)) {
             if (item.getBounds().intersects(this.circle.bounds)) {
               intersections = this.circle.getCrossings(item.controlPath);
               if (intersections.length > 0) {
@@ -194,11 +194,11 @@
         eraser = R.tools.eraser;
         if (eraser.circle == null) {
           eraser.circle = new P.Path.Circle(event.point, eraser.radius);
-          eraser.circle.selected = true;
+          eraser.circle.strokeWidth = 1;
+          eraser.circle.strokeColor = '#2fa1d6';
           R.view.selectionLayer.addChild(eraser.circle);
         } else {
           eraser.circle.position = event.point;
-          eraser.circle.selected = true;
         }
       };
 

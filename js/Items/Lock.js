@@ -383,7 +383,7 @@
           loadEntireArea: data.loadEntireArea
         };
         args = {
-          clientID: this.id,
+          clientId: this.id,
           city: {
             city: R.city
           },

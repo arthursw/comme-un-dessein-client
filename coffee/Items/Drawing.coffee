@@ -27,6 +27,20 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 		@parameters = @initializeParameters()
 
+		@create: (duplicateData)->
+			copy = new @(null, duplicateData.data, duplicateData.id, null, duplicateData.owner, Date.now(), duplicateData.title, duplicateData.description)
+			for id in duplicateData.pathIds
+				if R.items[id]?
+					copy.addChild(R.items[id])
+			copy.rasterize()
+			R.rasterizer.rasterize(copy, false)
+
+			# copy.drawChildren()
+			if not @socketAction
+				copy.save(false)
+				R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
+			return copy
+
 		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @title, @description, @status='pending') ->
 			super(@data, @id, @pk)
 
@@ -40,7 +54,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			@votes = [] # { positive: boolean, author: string, authorPk: pk }
 
 			for id, path of R.paths
-				if path.drawingID? and (path.drawingID == @id or path.drawingID == @pk)
+				if path.drawingId? and (path.drawingId == @id or path.drawingId == @pk)
 					@addChild(path)
 
 			# create special list to contains children paths
@@ -75,6 +89,19 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			# @itemListsJ = R.sidebar.itemListsJ.find(".layer:first")
 
 			return
+		
+		getPathIds: ()->
+			pathIds = []
+			for child in @children()
+				pathIds.push(child.id)
+			return pathIds
+
+		getDuplicateData: ()->
+			data = super
+			data.title = @title
+			data.description = @description
+			data.pathIds = @getPathIds()
+			return data
 
 		getListItem: ()->
 
@@ -137,8 +164,18 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			@select()
 			return
 
+		computeRectangle: ()->
+			for child of @drawing.children
+				path = child.controller
+				if not path? then continue
+				bounds = path.getDrawingBounds()
+				if bounds?
+					@rectangle ?= bounds.clone()
+					@rectangle = @rectangle.unite(bounds)
+			return
+
 		addChild: (path)->
-			path.drawingID = @id
+			path.drawingId = @id
 			@pathPks ?= []
 			if not path.pk?
 				R.alertManager.alert 'Error: a path has not been saved yet. Please wait until the path is saved before creating the drawing.', 'error'
@@ -151,6 +188,21 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 				@rectangle = @rectangle.unite(bounds)
 			path.updateStrokeColor()
 			path.removeFromListItem()
+			@drawn = false
+			if @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
+				@replaceDrawing()
+			return
+		
+		removeChild: (path, updateRectangle=true)->
+			path.drawingId = null
+			pkIndex = @pathPks.indexOf(path.pk)
+			if pkIndex >= 0
+				@pathPks.splice(pkIndex, 1)
+			R.view.mainLayer.addChild(path.group)
+			if updateRectangle
+				@computeRectangle()
+			path.updateStrokeColor()
+			path.addToListItem()
 			@drawn = false
 			if @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
 				@replaceDrawing()
@@ -175,7 +227,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 				return
 
 			args = {
-				clientID: @id
+				clientId: @id
 				date: @date
 				pathPks: @pathPks
 				title: @title
@@ -184,7 +236,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'saveDrawing', args: args } ).done(@saveCallback)
 
-			super
+			super(addCreateCommand)
 			return
 
 		# check if the save was successful and set @pk if it is
@@ -200,6 +252,10 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 			R.alertManager.alert "Drawing successfully submitted. It will be drawn if it gets 100 votes.", "success"
 
+			if @selectAfterSave?
+				@selected = false
+				@select()
+
 			if @updateAfterSave?
 				@update(@updateAfterSave)
 			super
@@ -210,51 +266,61 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 				item.addUpdateFunctionAndArguments(args, type)
 			return
 
-		update: (type) =>
+		updateCallback: (result)=>
+			if not R.loader.checkError(result)
+				@title = @previousTitle
+				@description = @previousDescription
+				contentJ = R.drawingPanel.drawingPanelJ.find('.content')
+				contentJ.find('#drawing-title').val(@title)
+				contentJ.find('#drawing-description').val(@description)
+				return
+			R.alertManager.alert "Drawing successfully modified.", "success"
+			return
+
+		update: (data) =>
 			if not @pk?
-				@updateAfterSave = type
+				@updateAfterSave = data
 				return
 			delete @updateAfterSave
 
-			# check if position is valid
-			if R.view.grid.rectangleOverlapsTwoPlanets(@rectangle)
-				return
+			@previousTitle = @title
+			@previousDescription = @description
 
-			# initialize data to be saved
-			updateBoxArgs =
-				box: Utils.CS.boxFromRectangle(@rectangle)
+			@title = data.title
+			@description = data.description
+			
+			args = {
 				pk: @pk
-				object_type: @object_type
-				name: @data.name
-				data: @getStringifiedData()
-				updateType: type 		# not used anymore
-				# message: @data.message
+				title: @title
+				description: @description
+			}
 
-			# Dajaxice.draw.updateBox( @updateCallback, args )
-			args = []
-			args.push( function: 'updateBox', arguments: updateBoxArgs )
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawing', args: args } ).done(@updateCallback)
 
-			if type == 'position' or type == 'rectangle'
-				itemsToUpdate = if type == 'position' then @children() else []
-
-				for item in itemsToUpdate
-					args.push( function: item.getUpdateFunction(), arguments: item.getUpdateArguments() )
-
-			# Dajaxice.draw.multipleCalls( @updateCallback, functionsAndArguments: args)
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'multipleCalls', args: functionsAndArguments: args } ).done(@updateCallback)
 			return
 
-		updateCallback: (results)->
-			for result in results
-				R.loader.checkError(result)
+		deleteFromDatabaseCallback: ()=>
+			if not R.loader.checkError()
+				if @pathIdsBeforeRemove?
+					for id in @pathIdsBeforeRemove
+						if R.items[id]?
+							@addChild(R.items[id])
+					@rasterize()
+					R.rasterizer.rasterize(@, false)
+				return
+			R.alertManager.alert "Drawing successfully cancelled.", "success"
+			return
+
+		delete: ()->
+			@pathIdsBeforeRemove = @getPathIds()
+			super
 			return
 
 		# called when user deletes the item by pressing delete key or from the gui
 		# @delete() removes the item and delete it in the database
 		# @remove() just removes visually
 		deleteFromDatabase: () ->
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteBox', args: { 'pk': @pk } } ).done(R.loader.checkError)
-			# Dajaxice.draw.deleteBox( R.loader.checkError, { 'pk': @pk } )
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteDrawing', args: { 'pk': @pk } } ).done(@deleteFromDatabaseCallback())
 			return
 
 		setRectangle: (rectangle, update=true)->
@@ -294,23 +360,29 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 				R.drawingPanel.showLoadAnimation()
 				R.drawingPanel.open()
 
-				args =
-					pk: @pk
+				if @pk?
+					delete @selectAfterSave
+					args =
+						pk: @pk
 
-				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
-					R.drawingPanel.setDrawing(@, result)
-				)
+					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+						R.drawingPanel.setDrawing(@, result)
+					)
+				else
+					@selectAfterSave = true
 
 			return true
 
 		remove: () ->
 			for path in @children()
-				@removeItem(path)
+				@removeChild(path)
 
-			# @itemListsJ.remove()
-			# @itemListsJ = null
-			Utils.Array.remove(R.drawings, @)
 			@removeFromListItem()
+			super
+			return
+
+		delete: ()->
+			@remove()
 			super
 			return
 
@@ -319,16 +391,6 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			for child in @drawing.children
 				paths.push(child.controller)
 			return paths
-
-		addItem: (item)->
-			Item.addItemTo(item, @)
-			item.drawing = @
-			return
-
-		removeItem: (item)->
-			Item.addItemToStage(item)
-			item.drawing = null
-			return
 
 		highlight: (color)->
 			super()
@@ -350,9 +412,6 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			# make sure children are drawn BEFORE this, otherwise this can be rasterized before children are drawn, see Rasterizer.drawItems()
 			@drawChildren()
 			super()
-			return
-		
-		deleteCommand: ()->
 			return
 
 	Item.Drawing = Drawing

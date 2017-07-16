@@ -155,7 +155,7 @@ define [ 'Items/Item' ], (Item) ->
 			# @selectionRectangle.rotation = rotation
 			if not @socketAction
 				if update then @update('rotation')
-				R.socket.emit "bounce", itemID: @id, function: "setRotation", arguments: [rotation, center, false]
+				R.socket.emit "bounce", itemId: @id, function: "setRotation", arguments: [rotation, center, false]
 			return
 
 		# updateSetRotation: (event)->

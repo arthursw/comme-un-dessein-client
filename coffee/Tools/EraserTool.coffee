@@ -80,9 +80,9 @@ define [ 'Tools/Tool', 'UI/Button', 'Commands/Command' ], (Tool, Button, Command
 
 			refreshRasterizer = false
 
-			for itemID of R.paths
-				item = R.paths[itemID]
-				if item.controlPath? and item instanceof R.Tools.Item.Item.PrecisePath and item.owner == R.me and not item.drawingID?
+			for itemId of R.paths
+				item = R.paths[itemId]
+				if item.controlPath? and item instanceof R.Tools.Item.Item.PrecisePath and item.owner == R.me and not item.drawingId?
 					if item.getBounds().intersects(@circle.bounds)
 
 						intersections = @circle.getCrossings(item.controlPath)
@@ -181,11 +181,11 @@ define [ 'Tools/Tool', 'UI/Button', 'Commands/Command' ], (Tool, Button, Command
 			# if R.currentPaths[R.me]?.data?.polygonMode then R.currentPaths[R.me].createMove?(event)
 			if not eraser.circle?
 				eraser.circle = new P.Path.Circle(event.point, eraser.radius)
-				eraser.circle.selected = true
+				eraser.circle.strokeWidth = 1
+				eraser.circle.strokeColor = '#2fa1d6'
 				R.view.selectionLayer.addChild(eraser.circle)
 			else
 				eraser.circle.position = event.point
-				eraser.circle.selected = true
 			return
 
 		# End path action:

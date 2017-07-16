@@ -279,7 +279,7 @@
             this.update('text');
           }
           R.socket.emit("bounce", {
-            itemID: this.id,
+            itemId: this.id,
             "function": "setText",
             "arguments": [newText, false]
           });

@@ -185,7 +185,7 @@ define [ 'Items/Paths/PrecisePaths/StepPath', 'Commands/Command' ], (StepPath, C
 			@draw()
 			if not @socketAction
 				if update then @update('speed')
-				R.socket.emit "bounce", itemID: @id, function: "modifySpeed", arguments: [@speeds, false]
+				R.socket.emit "bounce", itemId: @id, function: "modifySpeed", arguments: [@speeds, false]
 			else
 				@speedGroup?.visible = @selected? and @data.showSpeed
 			return
@@ -439,7 +439,7 @@ define [ 'Items/Paths/PrecisePaths/StepPath', 'Commands/Command' ], (StepPath, C
 			@update('speed')
 			@speedSelectionHighlight?.remove()
 			@speedSelectionHighlight = null
-			if not @socketAction then R.socket.emit "bounce", itemID: @id, function: "modifySpeed", arguments: [@speeds, false]
+			if not @socketAction then R.socket.emit "bounce", itemId: @id, function: "modifySpeed", arguments: [@speeds, false]
 			return
 
 		# overload {PrecisePath#remove} and remove speed group

@@ -62,14 +62,14 @@
 
       Loader.prototype.showLoadingBar = function(timeout) {
         if ((timeout != null) && timeout > 0) {
-          this.showLoadingBarTimeoutID = setTimeout(this.showLoadingBarCallback, timeout);
+          this.showLoadingBarTimeoutId = setTimeout(this.showLoadingBarCallback, timeout);
         } else {
           this.showLoadingBarCallback();
         }
       };
 
       Loader.prototype.hideLoadingBar = function() {
-        clearTimeout(this.showLoadingBarTimeoutID);
+        clearTimeout(this.showLoadingBarTimeoutId);
         $("#loadingBar").hide();
       };
 
@@ -335,10 +335,10 @@
       };
 
       Loader.prototype.createPath = function(args) {
-        var drawingID, drawingPk, path, ref, ref1;
+        var drawingId, drawingPk, path, ref, ref1;
         drawingPk = (ref = args.drawing) != null ? ref.$oid : void 0;
-        drawingID = drawingPk != null ? Item.Drawing.pkToId[drawingPk] || drawingPk : null;
-        path = new R.tools[args.path.object_type].Path(args.date, args.data, args.id, args.pk, args.points, args.lock, args.owner, drawingID);
+        drawingId = drawingPk != null ? Item.Drawing.pkToId[drawingPk] || drawingPk : null;
+        path = new R.tools[args.path.object_type].Path(args.date, args.data, args.id, args.pk, args.points, args.lock, args.owner, drawingId);
         path.lastUpdateDate = (ref1 = args.path.lastUpdate) != null ? ref1.$date : void 0;
       };
 
@@ -347,7 +347,7 @@
         for (k = 0, len = itemsToLoad.length; k < len; k++) {
           item = itemsToLoad[k];
           pk = item._id.$oid;
-          id = item.clientID;
+          id = item.clientId;
           date = (ref = item.date) != null ? ref.$date : void 0;
           data = (item.data != null) && item.data.length > 0 ? JSON.parse(item.data) : null;
           lock = item.lock != null ? R.items[item.lock] : null;

@@ -99,7 +99,7 @@
       93: 'command',
       224: 'command'
     };
-    Utils.createID = function() {
+    Utils.createId = function() {
       return ('' + Math.random()).substring(2) + '-' + Date.now();
     };
     Utils.sign = function(x) {

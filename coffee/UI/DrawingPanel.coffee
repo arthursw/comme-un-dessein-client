@@ -243,28 +243,22 @@ define [ 'Items/Item', 'coffee', 'typeahead' ], (Item, CoffeeScript) -> 			# 'ac
 				R.alertManager.alert "You must select some drawings first.", "error"
 				return
 
-			drawingID = Utils.createID()
+			drawingId = Utils.createId()
 
 			for item in R.selectedItems
-				item.drawingID = drawingID
+				item.drawingId = drawingId
 
 			contentJ = @drawingPanelJ.find('.content')
 
 			title = contentJ.find('#drawing-title').val()
 			description = contentJ.find('#drawing-description').val()
-			drawing = new Item.Drawing(null, null, drawingID, null, R.me, Date.now(), title, description, 'pending')
+			drawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending')
 			drawing.save()
 			drawing.rasterize()
 			R.rasterizer.rasterize(drawing, false)
-			Utils.callNextFrame((()-> return drawing.select(true, false)), 'select drawing')
 			
 			@close()
 
-			return
-
-		modifyDrawingCallback: (result)=>
-			if not R.loader.checkError(result) then return
-			R.alertManager.alert "Drawing successfully modified.", "success"
 			return
 
 		modifyDrawing: ()=>
@@ -279,19 +273,8 @@ define [ 'Items/Item', 'coffee', 'typeahead' ], (Item, CoffeeScript) -> 			# 'ac
 
 			contentJ = @drawingPanelJ.find('.content')
 
-			args = {
-				pk: @currentDrawing.pk
-				title: contentJ.find('#drawing-title').val()
-				description: contentJ.find('#drawing-description').val()
-			}
-
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawing', args: args } ).done(@modifyDrawingCallback)
-
-			return
-
-		cancelDrawingCallback: (result)=>
-			if not R.loader.checkError(result) then return
-			R.alertManager.alert "Drawing successfully cancelled.", "success"
+			@currentDrawing.update( { title: contentJ.find('#drawing-title').val(), data: contentJ.find('#drawing-description').val() } )
+			
 			return
 
 		cancelDrawing: ()=>
@@ -304,12 +287,8 @@ define [ 'Items/Item', 'coffee', 'typeahead' ], (Item, CoffeeScript) -> 			# 'ac
 				R.alertManager.alert "You must select a drawing first.", "error"
 				return
 
-			args = {
-				pk: @currentDrawing.pk
-			}
-
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteDrawing', args: args } ).done(@deleteDrawingCallback)
-
+			@currentDrawing.deleteCommand()
+			@close()
 			return
 
 	return DrawingPanel

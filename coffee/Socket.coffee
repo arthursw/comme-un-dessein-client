@@ -286,8 +286,8 @@ define [ 'socketio' ], (ioo) ->
 					if rFunction?
 						# data.arguments[0] = Event.prototype.fromJSON(data.arguments[0])
 						rFunction.apply(tool, data.arguments)
-				else if data.itemID?
-					item = R.items[data.itemID]
+				else if data.itemId?
+					item = R.items[data.itemId]
 					if item? and not item.currentCommand?
 						allowedFunctions =
 							['setRectangle', 'setRotation', 'moveTo', 'setParameter', 'modifyPoint', 'modifyPointType',

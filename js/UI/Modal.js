@@ -88,7 +88,7 @@
       };
 
       Modal.prototype.addTextInput = function(args) {
-        var className, defaultValue, divJ, errorMessage, extractor, id, inputID, inputJ, label, labelJ, name, placeholder, required, submitShortcut, type;
+        var className, defaultValue, divJ, errorMessage, extractor, id, inputId, inputJ, label, labelJ, name, placeholder, required, submitShortcut, type;
         name = args.name;
         placeholder = args.placeholder;
         type = args.type;
@@ -119,10 +119,10 @@
           return (!required) || (!inputJ.is(':visible')) || ((data[name] != null) && data[name] !== '');
         };
         if (label) {
-          inputID = 'modal-' + name + '-' + Math.random().toString();
-          inputJ.attr('id', inputID);
+          inputId = 'modal-' + name + '-' + Math.random().toString();
+          inputJ.attr('id', inputId);
           divJ = $("<div id='" + id + "' class='form-group " + className + "-group'></div>");
-          labelJ = $("<label for='" + inputID + "'>" + label + "</label>");
+          labelJ = $("<label for='" + inputId + "'>" + label + "</label>");
           divJ.append(labelJ);
           divJ.append(inputJ);
           inputJ = divJ;

@@ -26,10 +26,33 @@
 
       Drawing.parameters = Drawing.initializeParameters();
 
-      function Drawing(rectangle1, data, id1, pk, owner, date, title1, description, status) {
+      Drawing.create = function(duplicateData) {
+        var copy, i, id, len, ref;
+        copy = new this(null, duplicateData.data, duplicateData.id, null, duplicateData.owner, Date.now(), duplicateData.title, duplicateData.description);
+        ref = duplicateData.pathIds;
+        for (i = 0, len = ref.length; i < len; i++) {
+          id = ref[i];
+          if (R.items[id] != null) {
+            copy.addChild(R.items[id]);
+          }
+        }
+        copy.rasterize();
+        R.rasterizer.rasterize(copy, false);
+        if (!this.socketAction) {
+          copy.save(false);
+          R.socket.emit("bounce", {
+            itemClass: this.name,
+            "function": "create",
+            "arguments": [duplicateData]
+          });
+        }
+        return copy;
+      };
+
+      function Drawing(rectangle1, data1, id1, pk, owner, date, title1, description, status) {
         var id, path, ref;
         this.rectangle = rectangle1;
-        this.data = data != null ? data : null;
+        this.data = data1 != null ? data1 : null;
         this.id = id1 != null ? id1 : null;
         this.pk = pk != null ? pk : null;
         this.owner = owner != null ? owner : null;
@@ -38,7 +61,9 @@
         this.description = description;
         this.status = status != null ? status : 'pending';
         this.select = bind(this.select, this);
+        this.deleteFromDatabaseCallback = bind(this.deleteFromDatabaseCallback, this);
         this.update = bind(this.update, this);
+        this.updateCallback = bind(this.updateCallback, this);
         this.saveCallback = bind(this.saveCallback, this);
         this.onLiClick = bind(this.onLiClick, this);
         Drawing.__super__.constructor.call(this, this.data, this.id, this.pk);
@@ -51,7 +76,7 @@
         ref = R.paths;
         for (id in ref) {
           path = ref[id];
-          if ((path.drawingID != null) && (path.drawingID === this.id || path.drawingID === this.pk)) {
+          if ((path.drawingId != null) && (path.drawingId === this.id || path.drawingId === this.pk)) {
             this.addChild(path);
           }
         }
@@ -59,6 +84,26 @@
         this.addToListItem(this.getListItem());
         return;
       }
+
+      Drawing.prototype.getPathIds = function() {
+        var child, i, len, pathIds, ref;
+        pathIds = [];
+        ref = this.children();
+        for (i = 0, len = ref.length; i < len; i++) {
+          child = ref[i];
+          pathIds.push(child.id);
+        }
+        return pathIds;
+      };
+
+      Drawing.prototype.getDuplicateData = function() {
+        var data;
+        data = Drawing.__super__.getDuplicateData.apply(this, arguments);
+        data.title = this.title;
+        data.description = this.description;
+        data.pathIds = this.getPathIds();
+        return data;
+      };
 
       Drawing.prototype.getListItem = function() {
         var itemListJ;
@@ -133,9 +178,26 @@
         this.select();
       };
 
+      Drawing.prototype.computeRectangle = function() {
+        var bounds, child, path;
+        for (child in this.drawing.children) {
+          path = child.controller;
+          if (path == null) {
+            continue;
+          }
+          bounds = path.getDrawingBounds();
+          if (bounds != null) {
+            if (this.rectangle == null) {
+              this.rectangle = bounds.clone();
+            }
+            this.rectangle = this.rectangle.unite(bounds);
+          }
+        }
+      };
+
       Drawing.prototype.addChild = function(path) {
         var bounds;
-        path.drawingID = this.id;
+        path.drawingId = this.id;
         if (this.pathPks == null) {
           this.pathPks = [];
         }
@@ -160,6 +222,28 @@
         }
       };
 
+      Drawing.prototype.removeChild = function(path, updateRectangle) {
+        var pkIndex;
+        if (updateRectangle == null) {
+          updateRectangle = true;
+        }
+        path.drawingId = null;
+        pkIndex = this.pathPks.indexOf(path.pk);
+        if (pkIndex >= 0) {
+          this.pathPks.splice(pkIndex, 1);
+        }
+        R.view.mainLayer.addChild(path.group);
+        if (updateRectangle) {
+          this.computeRectangle();
+        }
+        path.updateStrokeColor();
+        path.addToListItem();
+        this.drawn = false;
+        if ((this.raster != null) && this.raster.parent !== null) {
+          this.replaceDrawing();
+        }
+      };
+
       Drawing.prototype.setParameter = function(name, value, updateGUI, update) {
         Drawing.__super__.setParameter.call(this, name, value, updateGUI, update);
       };
@@ -178,7 +262,7 @@
           return;
         }
         args = {
-          clientID: this.id,
+          clientId: this.id,
           date: this.date,
           pathPks: this.pathPks,
           title: this.title,
@@ -194,7 +278,7 @@
             })
           }
         }).done(this.saveCallback);
-        Drawing.__super__.save.apply(this, arguments);
+        Drawing.__super__.save.call(this, addCreateCommand);
       };
 
       Drawing.prototype.saveCallback = function(result) {
@@ -206,6 +290,10 @@
         this.owner = result.owner;
         this.setPK(result.pk);
         R.alertManager.alert("Drawing successfully submitted. It will be drawn if it gets 100 votes.", "success");
+        if (this.selectAfterSave != null) {
+          this.selected = false;
+          this.select();
+        }
         if (this.updateAfterSave != null) {
           this.update(this.updateAfterSave);
         }
@@ -221,59 +309,69 @@
         }
       };
 
-      Drawing.prototype.update = function(type) {
-        var args, i, item, itemsToUpdate, len, updateBoxArgs;
+      Drawing.prototype.updateCallback = function(result) {
+        var contentJ;
+        if (!R.loader.checkError(result)) {
+          this.title = this.previousTitle;
+          this.description = this.previousDescription;
+          contentJ = R.drawingPanel.drawingPanelJ.find('.content');
+          contentJ.find('#drawing-title').val(this.title);
+          contentJ.find('#drawing-description').val(this.description);
+          return;
+        }
+        R.alertManager.alert("Drawing successfully modified.", "success");
+      };
+
+      Drawing.prototype.update = function(data) {
+        var args;
         if (this.pk == null) {
-          this.updateAfterSave = type;
+          this.updateAfterSave = data;
           return;
         }
         delete this.updateAfterSave;
-        if (R.view.grid.rectangleOverlapsTwoPlanets(this.rectangle)) {
-          return;
-        }
-        updateBoxArgs = {
-          box: Utils.CS.boxFromRectangle(this.rectangle),
+        this.previousTitle = this.title;
+        this.previousDescription = this.description;
+        this.title = data.title;
+        this.description = data.description;
+        args = {
           pk: this.pk,
-          object_type: this.object_type,
-          name: this.data.name,
-          data: this.getStringifiedData(),
-          updateType: type
+          title: this.title,
+          description: this.description
         };
-        args = [];
-        args.push({
-          "function": 'updateBox',
-          "arguments": updateBoxArgs
-        });
-        if (type === 'position' || type === 'rectangle') {
-          itemsToUpdate = type === 'position' ? this.children() : [];
-          for (i = 0, len = itemsToUpdate.length; i < len; i++) {
-            item = itemsToUpdate[i];
-            args.push({
-              "function": item.getUpdateFunction(),
-              "arguments": item.getUpdateArguments()
-            });
-          }
-        }
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
           data: {
             data: JSON.stringify({
-              "function": 'multipleCalls',
-              args: {
-                functionsAndArguments: args
-              }
+              "function": 'updateDrawing',
+              args: args
             })
           }
         }).done(this.updateCallback);
       };
 
-      Drawing.prototype.updateCallback = function(results) {
-        var i, len, result;
-        for (i = 0, len = results.length; i < len; i++) {
-          result = results[i];
-          R.loader.checkError(result);
+      Drawing.prototype.deleteFromDatabaseCallback = function() {
+        var i, id, len, ref;
+        if (!R.loader.checkError()) {
+          if (this.pathIdsBeforeRemove != null) {
+            ref = this.pathIdsBeforeRemove;
+            for (i = 0, len = ref.length; i < len; i++) {
+              id = ref[i];
+              if (R.items[id] != null) {
+                this.addChild(R.items[id]);
+              }
+            }
+            this.rasterize();
+            R.rasterizer.rasterize(this, false);
+          }
+          return;
         }
+        R.alertManager.alert("Drawing successfully cancelled.", "success");
+      };
+
+      Drawing.prototype["delete"] = function() {
+        this.pathIdsBeforeRemove = this.getPathIds();
+        Drawing.__super__["delete"].apply(this, arguments);
       };
 
       Drawing.prototype.deleteFromDatabase = function() {
@@ -282,13 +380,13 @@
           url: "ajaxCall/",
           data: {
             data: JSON.stringify({
-              "function": 'deleteBox',
+              "function": 'deleteDrawing',
               args: {
                 'pk': this.pk
               }
             })
           }
-        }).done(R.loader.checkError);
+        }).done(this.deleteFromDatabaseCallback());
       };
 
       Drawing.prototype.setRectangle = function(rectangle, update) {
@@ -355,23 +453,28 @@
         if (showPanelAndLoad) {
           R.drawingPanel.showLoadAnimation();
           R.drawingPanel.open();
-          args = {
-            pk: this.pk
-          };
-          $.ajax({
-            method: "POST",
-            url: "ajaxCall/",
-            data: {
-              data: JSON.stringify({
-                "function": 'loadDrawing',
-                args: args
-              })
-            }
-          }).done((function(_this) {
-            return function(result) {
-              return R.drawingPanel.setDrawing(_this, result);
+          if (this.pk != null) {
+            delete this.selectAfterSave;
+            args = {
+              pk: this.pk
             };
-          })(this));
+            $.ajax({
+              method: "POST",
+              url: "ajaxCall/",
+              data: {
+                data: JSON.stringify({
+                  "function": 'loadDrawing',
+                  args: args
+                })
+              }
+            }).done((function(_this) {
+              return function(result) {
+                return R.drawingPanel.setDrawing(_this, result);
+              };
+            })(this));
+          } else {
+            this.selectAfterSave = true;
+          }
         }
         return true;
       };
@@ -381,11 +484,15 @@
         ref = this.children();
         for (i = 0, len = ref.length; i < len; i++) {
           path = ref[i];
-          this.removeItem(path);
+          this.removeChild(path);
         }
-        Utils.Array.remove(R.drawings, this);
         this.removeFromListItem();
         Drawing.__super__.remove.apply(this, arguments);
+      };
+
+      Drawing.prototype["delete"] = function() {
+        this.remove();
+        Drawing.__super__["delete"].apply(this, arguments);
       };
 
       Drawing.prototype.children = function() {
@@ -397,16 +504,6 @@
           paths.push(child.controller);
         }
         return paths;
-      };
-
-      Drawing.prototype.addItem = function(item) {
-        Item.addItemTo(item, this);
-        item.drawing = this;
-      };
-
-      Drawing.prototype.removeItem = function(item) {
-        Item.addItemToStage(item);
-        item.drawing = null;
       };
 
       Drawing.prototype.highlight = function(color) {
@@ -436,8 +533,6 @@
         this.drawChildren();
         Drawing.__super__.rasterize.call(this);
       };
-
-      Drawing.prototype.deleteCommand = function() {};
 
       return Drawing;
 

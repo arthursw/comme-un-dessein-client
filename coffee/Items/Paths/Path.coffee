@@ -37,7 +37,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 	# - dy default, when a parameter is chanegd in the gui, onParameterChange is called
 
 	# tododoc: loadPath will call create begin, update, end
-	# todo-doc: explain ID?
+	# todo-doc: explain Id?
 
 	# Notable differences between RPath:
 	# - in regular path: when transforming a path, the points of the control path are resaved with their new positions; no transform information is stored
@@ -59,6 +59,8 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			drawn: '#4d4d4d',
 			rejected: '#EB5A46'
 		}
+
+		@strokeWidth = 7
 
 		# parameters are defined as in {RTool}
 		# The following parameters are reserved for commeUnDessein: id, polygonMode, points, planet, step, smooth, speeds, showSpeeds
@@ -131,10 +133,10 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 		# When user creates a path, the path is given an identifier (@id); when the path is saved, the servers returns a primary key (@pk) and @id will not be used anymore
 		# @param date [Date] (optional) the date at which the path has been crated (will be used as z-index in further versions)
 		# @param data [Object] (optional) the data containing information about parameters and state of RPath
-		# @param pk [ID] (optional) the primary key of the path in the database
+		# @param pk [Id] (optional) the primary key of the path in the database
 		# @param points [Array of P.Point] (optional) the points of the controlPath, the points must fit on the control path (the control path is stored in @data.points)
 		# @param lock [Lock] the lock which contains this RPath (if any)
-		constructor: (@date=null, @data=null, @id=null, @pk=null, points=null, @lock=null, @owner=null, @drawingID=null) ->
+		constructor: (@date=null, @data=null, @id=null, @pk=null, points=null, @lock=null, @owner=null, @drawingId=null) ->
 			if not @lock
 				super(@data, @id, @pk, @date, R.sidebar.pathListJ, R.sortedPaths)
 			else
@@ -142,11 +144,11 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 
 			R.paths[@id] = @
 			
-			if not @drawingID?
-				@addToListItem(@getListItem(), @id.substring(0, 5))
+			if not @drawingId?
+				@addToListItem()
 			else
-				if R.items[@drawingID]?
-					drawing = R.items[@drawingID]
+				if R.items[@drawingId]?
+					drawing = R.items[@drawingId]
 					drawing.addChild(@)
 
 			@selectionHighlight = null
@@ -156,8 +158,14 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 
 			return
 
+		addToListItem: (@itemListJ=null, name=null)->
+			if not @itemListJ? then @itemListJ = @getListItem()
+			if not name? then name = @id.substring(0, 5)
+			super(@itemListJ, name)
+			return
+
 		getDrawing: ()->
-			return if @drawingID? then R.items[@drawingID] else null
+			return if @drawingId? then R.items[@drawingId] else null
 
 		getDuplicateData: ()->
 			data = super()
@@ -175,8 +183,8 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			if not @canvasRaster and @drawing? and @drawing.strokeBounds.area>0
 				if @raster?
 					return @raster.bounds
-				return @drawing.strokeBounds
-			return @getBounds()?.expand(@data.strokeWidth)
+				return @drawing.strokeBounds.expand(@constructor.strokeWidth)
+			return @getBounds()?.expand(@constructor.strokeWidth)
 
 		# updateMove: (event)->
 		# 	if @drawing?
@@ -269,10 +277,10 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 		# @param updateOptions [Boolean] whether to update controllers in gui or not
 		# @return whether the ritem was selected or not
 		select: (updateOptions=true)->
-			if R.me != @owner && not @drawingID? then return false
+			if R.me != @owner && not @drawingId? then return false
 
-			if @drawingID? and R.items[@drawingID]?
-				R.items[@drawingID].select()
+			if @drawingId? and R.items[@drawingId]?
+				R.items[@drawingId].select()
 				return null
 			if not super(updateOptions) or not @controlPath? then return false
 			# if not @drawing? then @draw()
@@ -332,7 +340,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 
 		applyStylesToPath: (path)->
 			path.strokeColor = @getStrokeColor() # @data.strokeColor
-			path.strokeWidth = 7 # @data.strokeWidth
+			path.strokeWidth = @constructor.strokeWidth # @data.strokeWidth
 			path.fillColor = null # @data.fillColor
 			if @data.shadowOffsetY?
 				path.shadowOffset = new P.Point(@data.shadowOffsetX, @data.shadowOffsetY)
@@ -407,7 +415,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			@drawing = new P.Group()
 			@drawing.name = "drawing"
 			@drawing.strokeColor = color # @data.strokeColor
-			@drawing.strokeWidth = 7 # @data.strokeWidth
+			@drawing.strokeWidth = @constructor.strokeWidth # @data.strokeWidth
 			@drawing.fillColor = null # @data.fillColor
 			@drawing.insertBelow(@controlPath)
 			@drawing.controlPath = @controlPath
@@ -523,7 +531,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			R.paths[@id] = @
 
 			args =
-				clientID: @id
+				clientId: @id
 				city: R.city
 				box: Utils.CS.boxFromRectangle( @getDrawingBounds() )
 				points: @pathOnPlanet()
@@ -619,7 +627,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			return
 
 		# set @pk, update R.items and emit @pk to other users
-		# @param pk [ID] the new pk
+		# @param pk [Id] the new pk
 		# @param updateRoom [updateRoom] (optional) whether to emit @pk to other users in the room
 		setPK: (pk)->
 			super

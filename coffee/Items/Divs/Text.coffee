@@ -212,7 +212,7 @@ define [ 'Items/Item', 'Items/Divs/Div', 'Commands/Command' ], (Item, Div, Comma
 			@contentJ.val(newText)
 			if not @socketAction
 				if update then @update('text')
-				R.socket.emit "bounce", itemID: @id, function: "setText", arguments: [newText, false]
+				R.socket.emit "bounce", itemId: @id, function: "setText", arguments: [newText, false]
 			return
 
 		# set the font family for the text

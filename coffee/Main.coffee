@@ -280,11 +280,13 @@ define [
 		window.setPageFullyLoaded?(true)
 		return
 
+	R.debugDatabase = ()-> return $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'debugDatabase', args: {} } )
+
 	R.fsi = ()-> return R.selectedItems?[0]
 	R.fi = ()-> 
 		if not R.items? then return null
-		for itemID of R.items
-			return R.items[itemID]
+		for itemId of R.items
+			return R.items[itemId]
 
 	# R.showCodeEditor = (fileNode)->
 	# 	if not R.codeEditor?

@@ -53,13 +53,13 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 
 		showLoadingBar: (timeout)=>
 			if timeout? and timeout>0
-				@showLoadingBarTimeoutID = setTimeout(@showLoadingBarCallback, timeout)
+				@showLoadingBarTimeoutId = setTimeout(@showLoadingBarCallback, timeout)
 			else
 				@showLoadingBarCallback()
 			return
 
 		hideLoadingBar: ()=>
-			clearTimeout(@showLoadingBarTimeoutID)
+			clearTimeout(@showLoadingBarTimeoutId)
 			$("#loadingBar").hide()
 			# @spinner.stop()
 			return
@@ -300,8 +300,8 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 
 		createPath: (args)->
 			drawingPk = args.drawing?.$oid
-			drawingID = if drawingPk? then (Item.Drawing.pkToId[drawingPk] or drawingPk) else null
-			path = new R.tools[args.path.object_type].Path(args.date, args.data, args.id, args.pk, args.points, args.lock, args.owner, drawingID)
+			drawingId = if drawingPk? then (Item.Drawing.pkToId[drawingPk] or drawingPk) else null
+			path = new R.tools[args.path.object_type].Path(args.date, args.data, args.id, args.pk, args.points, args.lock, args.owner, drawingId)
 			path.lastUpdateDate = args.path.lastUpdate?.$date
 			return
 
@@ -309,7 +309,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 			for item in itemsToLoad
 
 				pk = item._id.$oid
-				id = item.clientID
+				id = item.clientId
 				date = item.date?.$date
 				data = if item.data? and item.data.length>0 then JSON.parse(item.data) else null
 				lock = if item.lock? then R.items[item.lock] else null

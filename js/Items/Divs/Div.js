@@ -182,7 +182,7 @@
           return;
         }
         args = {
-          clientID: this.id,
+          clientId: this.id,
           city: R.city,
           box: Utils.CS.boxFromRectangle(this.getBounds()),
           object_type: this.object_type,

@@ -31,6 +31,8 @@
         rejected: '#EB5A46'
       };
 
+      Path.strokeWidth = 7;
+
       Path.initializeParameters = function() {
         var parameters;
         parameters = Path.__super__.constructor.initializeParameters.call(this);
@@ -80,7 +82,7 @@
         return points;
       };
 
-      function Path(date, data1, id, pk1, points, lock, owner, drawingID) {
+      function Path(date, data1, id, pk1, points, lock, owner, drawingId) {
         var drawing;
         this.date = date != null ? date : null;
         this.data = data1 != null ? data1 : null;
@@ -91,7 +93,7 @@
         }
         this.lock = lock != null ? lock : null;
         this.owner = owner != null ? owner : null;
-        this.drawingID = drawingID != null ? drawingID : null;
+        this.drawingId = drawingId != null ? drawingId : null;
         this.sendToSpacebrew = bind(this.sendToSpacebrew, this);
         this.update = bind(this.update, this);
         this.saveCallback = bind(this.saveCallback, this);
@@ -101,11 +103,11 @@
           Path.__super__.constructor.call(this, this.data, this.id, this.pk, this.date, this.lock.itemListsJ.find('.rPath-list'), this.lock.sortedPaths);
         }
         R.paths[this.id] = this;
-        if (this.drawingID == null) {
-          this.addToListItem(this.getListItem(), this.id.substring(0, 5));
+        if (this.drawingId == null) {
+          this.addToListItem();
         } else {
-          if (R.items[this.drawingID] != null) {
-            drawing = R.items[this.drawingID];
+          if (R.items[this.drawingId] != null) {
+            drawing = R.items[this.drawingId];
             drawing.addChild(this);
           }
         }
@@ -116,9 +118,23 @@
         return;
       }
 
+      Path.prototype.addToListItem = function(itemListJ, name) {
+        this.itemListJ = itemListJ != null ? itemListJ : null;
+        if (name == null) {
+          name = null;
+        }
+        if (this.itemListJ == null) {
+          this.itemListJ = this.getListItem();
+        }
+        if (name == null) {
+          name = this.id.substring(0, 5);
+        }
+        Path.__super__.addToListItem.call(this, this.itemListJ, name);
+      };
+
       Path.prototype.getDrawing = function() {
-        if (this.drawingID != null) {
-          return R.items[this.drawingID];
+        if (this.drawingId != null) {
+          return R.items[this.drawingId];
         } else {
           return null;
         }
@@ -138,9 +154,9 @@
           if (this.raster != null) {
             return this.raster.bounds;
           }
-          return this.drawing.strokeBounds;
+          return this.drawing.strokeBounds.expand(this.constructor.strokeWidth);
         }
-        return (ref = this.getBounds()) != null ? ref.expand(this.data.strokeWidth) : void 0;
+        return (ref = this.getBounds()) != null ? ref.expand(this.constructor.strokeWidth) : void 0;
       };
 
       Path.prototype.endSetRectangle = function() {
@@ -229,11 +245,11 @@
         if (updateOptions == null) {
           updateOptions = true;
         }
-        if (R.me !== this.owner && (this.drawingID == null)) {
+        if (R.me !== this.owner && (this.drawingId == null)) {
           return false;
         }
-        if ((this.drawingID != null) && (R.items[this.drawingID] != null)) {
-          R.items[this.drawingID].select();
+        if ((this.drawingId != null) && (R.items[this.drawingId] != null)) {
+          R.items[this.drawingId].select();
           return null;
         }
         if (!Path.__super__.select.call(this, updateOptions) || (this.controlPath == null)) {
@@ -270,7 +286,7 @@
 
       Path.prototype.applyStylesToPath = function(path) {
         path.strokeColor = this.getStrokeColor();
-        path.strokeWidth = 7;
+        path.strokeWidth = this.constructor.strokeWidth;
         path.fillColor = null;
         if (this.data.shadowOffsetY != null) {
           path.shadowOffset = new P.Point(this.data.shadowOffsetX, this.data.shadowOffsetY);
@@ -348,7 +364,7 @@
         this.drawing = new P.Group();
         this.drawing.name = "drawing";
         this.drawing.strokeColor = color;
-        this.drawing.strokeWidth = 7;
+        this.drawing.strokeWidth = this.constructor.strokeWidth;
         this.drawing.fillColor = null;
         this.drawing.insertBelow(this.controlPath);
         this.drawing.controlPath = this.controlPath;
@@ -444,7 +460,7 @@
         }
         R.paths[this.id] = this;
         args = {
-          clientID: this.id,
+          clientId: this.id,
           city: R.city,
           box: Utils.CS.boxFromRectangle(this.getDrawingBounds()),
           points: this.pathOnPlanet(),
