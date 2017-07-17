@@ -60,7 +60,8 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			rejected: '#EB5A46'
 		}
 
-		@strokeWidth = 7
+		@strokeWidth = Utils.CS.mmToPixel(10)
+		@strokeColor = 'black'
 
 		# parameters are defined as in {RTool}
 		# The following parameters are reserved for commeUnDessein: id, polygonMode, points, planet, step, smooth, speeds, showSpeeds
@@ -153,10 +154,18 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 
 			@selectionHighlight = null
 
+			@data.strokeWidth = @constructor.strokeWidth
+			@data.strokeColor = @constructor.strokeColor
+			@data.fillColor = null
+
 			if points?
 				@loadPath(points)
 
 			return
+
+		containingLayer: ()->
+			drawing = @getDrawing()
+			return if drawing? then drawing.containingLayer() else @group.parent
 
 		addToListItem: (@itemListJ=null, name=null)->
 			if not @itemListJ? then @itemListJ = @getListItem()
@@ -184,7 +193,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 				if @raster?
 					return @raster.bounds
 				return @drawing.strokeBounds.expand(@constructor.strokeWidth)
-			return @getBounds()?.expand(@constructor.strokeWidth)
+			return @getBounds()?.expand(2*@constructor.strokeWidth)
 
 		# updateMove: (event)->
 		# 	if @drawing?
@@ -339,9 +348,9 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			return
 
 		applyStylesToPath: (path)->
-			path.strokeColor = @getStrokeColor() # @data.strokeColor
-			path.strokeWidth = @constructor.strokeWidth # @data.strokeWidth
-			path.fillColor = null # @data.fillColor
+			path.strokeColor = @data.strokeColor
+			path.strokeWidth = @data.strokeWidth
+			path.fillColor = @data.fillColor
 			if @data.shadowOffsetY?
 				path.shadowOffset = new P.Point(@data.shadowOffsetX, @data.shadowOffsetY)
 			if @data.shadowBlur?
@@ -384,6 +393,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 			d = @getDrawing()
 			color = new P.Color(if d? then @constructor.colorMap[d.status] else @constructor.colorMap.draft)
 			color.setBrightness(if @owner == R.me then 1 else 0.8)
+			@data.strokeColor = color
 			return color
 
 		updateStrokeColor: ()->
@@ -408,15 +418,15 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 
 			@controlPath.strokeWidth = 10
 
-			color = @getStrokeColor()
+			@data.strokeColor = @getStrokeColor()
 
 			# create drawing group and initialize it with @data
 			@drawing?.remove()
 			@drawing = new P.Group()
 			@drawing.name = "drawing"
-			@drawing.strokeColor = color # @data.strokeColor
-			@drawing.strokeWidth = @constructor.strokeWidth # @data.strokeWidth
-			@drawing.fillColor = null # @data.fillColor
+			@drawing.strokeColor = @data.strokeColor
+			@drawing.strokeWidth = @data.strokeWidth
+			@drawing.fillColor = @data.fillColor
 			@drawing.insertBelow(@controlPath)
 			@drawing.controlPath = @controlPath
 			@drawing.controller = @
@@ -443,9 +453,9 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 				@canvasRaster = new P.Raster(canvas, position)
 				@drawing.addChild(@canvasRaster)
 				@context = @canvasRaster.canvas.getContext("2d")
-				@context.strokeStyle = color # @data.strokeColor
-				@context.fillStyle = null # @data.fillColor
-				@context.lineWidth = 2 # @data.strokeWidth
+				@context.strokeStyle = @data.strokeColor
+				@context.fillStyle = @data.fillColor
+				@context.lineWidth = @data.strokeWidth
 			return
 
 		# finishDrawing: ()->

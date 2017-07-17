@@ -53,6 +53,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 
 		showLoadingBar: (timeout)=>
 			if timeout? and timeout>0
+				clearTimeout(@showLoadingBarTimeoutId)
 				@showLoadingBarTimeoutId = setTimeout(@showLoadingBarCallback, timeout)
 			else
 				@showLoadingBarCallback()
@@ -97,11 +98,12 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 
 		getLoadingBounds: (area)->
 			if not area?
-				if P.view.bounds.width <= window.innerWidth and P.view.bounds.height <= window.innerHeight
-					return P.view.bounds
-				else
-					halfSize = new P.Point(window.innerWidth*0.5, window.innerHeight*0.5)
-					return new P.Rectangle(P.view.center.subtract(halfSize), P.view.center.add(halfSize))
+				# if P.view.bounds.width <= window.innerWidth and P.view.bounds.height <= window.innerHeight
+				# 	return P.view.bounds
+				# else
+				# 	halfSize = new P.Point(window.innerWidth*0.5, window.innerHeight*0.5)
+				# 	return new P.Rectangle(P.view.center.subtract(halfSize), P.view.center.add(halfSize))
+				return P.view.bounds
 			return area
 
 		unloadAreas: (area, limit, qZoom)->
@@ -233,7 +235,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 
 			# load areas
 			@showDrawingBar()
-			@showLoadingBar(1000)
+			@showLoadingBar(500)
 
 			rectangle = { left: l / 1000.0, top: t / 1000.0, right: r / 1000.0, bottom: b / 1000.0 }
 			@requestAreas(rectangle, areasToLoad, qZoom)

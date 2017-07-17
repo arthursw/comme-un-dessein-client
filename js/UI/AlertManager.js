@@ -62,7 +62,7 @@
         this.showAlert(this.alerts.length - 1);
         this.alertsContainer.addClass("show");
         if (delay !== 0) {
-          clearTimeout(R.alertTimeOut);
+          clearTimeout(this.alertTimeOut);
           this.alertTimeOut = setTimeout(this.hide, delay);
         }
       };

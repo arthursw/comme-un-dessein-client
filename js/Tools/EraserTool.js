@@ -196,6 +196,7 @@
           eraser.circle = new P.Path.Circle(event.point, eraser.radius);
           eraser.circle.strokeWidth = 1;
           eraser.circle.strokeColor = '#2fa1d6';
+          eraser.circle.strokeScaling = false;
           R.view.selectionLayer.addChild(eraser.circle);
         } else {
           eraser.circle.position = event.point;

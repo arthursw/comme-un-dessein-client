@@ -45,7 +45,7 @@ define [ ], () ->
 			# show and hide in *delay* milliseconds
 			@alertsContainer.addClass("show")
 			if delay!=0
-				clearTimeout(R.alertTimeOut)
+				clearTimeout(@alertTimeOut)
 				@alertTimeOut = setTimeout(@hide, delay )
 			return
 

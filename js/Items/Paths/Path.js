@@ -31,7 +31,9 @@
         rejected: '#EB5A46'
       };
 
-      Path.strokeWidth = 7;
+      Path.strokeWidth = Utils.CS.mmToPixel(10);
+
+      Path.strokeColor = 'black';
 
       Path.initializeParameters = function() {
         var parameters;
@@ -112,11 +114,24 @@
           }
         }
         this.selectionHighlight = null;
+        this.data.strokeWidth = this.constructor.strokeWidth;
+        this.data.strokeColor = this.constructor.strokeColor;
+        this.data.fillColor = null;
         if (points != null) {
           this.loadPath(points);
         }
         return;
       }
+
+      Path.prototype.containingLayer = function() {
+        var drawing;
+        drawing = this.getDrawing();
+        if (drawing != null) {
+          return drawing.containingLayer();
+        } else {
+          return this.group.parent;
+        }
+      };
 
       Path.prototype.addToListItem = function(itemListJ, name) {
         this.itemListJ = itemListJ != null ? itemListJ : null;
@@ -156,7 +171,7 @@
           }
           return this.drawing.strokeBounds.expand(this.constructor.strokeWidth);
         }
-        return (ref = this.getBounds()) != null ? ref.expand(this.constructor.strokeWidth) : void 0;
+        return (ref = this.getBounds()) != null ? ref.expand(2 * this.constructor.strokeWidth) : void 0;
       };
 
       Path.prototype.endSetRectangle = function() {
@@ -285,9 +300,9 @@
       };
 
       Path.prototype.applyStylesToPath = function(path) {
-        path.strokeColor = this.getStrokeColor();
-        path.strokeWidth = this.constructor.strokeWidth;
-        path.fillColor = null;
+        path.strokeColor = this.data.strokeColor;
+        path.strokeWidth = this.data.strokeWidth;
+        path.fillColor = this.data.fillColor;
         if (this.data.shadowOffsetY != null) {
           path.shadowOffset = new P.Point(this.data.shadowOffsetX, this.data.shadowOffsetY);
         }
@@ -337,6 +352,7 @@
         d = this.getDrawing();
         color = new P.Color(d != null ? this.constructor.colorMap[d.status] : this.constructor.colorMap.draft);
         color.setBrightness(this.owner === R.me ? 1 : 0.8);
+        this.data.strokeColor = color;
         return color;
       };
 
@@ -348,7 +364,7 @@
       };
 
       Path.prototype.initializeDrawing = function(createCanvas) {
-        var bounds, canvas, color, position, ref, ref1, ref2;
+        var bounds, canvas, position, ref, ref1, ref2;
         if (createCanvas == null) {
           createCanvas = false;
         }
@@ -357,15 +373,15 @@
         }
         this.raster = null;
         this.controlPath.strokeWidth = 10;
-        color = this.getStrokeColor();
+        this.data.strokeColor = this.getStrokeColor();
         if ((ref1 = this.drawing) != null) {
           ref1.remove();
         }
         this.drawing = new P.Group();
         this.drawing.name = "drawing";
-        this.drawing.strokeColor = color;
-        this.drawing.strokeWidth = this.constructor.strokeWidth;
-        this.drawing.fillColor = null;
+        this.drawing.strokeColor = this.data.strokeColor;
+        this.drawing.strokeWidth = this.data.strokeWidth;
+        this.drawing.fillColor = this.data.fillColor;
         this.drawing.insertBelow(this.controlPath);
         this.drawing.controlPath = this.controlPath;
         this.drawing.controller = this;
@@ -388,9 +404,9 @@
           this.canvasRaster = new P.Raster(canvas, position);
           this.drawing.addChild(this.canvasRaster);
           this.context = this.canvasRaster.canvas.getContext("2d");
-          this.context.strokeStyle = color;
-          this.context.fillStyle = null;
-          this.context.lineWidth = 2;
+          this.context.strokeStyle = this.data.strokeColor;
+          this.context.fillStyle = this.data.fillColor;
+          this.context.lineWidth = this.data.strokeWidth;
         }
       };
 

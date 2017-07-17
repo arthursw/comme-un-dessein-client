@@ -116,15 +116,11 @@ define [ 'Tools/Tool', 'UI/Button' ], (Tool, Button) ->
 		# @param [Paper event or REvent] (usually) mouse drag event
 		# @param [String] author (username) of the event
 		update: (event, from=R.me) ->
-			R.currentPaths[from].updateCreate(event.point, event, false)
+			path = R.currentPaths[from]
+			path.updateCreate(event.point, event, false)
 
-			console.log('update:')
-			console.log(R.currentPaths[from].group.visible)
-			console.log(R.currentPaths[from].group.parent.visible)
-			console.log(R.currentPaths[from].group.parent.name)
-			console.log(R.currentPaths[from].group.parent.parent)
-			console.log(R.currentPaths[from].group.parent.parent?.visible)
-			R.huh = R.currentPaths[from]
+			if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))
+				path.path.strokeColor = 'red'
 
 			# R.currentPaths[from].group.visible = true
 			# if R.me? and from==R.me then R.socket.emit( "update", R.me, R.eventToObject(event), @name)
@@ -185,6 +181,12 @@ define [ 'Tools/Tool', 'UI/Button' ], (Tool, Button) ->
 		# @param [String] author (username) of the event
 		end: (event, from=R.me) ->
 			path = R.currentPaths[from]
+			
+			if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))
+				R.alertManager.alert 'Your path must be in the drawing area.', 'error'
+				R.currentPaths[from].remove()
+				delete R.currentPaths[from]
+				return false
 
 			path.endCreate(event.point, event, false)
 

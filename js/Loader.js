@@ -62,6 +62,7 @@
 
       Loader.prototype.showLoadingBar = function(timeout) {
         if ((timeout != null) && timeout > 0) {
+          clearTimeout(this.showLoadingBarTimeoutId);
           this.showLoadingBarTimeoutId = setTimeout(this.showLoadingBarCallback, timeout);
         } else {
           this.showLoadingBarCallback();
@@ -115,14 +116,8 @@
       };
 
       Loader.prototype.getLoadingBounds = function(area) {
-        var halfSize;
         if (area == null) {
-          if (P.view.bounds.width <= window.innerWidth && P.view.bounds.height <= window.innerHeight) {
-            return P.view.bounds;
-          } else {
-            halfSize = new P.Point(window.innerWidth * 0.5, window.innerHeight * 0.5);
-            return new P.Rectangle(P.view.center.subtract(halfSize), P.view.center.add(halfSize));
-          }
+          return P.view.bounds;
         }
         return area;
       };
@@ -246,7 +241,7 @@
           return false;
         }
         this.showDrawingBar();
-        this.showLoadingBar(1000);
+        this.showLoadingBar(500);
         rectangle = {
           left: l / 1000.0,
           top: t / 1000.0,

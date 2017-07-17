@@ -37,7 +37,7 @@ define [ 'UI/Controllers/Controller', 'UI/Controllers/ColorController', 'UI/Cont
 			R.parameters['General'].zoom =
 				type: 'slider'
 				label: 'Zoom'
-				min: 1
+				min: 25
 				max: 500
 				default: 100
 				permanent: true

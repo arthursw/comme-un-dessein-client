@@ -106,6 +106,13 @@
       }
       return zoom;
     };
+    CS.pixelsPerMm = 1;
+    CS.pixelToMm = function(pixel) {
+      return pixel / CS.pixelsPerMm;
+    };
+    CS.mmToPixel = function(mm) {
+      return mm * CS.pixelsPerMm;
+    };
     return CS;
   });
 

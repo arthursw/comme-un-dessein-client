@@ -4,19 +4,21 @@
     var Grid;
     Grid = (function() {
       function Grid() {
+        var size;
         this.grid = new P.Group();
         this.grid.name = 'grid group';
+        size = new P.Size(Utils.CS.mmToPixel(4000), Utils.CS.mmToPixel(3000));
+        this.limitCD = new P.Path.Rectangle(size.multiply(-0.5), size);
+        this.limitCD.strokeColor = '#33383e';
+        this.limitCD.strokeWidth = 10;
+        this.limitCD.strokeCap = 'square';
+        this.limitCD.dashArray = [10, 14];
         this.update();
         return;
       }
 
       Grid.prototype.rectangleOverlapsTwoPlanets = function(rectangle) {
-        var limit;
-        limit = Utils.CS.getLimit();
-        if ((rectangle.left < limit.x && rectangle.right > limit.x) || (rectangle.top < limit.y && rectangle.bottom > limit.y)) {
-          return true;
-        }
-        return false;
+        return !this.limitCD.bounds.contains(rectangle);
       };
 
       Grid.prototype.updateLimitPaths = function() {

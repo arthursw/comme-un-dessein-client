@@ -240,6 +240,13 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 
 			return
 
+		containingLayer: ()->
+			return @group?.parent
+
+		isVisible: ()->
+			# WARNING: returns true even if @group is not visible since it can be rasterized (in which case @group.visible == false)
+			return @containingLayer().visible
+
 		secureData: ()->
 			for name, parameter of @constructor.parameters
 				if parameter.secure?

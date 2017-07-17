@@ -149,6 +149,15 @@
         return;
       }
 
+      Item.prototype.containingLayer = function() {
+        var ref;
+        return (ref = this.group) != null ? ref.parent : void 0;
+      };
+
+      Item.prototype.isVisible = function() {
+        return this.containingLayer().visible;
+      };
+
       Item.prototype.secureData = function() {
         var name, parameter, ref, value;
         ref = this.constructor.parameters;

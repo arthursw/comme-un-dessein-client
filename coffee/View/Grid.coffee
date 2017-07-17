@@ -5,7 +5,17 @@ define [], ()->
 		constructor: ()->
 			@grid = new P.Group() 					# Paper P.Group to append all grid items
 			@grid.name = 'grid group'
+			
+			size = new P.Size(Utils.CS.mmToPixel(4000), Utils.CS.mmToPixel(3000))
+			@limitCD = new P.Path.Rectangle(size.multiply(-0.5), size)
+			@limitCD.strokeColor = '#33383e'
+			@limitCD.strokeWidth = 10
+			@limitCD.strokeCap = 'square'
+			@limitCD.dashArray = [10, 14]
+			
 			@update()
+
+
 			return
 
 		## Manage limits between planets
@@ -14,10 +24,11 @@ define [], ()->
 		# @param rectangle [P.Rectangle] rectangle to test
 		# @return [Boolean] true if overlaps
 		rectangleOverlapsTwoPlanets: (rectangle)->
-			limit = Utils.CS.getLimit()
-			if ( rectangle.left < limit.x && rectangle.right > limit.x ) || ( rectangle.top < limit.y && rectangle.bottom > limit.y )
-				return true
-			return false
+			return not @limitCD.bounds.contains(rectangle)
+			# limit = Utils.CS.getLimit()
+			# if ( rectangle.left < limit.x && rectangle.right > limit.x ) || ( rectangle.top < limit.y && rectangle.bottom > limit.y )
+			# 	return true
+			# return false
 
 		# Test if *path* overlaps two planets
 		#
@@ -41,6 +52,7 @@ define [], ()->
 		# 			return true
 
 		# 	return false
+
 
 		updateLimitPaths: ()->
 			limit = Utils.CS.getLimit()

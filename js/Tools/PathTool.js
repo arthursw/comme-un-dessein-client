@@ -116,18 +116,15 @@
       };
 
       PathTool.prototype.update = function(event, from) {
-        var ref;
+        var path;
         if (from == null) {
           from = R.me;
         }
-        R.currentPaths[from].updateCreate(event.point, event, false);
-        console.log('update:');
-        console.log(R.currentPaths[from].group.visible);
-        console.log(R.currentPaths[from].group.parent.visible);
-        console.log(R.currentPaths[from].group.parent.name);
-        console.log(R.currentPaths[from].group.parent.parent);
-        console.log((ref = R.currentPaths[from].group.parent.parent) != null ? ref.visible : void 0);
-        R.huh = R.currentPaths[from];
+        path = R.currentPaths[from];
+        path.updateCreate(event.point, event, false);
+        if (R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))) {
+          path.path.strokeColor = 'red';
+        }
         if ((R.me != null) && from === R.me) {
           R.socket.emit("bounce", {
             tool: this.name,
@@ -178,6 +175,12 @@
           from = R.me;
         }
         path = R.currentPaths[from];
+        if (R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))) {
+          R.alertManager.alert('Your path must be in the drawing area.', 'error');
+          R.currentPaths[from].remove();
+          delete R.currentPaths[from];
+          return false;
+        }
         path.endCreate(event.point, event, false);
         if (!((ref = path.data) != null ? ref.polygonMode : void 0)) {
           this.createPath(event, from);

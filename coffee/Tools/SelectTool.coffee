@@ -111,7 +111,7 @@ define [ 'Tools/Tool', 'Items/Lock', 'Items/Drawing', 'Commands/Command', 'View/
 		populateItemsToSelect: (itemsToSelect, locksToSelect, rectangle)->
 			# Add all items which have bounds intersecting with the selection rectangle (1st version)
 			for name, item of R.items
-				if item.getBounds().intersects(rectangle)
+				if item.getBounds().intersects(rectangle) and item.isVisible()
 					if Drawing.prototype.isPrototypeOf(item)
 						itemsToSelect.length = 0
 						itemsToSelect.push(item)

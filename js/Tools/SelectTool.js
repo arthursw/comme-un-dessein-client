@@ -154,7 +154,7 @@
         ref = R.items;
         for (name in ref) {
           item = ref[name];
-          if (item.getBounds().intersects(rectangle)) {
+          if (item.getBounds().intersects(rectangle) && item.isVisible()) {
             if (Drawing.prototype.isPrototypeOf(item)) {
               itemsToSelect.length = 0;
               itemsToSelect.push(item);
