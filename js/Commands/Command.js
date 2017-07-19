@@ -826,7 +826,9 @@
           event = new CustomEvent('command executed', {
             detail: this
           });
-          document.dispatchEvent(event);
+          Utils.callNextFrame((function() {
+            return document.dispatchEvent(event);
+          }), 'dispatch command executed');
           this.waitingSaveCallback = null;
         }
       };
@@ -837,7 +839,9 @@
           event = new CustomEvent('command executed', {
             detail: this
           });
-          document.dispatchEvent(event);
+          Utils.callNextFrame((function() {
+            return document.dispatchEvent(event);
+          }), 'dispatch command executed');
           this.waitingDeleteCallback = null;
         }
       };
@@ -947,7 +951,9 @@
           event = new CustomEvent('command executed', {
             detail: this
           });
-          document.dispatchEvent(event);
+          Utils.callNextFrame((function() {
+            return document.dispatchEvent(event);
+          }), 'dispatch command executed');
         }
       };
 
@@ -964,7 +970,9 @@
           event = new CustomEvent('command executed', {
             detail: this
           });
-          document.dispatchEvent(event);
+          Utils.callNextFrame((function() {
+            return document.dispatchEvent(event);
+          }), 'dispatch command executed');
         }
       };
 

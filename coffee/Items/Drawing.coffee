@@ -176,6 +176,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 		addChild: (path)->
 			path.drawingId = @id
+			path.group.visible = true # can be hidden by rasterizer, must be shown here to update @drawing.bounds
 			@pathPks ?= []
 			if not path.pk?
 				R.alertManager.alert 'Error: a path has not been saved yet. Please wait until the path is saved before creating the drawing.', 'error'
@@ -193,7 +194,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 				@replaceDrawing()
 			return
 		
-		removeChild: (path, updateRectangle=true)->
+		removeChild: (path, updateRectangle=true, updateRaster=false)->
 			path.drawingId = null
 			pkIndex = @pathPks.indexOf(path.pk)
 			if pkIndex >= 0
@@ -204,8 +205,11 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			path.updateStrokeColor()
 			path.addToListItem()
 			@drawn = false
-			if @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
+			if updateRaster and @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
 				@replaceDrawing()
+			R.rasterizer.rasterize(path, false)
+			path.draw?()
+			path.rasterize()
 			return
 
 		# @param name [String] the name of the value to change
@@ -253,8 +257,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			R.alertManager.alert "Drawing successfully submitted. It will be drawn if it gets 100 votes.", "success"
 
 			if @selectAfterSave?
-				@selected = false
-				@select()
+				@select(true, true, true)
 
 			if @updateAfterSave?
 				@update(@updateAfterSave)
@@ -308,6 +311,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 					@rasterize()
 					R.rasterizer.rasterize(@, false)
 				return
+			super()
 			R.alertManager.alert "Drawing successfully cancelled.", "success"
 			return
 
@@ -350,8 +354,8 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 			return
 
 		# can not select a drawing which the user does not own
-		select: (updateOptions=true, showPanelAndLoad=true) =>
-			if not super(updateOptions) then return false
+		select: (updateOptions=true, showPanelAndLoad=true, force=false) =>
+			if not super(updateOptions, force) then return false
 			
 			for item in @children()
 				item.deselect()
@@ -372,17 +376,18 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 					@selectAfterSave = true
 
 			return true
+		
+		deselect: (updateOptions=true)->
+			if not super(updateOptions) then return false
+			R.drawingPanel.close()
+			R.drawingPanel.hideSubmitDrawing()
+			return true
 
 		remove: () ->
 			for path in @children()
 				@removeChild(path)
 
 			@removeFromListItem()
-			super
-			return
-
-		delete: ()->
-			@remove()
 			super
 			return
 
@@ -409,6 +414,7 @@ define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
 
 		# disable rasterize if no children
 		rasterize: ()->	
+			if @raster? or not @drawing? then return
 			# make sure children are drawn BEFORE this, otherwise this can be rasterized before children are drawn, see Rasterizer.drawItems()
 			@drawChildren()
 			super()

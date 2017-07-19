@@ -35,8 +35,6 @@ define [ 'Tools/Tool', 'Items/Lock', 'Items/Drawing', 'Commands/Command', 'View/
 				@selectionRectangle?.remove()
 				@selectionRectangle = null
 			P.project.activeLayer.selected = false
-			R.drawingPanel.close()
-			R.drawingPanel.hideSubmitDrawing()
 			return
 
 		setSelectionRectangleVisibility: (value)=>
@@ -115,10 +113,10 @@ define [ 'Tools/Tool', 'Items/Lock', 'Items/Drawing', 'Commands/Command', 'View/
 					if Drawing.prototype.isPrototypeOf(item)
 						itemsToSelect.length = 0
 						itemsToSelect.push(item)
-						return
+						return true
 					else
 						itemsToSelect.push(item)
-			return
+			return false
 
 		# check if items all have the same parent
 		itemsAreSiblings: (itemsToSelect)->
@@ -137,13 +135,22 @@ define [ 'Tools/Tool', 'Items/Lock', 'Items/Drawing', 'Commands/Command', 'View/
 					Utils.Array.remove(itemsToSelect, child)
 			return
 
+		isDrawingSelected: ()->
+			for item in R.selectedItems
+				if Drawing.prototype.isPrototypeOf(item)
+					return true
+			return false
+
 		selectItems: (event)->
 			rectangle = new P.Rectangle(event.downPoint, event.point)
 
 			itemsToSelect = []
 			locksToSelect = []
 
-			@populateItemsToSelect(itemsToSelect, locksToSelect, rectangle)
+			selectDrawing = @populateItemsToSelect(itemsToSelect, locksToSelect, rectangle)
+
+			if selectDrawing
+				@deselectAll()
 
 			if itemsToSelect.length == 0
 				itemsToSelect = locksToSelect
@@ -185,7 +192,11 @@ define [ 'Tools/Tool', 'Items/Lock', 'Items/Drawing', 'Commands/Command', 'View/
 				itemWasHit = controller?
 
 			if not itemWasHit
-				@deselectAll()
+				if not event.event.shiftKey or @isDrawingSelected()
+					@deselectAll()
+				else
+					@selectionRectangle?.remove()
+					@selectionRectangle = null
 				@createSelectionHighlight(event)
 			return
 

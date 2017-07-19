@@ -162,8 +162,7 @@ define [ 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Drawing', 'Items/Di
 				@remove()
 				return
 			@rectangle = @getBoundingRectangle(@items)
-			if not @simple
-				@updatePath()
+			@updatePath()
 			Item.updatePositionAndSizeControllers(@rectangle.point, new paper.Point(@rectangle.size))
 			visible = true
 			for item in @items
@@ -175,8 +174,14 @@ define [ 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Drawing', 'Items/Di
 			return
 
 		updatePath: ()->
-			for index, name of @constructor.indexToName
-				@path.segments[index].point = @constructor.pointFromName(@rectangle, name)
+			if @simple
+				index = 0
+				for name in @constructor.cornersNames
+					@path.segments[index].point = @constructor.pointFromName(@rectangle, name)
+					index++
+			else
+				for index, name of @constructor.indexToName
+					@path.segments[index].point = @constructor.pointFromName(@rectangle, name)
 			@path.pivot = @rectangle.center
 			@path.rotation = @rotation or 0
 			return

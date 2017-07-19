@@ -297,7 +297,8 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 
 			hitResult = @performHitTest(event.point)
 			if hitResult? and not @selected
-				R.tools.select.deselectAll()
+				if not event.event.shiftKey or R.tools.select.isDrawingSelected()
+					R.tools.select.deselectAll()
 				R.commandManager.add(new Command.Select([@]), true)
 			return hitResult
 
@@ -610,6 +611,7 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 
 		deleteFromDatabaseCallback: ()=>
 			if not R.loader.checkError() then return
+			console.log('deleteFromDatabaseCallback')
 			R.commandManager.itemDeleted(@)
 			return
 
@@ -621,7 +623,10 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 		# - update the selection rectangle,
 		# - (optionally) update controller in the gui accordingly
 		# @return whether the ritem was selected or not
-		select: (updateOptions=true)->
+		select: (updateOptions=true, force=false)->
+			if force
+				@selected = false
+				Utils.Array.remove(R.selectedItems, @)
 			if @selected then return false
 			@selected = true
 
@@ -643,7 +648,9 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 
 			@zindex = @group.index
 
-			@parentBeforeSelection = @group.parent
+			if @group.parent != R.view.selectionLayer or not @parentBeforeSelection? 	# when force selected, do not set @parentBeforeSelection to R.selectionLayer
+																						# otherwise item will be put back to selection layer when deselecting
+				@parentBeforeSelection = @group.parent
 			R.view.selectionLayer.addChild(@group)
 
 			return true
@@ -671,11 +678,13 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 
 		remove: ()->
 			R.commandManager.unloadItem(@)
+			@deselect()
+			
 			if not @group then return
 
 			@group.remove()
 			@group = null
-			@deselect()
+			
 			@highlightRectangle?.remove()
 			
 			delete R.items[@id]

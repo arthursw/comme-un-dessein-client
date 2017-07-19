@@ -740,7 +740,7 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 			if item.id == @waitingSaveCallback
 				
 				event = new CustomEvent('command executed', detail: @)
-				document.dispatchEvent(event)
+				Utils.callNextFrame((()-> return document.dispatchEvent(event)), 'dispatch command executed')
 
 				@waitingSaveCallback = null
 			return
@@ -749,10 +749,12 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 			if item.id == @waitingDeleteCallback
 
 				event = new CustomEvent('command executed', detail: @)
-				document.dispatchEvent(event)
+				Utils.callNextFrame((()-> return document.dispatchEvent(event)), 'dispatch command executed')
+
 
 				@waitingDeleteCallback = null
 			return
+
 
 	class DeleteItemCommand extends CreateItemCommand
 		constructor: (item)-> super(item, 'Delete item')
@@ -812,23 +814,25 @@ define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerMa
 		itemSaved: (item)->
 			if not @waitingSaveCallbacks? then return
 			index = @waitingSaveCallbacks.indexOf(item.id)
+			
 			if index >= 0
 				@waitingSaveCallbacks.splice(index, 1) # remove item
 
 			if @waitingSaveCallbacks.length == 0
 				event = new CustomEvent('command executed', detail: @)
-				document.dispatchEvent(event)
+				Utils.callNextFrame((()-> return document.dispatchEvent(event)), 'dispatch command executed')
 			return
 		
 		itemDeleted: (item)->
 			if not @waitingDeleteCallbacks? then return
 			index = @waitingDeleteCallbacks.indexOf(item.id)
+
 			if index >= 0
 				@waitingDeleteCallbacks.splice(index, 1) # remove item
 
 			if @waitingDeleteCallbacks.length == 0
 				event = new CustomEvent('command executed', detail: @)
-				document.dispatchEvent(event)
+				Utils.callNextFrame((()-> return document.dispatchEvent(event)), 'dispatch command executed')
 			return
 
 	class DeleteItemsCommand extends CreateItemsCommand

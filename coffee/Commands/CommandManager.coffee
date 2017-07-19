@@ -39,8 +39,9 @@ define [ 'Commands/Command' ], (Command) ->
 			document.removeEventListener('command executed', @toggleCurrentCommand)
 
 			if @currentCommand == @commandIndex then return
-
+			
 			deferred = @history[@currentCommand+@offset].toggle()
+
 			@waitingCommand = @history[@currentCommand+@offset]
 			
 			@currentCommand += @direction

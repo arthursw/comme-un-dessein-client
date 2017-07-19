@@ -210,7 +210,9 @@
         var hitResult;
         hitResult = this.performHitTest(event.point);
         if ((hitResult != null) && !this.selected) {
-          R.tools.select.deselectAll();
+          if (!event.event.shiftKey || R.tools.select.isDrawingSelected()) {
+            R.tools.select.deselectAll();
+          }
           R.commandManager.add(new Command.Select([this]), true);
         }
         return hitResult;
@@ -318,6 +320,7 @@
         if (!R.loader.checkError()) {
           return;
         }
+        console.log('deleteFromDatabaseCallback');
         R.commandManager.itemDeleted(this);
       };
 
@@ -325,10 +328,17 @@
         return this.selectionRectangle != null;
       };
 
-      Item.prototype.select = function(updateOptions) {
+      Item.prototype.select = function(updateOptions, force) {
         var ref;
         if (updateOptions == null) {
           updateOptions = true;
+        }
+        if (force == null) {
+          force = false;
+        }
+        if (force) {
+          this.selected = false;
+          Utils.Array.remove(R.selectedItems, this);
         }
         if (this.selected) {
           return false;
@@ -348,7 +358,9 @@
         }
         R.rasterizer.selectItem(this);
         this.zindex = this.group.index;
-        this.parentBeforeSelection = this.group.parent;
+        if (this.group.parent !== R.view.selectionLayer || (this.parentBeforeSelection == null)) {
+          this.parentBeforeSelection = this.group.parent;
+        }
         R.view.selectionLayer.addChild(this.group);
         return true;
       };
@@ -376,12 +388,12 @@
       Item.prototype.remove = function() {
         var ref;
         R.commandManager.unloadItem(this);
+        this.deselect();
         if (!this.group) {
           return;
         }
         this.group.remove();
         this.group = null;
-        this.deselect();
         if ((ref = this.highlightRectangle) != null) {
           ref.remove();
         }

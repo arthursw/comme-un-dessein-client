@@ -58,8 +58,6 @@
           this.selectionRectangle = null;
         }
         P.project.activeLayer.selected = false;
-        R.drawingPanel.close();
-        R.drawingPanel.hideSubmitDrawing();
       };
 
       SelectTool.prototype.setSelectionRectangleVisibility = function(value) {
@@ -158,12 +156,13 @@
             if (Drawing.prototype.isPrototypeOf(item)) {
               itemsToSelect.length = 0;
               itemsToSelect.push(item);
-              return;
+              return true;
             } else {
               itemsToSelect.push(item);
             }
           }
         }
+        return false;
       };
 
       SelectTool.prototype.itemsAreSiblings = function(itemsToSelect) {
@@ -192,12 +191,27 @@
         }
       };
 
+      SelectTool.prototype.isDrawingSelected = function() {
+        var i, item, len, ref;
+        ref = R.selectedItems;
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          if (Drawing.prototype.isPrototypeOf(item)) {
+            return true;
+          }
+        }
+        return false;
+      };
+
       SelectTool.prototype.selectItems = function(event) {
-        var itemsToSelect, locksToSelect, rectangle;
+        var itemsToSelect, locksToSelect, rectangle, selectDrawing;
         rectangle = new P.Rectangle(event.downPoint, event.point);
         itemsToSelect = [];
         locksToSelect = [];
-        this.populateItemsToSelect(itemsToSelect, locksToSelect, rectangle);
+        selectDrawing = this.populateItemsToSelect(itemsToSelect, locksToSelect, rectangle);
+        if (selectDrawing) {
+          this.deselectAll();
+        }
         if (itemsToSelect.length === 0) {
           itemsToSelect = locksToSelect;
         }
@@ -210,7 +224,7 @@
       };
 
       SelectTool.prototype.begin = function(event) {
-        var controller, hitResult, itemWasHit, name, path, ref, ref1;
+        var controller, hitResult, itemWasHit, name, path, ref, ref1, ref2;
         if (event.event.which === 2) {
           return;
         }
@@ -237,7 +251,14 @@
           itemWasHit = controller != null;
         }
         if (!itemWasHit) {
-          this.deselectAll();
+          if (!event.event.shiftKey || this.isDrawingSelected()) {
+            this.deselectAll();
+          } else {
+            if ((ref2 = this.selectionRectangle) != null) {
+              ref2.remove();
+            }
+            this.selectionRectangle = null;
+          }
           this.createSelectionHighlight(event);
         }
       };

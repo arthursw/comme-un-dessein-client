@@ -43,7 +43,6 @@
         this.areasToUpdateLayer.name = 'areasToUpdateLayer';
         this.backgroundRectangle = null;
         this.areasToUpdateLayer.visible = false;
-        this.mainLayer.activate();
         paper.settings.hitTolerance = 5;
         R.scale = 1000.0;
         P.view.zoom = 1;
@@ -52,6 +51,7 @@
         this.entireArea = null;
         this.entireAreas = [];
         this.grid = new Grid();
+        this.mainLayer.activate();
         R.canvasJ.dblclick(function(event) {
           var ref;
           return (ref = R.selectedTool) != null ? typeof ref.doubleClick === "function" ? ref.doubleClick(event) : void 0 : void 0;

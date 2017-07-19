@@ -35,7 +35,7 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 			@backgroundRectangle = null 			# the rectangle to highlight the stage when dragging an RContent over it
 
 			@areasToUpdateLayer.visible = false
-			@mainLayer.activate()
+			
 			paper.settings.hitTolerance = 5
 
 			R.scale = 1000.0
@@ -48,7 +48,8 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 
 			@grid = new Grid()
 
-
+			@mainLayer.activate()
+			
 			R.canvasJ.dblclick( (event) -> R.selectedTool?.doubleClick?(event) )
 			# cancel default delete key behaviour (not really working)
 			R.canvasJ.keydown( (event) -> if event.key == 46 then event.preventDefault(); return false )

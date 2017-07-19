@@ -198,6 +198,7 @@
       Drawing.prototype.addChild = function(path) {
         var bounds;
         path.drawingId = this.id;
+        path.group.visible = true;
         if (this.pathPks == null) {
           this.pathPks = [];
         }
@@ -222,10 +223,13 @@
         }
       };
 
-      Drawing.prototype.removeChild = function(path, updateRectangle) {
+      Drawing.prototype.removeChild = function(path, updateRectangle, updateRaster) {
         var pkIndex;
         if (updateRectangle == null) {
           updateRectangle = true;
+        }
+        if (updateRaster == null) {
+          updateRaster = false;
         }
         path.drawingId = null;
         pkIndex = this.pathPks.indexOf(path.pk);
@@ -239,9 +243,14 @@
         path.updateStrokeColor();
         path.addToListItem();
         this.drawn = false;
-        if ((this.raster != null) && this.raster.parent !== null) {
+        if (updateRaster && (this.raster != null) && this.raster.parent !== null) {
           this.replaceDrawing();
         }
+        R.rasterizer.rasterize(path, false);
+        if (typeof path.draw === "function") {
+          path.draw();
+        }
+        path.rasterize();
       };
 
       Drawing.prototype.setParameter = function(name, value, updateGUI, update) {
@@ -291,8 +300,7 @@
         this.setPK(result.pk);
         R.alertManager.alert("Drawing successfully submitted. It will be drawn if it gets 100 votes.", "success");
         if (this.selectAfterSave != null) {
-          this.selected = false;
-          this.select();
+          this.select(true, true, true);
         }
         if (this.updateAfterSave != null) {
           this.update(this.updateAfterSave);
@@ -366,6 +374,7 @@
           }
           return;
         }
+        Drawing.__super__.deleteFromDatabaseCallback.call(this);
         R.alertManager.alert("Drawing successfully cancelled.", "success");
       };
 
@@ -434,7 +443,7 @@
         }
       };
 
-      Drawing.prototype.select = function(updateOptions, showPanelAndLoad) {
+      Drawing.prototype.select = function(updateOptions, showPanelAndLoad, force) {
         var args, i, item, len, ref;
         if (updateOptions == null) {
           updateOptions = true;
@@ -442,7 +451,10 @@
         if (showPanelAndLoad == null) {
           showPanelAndLoad = true;
         }
-        if (!Drawing.__super__.select.call(this, updateOptions)) {
+        if (force == null) {
+          force = false;
+        }
+        if (!Drawing.__super__.select.call(this, updateOptions, force)) {
           return false;
         }
         ref = this.children();
@@ -479,6 +491,18 @@
         return true;
       };
 
+      Drawing.prototype.deselect = function(updateOptions) {
+        if (updateOptions == null) {
+          updateOptions = true;
+        }
+        if (!Drawing.__super__.deselect.call(this, updateOptions)) {
+          return false;
+        }
+        R.drawingPanel.close();
+        R.drawingPanel.hideSubmitDrawing();
+        return true;
+      };
+
       Drawing.prototype.remove = function() {
         var i, len, path, ref;
         ref = this.children();
@@ -488,11 +512,6 @@
         }
         this.removeFromListItem();
         Drawing.__super__.remove.apply(this, arguments);
-      };
-
-      Drawing.prototype["delete"] = function() {
-        this.remove();
-        Drawing.__super__["delete"].apply(this, arguments);
       };
 
       Drawing.prototype.children = function() {
@@ -530,6 +549,9 @@
       };
 
       Drawing.prototype.rasterize = function() {
+        if ((this.raster != null) || (this.drawing == null)) {
+          return;
+        }
         this.drawChildren();
         Drawing.__super__.rasterize.call(this);
       };

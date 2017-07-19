@@ -3,18 +3,21 @@ define [], ()->
 	class Grid
 
 		constructor: ()->
-			@grid = new P.Group() 					# Paper P.Group to append all grid items
+			@layer = new P.Layer()
+
+			@grid = new P.Group() 					# Paper P.Layer to append all grid items
 			@grid.name = 'grid group'
-			
+			@layer.addChild(@grid)
+
 			size = new P.Size(Utils.CS.mmToPixel(4000), Utils.CS.mmToPixel(3000))
 			@limitCD = new P.Path.Rectangle(size.multiply(-0.5), size)
 			@limitCD.strokeColor = '#33383e'
 			@limitCD.strokeWidth = 10
 			@limitCD.strokeCap = 'square'
 			@limitCD.dashArray = [10, 14]
-			
-			@update()
+			@layer.addChild(@limitCD)
 
+			@update()
 
 			return
 

@@ -5,14 +5,17 @@
     Grid = (function() {
       function Grid() {
         var size;
+        this.layer = new P.Layer();
         this.grid = new P.Group();
         this.grid.name = 'grid group';
+        this.layer.addChild(this.grid);
         size = new P.Size(Utils.CS.mmToPixel(4000), Utils.CS.mmToPixel(3000));
         this.limitCD = new P.Path.Rectangle(size.multiply(-0.5), size);
         this.limitCD.strokeColor = '#33383e';
         this.limitCD.strokeWidth = 10;
         this.limitCD.strokeCap = 'square';
         this.limitCD.dashArray = [10, 14];
+        this.layer.addChild(this.limitCD);
         this.update();
         return;
       }

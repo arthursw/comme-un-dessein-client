@@ -215,9 +215,7 @@
           return;
         }
         this.rectangle = this.getBoundingRectangle(this.items);
-        if (!this.simple) {
-          this.updatePath();
-        }
+        this.updatePath();
         Item.updatePositionAndSizeControllers(this.rectangle.point, new paper.Point(this.rectangle.size));
         visible = true;
         ref = this.items;
@@ -233,11 +231,21 @@
       };
 
       SelectionRectangle.prototype.updatePath = function() {
-        var index, name, ref;
-        ref = this.constructor.indexToName;
-        for (index in ref) {
-          name = ref[index];
-          this.path.segments[index].point = this.constructor.pointFromName(this.rectangle, name);
+        var i, index, len, name, ref, ref1;
+        if (this.simple) {
+          index = 0;
+          ref = this.constructor.cornersNames;
+          for (i = 0, len = ref.length; i < len; i++) {
+            name = ref[i];
+            this.path.segments[index].point = this.constructor.pointFromName(this.rectangle, name);
+            index++;
+          }
+        } else {
+          ref1 = this.constructor.indexToName;
+          for (index in ref1) {
+            name = ref1[index];
+            this.path.segments[index].point = this.constructor.pointFromName(this.rectangle, name);
+          }
         }
         this.path.pivot = this.rectangle.center;
         this.path.rotation = this.rotation || 0;
