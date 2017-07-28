@@ -264,8 +264,11 @@ define [
 		# R.cityManager = new CityManager()
 		R.view = new View()
 		R.alertManager = new AlertManager()
-		R.controllerManager = new ControllerManager()
-		R.controllerManager.createGlobalControllers()
+		
+		if document?		
+			R.controllerManager = new ControllerManager()
+			R.controllerManager.createGlobalControllers()
+		
 		R.rasterizerManager = new RasterizerManager()
 		R.rasterizerManager.initializeRasterizers()
 		R.commandManager = new CommandManager()
@@ -277,7 +280,7 @@ define [
 		R.view.initializePosition()
 		R.sidebar.initialize()
 
-		window.setPageFullyLoaded?(true)
+		window?.setPageFullyLoaded?(true)
 		return
 
 	R.debugDatabase = ()-> return $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'debugDatabase', args: {} } )

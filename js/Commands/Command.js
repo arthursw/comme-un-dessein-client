@@ -5,7 +5,7 @@
     hasProp = {}.hasOwnProperty,
     slice = [].slice;
 
-  define(['Utils/Utils', 'UI/Controllers/ControllerManager'], function(Utils, ControllerManager) {
+  define(['paper', 'R', 'Utils/Utils', 'UI/Controllers/ControllerManager'], function(P, R, Utils, ControllerManager) {
     var AddPointCommand, Command, CreateItemCommand, CreateItemsCommand, DeferredCommand, DeleteItemCommand, DeleteItemsCommand, DeletePointCommand, DeselectCommand, DuplicateItemCommand, ItemCommand, ItemsCommand, ModifyControlPathCommand, ModifyPointCommand, ModifyPointTypeCommand, ModifySpeedCommand, ModifyTextCommand, MoveViewCommand, RotateCommand, ScaleCommand, SelectCommand, SelectionRectangleCommand, SetParameterCommand, TranslateCommand;
     Command = (function() {
       function Command(name) {

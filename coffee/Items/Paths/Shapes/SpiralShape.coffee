@@ -1,4 +1,4 @@
-define [ 'Items/Paths/Shapes/Shape' ], (Shape) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/Shapes/Shape' ], (P, R, Utils, Shape) ->
 
 	# The spiral shape can have an intern radius, and a custom number of sides
 	# A smooth spiral could be drawn with less points and with handles, that could be more efficient

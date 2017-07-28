@@ -1,4 +1,4 @@
-define [ 'Tools/Tool' ], (Tool) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 
 	class Button
 

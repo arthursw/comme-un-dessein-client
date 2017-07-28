@@ -4,7 +4,7 @@
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['Items/Paths/Shapes/Shape', 'UI/Modal'], function(Shape, Modal) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Paths/Shapes/Shape', 'UI/Modal'], function(P, R, Utils, Shape, Modal) {
     var Vectorizer;
     Vectorizer = (function(superClass) {
       extend(Vectorizer, superClass);

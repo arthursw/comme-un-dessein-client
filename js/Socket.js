@@ -3,7 +3,7 @@
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  define(['socketio'], function(ioo) {
+  define(['paper', 'R', 'Utils/Utils', 'socket.io'], function(P, R, Utils, ioo) {
     var Socket;
     Socket = (function() {
       function Socket() {
@@ -15,6 +15,7 @@
         this.onConnectionError = bind(this.onConnectionError, this);
         this.onKeyPress = bind(this.onKeyPress, this);
         this.addMessage = bind(this.addMessage, this);
+        this.connectToTipibot = bind(this.connectToTipibot, this);
         this.initialize();
         return;
       }
@@ -76,7 +77,59 @@
         if (this.chatJ.find("#chatUserNameInput").length > 0) {
           this.initializeUserName();
         }
-        return this.socket.on("bounce", this.onBounce);
+        this.socket.on("bounce", this.onBounce);
+        if (R.tipibot) {
+          setTimeout(this.connectToTipibot, 3000);
+        }
+      };
+
+      Socket.prototype.connectToTipibot = function() {
+        console.log('connect to tipibot...');
+        this.tipibotSocket = new WebSocket("ws://localhost:8026/tipibot");
+        this.tipibotSocket.onopen = function(event) {
+          console.log('tipibotSocket.onopen', event);
+        };
+        this.tipibotSocket.onmessage = (function(_this) {
+          return function(event) {
+            var args, message;
+            console.log(event.data);
+            message = JSON.parse(event.data);
+            switch (message.type) {
+              case 'getNextValidatedDrawing':
+                if (!_this.requestedNextDrawing) {
+                  $.ajax({
+                    method: "POST",
+                    url: "ajaxCall/",
+                    data: {
+                      data: JSON.stringify({
+                        "function": 'getNextValidatedDrawing',
+                        args: {}
+                      })
+                    }
+                  }).done(function(results) {
+                    _this.requestedNextDrawing = false;
+                    R.loader.loadCallbackTipibot(results);
+                  });
+                  _this.requestedNextDrawing = true;
+                }
+                break;
+              case 'setDrawingStatusDrawn':
+                args = {
+                  pk: message.pk
+                };
+                $.ajax({
+                  method: "POST",
+                  url: "ajaxCall/",
+                  data: {
+                    data: JSON.stringify({
+                      "function": 'setDrawingStatusDrawn',
+                      args: args
+                    })
+                  }
+                }).done(R.loader.checkError);
+            }
+          };
+        })(this);
       };
 
       Socket.prototype.initializeUserName = function() {
@@ -188,7 +241,7 @@
 
       Socket.prototype.onSetUserName = function(set) {
         if (set) {
-          window.clearTimeout(this.chatConnectionTimeout);
+          clearTimeout(this.chatConnectionTimeout);
           this.chatMainJ.removeClass("hidden");
           this.chatMainJ.find("#chatConnectingMessage").addClass("hidden");
           this.chatJ.find("#chatUserNameError").addClass("hidden");

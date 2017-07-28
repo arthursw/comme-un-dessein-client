@@ -1,4 +1,4 @@
-define ['Utils/Utils', 'UI/Modal'], (Utils, Modal) ->
+define ['paper', 'R',  'Utils/Utils', 'UI/Modal' ], (P, R, Utils, Modal) ->
 
 	class CityManager
 
@@ -14,9 +14,8 @@ define ['Utils/Utils', 'UI/Modal'], (Utils, Modal) ->
 			@createCityBtnJ.click @createCityModal
 			@citiesListBtnJ.click @citiesModal
 
-#			Dajaxice.draw.loadCities(@addCities)
 			if R.offline then return
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadCities', args: {} } ).done(@addCities)
+			$.ajax( { method: "POST", url: "ajaxCall/", data: { data: JSON.stringify({ function: 'loadCities', args: {} }) } } ).done(@addCities)
 			return
 
 		createCity: (data)=>

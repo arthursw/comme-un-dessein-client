@@ -1,4 +1,4 @@
-define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
+define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P, R, Utils, Command, ItemTool) ->
 	console.log 'Item'
 
 	class Item
@@ -757,6 +757,9 @@ define [ 'Commands/Command', 'Tools/ItemTool' ], (Command, ItemTool) ->
 			# background.fillColor = 'blue'
 			# @drawing.addChild(background)
 			# background.sendToBack()
+
+			if @data.strokeWidth?
+				@drawing.addChild(new P.Path.Rectangle(@drawing.bounds.expand(2*@data.strokeWidth)))
 
 			@raster = @drawing.rasterize()
 

@@ -3,7 +3,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['Tools/Tool', 'UI/Button', 'Commands/Command'], function(Tool, Button, Command) {
+  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Command'], function(P, R, Utils, Tool, Button, Command) {
     var EraserTool;
     EraserTool = (function(superClass) {
       extend(EraserTool, superClass);

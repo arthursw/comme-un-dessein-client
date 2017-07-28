@@ -5,7 +5,7 @@
     hasProp = {}.hasOwnProperty,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  define(['Items/Lock', 'Items/Drawing'], function(Lock, Drawing) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Lock', 'Items/Drawing'], function(P, R, Utils, Lock, Drawing) {
     var CanvasTileRasterizer, InstantPaperTileRasterizer, PaperTileRasterizer, Rasterizer, TileRasterizer;
     Rasterizer = (function() {
       Rasterizer.TYPE = 'default';
@@ -198,6 +198,12 @@
 
       TileRasterizer.prototype.loadItem = function(item) {
         var ref;
+        if (this.rasterizationDisabled) {
+          if (typeof item.draw === "function") {
+            item.draw();
+          }
+          return;
+        }
         if (((ref = item.data) != null ? ref.animate : void 0) || R.selectedTool.constructor.drawItems) {
           if (typeof item.draw === "function") {
             item.draw();
@@ -443,7 +449,9 @@
           } else {
             sourceRectangle = new P.Rectangle(intersection.topLeft.subtract(rectangle.topLeft).divide(qZoom), intersection.size.divide(qZoom));
           }
-          context.drawImage(canvas, sourceRectangle.x, sourceRectangle.y, sourceRectangle.width, sourceRectangle.height, destinationRectangle.x, destinationRectangle.y, destinationRectangle.width, destinationRectangle.height);
+          if (sourceRectangle.width > 0 && sourceRectangle.height > 0 && destinationRectangle.width > 0 && destinationRectangle.height > 0) {
+            context.drawImage(canvas, sourceRectangle.x, sourceRectangle.y, sourceRectangle.width, sourceRectangle.height, destinationRectangle.x, destinationRectangle.y, destinationRectangle.width, destinationRectangle.height);
+          }
         }
       };
 
@@ -470,6 +478,9 @@
       };
 
       TileRasterizer.prototype.rasterizeArea = function(area) {
+        if (this.rasterizationDisabled) {
+          return;
+        }
         P.view.viewSize = area.size.multiply(P.view.zoom);
         P.view.center = area.center;
         P.view.update();
@@ -478,6 +489,9 @@
 
       TileRasterizer.prototype.rasterizeAreas = function(areas) {
         var area, i, len, viewPosition, viewSize, viewZoom;
+        if (this.rasterizationDisabled) {
+          return;
+        }
         viewZoom = P.view.zoom;
         viewSize = P.view.viewSize;
         viewPosition = P.view.center;
@@ -493,6 +507,9 @@
 
       TileRasterizer.prototype.prepareView = function() {
         var i, id, item, len, ref, ref1, ref2, ref3;
+        if (this.rasterizationDisabled) {
+          return;
+        }
         ref = R.items;
         for (id in ref) {
           item = ref[id];
@@ -530,6 +547,9 @@
 
       TileRasterizer.prototype.rasterizeCallback = function(step) {
         var area, areas, i, id, item, j, k, len, len1, len2, ref, ref1, ref2, ref3, ref4, sortedItems;
+        if (this.rasterizationDisabled) {
+          return;
+        }
         if (!this.areaToRasterize) {
           return;
         }
@@ -615,6 +635,9 @@
       };
 
       TileRasterizer.prototype.rasterizeRectangle = function(rectangle) {
+        if (this.rasterizationDisabled) {
+          return;
+        }
         this.drawItems();
         if (this.areaToRasterize == null) {
           this.areaToRasterize = rectangle;
@@ -625,6 +648,9 @@
       };
 
       TileRasterizer.prototype.addAreaToUpdate = function(area) {
+        if (this.rasterizationDisabled) {
+          return;
+        }
         this.areasToUpdate.push(area);
       };
 
@@ -634,6 +660,9 @@
 
       TileRasterizer.prototype.rasterizeAreasToUpdate = function() {
         var area, i, len, previousAreaToRasterize, previousItemsToExclude, previousZoom, ref;
+        if (this.rasterizationDisabled) {
+          return;
+        }
         if (this.areasToUpdate.length === 0) {
           return;
         }
@@ -829,11 +858,14 @@
       };
 
       PaperTileRasterizer.prototype.createRaster = function(x, y, zoom) {
-        var raster, ref;
+        var image, raster, ref;
         if (((ref = this.rasters[x]) != null ? ref[y] : void 0) != null) {
           return;
         }
-        raster = new P.Raster('');
+        image = new Image();
+        image.width = R.scale;
+        image.height = R.scale;
+        raster = new P.Raster(image);
         raster.name = 'raster: ' + x + ', ' + y;
         console.log(raster.name);
         raster.position.x = x + 0.5 * R.scale * zoom;

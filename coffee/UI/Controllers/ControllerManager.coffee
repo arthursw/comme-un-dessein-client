@@ -1,4 +1,8 @@
-define [ 'UI/Controllers/Controller', 'UI/Controllers/ColorController', 'UI/Controllers/Folder', 'gui' ], (Controller, ColorController, Folder, GUI) ->
+dependencies = ['paper', 'R', 'Utils/Utils', 'UI/Controllers/Controller', 'UI/Controllers/ColorController', 'UI/Controllers/Folder']
+if document?
+	dependencies.push('gui')
+
+define dependencies, (P, R, Utils, Controller, ColorController, Folder, GUI) ->
 
 	console.log 'ControllerManager'
 

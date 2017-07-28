@@ -1,4 +1,4 @@
-define [ 'Items/Item', 'UI/ModuleLoader', 'jqueryUi', 'scrollbar', 'typeahead' ], (Item, ModuleLoader) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi', 'scrollbar', 'typeahead' ], (P, R, Utils, Item, ModuleLoader) ->
 
 	class Sidebar
 

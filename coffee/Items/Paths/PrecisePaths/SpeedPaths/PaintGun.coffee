@@ -1,4 +1,4 @@
-define ['Items/Paths/PrecisePaths/SpeedPaths/SpeedPath'], (SpeedPath) ->
+define ['paper', 'R', 'Utils/Utils','Items/Paths/PrecisePaths/SpeedPaths/SpeedPath'], (P, R, Utils, SpeedPath) ->
 
 	class PaintGun extends SpeedPath
 		@label = 'Paint gun'

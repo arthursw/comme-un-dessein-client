@@ -1,4 +1,4 @@
-define [ 'socketio' ], (ioo) ->
+define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 
 	class Socket
 
@@ -165,6 +165,38 @@ define [ 'socketio' ], (ioo) ->
 
 			@socket.on "bounce", @onBounce
 
+			if R.tipibot
+				setTimeout(@connectToTipibot, 3000)
+
+			return
+
+		connectToTipibot: ()=>
+			console.log('connect to tipibot...')
+			@tipibotSocket = new WebSocket("ws://localhost:8026/tipibot")
+
+			@tipibotSocket.onopen = (event) ->
+				console.log('tipibotSocket.onopen', event)
+				return
+
+			@tipibotSocket.onmessage = (event) =>
+				console.log(event.data)
+				message = JSON.parse(event.data)
+				switch message.type
+					when 'getNextValidatedDrawing'
+						if not @requestedNextDrawing
+							$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getNextValidatedDrawing', args: {} } ).done((results)=>
+								@requestedNextDrawing = false
+								R.loader.loadCallbackTipibot(results)
+								return
+							)
+							@requestedNextDrawing = true
+					when 'setDrawingStatusDrawn'
+						args = 
+							pk: message.pk
+						$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingStatusDrawn', args: args } ).done(R.loader.checkError)
+				return
+			return
+
 		initializeUserName: ()->
 			@chatJ.find("a.sign-in").click(@onSignInClick)
 
@@ -266,7 +298,7 @@ define [ 'socketio' ], (ioo) ->
 
 		onSetUserName: (set)=>
 			if set
-				window.clearTimeout(@chatConnectionTimeout)
+				clearTimeout(@chatConnectionTimeout)
 				@chatMainJ.removeClass("hidden")
 				@chatMainJ.find("#chatConnectingMessage").addClass("hidden")
 				@chatJ.find("#chatUserNameError").addClass("hidden")

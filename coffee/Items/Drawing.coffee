@@ -1,4 +1,4 @@
-define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, Item, Modal) ->
 
 	# Drawing can only be modified by their author
 

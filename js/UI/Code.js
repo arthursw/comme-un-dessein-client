@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['UI/Modal', 'coffee', 'spin', 'jqtree', 'typeahead'], function(Modal, CoffeeScript, Spinner) {
+  define(['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtree', 'typeahead'], function(P, R, Utils, Modal, CoffeeScript) {
     var FileManager;
     FileManager = (function() {
       function FileManager() {
@@ -126,19 +126,11 @@
           hwaccel: false,
           position: 'absolute'
         };
-        this.spinner = new Spinner(opts).spin(this.runForkBtnJ[0]);
       };
 
-      FileManager.prototype.showLoader = function() {
-        this.spinner.spin(this.runForkBtnJ[0]);
-        $(this.spinner.el).css({
-          right: '15px'
-        });
-      };
+      FileManager.prototype.showLoader = function() {};
 
-      FileManager.prototype.hideLoader = function() {
-        this.spinner.stop();
-      };
+      FileManager.prototype.hideLoader = function() {};
 
       FileManager.prototype.showCommitButtons = function() {
         this.undoChangesBtnJ.show();

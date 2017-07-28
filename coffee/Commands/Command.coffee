@@ -1,4 +1,4 @@
-define ['Utils/Utils', 'UI/Controllers/ControllerManager'], (Utils, ControllerManager) ->
+define ['paper', 'R',  'Utils/Utils', 'UI/Controllers/ControllerManager' ], (P, R, Utils, ControllerManager) ->
 
 	class Command
 

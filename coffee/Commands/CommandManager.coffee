@@ -1,4 +1,4 @@
-define [ 'Commands/Command' ], (Command) ->
+define ['paper', 'R', 'Utils/Utils', 'Commands/Command' ], (P, R, Utils, Command) ->
 
 	class CommandManager
 		@maxCommandNumber = 20
@@ -23,9 +23,7 @@ define [ 'Commands/Command' ], (Command) ->
 			@currentCommand++
 			@history.splice(@currentCommand, @history.length-@currentCommand, command)
 
-			console.log('add command: ' + command.name)
 			@mapItemsToCommand(command)
-			console.log(@itemToCommands)
 
 			if execute then command.do()
 			return

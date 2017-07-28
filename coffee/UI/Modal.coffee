@@ -1,4 +1,4 @@
-define [ 'Utils/Utils' ], () ->
+define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 
 	class Modal
 

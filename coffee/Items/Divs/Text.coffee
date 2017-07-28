@@ -1,4 +1,4 @@
-define [ 'Items/Item', 'Items/Divs/Div', 'Commands/Command' ], (Item, Div, Command) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Divs/Div', 'Commands/Command' ], (P, R, Utils, Item, Div, Command) ->
 
 	# Text: a textarea to write some text.
 	# The text can have any google font, any effect, but all the text has the same formating.

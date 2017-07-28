@@ -1,4 +1,4 @@
-define [ 'Items/Paths/PrecisePaths/StepPath' ], (StepPath) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/PrecisePaths/StepPath' ], (P, R, Utils, StepPath) ->
 
 	# The geometric lines path draws a line between all pair of points which are close enough
 	# This means that hundreds of lines will be drawn at each update.

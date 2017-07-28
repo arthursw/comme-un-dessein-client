@@ -1,4 +1,5 @@
-define [
+dependencies = [
+	'Utils/Utils'
 	'Tools/Tool'
 	'Tools/MoveTool'
 	'Tools/SelectTool'
@@ -8,10 +9,14 @@ define [
 	'Tools/LockTool'
 	'Tools/MediaTool'
 	'Tools/TextTool'
-	'Tools/ScreenshotTool'
 	'Tools/GradientTool'
-	'Tools/CarTool'
-], (Tool) ->
+]
+
+if document?
+	dependencies.push('Tools/ScreenshotTool')
+	dependencies.push('Tools/CarTool')
+
+define dependencies, (Utils, Tool) ->
 
 	class ToolManager
 

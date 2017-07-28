@@ -1,4 +1,4 @@
-define [ 'Tools/Tool' ], (Tool) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 
 	# ItemTool: mother class of all Div creation tools (this will create a new div on top of the canvas, with custom content, and often resizable)
 	# User will create a selection rectangle

@@ -1,4 +1,8 @@
-define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween' ], (Grid, Command, Div)->
+dependencies = ['paper', 'R',  'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel' ]
+if document?
+	dependencies.push('tween')
+
+define dependencies, (P, R, Utils, Grid, Command, Div) ->
 
 	class View
 
@@ -8,8 +12,8 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 
 			R.canvasJ = R.stageJ.find("#canvas")
 			R.canvas = R.canvasJ[0]
-			R.canvas.width = window.innerWidth
-			R.canvas.height = window.innerHeight
+			R.canvas.width = if window? then window.innerWidth else R.canvasWidth
+			R.canvas.height = if window? then window.innerHeight else R.canvasHeight
 			R.context = R.canvas.getContext('2d')
 
 			paper.setup(R.canvas)
@@ -65,11 +69,12 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 
 			R.stageJ.mousewheel( @mousewheel )
 			R.stageJ.mousedown( @mousedown )
-			$(window).mousemove( @mousemove )
-			$(window).mouseup( @mouseup )
-			$(window).resize(@onWindowResize)
+			if window?
+				$(window).mousemove( @mousemove )
+				$(window).mouseup( @mouseup )
+				$(window).resize(@onWindowResize)
 
-			window.onhashchange = @onHashChange
+				window.onhashchange = @onHashChange
 
 			@mousePosition = new P.Point() 			# the mouse position in window coordinates (updated everytime the mouse moves)
 			@previousMousePosition = null 			# the previous position of the mouse in the mousedown/move/up
@@ -268,6 +273,8 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 				hashParameters['city-owner'] = R.city.owner
 				hashParameters['city-name'] = R.city.name
 			hashParameters['location'] = Utils.pointToString(P.view.center)
+			if R.tipibot?
+				hashParameters['tipibot'] = true
 			location.hash = Utils.URL.setParameters(hashParameters)
 			return
 
@@ -290,6 +297,8 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 
 			if parameters['location']?
 				p = Utils.stringToPoint(parameters['location'])
+
+			R.tipibot = parameters['tipibot']
 
 			# if R.city.name != parameters['city-name'] or R.city.owner != parameters['city-owner']
 			# 	R.cityManager.loadCity(parameters['city-name'], parameters['city-owner'], p)
@@ -316,7 +325,7 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 			#
 			# if not boxString or boxString.length==0
 			if not R.loadedBox?
-				window.onhashchange()
+				window?.onhashchange()
 				return
 
 			# initialize the area rectangle *boxRectangle* from 'data-box' attr and move to the center of the box
@@ -457,7 +466,7 @@ define [ 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel', 'tween
 		onFrame: (event)=>
 			TWEEN.update(event.time)
 
-			R.rasterizer.updateLoadingBar?(event.time)
+			R.rasterizer?.updateLoadingBar?(event.time)
 
 			R.selectedTool?.onFrame?(event)
 

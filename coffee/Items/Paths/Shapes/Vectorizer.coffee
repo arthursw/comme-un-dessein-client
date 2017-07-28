@@ -1,4 +1,4 @@
-define [ 'Items/Paths/Shapes/Shape', 'UI/Modal'], (Shape, Modal) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/Shapes/Shape', 'UI/Modal'], (P, R, Utils, Shape, Modal) ->
 
 	class Vectorizer extends Shape
 		@Shape = P.Path.Rectangle

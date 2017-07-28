@@ -1,4 +1,4 @@
-define [ 'Items/Paths/Shapes/Shape' ], (Shape) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/Shapes/Shape' ], (P, R, Utils, Shape) ->
 
 	class StripeAnimation extends Shape
 		@Shape = P.Path.Rectangle
@@ -55,7 +55,7 @@ define [ 'Items/Paths/Shapes/Shape' ], (Shape) ->
 			@modalJ.modal('show')
 			# @modalJ.find('.btn-primary').click( (event)=> @modalSubmit() ) 		# submit modal when click submit button
 
-			if window.File and window.FileReader and window.FileList and window.Blob
+			if window? and window.File and window.FileReader and window.FileList and window.Blob
 				#Great success! All the File APIs are supported.
 				console.log 'File upload supported'
 			else

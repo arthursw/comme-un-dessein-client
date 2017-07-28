@@ -1,4 +1,4 @@
-define [ 'spacebrew' ], (SpacebrewLib) ->
+define ['paper', 'R', 'Utils/Utils', 'spacebrew' ], (P, R, Utils, SpacebrewLib) ->
 
 	# Spacebrew
 

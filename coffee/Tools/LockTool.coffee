@@ -1,4 +1,4 @@
-define [ 'Tools/Tool', 'Tools/ItemTool', 'Items/Lock' ], (Tool, ItemTool, Lock) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Tools/ItemTool', 'Items/Lock' ], (P, R, Utils, Tool, ItemTool, Lock) ->
 
 	# Lock creation tool
 	class LockTool extends ItemTool

@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['Tools/Tool'], function(Tool) {
+  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool'], function(P, R, Utils, Tool) {
     var Button;
     Button = (function() {
       function Button(parameters) {

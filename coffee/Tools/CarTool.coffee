@@ -1,4 +1,4 @@
-define [ 'Tools/Tool' ], (Tool) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 
 	# CarTool gives a car to travel in the world with arrow key (and play video games)
 	class CarTool extends Tool

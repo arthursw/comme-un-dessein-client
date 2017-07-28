@@ -1,4 +1,4 @@
-define [ 'Items/Item', 'bootstrap', 'tween', 'mousewheel', 'scrollbar' ], (Item) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'bootstrap', 'mousewheel', 'scrollbar' ], (P, R, Utils, Item) ->
 
 	###
 	# Global functions #

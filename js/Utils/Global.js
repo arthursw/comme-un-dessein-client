@@ -2,7 +2,7 @@
 (function() {
   var indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  define(['Items/Item', 'bootstrap', 'tween', 'mousewheel', 'scrollbar'], function(Item) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'bootstrap', 'mousewheel', 'scrollbar'], function(P, R, Utils, Item) {
 
     /*
     	 * Global functions #

@@ -1,4 +1,4 @@
-define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, PathTool) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (P, R, Utils, Item, Content, PathTool) ->
 
 	# todo: Actions, undo & redo...
 	# todo: strokeWidth min = 0?
@@ -286,7 +286,7 @@ define [ 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (Item, Content, Path
 		# @param updateOptions [Boolean] whether to update controllers in gui or not
 		# @return whether the ritem was selected or not
 		select: (updateOptions=true)->
-			if R.me != @owner && not @drawingId? then return false
+			if R.me != @owner and not @drawingId? and not R.administrator then return false
 
 			if @drawingId? and R.items[@drawingId]?
 				R.items[@drawingId].select()

@@ -1,4 +1,4 @@
-define ['Items/Paths/PrecisePaths/SpeedPaths/SpeedPath'], (SpeedPath) ->
+define ['paper', 'R', 'Utils/Utils','Items/Paths/PrecisePaths/SpeedPaths/SpeedPath'], (P, R, Utils, SpeedPath) ->
 
 	# The thickness pass demonstrates a simple use of the speed path: it draws a stroke which is thick where the user draws quickly, and thin elsewhere
 	# The stroke width can be changed with the speed handles at any time

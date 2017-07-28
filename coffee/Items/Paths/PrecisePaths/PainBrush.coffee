@@ -1,4 +1,4 @@
-define [ 'Items/Paths/PrecisePaths/StepPath' ], (StepPath) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/PrecisePaths/StepPath' ], (P, R, Utils, StepPath) ->
 
 	class PaintBrush extends StepPath
 		@label = 'Paint brush'

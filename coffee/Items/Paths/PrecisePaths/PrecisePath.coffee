@@ -1,4 +1,4 @@
-define [ 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (Item, Path, Command) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], (P, R, Utils, Item, Path, Command) ->
 
 	# PrecisePath extends R.RPath to add precise editing functionalities
 	# PrecisePath adds control handles to the control path (which can be hidden):

@@ -4,11 +4,12 @@
     hasProp = {}.hasOwnProperty,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  define(['Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Lock', 'Items/Divs/Div', 'Items/Divs/Media', 'Items/Drawing', 'Items/Divs/Text'], function(Command, Item, ModuleLoader, Spinner) {
+  define(['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Lock', 'Items/Divs/Div', 'Items/Divs/Media', 'Items/Drawing', 'Items/Divs/Text'], function(P, R, Utils, Command, Item, ModuleLoader) {
     var Loader, RasterizerLoader;
     Loader = (function() {
       function Loader() {
         this.checkError = bind(this.checkError, this);
+        this.loadCallbackTipibot = bind(this.loadCallbackTipibot, this);
         this.loadCallback = bind(this.loadCallback, this);
         this.hideLoadingBar = bind(this.hideLoadingBar, this);
         this.showLoadingBar = bind(this.showLoadingBar, this);
@@ -283,7 +284,7 @@
       };
 
       Loader.prototype.mustLoadItem = function(item) {
-        return R.items[item._id.$oid] == null;
+        return R.items[item.clientId] == null;
       };
 
       Loader.prototype.unloadItem = function(item) {};
@@ -465,6 +466,47 @@
         this.endLoading();
       };
 
+      Loader.prototype.loadCallbackTipibot = function(results) {
+        var bounds, i, item, itemsToLoad, k, len, len1, len2, m, n, path, paths, points, ref, ref1, segment, segmentedPath;
+        if (!this.checkError(results)) {
+          return;
+        }
+        itemsToLoad = [];
+        ref = results.items;
+        for (k = 0, len = ref.length; k < len; k++) {
+          i = ref[k];
+          item = JSON.parse(i);
+          if (R.items[item.clientId]) {
+            R.items[item.clientId].remove();
+          }
+          itemsToLoad.push(item);
+        }
+        this.createNewItems(itemsToLoad);
+        paths = [];
+        bounds = R.view.grid.limitCD.bounds;
+        console.log(bounds);
+        for (m = 0, len1 = itemsToLoad.length; m < len1; m++) {
+          item = itemsToLoad[m];
+          path = R.items[item.clientId];
+          segmentedPath = path.controlPath.clone();
+          segmentedPath.flatten(5);
+          points = [];
+          ref1 = segmentedPath.segments;
+          for (n = 0, len2 = ref1.length; n < len2; n++) {
+            segment = ref1[n];
+            points.push(segment.point);
+            console.log(segment.point);
+            console.log(segment.point.subtract(bounds.topLeft).divide(bounds.size));
+          }
+          paths.push(points);
+        }
+        R.socket.tipibotSocket.send(JSON.stringify({
+          bounds: bounds,
+          paths: paths,
+          type: 'setNextDrawing'
+        }));
+      };
+
       Loader.prototype.checkError = function(result) {
         if (result == null) {
           return true;
@@ -588,25 +630,6 @@
           itemsDates[id] = item.lastUpdateDate;
         }
         return itemsDates;
-      };
-
-      RasterizerLoader.prototype.requestAreas = function(rectangle, areasToLoad, qZoom) {
-        var itemsDates;
-        itemsDates = this.createItemsDates();
-        $.ajax({
-          method: "POST",
-          url: "ajaxCall/",
-          data: {
-            data: JSON.stringify({
-              "function": 'loadRasterizer',
-              args: {
-                areasToLoad: areasToLoad,
-                itemsDates: itemsDates,
-                city: R.city
-              }
-            })
-          }
-        }).done(this.loadCallback);
       };
 
       RasterizerLoader.prototype.mustLoadItem = function() {

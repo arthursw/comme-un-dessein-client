@@ -1,4 +1,4 @@
-define [ 'UI/Button' ], (Button) ->
+define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 
 	# An RTool can be selected from the sidebar, or with special shortcuts.
 	# once selected, a tool will usually react to user events (mouse and keyboard events)

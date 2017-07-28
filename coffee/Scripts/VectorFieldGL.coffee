@@ -1,4 +1,4 @@
-define ['Utils/Utils', 'UI/Controllers/Folder', 'three'], (Utils, Folder, Three) ->
+define ['paper', 'R', 'Utils/Utils', 'UI/Controllers/Folder', 'three'], (P, R, Utils, Folder, Three) ->
 
 	scene = null
 	camera = null

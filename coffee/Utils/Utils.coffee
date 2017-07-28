@@ -1,9 +1,10 @@
-define [ 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor', 'paper', 'bootstrap'], (CS, _, $, tinycolor) ->
+define [ 'paper', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2', 'bootstrap'], (P, CS, _, $, tinycolor) ->
 
 	# window._ = _
-	window.tinycolor = tinycolor
-	paper.install(window.P)
-	# Utils = {}
+	window?.tinycolor = tinycolor
+	window?.P = P
+
+	Utils = {}
 	Utils.CS = CS
 
 	$.ajaxSetup beforeSend: (xhr, settings) ->
@@ -95,6 +96,18 @@ define [ 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor', 'paper'
 	# )
 
 	window.setInterval.isPolyfill = true
+
+	Utils.URL = {}
+
+	Utils.URL.getParameters = R.getParameters
+
+	Utils.URL.setParameters = (parameters)->
+		hash = ''
+		for name, value of parameters
+			hash += '&' + name + "=" + value
+		hash = hash.replace('&', '')
+		return hash
+
 
 	Utils.LocalStorage = {}
 

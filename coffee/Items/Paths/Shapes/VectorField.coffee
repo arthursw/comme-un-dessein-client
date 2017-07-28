@@ -1,4 +1,4 @@
-define ['Utils/Utils', 'Items/Paths/Shapes/Shape'], (Utils, Shape) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/Shapes/Shape'], (P, R, Utils, Shape) ->
 
 
 	class VectorField extends Shape

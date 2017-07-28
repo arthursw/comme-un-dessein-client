@@ -1,4 +1,4 @@
-define [ 'Items/Item', 'UI/Modal' ], (Item, Modal) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, Item, Modal) ->
 
 	# Lock are locked area which can only be modified by their author
 	# all RItems on the area are also locked, and can be unlocked if the user drags them outside the div

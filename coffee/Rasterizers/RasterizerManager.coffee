@@ -1,4 +1,4 @@
-define [ 'Rasterizers/Rasterizer', 'UI/Controllers/Folder' ], (Rasterizer, Folder) ->
+define ['paper', 'R', 'Utils/Utils', 'Rasterizers/Rasterizer', 'UI/Controllers/Folder' ], (P, R, Utils, Rasterizer, Folder) ->
 
 	class RasterizerManager
 
@@ -11,6 +11,7 @@ define [ 'Rasterizers/Rasterizer', 'UI/Controllers/Folder' ], (Rasterizer, Folde
 			new Rasterizer.CanvasTile()
 			new Rasterizer.InstantPaperTile()
 			R.rasterizer = new Rasterizer.PaperTile()
+			R.rasterizer.rasterizationDisabled = true
 
 			@addRasterizerParameters()
 			return

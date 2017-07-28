@@ -1,4 +1,4 @@
-define ['Items/Paths/PrecisePaths/SpeedPaths/SpeedPath'], (SpeedPath) ->
+define ['paper', 'R', 'Utils/Utils','Items/Paths/PrecisePaths/SpeedPaths/SpeedPath'], (P, R, Utils, SpeedPath) ->
 
 	# The shape path draw a rectangle or an ellipse along the control path
 	class ShapePath extends SpeedPath

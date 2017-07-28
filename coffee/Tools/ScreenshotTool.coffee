@@ -1,4 +1,4 @@
-define [ 'Tools/Tool', 'zeroClipboard', 'View/SelectionRectangle' ], (Tool, ZeroClipboard, SelectionRectangle) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'zeroClipboard', 'View/SelectionRectangle' ], (P, R, Utils, Tool, ZeroClipboard, SelectionRectangle) ->
 
 	# todo: ZeroClipboard.destroy()
 	# ScreenshotTool to take a screenshot and save it or publish it on different social platforms (facebook, pinterest or twitter)

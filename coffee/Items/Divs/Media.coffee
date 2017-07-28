@@ -1,4 +1,4 @@
-define ['Items/Item', 'Items/Divs/Div', 'UI/Modal', 'oembed'], (Item, Div, Modal) ->
+define ['paper', 'R', 'Utils/Utils','Items/Item', 'Items/Divs/Div', 'UI/Modal', 'oembed'], (P, R, Utils, Item, Div, Modal) ->
 
 	# todo: remove @url? duplicated in @data.url or remove data.url
 	# todo: websocket the url change

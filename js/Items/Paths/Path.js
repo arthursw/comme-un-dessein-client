@@ -4,7 +4,7 @@
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['Items/Item', 'Items/Content', 'Tools/PathTool'], function(Item, Content, PathTool) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathTool'], function(P, R, Utils, Item, Content, PathTool) {
     var Path;
     Path = (function(superClass) {
       extend(Path, superClass);
@@ -260,7 +260,7 @@
         if (updateOptions == null) {
           updateOptions = true;
         }
-        if (R.me !== this.owner && (this.drawingId == null)) {
+        if (R.me !== this.owner && (this.drawingId == null) && !R.administrator) {
           return false;
         }
         if ((this.drawingId != null) && (R.items[this.drawingId] != null)) {

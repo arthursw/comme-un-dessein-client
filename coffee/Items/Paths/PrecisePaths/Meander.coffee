@@ -1,4 +1,4 @@
-define [ 'Items/Paths/PrecisePaths/StepPath' ], (StepPath) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/PrecisePaths/StepPath' ], (P, R, Utils, StepPath) ->
 
 
 	# Meander makes use of both the tangent and the normal of the control path to draw a spiral at each step

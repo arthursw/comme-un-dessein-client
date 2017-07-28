@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['Items/Item', 'coffee', 'typeahead'], function(Item, CoffeeScript) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typeahead'], function(P, R, Utils, Item, CoffeeScript) {
     var DrawingPanel;
     DrawingPanel = (function() {
       function DrawingPanel() {
@@ -166,7 +166,7 @@
         this.hideLoadAnimation();
         contentJ = this.drawingPanelJ.find('.content');
         this.currentDrawing.votes = drawingData.votes;
-        if (this.currentDrawing.owner === R.me) {
+        if (this.currentDrawing.owner === R.me || R.administrator) {
           contentJ.find('.read').hide();
           contentJ.find('.modify').show();
           contentJ.find('#drawing-title').val(this.currentDrawing.title);
@@ -209,6 +209,16 @@
             }
           }
         }
+        if (nPositiveVotes > 0) {
+          positiveVoteListJ.removeClass('hidden');
+        } else {
+          positiveVoteListJ.addClass('hidden');
+        }
+        if (nNegativeVotes > 0) {
+          negativeVoteListJ.removeClass('hidden');
+        } else {
+          negativeVoteListJ.addClass('hidden');
+        }
         this.votesJ.find('.n-votes.positive').html(nPositiveVotes);
         this.votesJ.find('.n-votes.negative').html(nNegativeVotes);
         nVotes = nPositiveVotes + nNegativeVotes;
@@ -232,10 +242,16 @@
       };
 
       DrawingPanel.prototype.voteCallback = function(result) {
+        var suffix;
         if (!R.loader.checkError(result)) {
           return;
         }
-        R.alertManager.alert('You successfuly voted', 'success');
+        if (result.cancelled) {
+          R.alertManager.alert('Your vote was successfully cancelled', 'success');
+          return;
+        }
+        suffix = result.validates ? ', the drawing will be validated in a minute if nobody cancels its vote!' : '';
+        R.alertManager.alert('You successfully voted' + suffix, 'success');
       };
 
       DrawingPanel.prototype.vote = function(positive) {

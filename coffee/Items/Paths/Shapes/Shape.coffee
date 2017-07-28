@@ -1,4 +1,4 @@
-define [ 'Items/Paths/Path' ], (Path) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/Path' ], (P, R, Utils, Path) ->
 
 	# An RShape is defined by a rectangle in which the drawing should be included
 	# during the creation, the user draw the rectangle with the mouse

@@ -1,4 +1,4 @@
-define [ 'Tools/Tool', 'Items/Lock', 'Items/Drawing', 'Commands/Command', 'View/SelectionRectangle' ], (Tool, Lock, Drawing, Command, SelectionRectangle) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing', 'Commands/Command', 'View/SelectionRectangle' ], (P, R, Utils, Tool, Lock, Drawing, Command, SelectionRectangle) ->
 
 	# Enables to select RItems
 	class SelectTool extends Tool

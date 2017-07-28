@@ -1,4 +1,4 @@
-define [ 'Items/Paths/PrecisePaths/StepPath', 'Spacebrew'], (StepPath, spacebrew) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/PrecisePaths/StepPath', 'Spacebrew'], (P, R, Utils, StepPath, spacebrew) ->
 
 	class SpacePath extends StepPath
 		@label = 'Space path'

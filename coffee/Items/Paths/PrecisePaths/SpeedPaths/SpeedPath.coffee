@@ -1,4 +1,4 @@
-define [ 'Items/Paths/PrecisePaths/StepPath', 'Commands/Command' ], (StepPath, Command) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/PrecisePaths/StepPath', 'Commands/Command' ], (P, R, Utils, StepPath, Command) ->
 
 	# SpeedPath extends R.PrecisePath to add speed functionnalities:
 	#  - the speed at which the user has drawn the path is stored and has influence on the drawing,

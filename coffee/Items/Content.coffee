@@ -1,4 +1,4 @@
-define [ 'Items/Item' ], (Item) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item' ], (P, R, Utils, Item) ->
 
 	class Content extends Item
 

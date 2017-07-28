@@ -1,4 +1,4 @@
-define [ 'Tools/Tool', 'Tools/ItemTool', 'Items/Divs/Text' ], (Tool, ItemTool, Text) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Tools/ItemTool', 'Items/Divs/Text' ], (P, R, Utils, Tool, ItemTool, Text) ->
 
 	# Text creation tool
 	class TextTool extends ItemTool

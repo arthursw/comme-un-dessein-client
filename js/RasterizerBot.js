@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define([], function() {
+  define(['paper', 'R', 'Utils/Utils'], function(P, R, Utils) {
     var RasterizerBot;
     RasterizerBot = (function() {
       function RasterizerBot() {

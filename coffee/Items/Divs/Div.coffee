@@ -1,4 +1,4 @@
-define [ 'Items/Item', 'Items/Content' ], (Item, Content) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content' ], (P, R, Utils, Item, Content) ->
 
 	# todo: change ownership through websocket?
 	# todo: change lock/link popover to commeUnDessein alert?

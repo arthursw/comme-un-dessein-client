@@ -3,7 +3,7 @@
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     slice = [].slice;
 
-  define(['Commands/Command'], function(Command) {
+  define(['paper', 'R', 'Utils/Utils', 'Commands/Command'], function(P, R, Utils, Command) {
     var CommandManager;
     CommandManager = (function() {
       CommandManager.maxCommandNumber = 20;
@@ -37,9 +37,7 @@
         $("#History .mCustomScrollbar").mCustomScrollbar("scrollTo", "bottom");
         this.currentCommand++;
         this.history.splice(this.currentCommand, this.history.length - this.currentCommand, command);
-        console.log('add command: ' + command.name);
         this.mapItemsToCommand(command);
-        console.log(this.itemToCommands);
         if (execute) {
           command["do"]();
         }

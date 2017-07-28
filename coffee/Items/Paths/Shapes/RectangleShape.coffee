@@ -1,4 +1,4 @@
-define [ 'Items/Paths/Shapes/Shape' ], (Shape) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/Shapes/Shape' ], (P, R, Utils, Shape) ->
 
 	# Simple rectangle shape
 	class RectangleShape extends Shape

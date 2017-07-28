@@ -1,4 +1,4 @@
-define [ 'Tools/Tool', 'UI/Button', 'Commands/Command' ], (Tool, Button, Command) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Command' ], (P, R, Utils, Tool, Button, Command) ->
 
 	# EraseTool: the mother class of all drawing tools
 	# doctodo: P.Path are created with three steps:

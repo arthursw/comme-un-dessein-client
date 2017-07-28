@@ -1,4 +1,4 @@
-define [ 'UI/Modal', 'coffee', 'spin', 'jqtree', 'typeahead' ], (Modal, CoffeeScript, Spinner) ->
+define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtree', 'typeahead' ], (P, R, Utils, Modal, CoffeeScript) ->
 
 	class FileManager
 
@@ -93,16 +93,16 @@ define [ 'UI/Modal', 'coffee', 'spin', 'jqtree', 'typeahead' ], (Modal, CoffeeSc
 				shadow: false
 				hwaccel: false
 				position: 'absolute'
-			@spinner = new Spinner(opts).spin(@runForkBtnJ[0])
+			# @spinner = new Spinner(opts).spin(@runForkBtnJ[0])
 			return
 
 		showLoader: ()->
-			@spinner.spin(@runForkBtnJ[0])
-			$(@spinner.el).css(right: '15px')
+			# @spinner.spin(@runForkBtnJ[0])
+			# $(@spinner.el).css(right: '15px')
 			return
 
 		hideLoader: ()->
-			@spinner.stop()
+			# @spinner.stop()
 			return
 
 		showCommitButtons: ()->

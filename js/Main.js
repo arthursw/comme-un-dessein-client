@@ -44,8 +44,10 @@
       R.sidebar = new Sidebar();
       R.view = new View();
       R.alertManager = new AlertManager();
-      R.controllerManager = new ControllerManager();
-      R.controllerManager.createGlobalControllers();
+      if (typeof document !== "undefined" && document !== null) {
+        R.controllerManager = new ControllerManager();
+        R.controllerManager.createGlobalControllers();
+      }
       R.rasterizerManager = new RasterizerManager();
       R.rasterizerManager.initializeRasterizers();
       R.commandManager = new CommandManager();
@@ -54,8 +56,10 @@
       R.fontManager = new FontManager();
       R.view.initializePosition();
       R.sidebar.initialize();
-      if (typeof window.setPageFullyLoaded === "function") {
-        window.setPageFullyLoaded(true);
+      if (typeof window !== "undefined" && window !== null) {
+        if (typeof window.setPageFullyLoaded === "function") {
+          window.setPageFullyLoaded(true);
+        }
       }
     });
     R.debugDatabase = function() {

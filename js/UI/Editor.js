@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['coffee', 'typeahead'], function(CoffeeScript) {
+  define(['paper', 'R', 'Utils/Utils', 'coffeescript-compiler', 'typeahead'], function(P, R, Utils, CoffeeScript) {
     var CodeEditor, Console;
     CodeEditor = (function() {
       function CodeEditor() {

@@ -1,4 +1,4 @@
-define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Lock', 'Items/Drawing' ], (P, R, Utils, Lock, Drawing) ->
 
 	#  values: ['one raster per shape', 'paper.js only', 'tiled canvas', 'hide inactives', 'single canvas']
 
@@ -170,6 +170,9 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			return
 
 		loadItem: (item)->
+			if @rasterizationDisabled
+				item.draw?()
+				return
 			if item.data?.animate or R.selectedTool.constructor.drawItems	# only draw if animated thanks to rasterization
 				item.draw?()
 			else
@@ -360,7 +363,8 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 					sourceRectangle = new P.Rectangle(intersection.topLeft.subtract(sourceRectangle.topLeft), intersection.size)
 				else
 					sourceRectangle = new P.Rectangle(intersection.topLeft.subtract(rectangle.topLeft).divide(qZoom), intersection.size.divide(qZoom))
-				context.drawImage(canvas, sourceRectangle.x, sourceRectangle.y, sourceRectangle.width, sourceRectangle.height,
+				if sourceRectangle.width > 0 and sourceRectangle.height > 0 and destinationRectangle.width > 0 and destinationRectangle.height > 0
+					context.drawImage(canvas, sourceRectangle.x, sourceRectangle.y, sourceRectangle.width, sourceRectangle.height,
 					destinationRectangle.x, destinationRectangle.y, destinationRectangle.width, destinationRectangle.height)
 			return
 
@@ -379,6 +383,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			return
 
 		rasterizeArea: (area)->
+			if @rasterizationDisabled then return
 			P.view.viewSize = area.size.multiply(P.view.zoom)
 			P.view.center = area.center
 			P.view.update()
@@ -387,6 +392,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			return
 
 		rasterizeAreas: (areas)->
+			if @rasterizationDisabled then return
 			viewZoom = P.view.zoom
 			viewSize = P.view.viewSize
 			viewPosition = P.view.center
@@ -402,6 +408,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			return
 
 		prepareView: ()->
+			if @rasterizationDisabled then return
 			# show all items
 			for id, item of R.items
 				item.group.visible = true
@@ -429,7 +436,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			return
 
 		rasterizeCallback: (step)=>
-
+			if @rasterizationDisabled then return
 			if not @areaToRasterize then return
 
 			console.log "rasterize"
@@ -484,7 +491,6 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			return
 
 		rasterize: (items, excludeItems)->
-
 			if @rasterizationDisabled then return
 
 			console.log "ask rasterize" + (if excludeItems then " excluding items." else "")
@@ -502,6 +508,8 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			return
 
 		rasterizeRectangle: (rectangle)->
+			if @rasterizationDisabled then return
+
 			@drawItems()
 
 			if not @areaToRasterize?
@@ -513,6 +521,8 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			return
 
 		addAreaToUpdate: (area)->
+			if @rasterizationDisabled then return
+
 			@areasToUpdate.push(area)
 			return
 
@@ -521,6 +531,7 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 			return
 
 		rasterizeAreasToUpdate: ()->
+			if @rasterizationDisabled then return
 
 			if @areasToUpdate.length==0 then return
 
@@ -670,7 +681,10 @@ define [ 'Items/Lock', 'Items/Drawing' ], (Lock, Drawing) ->
 		createRaster: (x, y, zoom)->
 			if @rasters[x]?[y]? then return
 
-			raster = new P.Raster('')
+			image = new Image()
+			image.width = R.scale
+			image.height = R.scale
+			raster = new P.Raster(image)
 			raster.name = 'raster: ' + x + ', ' + y
 			console.log raster.name
 			raster.position.x = x + 0.5 * R.scale * zoom

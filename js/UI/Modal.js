@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['Utils/Utils'], function() {
+  define(['paper', 'R', 'Utils/Utils'], function(P, R, Utils) {
     var Modal;
     Modal = (function() {
       Modal.modalJ = $('#customModal');

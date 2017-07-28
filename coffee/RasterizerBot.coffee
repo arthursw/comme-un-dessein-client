@@ -1,4 +1,4 @@
-define [], () ->
+define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 
 	class RasterizerBot
 

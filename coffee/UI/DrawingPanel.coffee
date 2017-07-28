@@ -1,4 +1,4 @@
-define [ 'Items/Item', 'coffee', 'typeahead' ], (Item, CoffeeScript) -> 			# 'ace/ext-language_tools', required?
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typeahead' ], (P, R, Utils, Item, CoffeeScript) -> 			# 'ace/ext-language_tools', required?
 
 	class DrawingPanel
 
@@ -147,7 +147,7 @@ define [ 'Items/Item', 'coffee', 'typeahead' ], (Item, CoffeeScript) -> 			# 'ac
 			contentJ = @drawingPanelJ.find('.content')
 			@currentDrawing.votes = drawingData.votes
 
-			if @currentDrawing.owner == R.me
+			if @currentDrawing.owner == R.me || R.administrator
 				contentJ.find('.read').hide()
 				contentJ.find('.modify').show()
 				contentJ.find('#drawing-title').val(@currentDrawing.title)
@@ -185,6 +185,9 @@ define [ 'Items/Item', 'coffee', 'typeahead' ], (Item, CoffeeScript) -> 			# 'ac
 					if vote.author == R.me
 						@voteDownBtnJ.addClass('voted')
 
+			if nPositiveVotes > 0 then positiveVoteListJ.removeClass('hidden') else positiveVoteListJ.addClass('hidden')
+			if nNegativeVotes > 0 then negativeVoteListJ.removeClass('hidden') else negativeVoteListJ.addClass('hidden')
+
 			@votesJ.find('.n-votes.positive').html(nPositiveVotes)
 			@votesJ.find('.n-votes.negative').html(nNegativeVotes)
 			nVotes = nPositiveVotes+nNegativeVotes
@@ -202,7 +205,11 @@ define [ 'Items/Item', 'coffee', 'typeahead' ], (Item, CoffeeScript) -> 			# 'ac
 
 		voteCallback: (result)=>
 			if not R.loader.checkError(result) then return
-			R.alertManager.alert 'You successfuly voted', 'success'
+			if result.cancelled 
+				R.alertManager.alert 'Your vote was successfully cancelled', 'success'
+				return
+			suffix = if result.validates then ', the drawing will be validated in a minute if nobody cancels its vote!' else ''
+			R.alertManager.alert 'You successfully voted' + suffix, 'success'
 			return
 
 		vote: (positive)=>

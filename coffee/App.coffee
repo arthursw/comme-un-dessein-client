@@ -1,39 +1,27 @@
-R.offline = false
 
-Utils = {}
-Utils.URL = {}
+# window.XMLHttpRequest = window.RXMLHttpRequest
 
-Utils.URL.getParameters = (hash)->
+libs = '../../libs/'
+
+getParameters = (hash)->
 	# queryString = queryString.split('+').join(' ')
 	hash = hash.replace('#', '')
 	parameters = {}
 	re = /[?&]?([^=]+)=([^&]*)/g
 	while tokens = re.exec(hash)
-		parameters[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2])
+		key = decodeURIComponent(tokens[1])
+		value = decodeURIComponent(tokens[2])
+		parameters[key] = if value == 'true' then true else if value == 'false' then false else value
 	return parameters
 
-Utils.URL.setParameters = (parameters)->
-	hash = ''
-	for name, value of parameters
-		hash += '&' + name + "=" + value
-	hash = hash.replace('&', '')
-	return hash
+parameters = if document? then getParameters(document.location.hash) else null
 
-window.Utils = Utils
-window.P = {}
-R.DajaxiceXMLHttpRequest = window.XMLHttpRequest
-window.XMLHttpRequest = window.RXMLHttpRequest
+repository = owner: 'arthursw', commit: null
 
-libs = '../../libs/'
-
-parameters = Utils.URL.getParameters(document.location.hash)
-
-window.R.repository = owner: 'arthursw', commit: null
-
-if parameters['repository-owner']? and parameters['repository-commit']?
+if parameters? and parameters['repository-owner']? and parameters['repository-commit']?
 	prefix = if parameters['repository-use-cdn']? then '//cdn.' else '//'
 	baseUrl = prefix + 'rawgit.com/' + parameters['repository-owner'] + '/comme-un-dessein-client/' + parameters['repository-commit'] + '/js'
-	window.R.repository = owner: parameters['repository-owner'], commit: parameters['repository-commit']
+	repository = owner: parameters['repository-owner'], commit: parameters['repository-commit']
 	libs = location.origin + '/static/libs/'
 else
 	baseUrl = '../static/comme-un-dessein-client/js'
@@ -82,7 +70,7 @@ requirejs.config
 		'jqueryUi': [libs + 'jquery-ui.min']
 		'mousewheel': [libs + 'jquery.mousewheel.min']
 		'scrollbar': [libs + 'jquery.mCustomScrollbar.min']
-		'tinycolor': [libs + 'tinycolor.min']
+		'tinycolor2': [ libs + 'tinycolor']
 		# 'socketio': '//cdn.socket.io/socket.io-1.3.4'
 		# 'socketio': '//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io'
 		# 'prefix': ['//cdnjs.cloudflare.com/ajax/libs/prefixfree/1.0.7/prefixfree.min']
@@ -96,7 +84,7 @@ requirejs.config
 		'typeahead': [libs + 'typeahead.bundle.min']
 		'pinit': [libs + 'pinit']
 		'howler': [libs + 'howler']
-		'spin': [libs + 'spin.min']
+		# 'spin': [libs + 'spin.min']
 
 		'zeroClipboard': [libs + 'ZeroClipboard.min']
 
@@ -104,9 +92,9 @@ requirejs.config
 		'aceDiff': libs + 'AceDiff/ace-diff'
 		'colorpickersliders': libs + 'bootstrap-colorpickersliders/bootstrap.colorpickersliders.nocielch'
 		'requestAnimationFrame': libs + 'RequestAnimationFrame'
-		'coffee': libs + 'coffee-script'
+		'coffeescript-compiler': libs + 'coffee-script'
 		'tween': libs + 'tween.min'
-		'socketio': libs + 'socket.io'
+		'socket.io': libs + 'socket.io'
 		'oembed': libs + 'jquery.oembed'
 		'jqtree': libs + 'jqtree/tree.jquery'
 		'js-cookie': libs + 'js.cookie'
@@ -128,7 +116,7 @@ requirejs.config
 		'aceDiff': ['jquery', 'diffMatch', 'ace/ace']
 		# 'modal': ['bootstrap', 'modalManager']
 		'colorpickersliders':
-			deps: ['jquery', 'tinycolor']
+			deps: ['jquery', 'tinycolor2']
 		# 'ace': ['aceTools']
 		'underscore':
 			exports: '_'
@@ -136,4 +124,9 @@ requirejs.config
 			exports: '$'
 
 # Load the main app module to start the app
-requirejs [ 'Main' ]
+requirejs [ 'R' ], (R) ->
+	R.repository = repository
+	R.tipibot = parameters['tipibot']
+	R.getParameters = getParameters
+	requirejs [ 'Main' ]
+	return

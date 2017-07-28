@@ -1,4 +1,4 @@
-define [], () ->
+define ['paper', 'R'], (P, R) ->
 
 	CS = {}
 	# Romansco relies on different coordinate systems:

@@ -1,4 +1,4 @@
-define [ 'Tools/Tool', 'Tools/ItemTool', 'Items/Divs/Media' ], (Tool, ItemTool, Media) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Tools/ItemTool', 'Items/Divs/Media' ], (P, R, Utils, Tool, ItemTool, Media) ->
 
 	# Media creation tool
 	class MediaTool extends ItemTool

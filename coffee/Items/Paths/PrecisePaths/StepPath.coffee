@@ -1,4 +1,4 @@
-define [ 'Items/Paths/PrecisePaths/PrecisePath' ], (PrecisePath) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/PrecisePaths/PrecisePath' ], (P, R, Utils, PrecisePath) ->
 
 	class StepPath extends PrecisePath
 		@label = 'Step path'

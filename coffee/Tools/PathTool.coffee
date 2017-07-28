@@ -1,4 +1,4 @@
-define [ 'Tools/Tool', 'UI/Button' ], (Tool, Button) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, Tool, Button) ->
 
 	# PathTool: the mother class of all drawing tools
 	# doctodo: P.Path are created with three steps:

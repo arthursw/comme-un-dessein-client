@@ -1,4 +1,4 @@
-define [ 'Items/Paths/Shapes/Shape', 'UI/Modal', 'jszip', 'fileSaver', 'color-classifier'], (Shape, Modal, JSZip, FileSaver, ColorClassifierFile) ->
+define [ 'Items/Paths/Shapes/Shape', 'UI/Modal', 'jszip', 'fileSaver', 'tinycolor2', 'color-classifier'], (Shape, Modal, JSZip, FileSaver, tinycolor, ColorClassifierFile) ->
 
 	class Striper extends Shape
 		@Shape = P.Path.Rectangle

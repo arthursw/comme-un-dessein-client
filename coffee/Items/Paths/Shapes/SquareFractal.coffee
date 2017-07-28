@@ -1,4 +1,4 @@
-define [ 'Items/Paths/Shapes/Shape', 'Spacebrew' ], (Shape, spacebrew) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/Shapes/Shape', 'Spacebrew' ], (P, R, Utils, Shape, spacebrew) ->
 
 	class SquareFractal extends Shape
 		@Shape = P.Path.Rectangle

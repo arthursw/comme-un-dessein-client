@@ -1,4 +1,4 @@
-define [ 'Items/Paths/Shapes/Shape' ], (Shape) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/Shapes/Shape' ], (P, R, Utils, Shape) ->
 
 	# Checkpoint is a video game element:
 	# if placed on a video game area, it will be registered in it

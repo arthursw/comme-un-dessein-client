@@ -1,4 +1,4 @@
-define ['Items/Paths/PrecisePaths/SpeedPaths/SpeedPath'], (SpeedPath) ->
+define ['paper', 'R', 'Utils/Utils','Items/Paths/PrecisePaths/SpeedPaths/SpeedPath'], (P, R, Utils, SpeedPath) ->
 
 	# The grid path is similar to the thickness path, but draws a grid along the path
 	class GridPath extends SpeedPath

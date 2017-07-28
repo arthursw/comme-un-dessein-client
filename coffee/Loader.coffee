@@ -1,4 +1,4 @@
-define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Lock', 'Items/Divs/Div', 'Items/Divs/Media', 'Items/Drawing', 'Items/Divs/Text' ], (Command, Item, ModuleLoader, Spinner) ->
+define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Lock', 'Items/Divs/Div', 'Items/Divs/Media', 'Items/Drawing', 'Items/Divs/Text' ], (P, R, Utils, Command, Item, ModuleLoader) ->
 
 	# --- load --- #
 
@@ -204,8 +204,6 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 
 			bounds = @getLoadingBounds(area)
 
-			# unload:
-			# define unload limit rectangle
 			unloadDist = Math.round(R.scale / P.view.zoom)
 
 			limit = R.view.entireArea or bounds.expand(unloadDist)
@@ -264,7 +262,7 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 			return
 
 		mustLoadItem: (item)->
-			return not R.items[item._id.$oid]?
+			return not R.items[item.clientId]?
 
 		unloadItem: (item)->
 			return
@@ -442,6 +440,38 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 			@endLoading()
 			return
 
+		loadCallbackTipibot: (results)=>
+			if not @checkError(results) then return
+			itemsToLoad = []
+
+			# parse items and remove them if they are on stage (they must be updated)
+			for i in results.items
+				item = JSON.parse(i)
+				if R.items[item.clientId]
+					R.items[item.clientId].remove()
+				itemsToLoad.push(item)
+
+			@createNewItems(itemsToLoad)
+
+			paths = []
+
+			bounds = R.view.grid.limitCD.bounds
+			console.log(bounds)
+
+			for item in itemsToLoad
+				path = R.items[item.clientId]
+				segmentedPath = path.controlPath.clone()
+				segmentedPath.flatten(5)
+				points = []
+				for segment in segmentedPath.segments
+					points.push(segment.point)
+					console.log(segment.point)
+					console.log(segment.point.subtract(bounds.topLeft).divide(bounds.size))
+				paths.push(points)
+
+			R.socket.tipibotSocket.send(JSON.stringify( bounds: bounds, paths: paths, type: 'setNextDrawing'))
+			return
+
 		# check for any error in an ajax callback and display the appropriate error message
 		# @return [Boolean] true if there was no error, false otherwise
 		checkError: (result)=>
@@ -571,11 +601,10 @@ define [ 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'spin', 'Items/Loc
 				# itemsDates.push( id: id, lastUpdate: item.lastUpdateDate, type: type )
 			return itemsDates
 
-		requestAreas: (rectangle, areasToLoad, qZoom)->
-			itemsDates = @createItemsDates()
-#			Dajaxice.draw.loadRasterizer(@loadCallback, { areasToLoad: areasToLoad, itemsDates: itemsDates, city: R.city })
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadRasterizer', args: { areasToLoad: areasToLoad, itemsDates: itemsDates, city: R.city } } ).done(@loadCallback)
-			return
+		# requestAreas: (rectangle, areasToLoad, qZoom)->
+		# 	itemsDates = @createItemsDates()
+		# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadRasterizer', args: { areasToLoad: areasToLoad, itemsDates: itemsDates, city: R.city } } ).done(@loadCallback)
+		# 	return
 
 		mustLoadItem: ()->
 			return true

@@ -1,4 +1,4 @@
-define [ 'UI/Controllers/Controller', 'colorpickersliders' ], (Controller) ->
+define ['paper', 'R', 'Utils/Utils', 'UI/Controllers/Controller', 'colorpickersliders' ], (P, R, Utils, Controller) ->
 
 	class ColorController extends Controller
 

@@ -1,4 +1,4 @@
-define [ 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Drawing', 'Items/Divs/Div', 'Commands/Command' ], (Tool, Item, Content, Drawing, Div, Command) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Drawing', 'Items/Divs/Div', 'Commands/Command' ], (P, R, Utils, Tool, Item, Content, Drawing, Div, Command) ->
 
 	class SelectionRectangle
 

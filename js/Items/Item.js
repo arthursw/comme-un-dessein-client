@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['Commands/Command', 'Tools/ItemTool'], function(Command, ItemTool) {
+  define(['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool'], function(P, R, Utils, Command, ItemTool) {
     var Item;
     console.log('Item');
     Item = (function() {
@@ -492,6 +492,9 @@
         }
         if (this.drawing.bounds.width === 0 && this.drawing.bounds.height === 0) {
           return;
+        }
+        if (this.data.strokeWidth != null) {
+          this.drawing.addChild(new P.Path.Rectangle(this.drawing.bounds.expand(2 * this.data.strokeWidth)));
         }
         this.raster = this.drawing.rasterize();
         this.group.addChild(this.raster);

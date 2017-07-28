@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['Utils/Utils', 'UI/Modal'], function(Utils, Modal) {
+  define(['paper', 'R', 'Utils/Utils', 'UI/Modal'], function(P, R, Utils, Modal) {
     var CityManager;
     CityManager = (function() {
       function CityManager() {

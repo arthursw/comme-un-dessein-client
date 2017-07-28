@@ -1,4 +1,4 @@
-define [ 'Items/Paths/Shapes/Shape' ], (Shape) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Paths/Shapes/Shape' ], (P, R, Utils, Shape) ->
 
 	# The ellipse path does not even override any function, the RShape.createShape draws the shape defined in @constructor.Shape by default
 	class EllipseShape extends Shape

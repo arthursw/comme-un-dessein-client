@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['Items/Item', 'UI/ModuleLoader', 'jqueryUi', 'scrollbar', 'typeahead'], function(Item, ModuleLoader) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi', 'scrollbar', 'typeahead'], function(P, R, Utils, Item, ModuleLoader) {
     var Sidebar;
     Sidebar = (function() {
       function Sidebar() {

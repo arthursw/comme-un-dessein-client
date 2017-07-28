@@ -4,7 +4,7 @@
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['Items/Paths/Shapes/Shape'], function(Shape) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Paths/Shapes/Shape'], function(P, R, Utils, Shape) {
     var StripeAnimation;
     StripeAnimation = (function(superClass) {
       extend(StripeAnimation, superClass);
@@ -67,7 +67,7 @@
         modalContentJ = $("<div id=\"stripeAnimationContent\" class=\"form-group url-group\">\n	                <label for=\"stripeAnimationModalURL\">Add your images</label>\n	                <input id=\"stripeAnimationFileInput\" type=\"file\" class=\"form-control\" name=\"files[]\" multiple/>\n	                <div id=\"stripeAnimationDropZone\">Drop your image files here.</div>\n	                <div id=\"stripeAnimationGallery\"></div>\n	            </div>");
         modalBodyJ.append(modalContentJ);
         this.modalJ.modal('show');
-        if (window.File && window.FileReader && window.FileList && window.Blob) {
+        if ((typeof window !== "undefined" && window !== null) && window.File && window.FileReader && window.FileList && window.Blob) {
           console.log('File upload supported');
         } else {
           console.log('File upload not supported');
