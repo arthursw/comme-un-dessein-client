@@ -41,7 +41,7 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 					emit: ()-> return
 				return
 
-			@socket = io.connect(":8000/chat")
+			@socket = io.connect("/chat")
 
 			# on connect: update room (join the room "x: X, y: Y")
 			@socket.on "connect", @updateRoom
