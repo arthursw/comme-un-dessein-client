@@ -38,7 +38,7 @@
           };
           return;
         }
-        this.socket = io.connect("/chat");
+        this.socket = io.connect(":8000/chat");
         this.socket.on("connect", this.updateRoom);
         this.socket.on("announcement", this.addMessage);
         this.socket.on("nicknames", (function(_this) {
