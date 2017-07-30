@@ -35,7 +35,7 @@
       Div.updateHiddenDivs = function(event) {
         var div, hiddenDivs, j, len, point, projectPoint;
         if (this.hiddenDivs.length > 0) {
-          point = new P.Point(event.pageX, event.pageY);
+          point = Utils.Event.GetPoint(event);
           projectPoint = P.view.viewToProject(point);
           hiddenDivs = this.hiddenDivs.slice();
           for (j = 0, len = hiddenDivs.length; j < len; j++) {

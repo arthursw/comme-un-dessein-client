@@ -182,7 +182,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 			return
 
 		doubleClick: (event) ->
-			point = P.view.viewToProject(new P.Point(event.pageX, event.pageY))
+			point = P.view.viewToProject(Utils.Event.GetPoint(event))
 			hitResult = @group.hitTest(point)
 			if hitResult
 				if hitResult.item == @line

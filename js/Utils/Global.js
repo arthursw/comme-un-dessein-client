@@ -10,9 +10,13 @@
     	Here are all global functions (which do not belong to classes and are not event handlers neither initialization functions).
      */
     var doAreasOverlap;
-    Utils.Event = {};
+    if (Utils.Event == null) {
+      Utils.Event = {};
+    }
     Utils.Event.jEventToPoint = function(event) {
-      return P.view.viewToProject(new P.Point(event.pageX - R.canvasJ.offset().left, event.pageY - R.canvasJ.offset().top));
+      var point;
+      point = Utils.Event.GetPoint(event);
+      return P.view.viewToProject(new P.Point(point.x - R.canvasJ.offset().left, point.y - R.canvasJ.offset().top));
     };
     Utils.Event.jEventToPaperEvent = function(event, previousPosition, initialPosition, type, count) {
       var currentPosition, delta, paperEvent;
@@ -89,7 +93,7 @@
     };
     R.specialKey = function(event) {
       var specialKey;
-      if ((event.pageX != null) && (event.pageY != null)) {
+      if (event instanceof Event) {
         specialKey = R.OSName === "MacOS" ? event.metaKey : event.ctrlKey;
       } else {
         specialKey = R.OSName === "MacOS" ? event.modifiers.command : event.modifiers.control;

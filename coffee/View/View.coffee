@@ -69,9 +69,19 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 
 			R.stageJ.mousewheel( @mousewheel )
 			R.stageJ.mousedown( @mousedown )
+			R.stageJ.on( touchstart: @mousedown )
+			# R.stageJ[0].addEventListener('touchstart', @mousedown, false)
+
 			if window?
 				$(window).mousemove( @mousemove )
+				$(window).on( touchmove: @mousemove )
+
 				$(window).mouseup( @mouseup )
+
+				$(window).on( touchend: @mouseup )
+				$(window).on( touchleave: @mouseup )
+				$(window).on( touchcancel: @mouseup )
+
 				$(window).resize(@onWindowResize)
 
 				window.onhashchange = @onHashChange
@@ -497,14 +507,16 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 		# mousedown event listener
 		mousedown: (event) =>
 
+			moveButton = if event instanceof MouseEvent then 2 else if (TouchEvent? and event instanceof TouchEvent) then 0 else 2
+
 			switch event.which						# switch on mouse button number (left, middle or right click)
-				when 2
+				when moveButton
 					R.tools.move.select()		# select move tool if middle mouse button
 				when 3
 					R.selectedTool?.finish?() 	# finish current path (in polygon mode) if right click
 
 			if R.selectedTool?.name == 'Move' 		# update 'Move' tool if it is the one selected, and return
-				# @initialMousePosition = new P.Point(event.pageX, event.pageY)
+				# @initialMousePosition = Utils.Event.GetPoint(event)
 				# @previousMousePosition = @initialMousePosition.clone()
 				# R.selectedTool.begin()
 				R.selectedTool?.beginNative(event)
@@ -517,11 +529,11 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 
 		# mousemove event listener
 		mousemove: (event) =>
-			@mousePosition.x = event.pageX
-			@mousePosition.y = event.pageY
+
+			@mousePosition.set(Utils.Event.GetPoint(event))
 
 			if R.selectedTool?.name == 'Move' and R.selectedTool.dragging
-				# mousePosition = new P.Point(event.pageX, event.pageY)
+				# mousePosition.set(Utils.Event.GetPoint(event))
 				# simpleEvent = delta: @previousMousePosition.subtract(mousePosition)
 				# @previousMousePosition = mousePosition
 				# console.log simpleEvent.delta.toString()
@@ -533,7 +545,8 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 
 			# update selected RDivs
 			# if R.previousPoint?
-			# 	event.delta = new P.Point(event.pageX-R.previousPoint.x, event.pageY-R.previousPoint.y)
+			#	point = Utils.Event.GetPoint(event)
+			# 	event.delta = new P.Point(point.x-R.previousPoint.x, point.y-R.previousPoint.y)
 			# 	R.previousPoint = new P.Point(event.pageX, event.pageY)
 
 			# 	for item in R.selectedItems
@@ -580,7 +593,8 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 
 			# # update selected RDivs
 			# if R.previousPoint?
-			# 	event.delta = new P.Point(event.pageX-R.previousPoint.x, event.pageY-R.previousPoint.y)
+			# point = Utils.Event.GetPoint(event)
+			# 	event.delta = new P.Point(point.x-R.previousPoint.x, point.y-R.previousPoint.y)
 			# 	R.previousPoint = null
 			# 	for item in R.selectedItems
 			# 		item.endSelect?(event)

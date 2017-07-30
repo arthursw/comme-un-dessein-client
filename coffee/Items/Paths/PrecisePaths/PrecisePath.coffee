@@ -272,7 +272,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@path = @addPath()
 			@path.segments = @controlPath.segments
 			@path.selected = false
-			@path.strokeCap = 'round'
+			@path.strokeCap = if @data.strokeCap? then @data.strokeCap else 'round'
 			return
 
 		# default updateDraw function, will be redefined by children PrecisePath
@@ -744,7 +744,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 			# check if user clicked on the curve
 
-			point = P.view.viewToProject(new P.Point(event.pageX, event.pageY))
+			point = P.view.viewToProject(Utils.Event.GetPoint(event))
 			hitResult = @performHitTest(point)
 
 			# return if user did not click on the curve

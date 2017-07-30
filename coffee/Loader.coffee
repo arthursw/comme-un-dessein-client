@@ -469,7 +469,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 					console.log(segment.point.subtract(bounds.topLeft).divide(bounds.size))
 				paths.push(points)
 
-			R.socket.tipibotSocket.send(JSON.stringify( bounds: bounds, paths: paths, type: 'setNextDrawing'))
+			R.socket.tipibotSocket.send(JSON.stringify( bounds: bounds, paths: paths, type: 'setNextDrawing', drawingPk: results.pk ))
 			return
 
 		# check for any error in an ajax callback and display the appropriate error message

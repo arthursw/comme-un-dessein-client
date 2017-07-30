@@ -351,6 +351,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			path.strokeColor = @data.strokeColor
 			path.strokeWidth = @data.strokeWidth
 			path.fillColor = @data.fillColor
+			if @data.dashArray?
+				path.dashArray = @data.dashArray
+			if @data.strokeCap?
+				@drawing.strokeCap = @data.strokeCap
 			if @data.shadowOffsetY?
 				path.shadowOffset = new P.Point(@data.shadowOffsetX, @data.shadowOffsetY)
 			if @data.shadowBlur?
@@ -392,8 +396,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 		getStrokeColor: ()->
 			d = @getDrawing()
 			color = new P.Color(if d? then @constructor.colorMap[d.status] else @constructor.colorMap.draft)
-			color.setBrightness(if @owner == R.me then 1 else 0.8)
+			if @owner != R.me
+				color.brightness *= 0.8
 			@data.strokeColor = color
+			# @data.dashArray = if @owner != R.me then [1, @constructor.strokeWidth+1] else []
+			# @data.strokeCap = if @owner != R.me then 'square' else 'round'
 			return color
 
 		updateStrokeColor: ()->
@@ -426,6 +433,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			@drawing.name = "drawing"
 			@drawing.strokeColor = @data.strokeColor
 			@drawing.strokeWidth = @data.strokeWidth
+			if @data.dashArray?
+				@drawing.dashArray = @data.dashArray
+			if @data.strokeCap?
+				@drawing.strokeCap = @data.strokeCap
 			@drawing.fillColor = @data.fillColor
 			@drawing.insertBelow(@controlPath)
 			@drawing.controlPath = @controlPath

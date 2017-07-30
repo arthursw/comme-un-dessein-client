@@ -78,9 +78,24 @@
         P.view.onFrame = this.onFrame;
         R.stageJ.mousewheel(this.mousewheel);
         R.stageJ.mousedown(this.mousedown);
+        R.stageJ.on({
+          touchstart: this.mousedown
+        });
         if (typeof window !== "undefined" && window !== null) {
           $(window).mousemove(this.mousemove);
+          $(window).on({
+            touchmove: this.mousemove
+          });
           $(window).mouseup(this.mouseup);
+          $(window).on({
+            touchend: this.mouseup
+          });
+          $(window).on({
+            touchleave: this.mouseup
+          });
+          $(window).on({
+            touchcancel: this.mouseup
+          });
           $(window).resize(this.onWindowResize);
           window.onhashchange = this.onHashChange;
         }
@@ -443,9 +458,10 @@
       };
 
       View.prototype.mousedown = function(event) {
-        var ref, ref1, ref2;
+        var moveButton, ref, ref1, ref2;
+        moveButton = event instanceof MouseEvent ? 2 : (typeof TouchEvent !== "undefined" && TouchEvent !== null) && event instanceof TouchEvent ? 0 : 2;
         switch (event.which) {
-          case 2:
+          case moveButton:
             R.tools.move.select();
             break;
           case 3:
@@ -467,8 +483,7 @@
 
       View.prototype.mousemove = function(event) {
         var base, paperEvent, ref, ref1, ref2;
-        this.mousePosition.x = event.pageX;
-        this.mousePosition.y = event.pageY;
+        this.mousePosition.set(Utils.Event.GetPoint(event));
         if (((ref = R.selectedTool) != null ? ref.name : void 0) === 'Move' && R.selectedTool.dragging) {
           R.selectedTool.updateNative(event);
           return;

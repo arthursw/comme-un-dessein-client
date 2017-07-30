@@ -503,7 +503,8 @@
         R.socket.tipibotSocket.send(JSON.stringify({
           bounds: bounds,
           paths: paths,
-          type: 'setNextDrawing'
+          type: 'setNextDrawing',
+          drawingPk: results.pk
         }));
       };
 

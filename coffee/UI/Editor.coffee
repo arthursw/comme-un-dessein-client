@@ -15,6 +15,7 @@ define ['paper', 'R', 'Utils/Utils', 'coffeescript-compiler', 'typeahead' ], (P,
 			# handle
 			handleJ = @editorJ.find(".editor-handle")
 			handleJ.mousedown @onHandleDown
+			# handleJ.on( touchstart: @onHandleDown )
 			handleJ.find('.handle-left').click(@setHalfSize)
 			handleJ.find('.handle-right').click(@setFullSize)
 
@@ -220,7 +221,8 @@ define ['paper', 'R', 'Utils/Utils', 'coffeescript-compiler', 'typeahead' ], (P,
 
 		onMouseMove: (event)->
 			if @draggingEditor
-				@editorJ.css( right: Math.max(0, window.innerWidth-event.pageX))
+				point = Utils.Event.GetPoint(event)
+				@editorJ.css( right: Math.max(0, window.innerWidth-point.x))
 			@console.onMouseMove(event)
 			return
 
@@ -523,6 +525,7 @@ define ['paper', 'R', 'Utils/Utils', 'coffeescript-compiler', 'typeahead' ], (P,
 
 			@consoleToggleBtnJ.click @toggle
 			consoleHandleJ.mousedown @onConsoleHandleDown
+			# consoleHandleJ.on( touchstart: @onConsoleHandleDown )
 
 			@height = 200
 

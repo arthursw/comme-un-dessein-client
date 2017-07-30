@@ -353,6 +353,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 				item.group?.visible = true
 			return
 
+		updateDrawingPanel: ()->
+			args =
+				pk: @pk
+
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+				R.drawingPanel.setDrawing(@, result)
+			)
+			return
+
 		# can not select a drawing which the user does not own
 		select: (updateOptions=true, showPanelAndLoad=true, force=false) =>
 			if not super(updateOptions, force) then return false
@@ -366,12 +375,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 
 				if @pk?
 					delete @selectAfterSave
-					args =
-						pk: @pk
-
-					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
-						R.drawingPanel.setDrawing(@, result)
-					)
+					@updateDrawingPanel()
 				else
 					@selectAfterSave = true
 

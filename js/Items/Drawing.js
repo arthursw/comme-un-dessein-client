@@ -443,8 +443,29 @@
         }
       };
 
+      Drawing.prototype.updateDrawingPanel = function() {
+        var args;
+        args = {
+          pk: this.pk
+        };
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'loadDrawing',
+              args: args
+            })
+          }
+        }).done((function(_this) {
+          return function(result) {
+            return R.drawingPanel.setDrawing(_this, result);
+          };
+        })(this));
+      };
+
       Drawing.prototype.select = function(updateOptions, showPanelAndLoad, force) {
-        var args, i, item, len, ref;
+        var i, item, len, ref;
         if (updateOptions == null) {
           updateOptions = true;
         }
@@ -467,23 +488,7 @@
           R.drawingPanel.open();
           if (this.pk != null) {
             delete this.selectAfterSave;
-            args = {
-              pk: this.pk
-            };
-            $.ajax({
-              method: "POST",
-              url: "ajaxCall/",
-              data: {
-                data: JSON.stringify({
-                  "function": 'loadDrawing',
-                  args: args
-                })
-              }
-            }).done((function(_this) {
-              return function(result) {
-                return R.drawingPanel.setDrawing(_this, result);
-              };
-            })(this));
+            this.updateDrawingPanel();
           } else {
             this.selectAfterSave = true;
           }

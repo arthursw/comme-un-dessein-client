@@ -186,6 +186,7 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 						if not @requestedNextDrawing
 							$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getNextValidatedDrawing', args: {} } ).done((results)=>
 								@requestedNextDrawing = false
+								if results.message == 'no path' then return
 								R.loader.loadCallbackTipibot(results)
 								return
 							)
@@ -193,7 +194,12 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 					when 'setDrawingStatusDrawn'
 						args = 
 							pk: message.pk
-						$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingStatusDrawn', args: args } ).done(R.loader.checkError)
+							secret: message.secret
+						$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingStatusDrawn', args: args } ).done((results)=>
+							if not R.loader.checkError(results) then return
+							R.socket.tipibotSocket.send(JSON.stringify( type: 'drawingStatusSetToDrawn', drawingPk: results.pk ))
+							return
+						)
 				return
 			return
 

@@ -303,6 +303,12 @@
         path.strokeColor = this.data.strokeColor;
         path.strokeWidth = this.data.strokeWidth;
         path.fillColor = this.data.fillColor;
+        if (this.data.dashArray != null) {
+          path.dashArray = this.data.dashArray;
+        }
+        if (this.data.strokeCap != null) {
+          this.drawing.strokeCap = this.data.strokeCap;
+        }
         if (this.data.shadowOffsetY != null) {
           path.shadowOffset = new P.Point(this.data.shadowOffsetX, this.data.shadowOffsetY);
         }
@@ -351,7 +357,9 @@
         var color, d;
         d = this.getDrawing();
         color = new P.Color(d != null ? this.constructor.colorMap[d.status] : this.constructor.colorMap.draft);
-        color.setBrightness(this.owner === R.me ? 1 : 0.8);
+        if (this.owner !== R.me) {
+          color.brightness *= 0.8;
+        }
         this.data.strokeColor = color;
         return color;
       };
@@ -381,6 +389,12 @@
         this.drawing.name = "drawing";
         this.drawing.strokeColor = this.data.strokeColor;
         this.drawing.strokeWidth = this.data.strokeWidth;
+        if (this.data.dashArray != null) {
+          this.drawing.dashArray = this.data.dashArray;
+        }
+        if (this.data.strokeCap != null) {
+          this.drawing.strokeCap = this.data.strokeCap;
+        }
         this.drawing.fillColor = this.data.fillColor;
         this.drawing.insertBelow(this.controlPath);
         this.drawing.controlPath = this.controlPath;

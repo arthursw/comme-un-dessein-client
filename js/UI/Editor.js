@@ -226,9 +226,11 @@
       };
 
       CodeEditor.prototype.onMouseMove = function(event) {
+        var point;
         if (this.draggingEditor) {
+          point = Utils.Event.GetPoint(event);
           this.editorJ.css({
-            right: Math.max(0, window.innerWidth - event.pageX)
+            right: Math.max(0, window.innerWidth - point.x)
           });
         }
         this.console.onMouseMove(event);

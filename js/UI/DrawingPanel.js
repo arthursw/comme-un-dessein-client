@@ -91,9 +91,11 @@
       DrawingPanel.prototype.resize = function() {};
 
       DrawingPanel.prototype.onMouseMove = function(event) {
+        var point;
         if (this.draggingEditor) {
+          point = Utils.Event.GetPoint(event);
           this.drawingPanelJ.css({
-            left: Math.max(265, event.pageX)
+            left: Math.max(265, point.x)
           });
         }
       };
@@ -246,11 +248,17 @@
         if (!R.loader.checkError(result)) {
           return;
         }
+        this.currentDrawing.updateDrawingPanel();
         if (result.cancelled) {
           R.alertManager.alert('Your vote was successfully cancelled', 'success');
           return;
         }
-        suffix = result.validates ? ', the drawing will be validated in a minute if nobody cancels its vote!' : '';
+        suffix = '';
+        if (result.validates) {
+          suffix = ', the drawing will be validated in a minute if nobody cancels its vote!';
+        } else if (result.rejects) {
+          suffix = ', the drawing will be rejected in a minute if nobody cancels its vote!';
+        }
         R.alertManager.alert('You successfully voted' + suffix, 'success');
       };
 

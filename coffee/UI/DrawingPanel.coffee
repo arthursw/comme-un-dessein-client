@@ -17,6 +17,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			# handle
 			handleJ = @drawingPanelJ.find(".panel-handle")
 			handleJ.mousedown @onHandleDown
+			# handleJ.on( touchstart: @onHandleDown )
 			handleJ.find('.handle-right').click(@setHalfSize)
 			handleJ.find('.handle-left').click(@setFullSize)
 
@@ -81,7 +82,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 
 		onMouseMove: (event)->
 			if @draggingEditor
-				@drawingPanelJ.css( left: Math.max(265, event.pageX))
+				point = Utils.Event.GetPoint(event)
+				@drawingPanelJ.css( left: Math.max(265, point.x))
 			return
 
 		onMouseUp: (event)=>
@@ -205,11 +207,21 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 
 		voteCallback: (result)=>
 			if not R.loader.checkError(result) then return
+
+			@currentDrawing.updateDrawingPanel()
+
 			if result.cancelled 
 				R.alertManager.alert 'Your vote was successfully cancelled', 'success'
 				return
-			suffix = if result.validates then ', the drawing will be validated in a minute if nobody cancels its vote!' else ''
+
+			suffix = ''
+			if result.validates
+				suffix = ', the drawing will be validated in a minute if nobody cancels its vote!'
+			else if result.rejects
+				suffix = ', the drawing will be rejected in a minute if nobody cancels its vote!'
+
 			R.alertManager.alert 'You successfully voted' + suffix, 'success'
+
 			return
 
 		vote: (positive)=>

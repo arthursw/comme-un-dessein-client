@@ -56,15 +56,17 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 		# note: we could use R.eventToObject to convert the Native event into Paper.ToolEvent, however onMouseDown/Drag/Up also fire begin/update/end
 		beginNative: (event) ->
 			@dragging = true
-			@initialPosition = { x: event.pageX, y: event.pageY }
-			@prevPoint = { x: event.pageX, y: event.pageY }
+			point = Utils.Event.GetPoint(event)
+			@initialPosition = point
+			@prevPoint = point
 			return
 
 		# update with jQuery event
 		updateNative: (event) ->
 			if @dragging
-				R.view.moveBy({ x: (@prevPoint.x-event.pageX)/P.view.zoom, y: (@prevPoint.y-event.pageY)/P.view.zoom })
-				@prevPoint = { x: event.pageX, y: event.pageY }
+				point = Utils.Event.GetPoint(event)
+				R.view.moveBy({ x: (@prevPoint.x-point.x)/P.view.zoom, y: (@prevPoint.y-point.y)/P.view.zoom })
+				@prevPoint = point
 			return
 
 		# end with jQuery event

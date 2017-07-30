@@ -38,7 +38,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content' ], (P, R, Uti
 
 		@updateHiddenDivs: (event)->
 			if @hiddenDivs.length > 0
-				point = new P.Point(event.pageX, event.pageY)
+				point = Utils.Event.GetPoint(event)
 				projectPoint = P.view.viewToProject(point)
 				hiddenDivs = @hiddenDivs.slice() 	# hidden divs will be modified:
 													# (divs are removed from hiddenDivs when shown)

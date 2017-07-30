@@ -241,7 +241,7 @@
 
       GradientTool.prototype.doubleClick = function(event) {
         var hitResult, point;
-        point = P.view.viewToProject(new P.Point(event.pageX, event.pageY));
+        point = P.view.viewToProject(Utils.Event.GetPoint(event));
         hitResult = this.group.hitTest(point);
         if (hitResult) {
           if (hitResult.item === this.line) {

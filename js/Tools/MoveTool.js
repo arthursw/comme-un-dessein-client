@@ -74,27 +74,22 @@
       MoveTool.prototype.end = function(moved) {};
 
       MoveTool.prototype.beginNative = function(event) {
+        var point;
         this.dragging = true;
-        this.initialPosition = {
-          x: event.pageX,
-          y: event.pageY
-        };
-        this.prevPoint = {
-          x: event.pageX,
-          y: event.pageY
-        };
+        point = Utils.Event.GetPoint(event);
+        this.initialPosition = point;
+        this.prevPoint = point;
       };
 
       MoveTool.prototype.updateNative = function(event) {
+        var point;
         if (this.dragging) {
+          point = Utils.Event.GetPoint(event);
           R.view.moveBy({
-            x: (this.prevPoint.x - event.pageX) / P.view.zoom,
-            y: (this.prevPoint.y - event.pageY) / P.view.zoom
+            x: (this.prevPoint.x - point.x) / P.view.zoom,
+            y: (this.prevPoint.y - point.y) / P.view.zoom
           });
-          this.prevPoint = {
-            x: event.pageX,
-            y: event.pageY
-          };
+          this.prevPoint = point;
         }
       };
 

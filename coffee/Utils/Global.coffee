@@ -7,11 +7,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'bootstrap', 'mousewheel', 's
 
 	###
 
-	Utils.Event = {}
+	Utils.Event ?= {}
+	
 	# Convert a jQuery event to a project position
 	# @return [Paper P.Point] the project position corresponding to the event pageX, pageY
 	Utils.Event.jEventToPoint = (event)->
-		return P.view.viewToProject(new P.Point(event.pageX-R.canvasJ.offset().left, event.pageY-R.canvasJ.offset().top))
+		point = Utils.Event.GetPoint(event)
+		return P.view.viewToProject(new P.Point(point.x-R.canvasJ.offset().left, point.y-R.canvasJ.offset().top))
 
 	# ## Event to object conversion (to send event info through websockets)
 
@@ -102,7 +104,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'bootstrap', 'mousewheel', 's
 	# @param event [jQuery or Paper.js event] key event
 	# @return [Boolean] *specialKey*
 	R.specialKey = (event)->
-		if event.pageX? and event.pageY?
+
+		if event instanceof Event 		# not true when event is a paper event
 			specialKey = if R.OSName == "MacOS" then event.metaKey else event.ctrlKey
 		else
 			specialKey = if R.OSName == "MacOS" then event.modifiers.command else event.modifiers.control

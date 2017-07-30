@@ -141,7 +141,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		begin: (event, from=R.me, data=null) ->
 			if event.event.which == 2 then return 			# if middle mouse button (wheel) pressed: return
 
-			@circle.position = event.point
+			@updateCircle(event.point)
 
 			@pathsToDelete = []
 			@pathsToCreate = []
@@ -172,21 +172,27 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			if R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "update", arguments: [event, R.me]
 			return
 
+		createCircle: (point)->
+			@circle = new P.Path.Circle(point, @radius)
+			@circle.strokeWidth = 1
+			@circle.strokeColor = '#2fa1d6'
+			@circle.strokeScaling = false
+			R.view.selectionLayer.addChild(@circle)
+			return
+
+		updateCircle: (point)->
+			# if R.currentPaths[R.me]?.data?.polygonMode then R.currentPaths[R.me].createMove?(event)
+			if not @circle?
+				@createCircle(point)
+			else
+				@circle.position = point
+			return
+
 		# Update path action (usually from a mouse move event, necessary for the polygon mode):
 		# @param [Paper event or REvent] (usually) mouse move event
 		move: (event) ->
 			console.log("move")
-
-			eraser = R.tools.eraser
-			# if R.currentPaths[R.me]?.data?.polygonMode then R.currentPaths[R.me].createMove?(event)
-			if not eraser.circle?
-				eraser.circle = new P.Path.Circle(event.point, eraser.radius)
-				eraser.circle.strokeWidth = 1
-				eraser.circle.strokeColor = '#2fa1d6'
-				eraser.circle.strokeScaling = false
-				R.view.selectionLayer.addChild(eraser.circle)
-			else
-				eraser.circle.position = event.point
+			R.tools.eraser.updateCircle(event.point)
 			return
 
 		# End path action:

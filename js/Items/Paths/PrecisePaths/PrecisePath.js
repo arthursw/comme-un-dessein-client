@@ -273,7 +273,7 @@
         this.path = this.addPath();
         this.path.segments = this.controlPath.segments;
         this.path.selected = false;
-        this.path.strokeCap = 'round';
+        this.path.strokeCap = this.data.strokeCap != null ? this.data.strokeCap : 'round';
       };
 
       PrecisePath.prototype.updateDraw = function(offset, step, redrawing) {
@@ -626,7 +626,7 @@
 
       PrecisePath.prototype.doubleClick = function(event) {
         var hitResult, point, segment;
-        point = P.view.viewToProject(new P.Point(event.pageX, event.pageY));
+        point = P.view.viewToProject(Utils.Event.GetPoint(event));
         hitResult = this.performHitTest(point);
         if (hitResult == null) {
           return;

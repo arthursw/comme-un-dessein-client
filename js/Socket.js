@@ -108,6 +108,9 @@
                     }
                   }).done(function(results) {
                     _this.requestedNextDrawing = false;
+                    if (results.message === 'no path') {
+                      return;
+                    }
                     R.loader.loadCallbackTipibot(results);
                   });
                   _this.requestedNextDrawing = true;
@@ -115,7 +118,8 @@
                 break;
               case 'setDrawingStatusDrawn':
                 args = {
-                  pk: message.pk
+                  pk: message.pk,
+                  secret: message.secret
                 };
                 $.ajax({
                   method: "POST",
@@ -126,7 +130,15 @@
                       args: args
                     })
                   }
-                }).done(R.loader.checkError);
+                }).done(function(results) {
+                  if (!R.loader.checkError(results)) {
+                    return;
+                  }
+                  R.socket.tipibotSocket.send(JSON.stringify({
+                    type: 'drawingStatusSetToDrawn',
+                    drawingPk: results.pk
+                  }));
+                });
             }
           };
         })(this);

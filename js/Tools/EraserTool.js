@@ -158,7 +158,7 @@
         if (event.event.which === 2) {
           return;
         }
-        this.circle.position = event.point;
+        this.updateCircle(event.point);
         this.pathsToDelete = [];
         this.pathsToCreate = [];
         this.pathsToDeleteResurectors = {};
@@ -188,19 +188,25 @@
         }
       };
 
-      EraserTool.prototype.move = function(event) {
-        var eraser;
-        console.log("move");
-        eraser = R.tools.eraser;
-        if (eraser.circle == null) {
-          eraser.circle = new P.Path.Circle(event.point, eraser.radius);
-          eraser.circle.strokeWidth = 1;
-          eraser.circle.strokeColor = '#2fa1d6';
-          eraser.circle.strokeScaling = false;
-          R.view.selectionLayer.addChild(eraser.circle);
+      EraserTool.prototype.createCircle = function(point) {
+        this.circle = new P.Path.Circle(point, this.radius);
+        this.circle.strokeWidth = 1;
+        this.circle.strokeColor = '#2fa1d6';
+        this.circle.strokeScaling = false;
+        R.view.selectionLayer.addChild(this.circle);
+      };
+
+      EraserTool.prototype.updateCircle = function(point) {
+        if (this.circle == null) {
+          this.createCircle(point);
         } else {
-          eraser.circle.position = event.point;
+          this.circle.position = point;
         }
+      };
+
+      EraserTool.prototype.move = function(event) {
+        console.log("move");
+        R.tools.eraser.updateCircle(event.point);
       };
 
       EraserTool.prototype.end = function(event, from) {
