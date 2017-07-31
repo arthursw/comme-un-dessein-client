@@ -94,6 +94,10 @@
         if (updateParameters == null) {
           updateParameters = true;
         }
+        if (R.selectedTool === R.tools['Precise path']) {
+          R.alertManager.alert('Submit your drawing before voting', 'info');
+          return;
+        }
         SelectTool.__super__.select.call(this, false, updateParameters);
       };
 
@@ -107,13 +111,15 @@
         ref = R.items;
         for (name in ref) {
           item = ref[name];
-          item.unhighlight();
-          bounds = item.getBounds();
-          if (bounds.intersects(rectangle)) {
-            item.highlight();
-          }
-          if (rectangle.area === 0) {
-            break;
+          if (item instanceof Drawing) {
+            item.unhighlight();
+            bounds = item.getBounds();
+            if (bounds.intersects(rectangle)) {
+              item.highlight();
+            }
+            if (rectangle.area === 0) {
+              break;
+            }
           }
         }
       };
@@ -123,7 +129,9 @@
         ref = R.items;
         for (name in ref) {
           item = ref[name];
-          item.unhighlight();
+          if (item instanceof Drawing) {
+            item.unhighlight();
+          }
         }
       };
 
@@ -153,13 +161,7 @@
         for (name in ref) {
           item = ref[name];
           if (item.getBounds().intersects(rectangle) && item.isVisible()) {
-            if (Drawing.prototype.isPrototypeOf(item)) {
-              itemsToSelect.length = 0;
-              itemsToSelect.push(item);
-              return true;
-            } else {
-              itemsToSelect.push(item);
-            }
+            itemsToSelect.push(item);
           }
         }
         return false;

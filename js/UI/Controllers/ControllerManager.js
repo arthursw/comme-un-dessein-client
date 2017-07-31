@@ -250,9 +250,9 @@
         $(R.gui.domElement).children().first().css({
           height: 'auto'
         });
+        $(R.gui.domElement).hide();
         dat.GUI.toggleHide = function() {};
         this.folders = {};
-        $(".dat-gui.dg-sidebar").append(R.gui.domElement);
         return;
       }
 

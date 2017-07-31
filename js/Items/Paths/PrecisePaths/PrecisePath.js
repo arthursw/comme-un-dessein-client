@@ -518,7 +518,6 @@
         if (!this.data.smooth) {
           this.controlPath.fullySelected = true;
         }
-        R.drawingPanel.showSubmitDrawing();
         return true;
       };
 

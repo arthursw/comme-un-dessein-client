@@ -49,6 +49,22 @@
         return;
       }
 
+      ToolManager.prototype.enterDrawingMode = function() {
+        if (R.selectedTool !== R.tools['Precise path']) {
+          R.tools['Precise path'].select();
+        }
+        R.sidebar.favoriteToolsJ.find("[data-name='Select']").css({
+          opacity: 0.25
+        });
+      };
+
+      ToolManager.prototype.leaveDrawingMode = function() {
+        R.sidebar.favoriteToolsJ.find("[data-name='Select']").css({
+          opacity: 1
+        });
+        R.tools.select.select();
+      };
+
       return ToolManager;
 
     })();

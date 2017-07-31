@@ -244,6 +244,32 @@
         return somethingToLoad;
       };
 
+      View.prototype.fitRectangle = function(rectangle, considerPanels) {
+        var drawingPanelWidth, offset, rectangleRatio, sidebarWidth, viewRatio, viewSize, visibleViewCenterInView, windowCenterInView;
+        if (considerPanels == null) {
+          considerPanels = false;
+        }
+        viewSize = P.view.size.clone();
+        sidebarWidth = considerPanels ? R.sidebar.sidebarJ.outerWidth() : 0;
+        drawingPanelWidth = considerPanels ? R.drawingPanel.drawingPanelJ.outerWidth() : 0;
+        viewSize.width = viewSize.width - sidebarWidth - drawingPanelWidth;
+        viewRatio = viewSize.width / viewSize.height;
+        rectangleRatio = rectangle.width / rectangle.height;
+        if (viewRatio < rectangleRatio) {
+          P.view.zoom = Math.min(viewSize.width / rectangle.width, 1);
+        } else {
+          P.view.zoom = Math.min(viewSize.height / rectangle.height, 1);
+        }
+        if (considerPanels) {
+          windowCenterInView = P.view.viewToProject(new P.Point(window.innerWidth / 2, window.innerHeight / 2));
+          visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + viewSize.width / 2, window.innerHeight / 2));
+          offset = visibleViewCenterInView.subtract(windowCenterInView);
+          this.moveTo(rectangle.center.subtract(offset));
+        } else {
+          this.moveTo(rectangle.center);
+        }
+      };
+
       View.prototype.addMoveCommand = function() {
         R.commandManager.add(new Command.MoveView(this.previousPosition, P.view.center));
         this.previousPosition = null;

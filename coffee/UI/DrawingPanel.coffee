@@ -3,6 +3,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 	class DrawingPanel
 
 		constructor: ()->
+			# the button to start drawing
+			@beginDrawingBtnJ = $('button.begin-drawing')
+			@beginDrawingBtnJ.click(@beginDrawingClicked)
+
+
 			# the button to open the panel
 			@submitDrawingBtnJ = $('button.submit-drawing')
 			@submitDrawingBtnJ.click(@submitDrawingClicked)
@@ -20,6 +25,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			# handleJ.on( touchstart: @onHandleDown )
 			handleJ.find('.handle-right').click(@setHalfSize)
 			handleJ.find('.handle-left').click(@setFullSize)
+
+			@drawingPanelTitleJ = @drawingPanelJ.find('.drawing-panel-title')
 
 			# header
 			@fileNameJ = @drawingPanelJ.find(".header .fileName input")
@@ -91,6 +98,31 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			$("body").css('user-select': 'text')
 			return
 
+		updateSelection: ()=>
+			if R.selectedItems.length == 1
+
+				@showLoadAnimation()
+				@open()
+
+				drawing = R.selectedItems[0]
+
+				if drawing.pk?
+					delete drawing.selectAfterSave
+					drawing.updateDrawingPanel()
+				else
+					drawing.selectAfterSave = true
+
+			else
+				@showSelectedDrawings()
+
+				@open()
+
+			return
+
+		selectionChanged: ()->
+			Utils.callNextFrame(@updateSelection, 'update drawing selection')
+			return
+
 		### open close ###
 
 		open: ()->
@@ -98,24 +130,79 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			@drawingPanelJ.addClass('visible')
 			return
 
-		close: ()=>
+		close: (removeDrawingIfNotSaved=true)=>
+			if @currentDrawing? and not @currentDrawing.pk?
+				if removeDrawingIfNotSaved
+					@currentDrawing.remove()
+				@hideSubmitDrawing()
+				@showBeginDrawing()
 			@drawingPanelJ.hide()
 			@drawingPanelJ.removeClass('visible')
+			if R.selectedItems.length > 0
+				R.tools.select.deselectAll()
 			return
 
 		### set drawing ###
 		
+		createSelectionLi: (selectedDrawingsJ, listJ, item)->
+			liJ = $('<li>')
+			liJ.addClass('drawing-selection cd-button')
+			liJ.addClass('cd-row')
+			thumbnailJ = $('<div>')
+			thumbnailJ.addClass('thumbnail drawing-thumbnail')
+			thumbnailJ.append(@getDrawingImage(item))
+			titleJ = $('<h4>')
+			titleJ.addClass('cd-grow cd-center')
+			titleJ.html(item.title)
+			deselectBtnJ = $('<button>')
+			deselectIconJ = $('<span>').addClass('glyphicon glyphicon-remove')
+			deselectBtnJ.click (event)->
+				item.deselect()
+				liJ.remove()
+				event.preventDefault()
+				event.stopPropagation()
+				return -1
+			deselectBtnJ.append(deselectIconJ)
+			liJ.append(thumbnailJ)
+			liJ.append(titleJ)
+			liJ.append(deselectBtnJ)
+			liJ.click ()->
+				selectedDrawingsJ.hide()
+				listJ.empty()
+				R.tools.select.deselectAll()
+				item.select()
+				return
+			listJ.append(liJ)
+			return
+
+		showSelectedDrawings: ()->
+			@drawingPanelTitleJ.text('Select a single drawing')
+
+			@drawingPanelJ.find('.content').children().hide()
+			selectedDrawingsJ = @drawingPanelJ.find('.content').children('.selected-drawings')
+			selectedDrawingsJ.show()
+			listJ = selectedDrawingsJ.find('ul.drawing-list')
+			listJ.empty()
+
+			for item in R.selectedItems
+				if item instanceof Item.Drawing
+					@createSelectionLi(selectedDrawingsJ, listJ, item)
+
+			return
+
 		showLoadAnimation: ()=>
 			@drawingPanelJ.find('.content').children().hide()
 			@drawingPanelJ.find('.content').children('.loading-animation').show()
 			return
 
-		hideLoadAnimation: ()=>
+		showContent: ()=>
 			@drawingPanelJ.find('.content').children().show()
 			@drawingPanelJ.find('.content').children('.loading-animation').hide()
+			@drawingPanelJ.find('.content').children('.selected-drawings').hide()
 			return
 
 		showSubmitDrawing: ()->
+			@hideBeginDrawing()
 			@submitDrawingBtnJ.removeClass('hidden')
 			@submitDrawingBtnJ.show()
 			contentJ = @drawingPanelJ.find('.content')
@@ -126,10 +213,94 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			@submitDrawingBtnJ.hide()
 			return
 
+		showBeginDrawing: ()->
+			@hideSubmitDrawing()
+			@beginDrawingBtnJ.show()
+			return
+
+		hideBeginDrawing: ()->
+			@beginDrawingBtnJ.hide()
+			return
+
+		beginDrawingClicked: ()=>
+			R.toolManager.enterDrawingMode()
+			@beginDrawingBtnJ.hide()
+
+			# if there are already some draft paths: directly show submit button
+			for id, item of R.items
+				if item instanceof Item.Path
+					if item.owner == R.me and item.drawingId == null
+						@showSubmitDrawing()
+						return
+			return
+
+		getDrawingImage: (drawing)->
+			if not drawing.raster?
+				drawing.rasterize()
+
+			image = new Image()
+			image.src = drawing.raster.toDataURL()
+
+			return image
+
+		setDrawingThumbnail: ()->
+			contentJ = @drawingPanelJ.find('.content')
+			@currentDrawing.rasterize()
+			R.rasterizer.rasterize(@currentDrawing, false)
+
+			thumbnailJ = contentJ.find('.drawing-thumbnail')
+			thumbnailJ.empty().append(@getDrawingImage(@currentDrawing))
+			return
+
+		createDrawingFromItems: (items)->
+
+			drawingId = Utils.createId()
+
+			for item in items
+				if item instanceof Item.Path
+					item.drawingId = drawingId
+
+			contentJ = @drawingPanelJ.find('.content')
+
+			title = contentJ.find('#drawing-title').val()
+			description = contentJ.find('#drawing-description').val()
+			@currentDrawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending')
+			
+			@setDrawingThumbnail()
+
+			R.view.fitRectangle(@currentDrawing.rectangle, true)
+
+			return
+
+		submitDrawingClickedCallback: (results)=>
+			@submitBtnJ.find('span.glyphicon').removeClass('glyphicon-refresh glyphicon-refresh-animate').addClass('glyphicon-ok')
+
+			if not R.loader.checkError(results) then return
+			itemsToLoad = []
+			itemIds = []
+			# parse items and remove them if they are on stage (they must be updated)
+			for i in results.items
+				item = JSON.parse(i)
+				itemIds.push(item.clientId)
+				if not R.items[item.clientId]?
+					itemsToLoad.push(item)
+
+			R.loader.createNewItems(itemsToLoad)
+
+			items = []
+			for id in itemIds
+				items.push(R.items[id])
+
+			@createDrawingFromItems(items)
+
+			return
+
 		submitDrawingClicked: ()=>
+			R.toolManager.leaveDrawingMode()
 			# @submitDrawingBtnJ.hide()
+			@drawingPanelTitleJ.text('Create drawing')
 			@open()
-			@hideLoadAnimation()
+			@showContent()
 			@currentDrawing = null
 			contentJ = @drawingPanelJ.find('.content')
 			contentJ.find('.read').hide()
@@ -138,13 +309,23 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			contentJ.find('#drawing-description').val('')
 			@submitBtnJ.show()
 			@modifyBtnJ.hide()
-			@cancelBtnJ.hide()
+			@cancelBtnJ.show()
 			@votesJ.hide()
+
+			@currentDrawing = null
+
+			if R.selectedItems.length == 0
+				@submitBtnJ.find('span.glyphicon').removeClass('glyphicon-ok').addClass('glyphicon-refresh glyphicon-refresh-animate')
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getDrafts', args: {} } ).done(@submitDrawingClickedCallback)
+				return
+
+			@createDrawingFromItems(R.selectedItems)
 			return
 
 		setDrawing: (@currentDrawing, drawingData)->
+			@drawingPanelTitleJ.text(@currentDrawing.title)
 			@open()
-			@hideLoadAnimation()
+			@showContent()
 			
 			contentJ = @drawingPanelJ.find('.content')
 			@currentDrawing.votes = drawingData.votes
@@ -195,6 +376,17 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			nVotes = nPositiveVotes+nNegativeVotes
 			@votesJ.find('.n-votes.total').html(nVotes)
 			@votesJ.find('.percentage-votes').html(if nVotes > 0 then 100*nPositiveVotes/nVotes else 0)
+
+			# load missing paths
+			pathsToLoad = []
+			for p in drawingData.paths
+				path = JSON.parse(p)
+				if not R.items[path.clientId]
+					pathsToLoad.push(path)
+
+			R.loader.createNewItems(pathsToLoad)
+
+			@setDrawingThumbnail()
 			return
 
 		### votes ###
@@ -257,26 +449,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			if not R.me? or not _.isString(R.me)
 				R.alertManager.alert "You must be logged in to submit a drawing.", "error"
 				return
-
-			if R.selectedItems.length == 0
-				R.alertManager.alert "You must select some drawings first.", "error"
-				return
-
-			drawingId = Utils.createId()
-
-			for item in R.selectedItems
-				item.drawingId = drawingId
-
-			contentJ = @drawingPanelJ.find('.content')
-
-			title = contentJ.find('#drawing-title').val()
-			description = contentJ.find('#drawing-description').val()
-			drawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending')
-			drawing.save()
-			drawing.rasterize()
-			R.rasterizer.rasterize(drawing, false)
 			
-			@close()
+			contentJ = @drawingPanelJ.find('.content')
+			
+			@currentDrawing.title = contentJ.find('#drawing-title').val()
+			@currentDrawing.description = contentJ.find('#drawing-description').val()
+
+			@currentDrawing.save()
+			@close(false)
 
 			return
 
@@ -303,7 +483,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 				return
 
 			if not @currentDrawing?
-				R.alertManager.alert "You must select a drawing first.", "error"
+				@close()
+				return
+
+			if not @currentDrawing.pk?
+				@close()
 				return
 
 			@currentDrawing.deleteCommand()

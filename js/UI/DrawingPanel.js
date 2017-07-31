@@ -14,15 +14,20 @@
         this.vote = bind(this.vote, this);
         this.voteCallback = bind(this.voteCallback, this);
         this.submitDrawingClicked = bind(this.submitDrawingClicked, this);
-        this.hideLoadAnimation = bind(this.hideLoadAnimation, this);
+        this.submitDrawingClickedCallback = bind(this.submitDrawingClickedCallback, this);
+        this.beginDrawingClicked = bind(this.beginDrawingClicked, this);
+        this.showContent = bind(this.showContent, this);
         this.showLoadAnimation = bind(this.showLoadAnimation, this);
         this.close = bind(this.close, this);
+        this.updateSelection = bind(this.updateSelection, this);
         this.onMouseUp = bind(this.onMouseUp, this);
         this.resize = bind(this.resize, this);
         this.setFullSize = bind(this.setFullSize, this);
         this.setHalfSize = bind(this.setHalfSize, this);
         this.onHandleDown = bind(this.onHandleDown, this);
         var closeBtnJ, contentJ, descriptionJ, handleJ, runBtnJ;
+        this.beginDrawingBtnJ = $('button.begin-drawing');
+        this.beginDrawingBtnJ.click(this.beginDrawingClicked);
         this.submitDrawingBtnJ = $('button.submit-drawing');
         this.submitDrawingBtnJ.click(this.submitDrawingClicked);
         this.drawingPanelJ = $("#drawingPanel");
@@ -31,6 +36,7 @@
         handleJ.mousedown(this.onHandleDown);
         handleJ.find('.handle-right').click(this.setHalfSize);
         handleJ.find('.handle-left').click(this.setFullSize);
+        this.drawingPanelTitleJ = this.drawingPanelJ.find('.drawing-panel-title');
         this.fileNameJ = this.drawingPanelJ.find(".header .fileName input");
         this.linkFileInputJ = this.drawingPanelJ.find("input.link-file");
         this.linkFileInputJ.change(this.linkFile);
@@ -107,6 +113,28 @@
         });
       };
 
+      DrawingPanel.prototype.updateSelection = function() {
+        var drawing;
+        if (R.selectedItems.length === 1) {
+          this.showLoadAnimation();
+          this.open();
+          drawing = R.selectedItems[0];
+          if (drawing.pk != null) {
+            delete drawing.selectAfterSave;
+            drawing.updateDrawingPanel();
+          } else {
+            drawing.selectAfterSave = true;
+          }
+        } else {
+          this.showSelectedDrawings();
+          this.open();
+        }
+      };
+
+      DrawingPanel.prototype.selectionChanged = function() {
+        Utils.callNextFrame(this.updateSelection, 'update drawing selection');
+      };
+
 
       /* open close */
 
@@ -115,26 +143,91 @@
         this.drawingPanelJ.addClass('visible');
       };
 
-      DrawingPanel.prototype.close = function() {
+      DrawingPanel.prototype.close = function(removeDrawingIfNotSaved) {
+        if (removeDrawingIfNotSaved == null) {
+          removeDrawingIfNotSaved = true;
+        }
+        if ((this.currentDrawing != null) && (this.currentDrawing.pk == null)) {
+          if (removeDrawingIfNotSaved) {
+            this.currentDrawing.remove();
+          }
+          this.hideSubmitDrawing();
+          this.showBeginDrawing();
+        }
         this.drawingPanelJ.hide();
         this.drawingPanelJ.removeClass('visible');
+        if (R.selectedItems.length > 0) {
+          R.tools.select.deselectAll();
+        }
       };
 
 
       /* set drawing */
+
+      DrawingPanel.prototype.createSelectionLi = function(selectedDrawingsJ, listJ, item) {
+        var deselectBtnJ, deselectIconJ, liJ, thumbnailJ, titleJ;
+        liJ = $('<li>');
+        liJ.addClass('drawing-selection cd-button');
+        liJ.addClass('cd-row');
+        thumbnailJ = $('<div>');
+        thumbnailJ.addClass('thumbnail drawing-thumbnail');
+        thumbnailJ.append(this.getDrawingImage(item));
+        titleJ = $('<h4>');
+        titleJ.addClass('cd-grow cd-center');
+        titleJ.html(item.title);
+        deselectBtnJ = $('<button>');
+        deselectIconJ = $('<span>').addClass('glyphicon glyphicon-remove');
+        deselectBtnJ.click(function(event) {
+          item.deselect();
+          liJ.remove();
+          event.preventDefault();
+          event.stopPropagation();
+          return -1;
+        });
+        deselectBtnJ.append(deselectIconJ);
+        liJ.append(thumbnailJ);
+        liJ.append(titleJ);
+        liJ.append(deselectBtnJ);
+        liJ.click(function() {
+          selectedDrawingsJ.hide();
+          listJ.empty();
+          R.tools.select.deselectAll();
+          item.select();
+        });
+        listJ.append(liJ);
+      };
+
+      DrawingPanel.prototype.showSelectedDrawings = function() {
+        var item, j, len, listJ, ref, selectedDrawingsJ;
+        this.drawingPanelTitleJ.text('Select a single drawing');
+        this.drawingPanelJ.find('.content').children().hide();
+        selectedDrawingsJ = this.drawingPanelJ.find('.content').children('.selected-drawings');
+        selectedDrawingsJ.show();
+        listJ = selectedDrawingsJ.find('ul.drawing-list');
+        listJ.empty();
+        ref = R.selectedItems;
+        for (j = 0, len = ref.length; j < len; j++) {
+          item = ref[j];
+          if (item instanceof Item.Drawing) {
+            this.createSelectionLi(selectedDrawingsJ, listJ, item);
+          }
+        }
+      };
 
       DrawingPanel.prototype.showLoadAnimation = function() {
         this.drawingPanelJ.find('.content').children().hide();
         this.drawingPanelJ.find('.content').children('.loading-animation').show();
       };
 
-      DrawingPanel.prototype.hideLoadAnimation = function() {
+      DrawingPanel.prototype.showContent = function() {
         this.drawingPanelJ.find('.content').children().show();
         this.drawingPanelJ.find('.content').children('.loading-animation').hide();
+        this.drawingPanelJ.find('.content').children('.selected-drawings').hide();
       };
 
       DrawingPanel.prototype.showSubmitDrawing = function() {
         var contentJ;
+        this.hideBeginDrawing();
         this.submitDrawingBtnJ.removeClass('hidden');
         this.submitDrawingBtnJ.show();
         contentJ = this.drawingPanelJ.find('.content');
@@ -145,10 +238,99 @@
         this.submitDrawingBtnJ.hide();
       };
 
+      DrawingPanel.prototype.showBeginDrawing = function() {
+        this.hideSubmitDrawing();
+        this.beginDrawingBtnJ.show();
+      };
+
+      DrawingPanel.prototype.hideBeginDrawing = function() {
+        this.beginDrawingBtnJ.hide();
+      };
+
+      DrawingPanel.prototype.beginDrawingClicked = function() {
+        var id, item, ref;
+        R.toolManager.enterDrawingMode();
+        this.beginDrawingBtnJ.hide();
+        ref = R.items;
+        for (id in ref) {
+          item = ref[id];
+          if (item instanceof Item.Path) {
+            if (item.owner === R.me && item.drawingId === null) {
+              this.showSubmitDrawing();
+              return;
+            }
+          }
+        }
+      };
+
+      DrawingPanel.prototype.getDrawingImage = function(drawing) {
+        var image;
+        if (drawing.raster == null) {
+          drawing.rasterize();
+        }
+        image = new Image();
+        image.src = drawing.raster.toDataURL();
+        return image;
+      };
+
+      DrawingPanel.prototype.setDrawingThumbnail = function() {
+        var contentJ, thumbnailJ;
+        contentJ = this.drawingPanelJ.find('.content');
+        this.currentDrawing.rasterize();
+        R.rasterizer.rasterize(this.currentDrawing, false);
+        thumbnailJ = contentJ.find('.drawing-thumbnail');
+        thumbnailJ.empty().append(this.getDrawingImage(this.currentDrawing));
+      };
+
+      DrawingPanel.prototype.createDrawingFromItems = function(items) {
+        var contentJ, description, drawingId, item, j, len, title;
+        drawingId = Utils.createId();
+        for (j = 0, len = items.length; j < len; j++) {
+          item = items[j];
+          if (item instanceof Item.Path) {
+            item.drawingId = drawingId;
+          }
+        }
+        contentJ = this.drawingPanelJ.find('.content');
+        title = contentJ.find('#drawing-title').val();
+        description = contentJ.find('#drawing-description').val();
+        this.currentDrawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending');
+        this.setDrawingThumbnail();
+        R.view.fitRectangle(this.currentDrawing.rectangle, true);
+      };
+
+      DrawingPanel.prototype.submitDrawingClickedCallback = function(results) {
+        var i, id, item, itemIds, items, itemsToLoad, j, k, len, len1, ref;
+        this.submitBtnJ.find('span.glyphicon').removeClass('glyphicon-refresh glyphicon-refresh-animate').addClass('glyphicon-ok');
+        if (!R.loader.checkError(results)) {
+          return;
+        }
+        itemsToLoad = [];
+        itemIds = [];
+        ref = results.items;
+        for (j = 0, len = ref.length; j < len; j++) {
+          i = ref[j];
+          item = JSON.parse(i);
+          itemIds.push(item.clientId);
+          if (R.items[item.clientId] == null) {
+            itemsToLoad.push(item);
+          }
+        }
+        R.loader.createNewItems(itemsToLoad);
+        items = [];
+        for (k = 0, len1 = itemIds.length; k < len1; k++) {
+          id = itemIds[k];
+          items.push(R.items[id]);
+        }
+        this.createDrawingFromItems(items);
+      };
+
       DrawingPanel.prototype.submitDrawingClicked = function() {
         var contentJ;
+        R.toolManager.leaveDrawingMode();
+        this.drawingPanelTitleJ.text('Create drawing');
         this.open();
-        this.hideLoadAnimation();
+        this.showContent();
         this.currentDrawing = null;
         contentJ = this.drawingPanelJ.find('.content');
         contentJ.find('.read').hide();
@@ -157,15 +339,32 @@
         contentJ.find('#drawing-description').val('');
         this.submitBtnJ.show();
         this.modifyBtnJ.hide();
-        this.cancelBtnJ.hide();
+        this.cancelBtnJ.show();
         this.votesJ.hide();
+        this.currentDrawing = null;
+        if (R.selectedItems.length === 0) {
+          this.submitBtnJ.find('span.glyphicon').removeClass('glyphicon-ok').addClass('glyphicon-refresh glyphicon-refresh-animate');
+          $.ajax({
+            method: "POST",
+            url: "ajaxCall/",
+            data: {
+              data: JSON.stringify({
+                "function": 'getDrafts',
+                args: {}
+              })
+            }
+          }).done(this.submitDrawingClickedCallback);
+          return;
+        }
+        this.createDrawingFromItems(R.selectedItems);
       };
 
       DrawingPanel.prototype.setDrawing = function(currentDrawing, drawingData) {
-        var contentJ, i, len, liJ, nNegativeVotes, nPositiveVotes, nVotes, negativeVoteListJ, positiveVoteListJ, ref, v, vote;
+        var contentJ, j, k, len, len1, liJ, nNegativeVotes, nPositiveVotes, nVotes, negativeVoteListJ, p, path, pathsToLoad, positiveVoteListJ, ref, ref1, v, vote;
         this.currentDrawing = currentDrawing;
+        this.drawingPanelTitleJ.text(this.currentDrawing.title);
         this.open();
-        this.hideLoadAnimation();
+        this.showContent();
         contentJ = this.drawingPanelJ.find('.content');
         this.currentDrawing.votes = drawingData.votes;
         if (this.currentDrawing.owner === R.me || R.administrator) {
@@ -193,8 +392,8 @@
         nPositiveVotes = 0;
         nNegativeVotes = 0;
         ref = drawingData.votes;
-        for (i = 0, len = ref.length; i < len; i++) {
-          vote = ref[i];
+        for (j = 0, len = ref.length; j < len; j++) {
+          vote = ref[j];
           v = JSON.parse(vote.vote);
           liJ = $('<li data-author-pk="' + vote.authorPk + '">' + vote.author + '</li>');
           if (v.positive) {
@@ -226,16 +425,27 @@
         nVotes = nPositiveVotes + nNegativeVotes;
         this.votesJ.find('.n-votes.total').html(nVotes);
         this.votesJ.find('.percentage-votes').html(nVotes > 0 ? 100 * nPositiveVotes / nVotes : 0);
+        pathsToLoad = [];
+        ref1 = drawingData.paths;
+        for (k = 0, len1 = ref1.length; k < len1; k++) {
+          p = ref1[k];
+          path = JSON.parse(p);
+          if (!R.items[path.clientId]) {
+            pathsToLoad.push(path);
+          }
+        }
+        R.loader.createNewItems(pathsToLoad);
+        this.setDrawingThumbnail();
       };
 
 
       /* votes */
 
       DrawingPanel.prototype.hasAlreadyVoted = function() {
-        var i, len, ref, vote;
+        var j, len, ref, vote;
         ref = this.currentDrawing.votes;
-        for (i = 0, len = ref.length; i < len; i++) {
-          vote = ref[i];
+        for (j = 0, len = ref.length; j < len; j++) {
+          vote = ref[j];
           if (vote.vote.author === R.me) {
             return true;
           }
@@ -301,29 +511,16 @@
       /* submit modify cancel drawing */
 
       DrawingPanel.prototype.submitDrawing = function() {
-        var contentJ, description, drawing, drawingId, i, item, len, ref, title;
+        var contentJ;
         if ((R.me == null) || !_.isString(R.me)) {
           R.alertManager.alert("You must be logged in to submit a drawing.", "error");
           return;
         }
-        if (R.selectedItems.length === 0) {
-          R.alertManager.alert("You must select some drawings first.", "error");
-          return;
-        }
-        drawingId = Utils.createId();
-        ref = R.selectedItems;
-        for (i = 0, len = ref.length; i < len; i++) {
-          item = ref[i];
-          item.drawingId = drawingId;
-        }
         contentJ = this.drawingPanelJ.find('.content');
-        title = contentJ.find('#drawing-title').val();
-        description = contentJ.find('#drawing-description').val();
-        drawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending');
-        drawing.save();
-        drawing.rasterize();
-        R.rasterizer.rasterize(drawing, false);
-        this.close();
+        this.currentDrawing.title = contentJ.find('#drawing-title').val();
+        this.currentDrawing.description = contentJ.find('#drawing-description').val();
+        this.currentDrawing.save();
+        this.close(false);
       };
 
       DrawingPanel.prototype.modifyDrawing = function() {
@@ -349,7 +546,11 @@
           return;
         }
         if (this.currentDrawing == null) {
-          R.alertManager.alert("You must select a drawing first.", "error");
+          this.close();
+          return;
+        }
+        if (this.currentDrawing.pk == null) {
+          this.close();
           return;
         }
         this.currentDrawing.deleteCommand();

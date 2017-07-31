@@ -370,21 +370,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 				item.deselect()
 
 			if showPanelAndLoad
-				R.drawingPanel.showLoadAnimation()
-				R.drawingPanel.open()
-
-				if @pk?
-					delete @selectAfterSave
-					@updateDrawingPanel()
-				else
-					@selectAfterSave = true
+				R.drawingPanel.selectionChanged()
 
 			return true
 		
 		deselect: (updateOptions=true)->
 			if not super(updateOptions) then return false
-			R.drawingPanel.close()
-			R.drawingPanel.hideSubmitDrawing()
+			if R.selectedItems.length == 0
+				R.drawingPanel.close()
+				R.drawingPanel.hideSubmitDrawing()
 			return true
 
 		remove: () ->

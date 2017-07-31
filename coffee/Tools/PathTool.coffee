@@ -67,6 +67,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 			super
 
 			R.view.tool.onMouseMove = @move
+			R.toolManager.enterDrawingMode()
 			return
 
 		updateParameters: ()->
@@ -168,7 +169,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 					return
 
 				path.save(true)
-				path.select(false)
+				# path.select(false)
 			else
 				path.endCreate(event.point, event)
 			delete R.currentPaths[from]
@@ -192,6 +193,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 
 			if not path.data?.polygonMode
 				@createPath(event, from)
+
+			R.drawingPanel.showSubmitDrawing()
 
 			return
 

@@ -456,7 +456,6 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			paths = []
 
 			bounds = R.view.grid.limitCD.bounds
-			console.log(bounds)
 
 			for item in itemsToLoad
 				path = R.items[item.clientId]

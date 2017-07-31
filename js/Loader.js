@@ -484,7 +484,6 @@
         this.createNewItems(itemsToLoad);
         paths = [];
         bounds = R.view.grid.limitCD.bounds;
-        console.log(bounds);
         for (m = 0, len1 = itemsToLoad.length; m < len1; m++) {
           item = itemsToLoad[m];
           path = R.items[item.clientId];

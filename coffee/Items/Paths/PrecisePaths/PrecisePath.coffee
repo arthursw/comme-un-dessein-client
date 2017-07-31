@@ -561,7 +561,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			if not super(updateOptions) then return
 			@controlPath.selected = true
 			if not @data.smooth then @controlPath.fullySelected = true
-			R.drawingPanel.showSubmitDrawing()
 			return true
 
 		# @see RPath.deselect

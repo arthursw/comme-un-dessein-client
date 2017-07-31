@@ -484,14 +484,7 @@
           item.deselect();
         }
         if (showPanelAndLoad) {
-          R.drawingPanel.showLoadAnimation();
-          R.drawingPanel.open();
-          if (this.pk != null) {
-            delete this.selectAfterSave;
-            this.updateDrawingPanel();
-          } else {
-            this.selectAfterSave = true;
-          }
+          R.drawingPanel.selectionChanged();
         }
         return true;
       };
@@ -503,8 +496,10 @@
         if (!Drawing.__super__.deselect.call(this, updateOptions)) {
           return false;
         }
-        R.drawingPanel.close();
-        R.drawingPanel.hideSubmitDrawing();
+        if (R.selectedItems.length === 0) {
+          R.drawingPanel.close();
+          R.drawingPanel.hideSubmitDrawing();
+        }
         return true;
       };
 

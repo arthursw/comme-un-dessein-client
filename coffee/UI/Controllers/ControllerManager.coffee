@@ -342,9 +342,10 @@ define dependencies, (P, R, Utils, Controller, ColorController, Folder, GUI) ->
 			R.gui.constructor.prototype.onResize = ()-> return
 			$(R.gui.domElement).children().first().css( height: 'auto' )
 
+			$(R.gui.domElement).hide()
 			dat.GUI.toggleHide = ()-> return
 			@folders = {}
-			$(".dat-gui.dg-sidebar").append(R.gui.domElement)
+			# $(".dat-gui.dg-sidebar").append(R.gui.domElement)
 
 			# R.templatesJ.find("button.dat-gui-toggle").clone().appendTo(R.gui.domElement)
 			# toggleGuiButtonJ = $(R.gui.domElement).find("button.dat-gui-toggle")

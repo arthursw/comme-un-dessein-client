@@ -72,6 +72,7 @@
         R.rasterizer.drawItems();
         PathTool.__super__.select.apply(this, arguments);
         R.view.tool.onMouseMove = this.move;
+        R.toolManager.enterDrawingMode();
       };
 
       PathTool.prototype.updateParameters = function() {
@@ -162,7 +163,6 @@
             return;
           }
           path.save(true);
-          path.select(false);
         } else {
           path.endCreate(event.point, event);
         }
@@ -185,6 +185,7 @@
         if (!((ref = path.data) != null ? ref.polygonMode : void 0)) {
           this.createPath(event, from);
         }
+        R.drawingPanel.showSubmitDrawing();
       };
 
       PathTool.prototype.finish = function(from) {

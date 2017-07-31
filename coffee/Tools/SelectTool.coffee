@@ -56,6 +56,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing'
 			return
 
 		select: (deselectItems=false, updateParameters=true)->
+			if R.selectedTool == R.tools['Precise path']
+				R.alertManager.alert 'Submit your drawing before voting', 'info'
+				return
+			# R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").hide()
 			# R.rasterizer.drawItems() 		# must not draw all items here since user can just wish to use an Media
 			super(false, updateParameters)
 			return
@@ -69,18 +73,20 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing'
 
 			# Add all items which have bounds intersecting with the selection rectangle (1st version)
 			for name, item of R.items
-				item.unhighlight()
-				bounds = item.getBounds()
-				if bounds.intersects(rectangle)
-					item.highlight()
-				# if the user just clicked (not dragged a selection rectangle): just select the first item
-				if rectangle.area == 0
-					break
+				if item instanceof Drawing
+					item.unhighlight()
+					bounds = item.getBounds()
+					if bounds.intersects(rectangle)
+						item.highlight()
+					# if the user just clicked (not dragged a selection rectangle): just select the first item
+					if rectangle.area == 0
+						break
 			return
 
 		unhighlightItems: ()->
 			for name, item of R.items
-				item.unhighlight()
+				if item instanceof Drawing
+					item.unhighlight()
 			return
 
 		# Create selection rectangle path (remove if existed)
@@ -110,12 +116,13 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing'
 			# Add all items which have bounds intersecting with the selection rectangle (1st version)
 			for name, item of R.items
 				if item.getBounds().intersects(rectangle) and item.isVisible()
-					if Drawing.prototype.isPrototypeOf(item)
-						itemsToSelect.length = 0
-						itemsToSelect.push(item)
-						return true
-					else
-						itemsToSelect.push(item)
+					# if Drawing.prototype.isPrototypeOf(item)
+					# 	itemsToSelect.length = 0
+					# 	itemsToSelect.push(item)
+					# 	return true
+					# else
+					# 	itemsToSelect.push(item)
+					itemsToSelect.push(item)
 			return false
 
 		# check if items all have the same parent

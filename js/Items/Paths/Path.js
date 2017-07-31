@@ -267,9 +267,13 @@
           R.items[this.drawingId].select();
           return null;
         }
+        if (!R.administrator) {
+          return false;
+        }
         if (!Path.__super__.select.call(this, updateOptions) || (this.controlPath == null)) {
           return false;
         }
+        R.drawingPanel.showSubmitDrawing();
         return true;
       };
 

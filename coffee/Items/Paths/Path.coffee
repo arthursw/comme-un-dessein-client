@@ -291,8 +291,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			if @drawingId? and R.items[@drawingId]?
 				R.items[@drawingId].select()
 				return null
+			if not R.administrator then return false
 			if not super(updateOptions) or not @controlPath? then return false
 			# if not @drawing? then @draw()
+			R.drawingPanel.showSubmitDrawing()
 			return true
 
 		# deselect: remove the selection rectangle (and rasterize)

@@ -212,6 +212,18 @@ define dependencies, (Utils, Tool) ->
 			# 	touchStates[finger.TouchState]
 			return
 
+		enterDrawingMode: ()->
+			if R.selectedTool != R.tools['Precise path']
+				R.tools['Precise path'].select()
+			R.sidebar.favoriteToolsJ.find("[data-name='Select']").css( opacity: 0.25 )
+			# @drawingMode = true
+			return
+
+		leaveDrawingMode: ()->
+			# @drawingMode = false
+			R.sidebar.favoriteToolsJ.find("[data-name='Select']").css( opacity: 1 )
+			R.tools.select.select()
+			return
 
 	# todo: replace update by drag
 

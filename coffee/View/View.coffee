@@ -264,6 +264,30 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 			return somethingToLoad
 
 
+		fitRectangle: (rectangle, considerPanels=false)->
+			viewSize = P.view.size.clone()
+			
+			sidebarWidth = if considerPanels then R.sidebar.sidebarJ.outerWidth() else 0			
+			drawingPanelWidth = if considerPanels then R.drawingPanel.drawingPanelJ.outerWidth() else 0	
+			viewSize.width = viewSize.width - sidebarWidth - drawingPanelWidth
+
+			viewRatio = viewSize.width / viewSize.height
+			rectangleRatio = rectangle.width / rectangle.height
+
+			if viewRatio < rectangleRatio
+				P.view.zoom = Math.min(viewSize.width / rectangle.width, 1)
+			else
+				P.view.zoom = Math.min(viewSize.height / rectangle.height, 1)
+
+			if considerPanels
+				windowCenterInView = P.view.viewToProject(new P.Point(window.innerWidth / 2, window.innerHeight / 2))
+				visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + viewSize.width / 2, window.innerHeight / 2))
+				offset = visibleViewCenterInView.subtract(windowCenterInView)
+				@moveTo(rectangle.center.subtract(offset))
+			else
+				@moveTo(rectangle.center)
+			return
+
 		addMoveCommand: ()=>
 			R.commandManager.add(new Command.MoveView(@previousPosition, P.view.center))
 			@previousPosition = null
