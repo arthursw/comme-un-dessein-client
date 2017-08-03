@@ -736,12 +736,14 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 		removeDrawing: ()->
 			if not @drawing?.parent? then return
 			@drawingRelativePosition = @drawing.position.subtract(@rectangle.center)
+			@drawing.data.rectangle.remove()
 			@drawing.remove()
 			return
 
 		replaceDrawing: ()->
 			if not @drawing? or not @drawingRelativePosition? then return
 			@raster?.remove()
+			@raster = null
 			@group.addChild(@drawing)
 			@drawing.position = @rectangle.center.add(@drawingRelativePosition)
 			@drawingRelativePosition = null
@@ -758,8 +760,28 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 			# @drawing.addChild(background)
 			# background.sendToBack()
 
-			if @data.strokeWidth?
-				@drawing.addChild(new P.Path.Rectangle(@drawing.bounds.expand(2*@data.strokeWidth)))
+			# if @data.strokeWidth?
+			# 	rectangle = new P.Path.Rectangle(@drawing.bounds.expand(2*Item.Path.strokeWidth)
+			# 	rectangle.fillColor = new P.Color(Math.random(), Math.random(), Math.random())
+			# 	@drawing.addChild(rectangle)
+			# 	rectangle.sendToBack()
+
+			# for child in @drawing.children
+			# 	if @id == "9440088493130252-1501788953971" and child.controller?
+			# 		console.log('child id: ' + child.controller.id)
+			# 		console.log("child.controller.group.parent == @drawing: " + (child.controller.group.parent == @drawing))
+			# 		console.log("child.controller.group.children.length: " + (child.controller.group.children.length))
+			# 		console.log("child.controller.drawing.parent == child.controller.group: " + (child.controller.drawing.parent == child.controller.group))
+			# 		console.log("child == child.controller.group: " + (child == child.controller.group))
+
+			if @drawing.data.rectangle?
+				@drawing.data.rectangle.remove()
+			
+			if not @drawing.data.rectangle
+				@drawing.data.rectangle = new P.Path.Rectangle(@drawing.bounds.expand(2*Item.Path.strokeWidth))	
+				@drawing.data.rectangle.fillColor = new P.Color(Math.random(), Math.random(), Math.random())
+				@drawing.addChild(@drawing.data.rectangle)
+				@drawing.data.rectangle.sendToBack()
 
 			@raster = @drawing.rasterize()
 

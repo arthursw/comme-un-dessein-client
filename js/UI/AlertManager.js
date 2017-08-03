@@ -5,12 +5,20 @@
   define(['paper', 'R', 'Utils/Utils'], function(P, R, Utils) {
     var AlertManager;
     AlertManager = (function() {
+      AlertManager.hideDelay = 5000;
+
       function AlertManager() {
         this.hide = bind(this.hide, this);
+        this.hideDeferred = bind(this.hideDeferred, this);
+        this.show = bind(this.show, this);
         this.alertsContainer = $("#CommeUnDessein_alerts");
+        this.alertsContainer.find('button.show').click(this.show);
+        this.alertsContainer.on({
+          touchstart: this.show
+        });
         this.alerts = [];
         this.currentAlert = -1;
-        this.alertTimeOut = -1;
+        this.alertTimeOut = null;
         this.alertsContainer.find(".btn-up").click((function(_this) {
           return function() {
             return _this.showAlert(_this.currentAlert - 1);
@@ -42,7 +50,7 @@
           type = "";
         }
         if (delay == null) {
-          delay = 2000;
+          delay = this.constructor.hideDelay;
         }
         if (type.length === 0) {
           type = "info";
@@ -60,15 +68,53 @@
           this.alertsContainer.addClass("activated");
         }
         this.showAlert(this.alerts.length - 1);
-        this.alertsContainer.addClass("show");
-        if (delay !== 0) {
+        this.show();
+        this.hideDeferred(delay);
+      };
+
+      AlertManager.prototype.show = function() {
+        if (this.alertTimeOut != null) {
           clearTimeout(this.alertTimeOut);
+          this.alertTimeOut = null;
+        }
+        R.alertManager.alertsContainer.addClass('show');
+        R.sidebar.sidebarJ.addClass('r-alert');
+        R.drawingPanel.drawingPanelJ.addClass('r-alert');
+        this.openning = true;
+        setTimeout(((function(_this) {
+          return function() {
+            return _this.openning = null;
+          };
+        })(this)), 500);
+      };
+
+      AlertManager.prototype.hideDeferred = function(delay) {
+        if (delay == null) {
+          delay = this.constructor.hideDelay;
+        }
+        if (delay !== 0) {
+          if (this.alertTimeOut != null) {
+            clearTimeout(this.alertTimeOut);
+            this.alertTimeOut = null;
+          }
           this.alertTimeOut = setTimeout(this.hide, delay);
         }
       };
 
+      AlertManager.prototype.hideIfNoTimeout = function() {
+        if ((this.alertTimeOut == null) && !this.openning) {
+          this.hide();
+        }
+      };
+
       AlertManager.prototype.hide = function() {
+        if (this.alertTimeOut != null) {
+          clearTimeout(this.alertTimeOut);
+          this.alertTimeOut = null;
+        }
         this.alertsContainer.removeClass("show");
+        R.sidebar.sidebarJ.removeClass('r-alert');
+        R.drawingPanel.drawingPanelJ.removeClass('r-alert');
       };
 
       return AlertManager;

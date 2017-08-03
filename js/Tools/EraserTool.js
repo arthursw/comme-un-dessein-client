@@ -60,8 +60,10 @@
       EraserTool.prototype.deselect = function() {
         EraserTool.__super__.deselect.call(this);
         this.finish();
-        this.circle.remove();
-        this.circle = null;
+        if (this.circle != null) {
+          this.circle.remove();
+          this.circle = null;
+        }
         R.view.tool.onMouseMove = null;
       };
 
@@ -210,7 +212,7 @@
       };
 
       EraserTool.prototype.end = function(event, from) {
-        var i, j, k, l, len, len1, len2, len3, path, pathsToCreate, pathsToDelete, pathsToDeleteResurectors, ref, ref1;
+        var createCommand, deleteCommand, i, j, k, l, len, len1, len2, len3, path, pathsToCreate, pathsToDelete, pathsToDeleteResurectors, ref, ref1;
         if (from == null) {
           from = R.me;
         }
@@ -234,11 +236,18 @@
             pathsToDeleteResurectors[path.id] = this.pathsToDeleteResurectors[path.id];
           }
         }
+        deleteCommand = null;
         if (pathsToDelete.length > 0) {
-          R.commandManager.add(new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors), false);
+          deleteCommand = new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors);
+          R.commandManager.add(deleteCommand, false);
         }
         if (pathsToCreate.length > 0) {
-          R.commandManager.add(new Command.CreateItems(pathsToCreate), false);
+          createCommand = new Command.CreateItems(pathsToCreate);
+          R.commandManager.add(createCommand, false);
+          if (deleteCommand != null) {
+            deleteCommand.twin = createCommand;
+            createCommand.twin = deleteCommand;
+          }
         }
         for (k = 0, len2 = pathsToDelete.length; k < len2; k++) {
           path = pathsToDelete[k];

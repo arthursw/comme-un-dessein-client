@@ -1,8 +1,10 @@
-dependencies = ['paper', 'R',  'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel' ]
+dependencies = ['paper', 'R',  'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Divs/Div' ]
 if document?
+	dependencies.push('hammer')
 	dependencies.push('tween')
+	dependencies.push('mousewheel')
 
-define dependencies, (P, R, Utils, Grid, Command, Div) ->
+define dependencies, (P, R, Utils, Grid, Command, Div, Hammer) ->
 
 	class View
 
@@ -12,8 +14,9 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 
 			R.canvasJ = R.stageJ.find("#canvas")
 			R.canvas = R.canvasJ[0]
-			R.canvas.width = if window? then window.innerWidth else R.canvasWidth
-			R.canvas.height = if window? then window.innerHeight else R.canvasHeight
+
+			R.canvas.width = if window? then R.stageJ.innerWidth() else R.canvasWidth
+			R.canvas.height = if window? then R.stageJ.innerHeight() else R.canvasHeight
 			R.context = R.canvas.getContext('2d')
 
 			paper.setup(R.canvas)
@@ -86,15 +89,24 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 
 				window.onhashchange = @onHashChange
 
+				hammertime = new Hammer(R.canvas)
+				hammertime.get('pinch').set({ enable: true })
+				hammertime.on 'pinch', (event)=>
+					console.log(event.scale)
+					R.toolManager.zoom(event.scale)
+					return
+
 			@mousePosition = new P.Point() 			# the mouse position in window coordinates (updated everytime the mouse moves)
 			@previousMousePosition = null 			# the previous position of the mouse in the mousedown/move/up
 			@initialMousePosition = null 			# the initial position of the mouse in the mousedown/move/up
 
-
+			@firstHashChange = true
 			return
 
 		createLayerListItem: (title, layer, noArrow=false)->
 			itemListJ = R.templatesJ.find(".layer").clone()
+
+			itemListJ.attr('data-name', layer.name)
 
 			nItemsJ = itemListJ.find(".n-items")
 			nItemsJ.addClass(title.toLowerCase() + '-color')
@@ -105,32 +117,43 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 			if noArrow
 				titleJ.addClass('no-arrow')
 
-			titleJ.click (event)=>
-				itemListJ.toggleClass('closed')
-				if not event.shiftKey
-					R.tools.select.deselectAll()
-				return
+			if not noArrow
+				titleJ.click (event)=>
+					itemListJ.toggleClass('closed')
+					if not event.shiftKey
+						R.tools.select.deselectAll()
+					return
 
 			showBtnJ = itemListJ.find(".show-btn")
 			
-			showBtnJ.mousedown (event)=>
-				layer.visible = !layer.visible
+			layer.data.setVisibility = (visible)=>
+				layer.visible = visible
 				R.tools.select.deselectAll()
 				R.rasterizer.refresh()
-
-				# setTimeout((()->R.tools.select.deselectAll()), 10)
 
 				eyeIconJ = itemListJ.find("span.eye")
 				if layer.visible
 					eyeIconJ.removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open')
 				else
 					eyeIconJ.removeClass('glyphicon-eye-open').addClass('glyphicon-eye-close')
+				return
+
+			showBtnJ.mousedown (event)=>
+				layer.data.setVisibility(!layer.visible)
 				event.preventDefault()
 				event.stopPropagation()
 				return -1
 
 			R.sidebar.itemListsJ.prepend(itemListJ)
 			return itemListJ
+		
+		hideDraftLayer: ()=>
+			@mainLayer.data.setVisibility(false)
+			return
+
+		showDraftLayer: ()=>
+			@mainLayer.data.setVisibility(true)
+			return
 
 		createLayers: ()->
 
@@ -143,7 +166,7 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 			@drawnLayer = new P.Layer()
 			@drawnLayer.name  = 'drawnLayer'
 
-			@draftListJ = @createLayerListItem('Draft', @mainLayer)
+			@draftListJ = @createLayerListItem('Draft', @mainLayer, true)
 			@pendingListJ = @createLayerListItem('Pending', @pendingLayer)
 			@drawingListJ = @createLayerListItem('Drawing', @drawingLayer)
 			@drawnListJ = @createLayerListItem('Drawn', @drawnLayer)
@@ -265,23 +288,23 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 
 
 		fitRectangle: (rectangle, considerPanels=false)->
-			viewSize = P.view.size.clone()
+			windowSize = new P.Size(window.innerWidth, window.innerHeight)
 			
 			sidebarWidth = if considerPanels then R.sidebar.sidebarJ.outerWidth() else 0			
 			drawingPanelWidth = if considerPanels then R.drawingPanel.drawingPanelJ.outerWidth() else 0	
-			viewSize.width = viewSize.width - sidebarWidth - drawingPanelWidth
+			windowSize.width = windowSize.width - sidebarWidth - drawingPanelWidth
 
-			viewRatio = viewSize.width / viewSize.height
+			viewRatio = windowSize.width / windowSize.height
 			rectangleRatio = rectangle.width / rectangle.height
 
 			if viewRatio < rectangleRatio
-				P.view.zoom = Math.min(viewSize.width / rectangle.width, 1)
+				P.view.zoom = Math.min(windowSize.width / rectangle.width, 1)
 			else
-				P.view.zoom = Math.min(viewSize.height / rectangle.height, 1)
+				P.view.zoom = Math.min(windowSize.height / rectangle.height, 1)
 
 			if considerPanels
 				windowCenterInView = P.view.viewToProject(new P.Point(window.innerWidth / 2, window.innerHeight / 2))
-				visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + viewSize.width / 2, window.innerHeight / 2))
+				visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + windowSize.width / 2, window.innerHeight / 2))
 				offset = visibleViewCenterInView.subtract(windowCenterInView)
 				@moveTo(rectangle.center.subtract(offset))
 			else
@@ -338,7 +361,8 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 			# 	R.cityManager.loadCity(parameters['city-name'], parameters['city-owner'], p)
 			# 	return
 
-			@moveTo(p)
+			@moveTo(p, null, !@firstHashChange)
+			@firstHashChange = true
 			return
 
 		## Init position
@@ -353,6 +377,9 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 				owner: if R.canvasJ.attr("data-owner") != '' then R.canvasJ.attr("data-owner") else undefined
 				city: if R.canvasJ.attr("data-city") != '' then R.canvasJ.attr("data-city") else undefined
 				site: if R.canvasJ.attr("data-site") != '' then R.canvasJ.attr("data-site") else undefined
+
+
+			@restrictedArea = @grid.limitCD.bounds.expand(100)
 
 			# check if canvas has an attribute 'data-box'
 			# boxString = R.canvasJ.attr("data-box")
@@ -388,6 +415,7 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 			# init @restrictedArea
 			siteString = R.canvasJ.attr("data-site")
 			site = JSON.parse( siteString )
+			
 			if site.restrictedArea
 				@restrictedArea = boxRectangle
 
@@ -517,11 +545,11 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 			# R.backgroundCanvasJ.height(window.innerHeight)
 			@grid.update()
 			$(".mCustomScrollbar").mCustomScrollbar("update")
-			P.view.update()
+			@moveBy(new P.Point())
 
-			R.canvasJ.width(window.innerWidth)
-			R.canvasJ.height(window.innerHeight)
-			P.view.viewSize = new P.Size(window.innerWidth, window.innerHeight)
+			# R.canvasJ.width(window.innerWidth)
+			# R.canvasJ.height(window.innerHeight-50)
+			P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight())
 
 			# R.selectionCanvasJ.width(window.innerWidth)
 			# R.selectionCanvasJ.height(window.innerHeight)
@@ -592,6 +620,9 @@ define dependencies, (P, R, Utils, Grid, Command, Div) ->
 
 			if R.stageJ.hasClass("has-tool-box") and not $(event.target).parents('.tool-box').length>0
 				R.hideToolBox()
+
+			if not $(event.target).parents('#CommeUnDessein_alerts').length > 0
+				R.alertManager.hideIfNoTimeout()
 
 			R.codeEditor?.onMouseUp(event)
 			R.drawingPanel?.onMouseUp(event)

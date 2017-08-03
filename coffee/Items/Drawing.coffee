@@ -53,6 +53,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 
 			@votes = [] # { positive: boolean, author: string, authorPk: pk }
 
+			if @id == "9440088493130252-1501788953971"
+				for id, path of R.paths
+					if path.drawingId? and (path.drawingId == @id or path.drawingId == @pk)
+						console.log("drawing adds loaded path: ", path)
+
 			for id, path of R.paths
 				if path.drawingId? and (path.drawingId == @id or path.drawingId == @pk)
 					@addChild(path)
@@ -192,8 +197,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 			@drawn = false
 			if @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
 				@replaceDrawing()
+				R.rasterizer.rasterize(@)
 			return
 		
+		replaceDrawing: ()->
+			if not @drawing? or not @drawingRelativePosition? then return
+			for item in @children()
+				item.drawn = false
+				item.drawing?.remove()
+				item.raster?.remove()
+			super()
+			return
+
 		removeChild: (path, updateRectangle=true, updateRaster=false)->
 			path.drawingId = null
 			pkIndex = @pathPks.indexOf(path.pk)
@@ -376,14 +391,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 		
 		deselect: (updateOptions=true)->
 			if not super(updateOptions) then return false
-			if R.selectedItems.length == 0
-				R.drawingPanel.close()
-				R.drawingPanel.hideSubmitDrawing()
+			R.drawingPanel.deselectDrawing(@)
 			return true
 
 		remove: () ->
 			for path in @children()
-				@removeChild(path)
+				# @removeChild(path)
+				path.remove()
 
 			@removeFromListItem()
 			super
@@ -392,7 +406,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 		children: ()->
 			paths = []
 			for child in @drawing.children
-				paths.push(child.controller)
+				if child.controller?
+					paths.push(child.controller)
 			return paths
 
 		highlight: (color)->
@@ -406,14 +421,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 		drawChildren: ()->
 			if @drawing.children.length == 0 then return
 			
+			
 			for child in @drawing.children
-				child.controller.draw?()
+				child.controller?.draw?()
 			return
 
 		# disable rasterize if no children
 		rasterize: ()->	
 			if @raster? or not @drawing? then return
 			# make sure children are drawn BEFORE this, otherwise this can be rasterized before children are drawn, see Rasterizer.drawItems()
+
 			@drawChildren()
 			super()
 			return

@@ -4,7 +4,7 @@
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing', 'Commands/Command', 'View/SelectionRectangle'], function(P, R, Utils, Tool, Lock, Drawing, Command, SelectionRectangle) {
+  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Item', 'Commands/Command', 'View/SelectionRectangle'], function(P, R, Utils, Tool, Lock, Item, Command, SelectionRectangle) {
     var SelectTool;
     SelectTool = (function(superClass) {
       extend(SelectTool, superClass);
@@ -87,16 +87,15 @@
         }
       };
 
-      SelectTool.prototype.select = function(deselectItems, updateParameters) {
+      SelectTool.prototype.select = function(deselectItems, updateParameters, forceSelect) {
         if (deselectItems == null) {
           deselectItems = false;
         }
         if (updateParameters == null) {
           updateParameters = true;
         }
-        if (R.selectedTool === R.tools['Precise path']) {
-          R.alertManager.alert('Submit your drawing before voting', 'info');
-          return;
+        if (forceSelect == null) {
+          forceSelect = false;
         }
         SelectTool.__super__.select.call(this, false, updateParameters);
       };
@@ -111,7 +110,7 @@
         ref = R.items;
         for (name in ref) {
           item = ref[name];
-          if (item instanceof Drawing) {
+          if (item instanceof Item.Drawing) {
             item.unhighlight();
             bounds = item.getBounds();
             if (bounds.intersects(rectangle)) {
@@ -129,7 +128,7 @@
         ref = R.items;
         for (name in ref) {
           item = ref[name];
-          if (item instanceof Drawing) {
+          if (item instanceof Item.Drawing) {
             item.unhighlight();
           }
         }
@@ -156,12 +155,45 @@
       };
 
       SelectTool.prototype.populateItemsToSelect = function(itemsToSelect, locksToSelect, rectangle) {
-        var item, name, ref;
+        var allDrawingsInRectangleBox, drawing, hitResult, i, item, justClicked, len, name, ref;
+        justClicked = rectangle.area === 0;
+        if (justClicked) {
+          rectangle = rectangle.expand(5);
+        }
+        allDrawingsInRectangleBox = [];
         ref = R.items;
         for (name in ref) {
           item = ref[name];
           if (item.getBounds().intersects(rectangle) && item.isVisible()) {
-            itemsToSelect.push(item);
+            if (item instanceof Item.Drawing) {
+              allDrawingsInRectangleBox.push(item);
+            } else {
+              if (justClicked) {
+                if (item instanceof Item.Path) {
+                  hitResult = item.performHitTest(rectangle.center, {
+                    segments: true,
+                    stroke: true,
+                    handles: false,
+                    tolerance: 5
+                  });
+                  if (hitResult != null) {
+                    itemsToSelect.push(item);
+                  }
+                }
+              } else {
+                itemsToSelect.push(item);
+              }
+            }
+          }
+        }
+        if (allDrawingsInRectangleBox.length === 1) {
+          itemsToSelect.length = 0;
+          itemsToSelect.push(allDrawingsInRectangleBox[0]);
+        }
+        if (justClicked && allDrawingsInRectangleBox.length > 0 && itemsToSelect.length === 0) {
+          for (i = 0, len = allDrawingsInRectangleBox.length; i < len; i++) {
+            drawing = allDrawingsInRectangleBox[i];
+            itemsToSelect.push(drawing);
           }
         }
         return false;
@@ -198,7 +230,7 @@
         ref = R.selectedItems;
         for (i = 0, len = ref.length; i < len; i++) {
           item = ref[i];
-          if (Drawing.prototype.isPrototypeOf(item)) {
+          if (Item.Drawing.prototype.isPrototypeOf(item)) {
             return true;
           }
         }
@@ -218,9 +250,6 @@
           itemsToSelect = locksToSelect;
         }
         if (itemsToSelect.length > 0) {
-          if (rectangle.area === 0) {
-            itemsToSelect = [itemsToSelect[0]];
-          }
           R.commandManager.add(new Command.Select(itemsToSelect), true);
         }
       };
@@ -234,7 +263,7 @@
         if (this.selectionRectangle != null) {
           itemWasHit = this.selectionRectangle.hitTest(event);
         }
-        if (!itemWasHit) {
+        if (!itemWasHit && R.administrator) {
           ref = R.paths;
           for (name in ref) {
             path = ref[name];
@@ -300,48 +329,20 @@
       };
 
       SelectTool.prototype.keyUp = function(event) {
-        var delta, i, item, j, k, l, len, len1, len2, len3, len4, m, ref, ref1, ref2, ref3, ref4, ref5, selectedItems;
+        var delta, i, item, len, ref, ref1, selectedItems;
         if ((ref = event.key) === 'left' || ref === 'right' || ref === 'up' || ref === 'down') {
           delta = event.modifiers.shift ? 50 : event.modifiers.option ? 5 : 1;
         }
         switch (event.key) {
-          case 'right':
-            ref1 = R.selectedItems;
-            for (i = 0, len = ref1.length; i < len; i++) {
-              item = ref1[i];
-              item.moveBy(new P.Point(delta, 0), true);
-            }
-            break;
-          case 'left':
-            ref2 = R.selectedItems;
-            for (j = 0, len1 = ref2.length; j < len1; j++) {
-              item = ref2[j];
-              item.moveBy(new P.Point(-delta, 0), true);
-            }
-            break;
-          case 'up':
-            ref3 = R.selectedItems;
-            for (k = 0, len2 = ref3.length; k < len2; k++) {
-              item = ref3[k];
-              item.moveBy(new P.Point(0, -delta), true);
-            }
-            break;
-          case 'down':
-            ref4 = R.selectedItems;
-            for (l = 0, len3 = ref4.length; l < len3; l++) {
-              item = ref4[l];
-              item.moveBy(new P.Point(0, delta), true);
-            }
-            break;
           case 'escape':
             this.deselectAll();
             break;
           case 'delete':
           case 'backspace':
             selectedItems = R.selectedItems.slice();
-            for (m = 0, len4 = selectedItems.length; m < len4; m++) {
-              item = selectedItems[m];
-              if (((ref5 = item.selectionState) != null ? ref5.segment : void 0) != null) {
+            for (i = 0, len = selectedItems.length; i < len; i++) {
+              item = selectedItems[i];
+              if (((ref1 = item.selectionState) != null ? ref1.segment : void 0) != null) {
                 item.deletePointCommand();
               } else {
                 item.deleteCommand();

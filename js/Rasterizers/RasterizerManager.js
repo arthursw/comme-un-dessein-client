@@ -9,11 +9,10 @@
 
       RasterizerManager.prototype.initializeRasterizers = function() {
         this.rasterizers = {};
-        new Rasterizer();
         new Rasterizer.CanvasTile();
         new Rasterizer.InstantPaperTile();
+        new Rasterizer.PaperTile();
         R.rasterizer = new Rasterizer.PaperTile();
-        R.rasterizer.rasterizationDisabled = true;
         this.addRasterizerParameters();
       };
 

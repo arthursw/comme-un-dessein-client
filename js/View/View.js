@@ -3,13 +3,15 @@
   var dependencies,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  dependencies = ['paper', 'R', 'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Divs/Div', 'mousewheel'];
+  dependencies = ['paper', 'R', 'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Divs/Div'];
 
   if (typeof document !== "undefined" && document !== null) {
+    dependencies.push('hammer');
     dependencies.push('tween');
+    dependencies.push('mousewheel');
   }
 
-  define(dependencies, function(P, R, Utils, Grid, Command, Div) {
+  define(dependencies, function(P, R, Utils, Grid, Command, Div, Hammer) {
     var View;
     View = (function() {
       function View() {
@@ -27,11 +29,14 @@
         this.onHashChange = bind(this.onHashChange, this);
         this.updateHash = bind(this.updateHash, this);
         this.addMoveCommand = bind(this.addMoveCommand, this);
+        this.showDraftLayer = bind(this.showDraftLayer, this);
+        this.hideDraftLayer = bind(this.hideDraftLayer, this);
+        var hammertime;
         R.stageJ = $("#stage");
         R.canvasJ = R.stageJ.find("#canvas");
         R.canvas = R.canvasJ[0];
-        R.canvas.width = typeof window !== "undefined" && window !== null ? window.innerWidth : R.canvasWidth;
-        R.canvas.height = typeof window !== "undefined" && window !== null ? window.innerHeight : R.canvasHeight;
+        R.canvas.width = typeof window !== "undefined" && window !== null ? R.stageJ.innerWidth() : R.canvasWidth;
+        R.canvas.height = typeof window !== "undefined" && window !== null ? R.stageJ.innerHeight() : R.canvasHeight;
         R.context = R.canvas.getContext('2d');
         paper.setup(R.canvas);
         R.project = P.project;
@@ -98,10 +103,21 @@
           });
           $(window).resize(this.onWindowResize);
           window.onhashchange = this.onHashChange;
+          hammertime = new Hammer(R.canvas);
+          hammertime.get('pinch').set({
+            enable: true
+          });
+          hammertime.on('pinch', (function(_this) {
+            return function(event) {
+              console.log(event.scale);
+              R.toolManager.zoom(event.scale);
+            };
+          })(this));
         }
         this.mousePosition = new P.Point();
         this.previousMousePosition = null;
         this.initialMousePosition = null;
+        this.firstHashChange = true;
         return;
       }
 
@@ -111,6 +127,7 @@
           noArrow = false;
         }
         itemListJ = R.templatesJ.find(".layer").clone();
+        itemListJ.attr('data-name', layer.name);
         nItemsJ = itemListJ.find(".n-items");
         nItemsJ.addClass(title.toLowerCase() + '-color');
         titleJ = itemListJ.find(".title");
@@ -118,19 +135,21 @@
         if (noArrow) {
           titleJ.addClass('no-arrow');
         }
-        titleJ.click((function(_this) {
-          return function(event) {
-            itemListJ.toggleClass('closed');
-            if (!event.shiftKey) {
-              R.tools.select.deselectAll();
-            }
-          };
-        })(this));
+        if (!noArrow) {
+          titleJ.click((function(_this) {
+            return function(event) {
+              itemListJ.toggleClass('closed');
+              if (!event.shiftKey) {
+                R.tools.select.deselectAll();
+              }
+            };
+          })(this));
+        }
         showBtnJ = itemListJ.find(".show-btn");
-        showBtnJ.mousedown((function(_this) {
-          return function(event) {
+        layer.data.setVisibility = (function(_this) {
+          return function(visible) {
             var eyeIconJ;
-            layer.visible = !layer.visible;
+            layer.visible = visible;
             R.tools.select.deselectAll();
             R.rasterizer.refresh();
             eyeIconJ = itemListJ.find("span.eye");
@@ -139,6 +158,11 @@
             } else {
               eyeIconJ.removeClass('glyphicon-eye-open').addClass('glyphicon-eye-close');
             }
+          };
+        })(this);
+        showBtnJ.mousedown((function(_this) {
+          return function(event) {
+            layer.data.setVisibility(!layer.visible);
             event.preventDefault();
             event.stopPropagation();
             return -1;
@@ -146,6 +170,14 @@
         })(this));
         R.sidebar.itemListsJ.prepend(itemListJ);
         return itemListJ;
+      };
+
+      View.prototype.hideDraftLayer = function() {
+        this.mainLayer.data.setVisibility(false);
+      };
+
+      View.prototype.showDraftLayer = function() {
+        this.mainLayer.data.setVisibility(true);
       };
 
       View.prototype.createLayers = function() {
@@ -157,7 +189,7 @@
         this.drawingLayer.name = 'drawingLayer';
         this.drawnLayer = new P.Layer();
         this.drawnLayer.name = 'drawnLayer';
-        this.draftListJ = this.createLayerListItem('Draft', this.mainLayer);
+        this.draftListJ = this.createLayerListItem('Draft', this.mainLayer, true);
         this.pendingListJ = this.createLayerListItem('Pending', this.pendingLayer);
         this.drawingListJ = this.createLayerListItem('Drawing', this.drawingLayer);
         this.drawnListJ = this.createLayerListItem('Drawn', this.drawnLayer);
@@ -245,24 +277,24 @@
       };
 
       View.prototype.fitRectangle = function(rectangle, considerPanels) {
-        var drawingPanelWidth, offset, rectangleRatio, sidebarWidth, viewRatio, viewSize, visibleViewCenterInView, windowCenterInView;
+        var drawingPanelWidth, offset, rectangleRatio, sidebarWidth, viewRatio, visibleViewCenterInView, windowCenterInView, windowSize;
         if (considerPanels == null) {
           considerPanels = false;
         }
-        viewSize = P.view.size.clone();
+        windowSize = new P.Size(window.innerWidth, window.innerHeight);
         sidebarWidth = considerPanels ? R.sidebar.sidebarJ.outerWidth() : 0;
         drawingPanelWidth = considerPanels ? R.drawingPanel.drawingPanelJ.outerWidth() : 0;
-        viewSize.width = viewSize.width - sidebarWidth - drawingPanelWidth;
-        viewRatio = viewSize.width / viewSize.height;
+        windowSize.width = windowSize.width - sidebarWidth - drawingPanelWidth;
+        viewRatio = windowSize.width / windowSize.height;
         rectangleRatio = rectangle.width / rectangle.height;
         if (viewRatio < rectangleRatio) {
-          P.view.zoom = Math.min(viewSize.width / rectangle.width, 1);
+          P.view.zoom = Math.min(windowSize.width / rectangle.width, 1);
         } else {
-          P.view.zoom = Math.min(viewSize.height / rectangle.height, 1);
+          P.view.zoom = Math.min(windowSize.height / rectangle.height, 1);
         }
         if (considerPanels) {
           windowCenterInView = P.view.viewToProject(new P.Point(window.innerWidth / 2, window.innerHeight / 2));
-          visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + viewSize.width / 2, window.innerHeight / 2));
+          visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + windowSize.width / 2, window.innerHeight / 2));
           offset = visibleViewCenterInView.subtract(windowCenterInView);
           this.moveTo(rectangle.center.subtract(offset));
         } else {
@@ -313,7 +345,8 @@
           p = Utils.stringToPoint(parameters['location']);
         }
         R.tipibot = parameters['tipibot'];
-        this.moveTo(p);
+        this.moveTo(p, null, !this.firstHashChange);
+        this.firstHashChange = true;
       };
 
       View.prototype.initializePosition = function() {
@@ -323,6 +356,7 @@
           city: R.canvasJ.attr("data-city") !== '' ? R.canvasJ.attr("data-city") : void 0,
           site: R.canvasJ.attr("data-site") !== '' ? R.canvasJ.attr("data-site") : void 0
         };
+        this.restrictedArea = this.grid.limitCD.bounds.expand(100);
         if (R.loadedBox == null) {
           if (typeof window !== "undefined" && window !== null) {
             window.onhashchange();
@@ -477,10 +511,8 @@
       View.prototype.onWindowResize = function(event) {
         this.grid.update();
         $(".mCustomScrollbar").mCustomScrollbar("update");
-        P.view.update();
-        R.canvasJ.width(window.innerWidth);
-        R.canvasJ.height(window.innerHeight);
-        P.view.viewSize = new P.Size(window.innerWidth, window.innerHeight);
+        this.moveBy(new P.Point());
+        P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight());
       };
 
       View.prototype.mousedown = function(event) {
@@ -534,6 +566,9 @@
         var base, paperEvent, ref, ref1, ref2, ref3;
         if (R.stageJ.hasClass("has-tool-box") && !$(event.target).parents('.tool-box').length > 0) {
           R.hideToolBox();
+        }
+        if (!$(event.target).parents('#CommeUnDessein_alerts').length > 0) {
+          R.alertManager.hideIfNoTimeout();
         }
         if ((ref = R.codeEditor) != null) {
           ref.onMouseUp(event);

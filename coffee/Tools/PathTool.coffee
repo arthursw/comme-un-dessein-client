@@ -51,6 +51,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 
 			if justCreated
 				@select()
+
+			if not R.userAuthenticated?
+				R.toolManager.disableDrawingButton()
 			return
 
 		# Remove tool button, useful when user create a tool which already existed (overwrite the tool)
@@ -60,7 +63,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 
 		# Select: add the mouse move listener on the tool (userful when creating a path in polygon mode)
 		# todo: move this to main, have a global onMouseMove handler like other handlers
-		select: (deselectItems=true, updateParameters=true)->
+		select: (deselectItems=true, updateParameters=true, forceSelect=false)->
+			if not R.userAuthenticated and not forceSelect
+				R.alertManager.alert 'Log in before drawing', 'info'
+				return
 
 			R.rasterizer.drawItems()
 
@@ -79,6 +85,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 			super()
 			@finish()
 			R.view.tool.onMouseMove = null
+			R.toolManager.leaveDrawingMode()
 			return
 
 		# Begin path action:
@@ -169,6 +176,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 					return
 
 				path.save(true)
+				path.rasterize()
 				# path.select(false)
 			else
 				path.endCreate(event.point, event)

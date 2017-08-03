@@ -2,11 +2,19 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 
 	class AlertManager
 
+		@hideDelay = 5000
+
 		constructor: ()->
 			@alertsContainer = $("#CommeUnDessein_alerts")
+			# @alertsContainer.on( "blur", ()=> @hide() ) # not working... done in window.mouseup event in view
+			
+			@alertsContainer.find('button.show').click @show
+			@alertsContainer.on( touchstart: @show )
+			# @alertsContainer.mouseleave @hideDeferred
+
 			@alerts = []
 			@currentAlert = -1
-			@alertTimeOut = -1
+			@alertTimeOut = null
 			@alertsContainer.find(".btn-up").click( ()=> @showAlert(@currentAlert-1) )
 			@alertsContainer.find(".btn-down").click( ()=> @showAlert(@currentAlert+1) )
 			return
@@ -22,7 +30,7 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			@alertsContainer.find(".alert-number").text(@currentAlert+1)
 			return
 
-		alert: (message, type="", delay=2000) ->
+		alert: (message, type="", delay=@constructor.hideDelay) ->
 			# set type ('info' to default, 'error' == 'danger')
 			if type.length==0
 				type = "info"
@@ -43,14 +51,42 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			@showAlert(@alerts.length-1)
 
 			# show and hide in *delay* milliseconds
-			@alertsContainer.addClass("show")
-			if delay!=0
+			@show()
+			@hideDeferred(delay)
+
+			return
+
+		show: ()=>
+			if @alertTimeOut?
 				clearTimeout(@alertTimeOut)
+				@alertTimeOut = null
+			R.alertManager.alertsContainer.addClass('show')
+			R.sidebar.sidebarJ.addClass('r-alert')
+			R.drawingPanel.drawingPanelJ.addClass('r-alert')
+			@openning = true
+			setTimeout((()=> @openning = null), 500)
+			return
+
+		hideDeferred: (delay=@constructor.hideDelay)=>
+			if delay!=0
+				if @alertTimeOut?
+					clearTimeout(@alertTimeOut)
+					@alertTimeOut = null
 				@alertTimeOut = setTimeout(@hide, delay )
 			return
 
+		hideIfNoTimeout: ()->
+			if not @alertTimeOut? and not @openning
+				@hide()
+			return
+
 		hide: ()=>
+			if @alertTimeOut?
+				clearTimeout(@alertTimeOut)
+				@alertTimeOut = null
 			@alertsContainer.removeClass("show")
+			R.sidebar.sidebarJ.removeClass('r-alert')
+			R.drawingPanel.drawingPanelJ.removeClass('r-alert')
 			return
 
 	return AlertManager

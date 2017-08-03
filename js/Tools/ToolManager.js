@@ -2,14 +2,13 @@
 (function() {
   var dependencies;
 
-  dependencies = ['Utils/Utils', 'Tools/Tool', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool', 'Tools/LockTool', 'Tools/MediaTool', 'Tools/TextTool', 'Tools/GradientTool'];
+  dependencies = ['Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool', 'Tools/LockTool', 'Tools/MediaTool', 'Tools/TextTool', 'Tools/GradientTool'];
 
   if (typeof document !== "undefined" && document !== null) {
-    dependencies.push('Tools/ScreenshotTool');
     dependencies.push('Tools/CarTool');
   }
 
-  define(dependencies, function(Utils, Tool) {
+  define(dependencies, function(Utils, Tool, Button) {
     var ToolManager;
     ToolManager = (function() {
       function ToolManager() {
@@ -46,23 +45,108 @@
             3: 'Eraser'
           };
         }
+        this.createZoombuttons();
+        this.createUndoRedoButtons();
         return;
       }
 
-      ToolManager.prototype.enterDrawingMode = function() {
-        if (R.selectedTool !== R.tools['Precise path']) {
-          R.tools['Precise path'].select();
+      ToolManager.prototype.zoom = function(value) {
+        if (P.view.zoom * value < 0.125 || P.view.zoom * value > 4) {
+          return;
         }
-        R.sidebar.favoriteToolsJ.find("[data-name='Select']").css({
-          opacity: 0.25
+        P.view.zoom *= value;
+        console.log(P.view.zoom);
+        R.view.moveBy(new P.Point());
+      };
+
+      ToolManager.prototype.createZoombuttons = function() {
+        this.zoomInBtn = new Button({
+          name: 'Zoom +',
+          iconURL: 'glyphicon-zoom-in',
+          favorite: true,
+          category: null,
+          description: 'Zoom +',
+          popover: true,
+          order: null
+        });
+        this.zoomInBtn.btnJ.click((function(_this) {
+          return function() {
+            return _this.zoom(2);
+          };
+        })(this));
+        this.zoomOutBtn = new Button({
+          name: 'Zoom -',
+          iconURL: 'glyphicon-zoom-out',
+          favorite: true,
+          category: null,
+          description: 'Zoom -',
+          popover: true,
+          order: null
+        });
+        this.zoomOutBtn.btnJ.click((function(_this) {
+          return function() {
+            return _this.zoom(0.5);
+          };
+        })(this));
+      };
+
+      ToolManager.prototype.createUndoRedoButtons = function() {
+        this.undoBtn = new Button({
+          name: 'Undo',
+          iconURL: 'glyphicon-share-alt',
+          favorite: true,
+          category: null,
+          description: 'Undo',
+          popover: true,
+          order: null,
+          transform: 'scaleX(-1)'
+        });
+        this.undoBtn.btnJ.click(function() {
+          return R.commandManager.undo();
+        });
+        this.redoBtn = new Button({
+          name: 'Redo',
+          iconURL: 'glyphicon-share-alt',
+          favorite: true,
+          category: null,
+          description: 'Redo',
+          popover: true,
+          order: null
+        });
+        this.redoBtn.btnJ.click(function() {
+          return R.commandManager["do"]();
         });
       };
 
-      ToolManager.prototype.leaveDrawingMode = function() {
-        R.sidebar.favoriteToolsJ.find("[data-name='Select']").css({
-          opacity: 1
+      ToolManager.prototype.enterDrawingMode = function() {
+        var id, item, ref;
+        if (R.selectedTool !== R.tools['Precise path']) {
+          R.tools['Precise path'].select();
+        }
+        ref = R.items;
+        for (id in ref) {
+          item = ref[id];
+          if (R.items[id].owner === R.me) {
+            R.drawingPanel.showSubmitDrawing();
+            break;
+          }
+        }
+      };
+
+      ToolManager.prototype.leaveDrawingMode = function(selectTool) {
+        if (selectTool == null) {
+          selectTool = false;
+        }
+        if (selectTool) {
+          R.tools.select.select(false, true, true);
+        }
+        R.drawingPanel.hideSubmitDrawing();
+      };
+
+      ToolManager.prototype.disableDrawingButton = function() {
+        R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").css({
+          opacity: 0.25
         });
-        R.tools.select.select();
       };
 
       return ToolManager;

@@ -108,6 +108,9 @@
         if (this.drawingId == null) {
           this.addToListItem();
         } else {
+          if (this.drawingId === "9440088493130252-1501788953971") {
+            console.log("path includes in loaded drawing:", R.items[this.drawingId]);
+          }
           if (R.items[this.drawingId] != null) {
             drawing = R.items[this.drawingId];
             drawing.addChild(this);
@@ -361,9 +364,6 @@
         var color, d;
         d = this.getDrawing();
         color = new P.Color(d != null ? this.constructor.colorMap[d.status] : this.constructor.colorMap.draft);
-        if (this.owner !== R.me) {
-          color.brightness *= 0.8;
-        }
         this.data.strokeColor = color;
         return color;
       };

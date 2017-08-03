@@ -63,6 +63,7 @@ requirejs.config
 
 
 		'domReady': [libs + 'domReady']
+		'hammer': [libs + 'hammer.min']
 		# 'ace': [libs + 'ace']
 		'aceTools': [libs + 'ace/ext-language_tools']
 		'underscore': [libs + 'underscore-min']

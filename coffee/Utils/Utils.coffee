@@ -49,7 +49,6 @@ define [ 'paper', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2
 
 	# static
 	R.commeUnDesseinURL = 'http://localhost:8000/'
-	R.me = null 							# R.me is the username of the user (sent by the server in each ajax "load")
 
 	R.OSName = "Unknown OS" 				# user's operating system
 	if navigator.appVersion.indexOf("Win")!=-1 then R.OSName = "Windows"

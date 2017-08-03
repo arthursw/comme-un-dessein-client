@@ -39,12 +39,17 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 			@btnJ.attr("alt", name)
 
 			if iconURL? and iconURL != '' 															# set icon if url is provided
-				iconRootURL = 'static/images/icons/inverted/'
-				if iconURL.indexOf('//') < 0 and iconURL.indexOf(iconRootURL) < 0
-					iconURL = iconRootURL + iconURL
-				if iconURL.indexOf(iconRootURL) == 0
-					iconURL = location.origin + '/' + iconURL
-				@btnJ.append('<img src="' + iconURL + '" alt="' + name + '-icon">')
+				if iconURL.indexOf('glyphicon') == 0
+					@btnJ.append('<span class="glyphicon ' + iconURL + '" alt="' + name + '-icon">')
+					if parameters.transform?
+						@btnJ.find('span.glyphicon').css( transform: parameters.transform )
+				else
+					iconRootURL = 'static/images/icons/inverted/'
+					if iconURL.indexOf('//') < 0 and iconURL.indexOf(iconRootURL) < 0
+						iconURL = iconRootURL + iconURL
+					if iconURL.indexOf(iconRootURL) == 0
+						iconURL = location.origin + '/' + iconURL
+					@btnJ.append('<img src="' + iconURL + '" alt="' + name + '-icon">')
 			else 																					# create icon if url is not provided
 				@btnJ.addClass("text-btn")
 				words = name.split(" ")
@@ -77,6 +82,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 
 			if parameters.description? or parameters.popover
 				@addPopover(parameters)
+
+			if parameters.preload
+				@onClickWhenNotLoaded()
 			return
 
 		addPopover: (parameters)->

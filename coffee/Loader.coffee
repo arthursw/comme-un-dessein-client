@@ -195,7 +195,6 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 
 			if not @loadRequired() then return false
 
-			console.log "load"
 			if area? then console.log area.toString()
 
 			# R.startLoadingBar()
@@ -240,7 +239,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			return true
 
 		dispatchLoadFinished: ()->
-			console.log "dispatch command executed"
+			# console.log "dispatch command executed"
 			commandEvent = document.createEvent('Event')
 			commandEvent.initEvent('command executed', true, true)
 			document.dispatchEvent(commandEvent)

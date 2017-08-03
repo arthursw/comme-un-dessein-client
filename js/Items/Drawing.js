@@ -50,7 +50,7 @@
       };
 
       function Drawing(rectangle1, data1, id1, pk, owner, date, title1, description, status) {
-        var id, path, ref;
+        var id, path, ref, ref1;
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
         this.id = id1 != null ? id1 : null;
@@ -73,9 +73,18 @@
         this.drawing = new P.Group();
         this.group.addChild(this.drawing);
         this.votes = [];
-        ref = R.paths;
-        for (id in ref) {
-          path = ref[id];
+        if (this.id === "9440088493130252-1501788953971") {
+          ref = R.paths;
+          for (id in ref) {
+            path = ref[id];
+            if ((path.drawingId != null) && (path.drawingId === this.id || path.drawingId === this.pk)) {
+              console.log("drawing adds loaded path: ", path);
+            }
+          }
+        }
+        ref1 = R.paths;
+        for (id in ref1) {
+          path = ref1[id];
           if ((path.drawingId != null) && (path.drawingId === this.id || path.drawingId === this.pk)) {
             this.addChild(path);
           }
@@ -220,7 +229,27 @@
         this.drawn = false;
         if ((this.raster != null) && this.raster.parent !== null) {
           this.replaceDrawing();
+          R.rasterizer.rasterize(this);
         }
+      };
+
+      Drawing.prototype.replaceDrawing = function() {
+        var i, item, len, ref, ref1, ref2;
+        if ((this.drawing == null) || (this.drawingRelativePosition == null)) {
+          return;
+        }
+        ref = this.children();
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          item.drawn = false;
+          if ((ref1 = item.drawing) != null) {
+            ref1.remove();
+          }
+          if ((ref2 = item.raster) != null) {
+            ref2.remove();
+          }
+        }
+        Drawing.__super__.replaceDrawing.call(this);
       };
 
       Drawing.prototype.removeChild = function(path, updateRectangle, updateRaster) {
@@ -496,10 +525,7 @@
         if (!Drawing.__super__.deselect.call(this, updateOptions)) {
           return false;
         }
-        if (R.selectedItems.length === 0) {
-          R.drawingPanel.close();
-          R.drawingPanel.hideSubmitDrawing();
-        }
+        R.drawingPanel.deselectDrawing(this);
         return true;
       };
 
@@ -508,7 +534,7 @@
         ref = this.children();
         for (i = 0, len = ref.length; i < len; i++) {
           path = ref[i];
-          this.removeChild(path);
+          path.remove();
         }
         this.removeFromListItem();
         Drawing.__super__.remove.apply(this, arguments);
@@ -520,7 +546,9 @@
         ref = this.drawing.children;
         for (i = 0, len = ref.length; i < len; i++) {
           child = ref[i];
-          paths.push(child.controller);
+          if (child.controller != null) {
+            paths.push(child.controller);
+          }
         }
         return paths;
       };
@@ -535,15 +563,17 @@
       };
 
       Drawing.prototype.drawChildren = function() {
-        var base, child, i, len, ref;
+        var child, i, len, ref, ref1;
         if (this.drawing.children.length === 0) {
           return;
         }
         ref = this.drawing.children;
         for (i = 0, len = ref.length; i < len; i++) {
           child = ref[i];
-          if (typeof (base = child.controller).draw === "function") {
-            base.draw();
+          if ((ref1 = child.controller) != null) {
+            if (typeof ref1.draw === "function") {
+              ref1.draw();
+            }
           }
         }
       };

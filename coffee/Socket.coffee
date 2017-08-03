@@ -51,6 +51,7 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 
 			# on nicknames:
 			@socket.on "nicknames", (nicknames) =>
+				console.log 'nicknames'
 				@chatUsernamesJ.empty().append $("<span>Online: </span>")
 				for i of nicknames
 					@chatUsernamesJ.append $("<b>").text( if i>0 then ', ' + nicknames[i] else nicknames[i] )
@@ -62,28 +63,33 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 				return
 
 			@socket.on "reconnect", =>
+				console.log 'reconnect'
 				@chatMessagesJ.remove()
 				@addMessage("Reconnected to the server", "System")
 				return
 
 			@socket.on "reconnecting", =>
+				console.log 'reconnecting'
 				@addMessage("Attempting to re-connect to the server", "System")
 				return
 
 			@socket.on "error", (e) =>
+				console.log 'error'
+				console.log e
 				@addMessage((if e then e else "A unknown error occurred"), "System")
 				return
 
-			@chatMainJ.find("#chatSendMessageSubmit").submit(@sendMessage)
+			@chatMainJ.find("#chatSendMessageSubmit").click(@sendMessage)
 
 			# on key press: send message if key is return
 			@chatMessageJ.keypress(@onKeyPress)
 
 			@chatConnectionTimeout = setTimeout(@onConnectionError, 2000)
 
-			# if user not logged: set a random name
-			if @chatJ.find("#chatUserNameInput").length > 0
-
+			
+			if R.userAuthenticated
+				@startChatting(R.me)
+			else 						# if user not logged: set a random name
 				@initializeUserName()
 
 			## Tool creation websocket messages
@@ -367,6 +373,6 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 			return
 
 		getChatRoom: ()->
-			return 'x: ' + Math.round(P.view.center.x / R.scale) + ', y: ' + Math.round(P.view.center.y / R.scale)
+			return 'Comme un dessein' # 'x: ' + Math.round(P.view.center.x / R.scale) + ', y: ' + Math.round(P.view.center.y / R.scale)
 
 	return Socket

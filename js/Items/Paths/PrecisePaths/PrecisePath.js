@@ -200,7 +200,6 @@
           }
         }
         flattenedPath.remove();
-        console.log("Time to secure the path: " + ((Date.now() - time) / 1000) + " sec.");
       };
 
       PrecisePath.prototype.deselectPoint = function() {
@@ -209,10 +208,13 @@
         this.removeSelectionHighlight();
       };
 
-      PrecisePath.prototype.performHitTest = function(point) {
+      PrecisePath.prototype.performHitTest = function(point, options) {
         var hitResult;
+        if (options == null) {
+          options = this.constructor.hitOptions;
+        }
         this.controlPath.visible = true;
-        hitResult = this.controlPath.hitTest(point, this.constructor.hitOptions);
+        hitResult = this.controlPath.hitTest(point, options);
         this.controlPath.visible = false;
         return hitResult;
       };
@@ -319,6 +321,10 @@
       PrecisePath.prototype.updateCreate = function(point, event) {
         var lastSegment, previousSegment;
         if (!this.data.polygonMode) {
+          console.log(this.controlPath.lastSegment.point.getDistance(point, true));
+          if (this.controlPath.lastSegment.point.getDistance(point, true) < 20) {
+            return;
+          }
           this.controlPath.add(point);
           this.checkUpdateDrawing(this.controlPath.lastSegment, false);
         } else {
@@ -441,7 +447,9 @@
         if (redrawing == null) {
           redrawing = true;
         }
-        this.drawn = false;
+        if (this.drawn) {
+          return;
+        }
         if (!R.rasterizer.requestDraw(this, simplified, redrawing)) {
           return;
         }

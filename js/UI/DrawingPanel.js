@@ -25,7 +25,7 @@
         this.setFullSize = bind(this.setFullSize, this);
         this.setHalfSize = bind(this.setHalfSize, this);
         this.onHandleDown = bind(this.onHandleDown, this);
-        var closeBtnJ, contentJ, descriptionJ, handleJ, runBtnJ;
+        var closeBtnJ, descriptionJ, handleJ, runBtnJ;
         this.beginDrawingBtnJ = $('button.begin-drawing');
         this.beginDrawingBtnJ.click(this.beginDrawingClicked);
         this.submitDrawingBtnJ = $('button.submit-drawing');
@@ -49,14 +49,14 @@
         this.voteUpBtnJ.click(this.voteUp);
         this.voteDownBtnJ = this.drawingPanelJ.find('.vote-down');
         this.voteDownBtnJ.click(this.voteDown);
-        this.submitBtnJ = this.drawingPanelJ.find('form.create button.submit');
-        this.modifyBtnJ = this.drawingPanelJ.find('form.create button.modify');
-        this.cancelBtnJ = this.drawingPanelJ.find('form.create button.cancel');
+        this.submitBtnJ = this.drawingPanelJ.find('.action-buttons button.submit');
+        this.modifyBtnJ = this.drawingPanelJ.find('.action-buttons button.modify');
+        this.cancelBtnJ = this.drawingPanelJ.find('.action-buttons button.cancel');
         this.submitBtnJ.click(this.submitDrawing);
         this.modifyBtnJ.click(this.modifyDrawing);
         this.cancelBtnJ.click(this.cancelDrawing);
-        contentJ = this.drawingPanelJ.find('.content');
-        descriptionJ = contentJ.find('#drawing-description');
+        this.contentJ = this.drawingPanelJ.find('.content-container');
+        descriptionJ = this.contentJ.find('#drawing-description');
         descriptionJ.keydown((function(_this) {
           return function(event) {
             switch (Utils.specialKeys[event.keyCode]) {
@@ -135,6 +135,15 @@
         Utils.callNextFrame(this.updateSelection, 'update drawing selection');
       };
 
+      DrawingPanel.prototype.deselectDrawing = function(drawing) {
+        if (drawing === this.currentDrawing) {
+          this.currentDrawing = null;
+        }
+        if (R.selectedItems.length === 0) {
+          this.close();
+        }
+      };
+
 
       /* open close */
 
@@ -151,8 +160,6 @@
           if (removeDrawingIfNotSaved) {
             this.currentDrawing.remove();
           }
-          this.hideSubmitDrawing();
-          this.showBeginDrawing();
         }
         this.drawingPanelJ.hide();
         this.drawingPanelJ.removeClass('visible');
@@ -176,6 +183,7 @@
         titleJ.addClass('cd-grow cd-center');
         titleJ.html(item.title);
         deselectBtnJ = $('<button>');
+        deselectBtnJ.addClass('btn btn-default icon-only transparent');
         deselectIconJ = $('<span>').addClass('glyphicon glyphicon-remove');
         deselectBtnJ.click(function(event) {
           item.deselect();
@@ -200,8 +208,8 @@
       DrawingPanel.prototype.showSelectedDrawings = function() {
         var item, j, len, listJ, ref, selectedDrawingsJ;
         this.drawingPanelTitleJ.text('Select a single drawing');
-        this.drawingPanelJ.find('.content').children().hide();
-        selectedDrawingsJ = this.drawingPanelJ.find('.content').children('.selected-drawings');
+        this.drawingPanelJ.find('.content-container').children().hide();
+        selectedDrawingsJ = this.drawingPanelJ.find('.selected-drawings');
         selectedDrawingsJ.show();
         listJ = selectedDrawingsJ.find('ul.drawing-list');
         listJ.empty();
@@ -215,23 +223,22 @@
       };
 
       DrawingPanel.prototype.showLoadAnimation = function() {
-        this.drawingPanelJ.find('.content').children().hide();
-        this.drawingPanelJ.find('.content').children('.loading-animation').show();
+        this.drawingPanelJ.find('.loading-animation').show();
+        this.drawingPanelJ.find('.content').hide();
+        this.drawingPanelJ.find('.selected-drawings').hide();
       };
 
       DrawingPanel.prototype.showContent = function() {
-        this.drawingPanelJ.find('.content').children().show();
-        this.drawingPanelJ.find('.content').children('.loading-animation').hide();
-        this.drawingPanelJ.find('.content').children('.selected-drawings').hide();
+        this.drawingPanelJ.find('.content').show();
+        this.drawingPanelJ.find('.selected-drawings').hide();
+        this.drawingPanelJ.find('.loading-animation').hide();
       };
 
       DrawingPanel.prototype.showSubmitDrawing = function() {
-        var contentJ;
         this.hideBeginDrawing();
         this.submitDrawingBtnJ.removeClass('hidden');
         this.submitDrawingBtnJ.show();
-        contentJ = this.drawingPanelJ.find('.content');
-        contentJ.find('#drawing-title').focus();
+        this.contentJ.find('#drawing-title').focus();
       };
 
       DrawingPanel.prototype.hideSubmitDrawing = function() {
@@ -239,7 +246,6 @@
       };
 
       DrawingPanel.prototype.showBeginDrawing = function() {
-        this.hideSubmitDrawing();
         this.beginDrawingBtnJ.show();
       };
 
@@ -274,16 +280,15 @@
       };
 
       DrawingPanel.prototype.setDrawingThumbnail = function() {
-        var contentJ, thumbnailJ;
-        contentJ = this.drawingPanelJ.find('.content');
+        var thumbnailJ;
         this.currentDrawing.rasterize();
         R.rasterizer.rasterize(this.currentDrawing, false);
-        thumbnailJ = contentJ.find('.drawing-thumbnail');
+        thumbnailJ = this.contentJ.find('.drawing-thumbnail');
         thumbnailJ.empty().append(this.getDrawingImage(this.currentDrawing));
       };
 
       DrawingPanel.prototype.createDrawingFromItems = function(items) {
-        var contentJ, description, drawingId, item, j, len, title;
+        var description, drawingId, item, j, len, title;
         drawingId = Utils.createId();
         for (j = 0, len = items.length; j < len; j++) {
           item = items[j];
@@ -291,9 +296,8 @@
             item.drawingId = drawingId;
           }
         }
-        contentJ = this.drawingPanelJ.find('.content');
-        title = contentJ.find('#drawing-title').val();
-        description = contentJ.find('#drawing-description').val();
+        title = this.contentJ.find('#drawing-title').val();
+        description = this.contentJ.find('#drawing-description').val();
         this.currentDrawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending');
         this.setDrawingThumbnail();
         R.view.fitRectangle(this.currentDrawing.rectangle, true);
@@ -326,17 +330,16 @@
       };
 
       DrawingPanel.prototype.submitDrawingClicked = function() {
-        var contentJ;
-        R.toolManager.leaveDrawingMode();
+        R.toolManager.leaveDrawingMode(true);
+        this.submitDrawingBtnJ.hide();
         this.drawingPanelTitleJ.text('Create drawing');
         this.open();
         this.showContent();
         this.currentDrawing = null;
-        contentJ = this.drawingPanelJ.find('.content');
-        contentJ.find('.read').hide();
-        contentJ.find('.modify').show();
-        contentJ.find('#drawing-title').val('');
-        contentJ.find('#drawing-description').val('');
+        this.contentJ.find('.read').hide();
+        this.contentJ.find('.modify').show();
+        this.contentJ.find('#drawing-title').val('');
+        this.contentJ.find('#drawing-description').val('');
         this.submitBtnJ.show();
         this.modifyBtnJ.hide();
         this.cancelBtnJ.show();
@@ -360,27 +363,32 @@
       };
 
       DrawingPanel.prototype.setDrawing = function(currentDrawing, drawingData) {
-        var contentJ, j, k, len, len1, liJ, nNegativeVotes, nPositiveVotes, nVotes, negativeVoteListJ, p, path, pathsToLoad, positiveVoteListJ, ref, ref1, v, vote;
+        var j, k, latestDrawing, len, len1, liJ, nNegativeVotes, nPositiveVotes, nVotes, negativeVoteListJ, p, path, pathsToLoad, positiveVoteListJ, ref, ref1, v, vote;
         this.currentDrawing = currentDrawing;
-        this.drawingPanelTitleJ.text(this.currentDrawing.title);
+        this.drawingPanelTitleJ.text('Drawing info');
         this.open();
         this.showContent();
-        contentJ = this.drawingPanelJ.find('.content');
+        latestDrawing = JSON.parse(drawingData.drawing);
         this.currentDrawing.votes = drawingData.votes;
+        this.currentDrawing.status = latestDrawing.status;
+        this.submitBtnJ.hide();
+        this.modifyBtnJ.hide();
+        this.cancelBtnJ.hide();
         if (this.currentDrawing.owner === R.me || R.administrator) {
-          contentJ.find('.read').hide();
-          contentJ.find('.modify').show();
-          contentJ.find('#drawing-title').val(this.currentDrawing.title);
-          contentJ.find('#drawing-description').val(this.currentDrawing.description);
-          this.submitBtnJ.hide();
-          this.modifyBtnJ.show();
-          this.cancelBtnJ.show();
+          this.contentJ.find('.read').hide();
+          this.contentJ.find('.modify').show();
+          this.contentJ.find('#drawing-title').val(this.currentDrawing.title);
+          this.contentJ.find('#drawing-description').val(this.currentDrawing.description);
+          if (latestDrawing.status === 'pending') {
+            this.modifyBtnJ.show();
+            this.cancelBtnJ.show();
+          }
         } else {
-          contentJ.find('.read').show();
-          contentJ.find('.modify').hide();
-          contentJ.find('.title').html(this.currentDrawing.title);
-          contentJ.find('.description').html(this.currentDrawing.description);
-          contentJ.find('.author').html(this.currentDrawing.owner);
+          this.contentJ.find('.read').show();
+          this.contentJ.find('.modify').hide();
+          this.contentJ.find('.title').html(this.currentDrawing.title);
+          this.contentJ.find('.description').html(this.currentDrawing.description);
+          this.contentJ.find('.author').html(this.currentDrawing.owner);
         }
         this.votesJ.show();
         this.voteUpBtnJ.removeClass('voted');
@@ -511,20 +519,28 @@
       /* submit modify cancel drawing */
 
       DrawingPanel.prototype.submitDrawing = function() {
-        var contentJ;
+        var description, title;
         if ((R.me == null) || !_.isString(R.me)) {
           R.alertManager.alert("You must be logged in to submit a drawing.", "error");
           return;
         }
-        contentJ = this.drawingPanelJ.find('.content');
-        this.currentDrawing.title = contentJ.find('#drawing-title').val();
-        this.currentDrawing.description = contentJ.find('#drawing-description').val();
+        title = this.contentJ.find('#drawing-title').val();
+        description = this.contentJ.find('#drawing-description').val();
+        if (title.length === 0) {
+          R.alertManager.alert("You must enter a title.", "error");
+          return;
+        }
+        if (description.length === 0) {
+          R.alertManager.alert("You must enter a description.", "error");
+          return;
+        }
+        this.currentDrawing.title = title;
+        this.currentDrawing.description = description;
         this.currentDrawing.save();
         this.close(false);
       };
 
       DrawingPanel.prototype.modifyDrawing = function() {
-        var contentJ;
         if ((R.me == null) || !_.isString(R.me)) {
           R.alertManager.alert("You must be logged in to modify a drawing.", "error");
           return;
@@ -533,24 +549,31 @@
           R.alertManager.alert("You must select a drawing first.", "error");
           return;
         }
-        contentJ = this.drawingPanelJ.find('.content');
+        if (this.currentDrawing.status !== 'pending') {
+          R.alertManager.alert("The drawing is already validated, it cannot be modified anymore.", "error");
+          return;
+        }
         this.currentDrawing.update({
-          title: contentJ.find('#drawing-title').val(),
-          data: contentJ.find('#drawing-description').val()
+          title: this.contentJ.find('#drawing-title').val(),
+          data: this.contentJ.find('#drawing-description').val()
         });
       };
 
       DrawingPanel.prototype.cancelDrawing = function() {
-        if ((R.me == null) || !_.isString(R.me)) {
-          R.alertManager.alert("You must be logged in to cancel a drawing.", "error");
-          return;
-        }
         if (this.currentDrawing == null) {
           this.close();
           return;
         }
         if (this.currentDrawing.pk == null) {
           this.close();
+          return;
+        }
+        if (this.currentDrawing.status !== 'pending') {
+          R.alertManager.alert("The drawing is already validated, it cannot be cancelled anymore.", "error");
+          return;
+        }
+        if ((R.me == null) || !_.isString(R.me)) {
+          R.alertManager.alert("You must be logged in to cancel a drawing.", "error");
           return;
         }
         this.currentDrawing.deleteCommand();

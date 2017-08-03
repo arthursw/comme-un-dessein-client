@@ -148,6 +148,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			if not @drawingId?
 				@addToListItem()
 			else
+				if @drawingId == "9440088493130252-1501788953971"
+					console.log("path includes in loaded drawing:", R.items[@drawingId])
 				if R.items[@drawingId]?
 					drawing = R.items[@drawingId]
 					drawing.addChild(@)
@@ -398,8 +400,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 		getStrokeColor: ()->
 			d = @getDrawing()
 			color = new P.Color(if d? then @constructor.colorMap[d.status] else @constructor.colorMap.draft)
-			if @owner != R.me
-				color.brightness *= 0.8
+			# if @owner != R.me
+				# color.brightness *= 0.8
 			@data.strokeColor = color
 			# @data.dashArray = if @owner != R.me then [1, @constructor.strokeWidth+1] else []
 			# @data.strokeCap = if @owner != R.me then 'square' else 'round'

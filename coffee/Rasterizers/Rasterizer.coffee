@@ -121,6 +121,83 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Lock', 'Items/Drawing' ], (P, R, Uti
 		extractImage: (rectangle, redraw)->
 			return Rasterizer.areaToImageDataUrl(rectangle)
 
+		# All functions defined in TileRasterizer:
+
+		startLoading: ()->
+			return
+
+		stopLoading: (cancelTimeout=true)->
+			return
+
+		rasterizeImmediately: ()=>
+			return
+
+		updateLoadingBar: (time)->
+			return
+
+		drawItemsAndHideRasters: ()->
+			return
+
+		rasterLoaded: (raster)->
+			return
+
+		checkRasterizeAreasToUpdate: (pathsCreated=false)->
+			return
+
+		createRaster: (x, y, zoom, raster)->
+			return
+
+		getRasterBounds: (x, y)->
+			return
+
+		removeRaster: (raster, x, y)->
+			return
+
+		loadImageForRaster: (raster, url)->
+			return
+
+		createRasters: (rectangle)->
+			return
+
+		move: ()->
+			return
+
+		splitAreaToRasterize: ()->
+			return areas
+
+		rasterizeCanvasInRaster: (x, y, canvas, rectangle, qZoom, clearRasters=false, sourceRectangle=null)->
+			return
+
+		rasterizeCanvas: (canvas, rectangle, clearRasters=false, sourceRectangle=null)->
+			return
+
+		clearAreaInRasters: (rectangle)->
+			return
+
+		rasterizeArea: (area)->
+			return
+
+		rasterizeAreas: (areas)->
+			return
+
+		prepareView: ()->
+			return
+
+		restoreView: ()->
+			return
+
+		rasterizeCallback: (step)=>
+			return
+
+		disableRasterization: ()->
+			return
+
+		enableRasterization: (drawAllItems=true)->
+			return
+
+		refresh: (callback=null, drawAllItems=false)->
+			return
+
 	class TileRasterizer extends Rasterizer
 
 		@TYPE = 'abstract tile'
@@ -129,11 +206,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Lock', 'Items/Drawing' ], (P, R, Uti
 		@addChildren: (parent, sortedItems)->
 			if not parent.visible then return
 			if not parent.children? then return
+
 			for item in parent.children
 				if item.controller? and P.Group.prototype.isPrototypeOf(item)
 					sortedItems.push(item.controller)
-					if Drawing.prototype.isPrototypeOf(item.controller) # Lock.prototype.isPrototypeOf(item.controller)
-						@addChildren(item, sortedItems)
+					# drawing children are drawn in Drawing.rasterizer to make sure they are drawn before the Drawing
+					# if Drawing.prototype.isPrototypeOf(item.controller) # Lock.prototype.isPrototypeOf(item.controller)
+					# 	@addChildren(item.controller.drawing, sortedItems)
 			return
 
 		@getSortedItems: ()->
@@ -217,6 +296,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Lock', 'Items/Drawing' ], (P, R, Uti
 			return
 
 		selectItem: (item)->
+			if item instanceof Drawing
+				return
+
 			@drawItems()
 			@rasterize(item, true)
 
@@ -233,6 +315,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Lock', 'Items/Drawing' ], (P, R, Uti
 			return
 
 		deselectItem: (item)->
+			if item instanceof Drawing
+				return
+				
 			if @rasterizeItems
 				item.rasterize?()
 
@@ -439,11 +524,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Lock', 'Items/Drawing' ], (P, R, Uti
 			if @rasterizationDisabled then return
 			if not @areaToRasterize then return
 
-			console.log "rasterize"
+			# console.log "rasterize"
 
-			Utils.logElapsedTime()
+			# Utils.logElapsedTime()
 
-			R.startTimer()
+			# R.startTimer()
 
 			if @autoRasterization == 'deferred' or @autoRasterization == 'disabled'
 				@showRasters()
@@ -482,8 +567,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Lock', 'Items/Drawing' ], (P, R, Uti
 
 			@stopLoading()
 
-			R.stopTimer('Time to rasterize path: ')
-			Utils.logElapsedTime()
+			# R.stopTimer('Time to rasterize path: ')
+			# Utils.logElapsedTime()
 
 			@postRasterizationCallback?()
 			@postRasterizationCallback = null
@@ -493,8 +578,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Lock', 'Items/Drawing' ], (P, R, Uti
 		rasterize: (items, excludeItems)->
 			if @rasterizationDisabled then return
 
-			console.log "ask rasterize" + (if excludeItems then " excluding items." else "")
-			Utils.logElapsedTime()
+			# console.log "ask rasterize" + (if excludeItems then " excluding items." else "")
+			# Utils.logElapsedTime()
 
 			if not Utils.Array.isArray(items) then items = [items]
 			if not excludeItems then @itemsToExclude = []
@@ -686,7 +771,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Lock', 'Items/Drawing' ], (P, R, Uti
 			image.height = R.scale
 			raster = new P.Raster(image)
 			raster.name = 'raster: ' + x + ', ' + y
-			console.log raster.name
+			# console.log raster.name
 			raster.position.x = x + 0.5 * R.scale * zoom
 			raster.position.y = y + 0.5 * R.scale * zoom
 			raster.width = R.scale
@@ -747,6 +832,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Lock', 'Items/Drawing' ], (P, R, Uti
 			return not @disableDrawing
 
 		selectItem: (item)->
+			if item instanceof Drawing
+				return
 			if not @rasterizeItems
 				item.removeDrawing()
 			super(item)

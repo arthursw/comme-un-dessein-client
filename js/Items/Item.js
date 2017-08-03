@@ -464,6 +464,7 @@
           return;
         }
         this.drawingRelativePosition = this.drawing.position.subtract(this.rectangle.center);
+        this.drawing.data.rectangle.remove();
         this.drawing.remove();
       };
 
@@ -475,6 +476,7 @@
         if ((ref = this.raster) != null) {
           ref.remove();
         }
+        this.raster = null;
         this.group.addChild(this.drawing);
         this.drawing.position = this.rectangle.center.add(this.drawingRelativePosition);
         this.drawingRelativePosition = null;
@@ -493,8 +495,14 @@
         if (this.drawing.bounds.width === 0 && this.drawing.bounds.height === 0) {
           return;
         }
-        if (this.data.strokeWidth != null) {
-          this.drawing.addChild(new P.Path.Rectangle(this.drawing.bounds.expand(2 * this.data.strokeWidth)));
+        if (this.drawing.data.rectangle != null) {
+          this.drawing.data.rectangle.remove();
+        }
+        if (!this.drawing.data.rectangle) {
+          this.drawing.data.rectangle = new P.Path.Rectangle(this.drawing.bounds.expand(2 * Item.Path.strokeWidth));
+          this.drawing.data.rectangle.fillColor = new P.Color(Math.random(), Math.random(), Math.random());
+          this.drawing.addChild(this.drawing.data.rectangle);
+          this.drawing.data.rectangle.sendToBack();
         }
         this.raster = this.drawing.rasterize();
         this.group.addChild(this.raster);

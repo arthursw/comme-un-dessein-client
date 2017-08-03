@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing', 'Commands/Command', 'View/SelectionRectangle' ], (P, R, Utils, Tool, Lock, Drawing, Command, SelectionRectangle) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Item', 'Commands/Command', 'View/SelectionRectangle' ], (P, R, Utils, Tool, Lock, Item, Command, SelectionRectangle) ->
 
 	# Enables to select RItems
 	class SelectTool extends Tool
@@ -55,10 +55,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing'
 				@selectionRectangle = null
 			return
 
-		select: (deselectItems=false, updateParameters=true)->
-			if R.selectedTool == R.tools['Precise path']
-				R.alertManager.alert 'Submit your drawing before voting', 'info'
-				return
+		select: (deselectItems=false, updateParameters=true, forceSelect=false)->
 			# R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").hide()
 			# R.rasterizer.drawItems() 		# must not draw all items here since user can just wish to use an Media
 			super(false, updateParameters)
@@ -73,7 +70,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing'
 
 			# Add all items which have bounds intersecting with the selection rectangle (1st version)
 			for name, item of R.items
-				if item instanceof Drawing
+				if item instanceof Item.Drawing
 					item.unhighlight()
 					bounds = item.getBounds()
 					if bounds.intersects(rectangle)
@@ -85,7 +82,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing'
 
 		unhighlightItems: ()->
 			for name, item of R.items
-				if item instanceof Drawing
+				if item instanceof Item.Drawing
 					item.unhighlight()
 			return
 
@@ -113,16 +110,42 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing'
 			return
 
 		populateItemsToSelect: (itemsToSelect, locksToSelect, rectangle)->
+			justClicked = rectangle.area == 0
+			if justClicked
+				rectangle = rectangle.expand(5)
+
+			
+			allDrawingsInRectangleBox = []
+
 			# Add all items which have bounds intersecting with the selection rectangle (1st version)
 			for name, item of R.items
 				if item.getBounds().intersects(rectangle) and item.isVisible()
-					# if Drawing.prototype.isPrototypeOf(item)
-					# 	itemsToSelect.length = 0
-					# 	itemsToSelect.push(item)
-					# 	return true
-					# else
-					# 	itemsToSelect.push(item)
-					itemsToSelect.push(item)
+					if item instanceof Item.Drawing
+						allDrawingsInRectangleBox.push(item)
+					else
+						# if Item.Drawing.prototype.isPrototypeOf(item)
+						# 	itemsToSelect.length = 0
+						# 	itemsToSelect.push(item)
+						# 	return true
+						# else
+						# 	itemsToSelect.push(item)
+
+						# if the user just clicked (not dragged a selection rectangle): select all items which match perfectly (perfectly under the mouse)
+						if justClicked
+							if item instanceof Item.Path
+								hitResult = item.performHitTest(rectangle.center, { segments: true, stroke: true, handles: false, tolerance: 5})
+								if hitResult?	
+									itemsToSelect.push(item)
+						else
+							itemsToSelect.push(item)
+
+			if allDrawingsInRectangleBox.length == 1
+				itemsToSelect.length = 0
+				itemsToSelect.push(allDrawingsInRectangleBox[0])
+
+			if justClicked and allDrawingsInRectangleBox.length > 0 and itemsToSelect.length == 0
+				for drawing in allDrawingsInRectangleBox
+					itemsToSelect.push(drawing)
 			return false
 
 		# check if items all have the same parent
@@ -144,7 +167,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing'
 
 		isDrawingSelected: ()->
 			for item in R.selectedItems
-				if Drawing.prototype.isPrototypeOf(item)
+				if Item.Drawing.prototype.isPrototypeOf(item)
 					return true
 			return false
 
@@ -171,9 +194,6 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing'
 				# 	# add locks to itemsToSelect
 				# 	itemsToSelect = itemsToSelect.concat(locksToSelect)
 
-				# if the user just clicked (not dragged a selection rectangle): just select the first item
-				if rectangle.area == 0 then itemsToSelect = [itemsToSelect[0]]
-
 				R.commandManager.add(new Command.Select(itemsToSelect), true)
 			return
 
@@ -190,7 +210,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing'
 			if @selectionRectangle?
 				itemWasHit = @selectionRectangle.hitTest(event)
 
-			if not itemWasHit
+			if not itemWasHit and R.administrator
 				path.prepareHitTest() for name, path of R.paths
 				hitResult = P.project.hitTest(event.point, @constructor.hitOptions)
 				path.finishHitTest() for name, path of R.paths
@@ -375,14 +395,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Drawing'
 			if event.key in ['left', 'right', 'up', 'down']
 				delta = if event.modifiers.shift then 50 else if event.modifiers.option then 5 else 1
 			switch event.key
-				when 'right'
-					item.moveBy(new P.Point(delta,0), true) for item in R.selectedItems
-				when 'left'
-					item.moveBy(new P.Point(-delta,0), true) for item in R.selectedItems
-				when 'up'
-					item.moveBy(new P.Point(0,-delta), true) for item in R.selectedItems
-				when 'down'
-					item.moveBy(new P.Point(0,delta), true) for item in R.selectedItems
+				# when 'right'
+				# 	item.moveBy(new P.Point(delta,0), true) for item in R.selectedItems
+				# when 'left'
+				# 	item.moveBy(new P.Point(-delta,0), true) for item in R.selectedItems
+				# when 'up'
+				# 	item.moveBy(new P.Point(0,-delta), true) for item in R.selectedItems
+				# when 'down'
+				# 	item.moveBy(new P.Point(0,delta), true) for item in R.selectedItems
 				when 'escape'
 					@deselectAll()
 				when 'delete', 'backspace'

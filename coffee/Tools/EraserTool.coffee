@@ -63,8 +63,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		deselect: ()->
 			super()
 			@finish()
-			@circle.remove()
-			@circle = null
+			if @circle?
+				@circle.remove()
+				@circle = null
 			R.view.tool.onMouseMove = null
 			return
 
@@ -218,11 +219,17 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 					pathsToDelete.push(path)
 					pathsToDeleteResurectors[path.id] = @pathsToDeleteResurectors[path.id]
 
+			deleteCommand = null
 			if pathsToDelete.length > 0
-				R.commandManager.add(new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors), false)
+				deleteCommand = new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors)
+				R.commandManager.add(deleteCommand, false)
 			
 			if pathsToCreate.length > 0
-				R.commandManager.add(new Command.CreateItems(pathsToCreate), false)
+				createCommand = new Command.CreateItems(pathsToCreate)
+				R.commandManager.add(createCommand, false)
+				if deleteCommand?
+					deleteCommand.twin = createCommand
+					createCommand.twin = deleteCommand
 
 			for path in pathsToDelete
 				path.delete()

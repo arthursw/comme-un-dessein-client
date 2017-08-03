@@ -8,14 +8,21 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			@grid = new P.Group() 					# Paper P.Layer to append all grid items
 			@grid.name = 'grid group'
 			@layer.addChild(@grid)
-
+			
 			size = new P.Size(Utils.CS.mmToPixel(4000), Utils.CS.mmToPixel(3000))
+			@backgroundColor = new P.Path.Rectangle(size.multiply(-0.5).multiply(100), size.multiply(100))
+			@backgroundColor.fillColor = '#252525'
+			@layer.addChild(@backgroundColor)
+
 			@limitCD = new P.Path.Rectangle(size.multiply(-0.5), size)
-			@limitCD.strokeColor = '#33383e'
-			@limitCD.strokeWidth = 10
-			@limitCD.strokeCap = 'square'
-			@limitCD.dashArray = [10, 14]
+			# @limitCD.strokeColor = '#33383e'
+			# @limitCD.strokeWidth = 10
+			# @limitCD.strokeCap = 'square'
+			@limitCD.fillColor = 'white'
+			# @limitCD.dashArray = [10, 14]
+			
 			@layer.addChild(@limitCD)
+			@layer.sendToBack()
 
 			@update()
 

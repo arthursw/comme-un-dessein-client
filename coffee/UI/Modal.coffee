@@ -256,6 +256,10 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			@extractors[args.name] = args
 			return
 
+		# args:
+		# - type: bootstrap button type / appearance
+		# - name: name
+		# - submit: submit function
 		addButton: (args)->
 			args.type ?= 'default'
 			buttonJ = $("<button type='button' class='btn btn-#{args.type}' name='#{args.name}'>#{args.name}</button>")

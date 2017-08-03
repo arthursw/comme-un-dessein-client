@@ -215,7 +215,6 @@
         if (!this.loadRequired()) {
           return false;
         }
-        console.log("load");
         if (area != null) {
           console.log(area.toString());
         }
@@ -255,7 +254,6 @@
 
       Loader.prototype.dispatchLoadFinished = function() {
         var commandEvent;
-        console.log("dispatch command executed");
         commandEvent = document.createEvent('Event');
         commandEvent.initEvent('command executed', true, true);
         document.dispatchEvent(commandEvent);

@@ -14,6 +14,7 @@
         this.liJ = $("<li>").text(name);
         this.liJ.click(this.click);
         this.id = Math.random();
+        this.twin = null;
         return;
       }
 

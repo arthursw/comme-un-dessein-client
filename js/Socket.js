@@ -44,6 +44,7 @@
         this.socket.on("nicknames", (function(_this) {
           return function(nicknames) {
             var i;
+            console.log('nicknames');
             _this.chatUsernamesJ.empty().append($("<span>Online: </span>"));
             for (i in nicknames) {
               _this.chatUsernamesJ.append($("<b>").text(i > 0 ? ', ' + nicknames[i] : nicknames[i]));
@@ -57,24 +58,30 @@
         })(this));
         this.socket.on("reconnect", (function(_this) {
           return function() {
+            console.log('reconnect');
             _this.chatMessagesJ.remove();
             _this.addMessage("Reconnected to the server", "System");
           };
         })(this));
         this.socket.on("reconnecting", (function(_this) {
           return function() {
+            console.log('reconnecting');
             _this.addMessage("Attempting to re-connect to the server", "System");
           };
         })(this));
         this.socket.on("error", (function(_this) {
           return function(e) {
+            console.log('error');
+            console.log(e);
             _this.addMessage((e ? e : "A unknown error occurred"), "System");
           };
         })(this));
-        this.chatMainJ.find("#chatSendMessageSubmit").submit(this.sendMessage);
+        this.chatMainJ.find("#chatSendMessageSubmit").click(this.sendMessage);
         this.chatMessageJ.keypress(this.onKeyPress);
         this.chatConnectionTimeout = setTimeout(this.onConnectionError, 2000);
-        if (this.chatJ.find("#chatUserNameInput").length > 0) {
+        if (R.userAuthenticated) {
+          this.startChatting(R.me);
+        } else {
           this.initializeUserName();
         }
         this.socket.on("bounce", this.onBounce);
@@ -323,7 +330,7 @@
       };
 
       Socket.prototype.getChatRoom = function() {
-        return 'x: ' + Math.round(P.view.center.x / R.scale) + ', y: ' + Math.round(P.view.center.y / R.scale);
+        return 'Comme un dessein';
       };
 
       return Socket;

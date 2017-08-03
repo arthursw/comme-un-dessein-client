@@ -11,6 +11,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command' ], (P, R, Utils, Command
 			@add(new Command('Loaded CommeUnDessein'), true)
 			return
 
+		# twin: see Command.twin
 		add: (command, execute=false)->
 			if @currentCommand >= @constructor.maxCommandNumber - 1
 				firstCommand = @history.shift()
@@ -31,18 +32,23 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command' ], (P, R, Utils, Command
 		toggleCurrentCommand: (event)=>
 			if event? and event.detail?
 				if event.detail != @waitingCommand then return
+				@waitingCommand = null
+				$('#loadingMask').css('visibility': 'hidden')
 
-
-			$('#loadingMask').css('visibility': 'hidden')
 			document.removeEventListener('command executed', @toggleCurrentCommand)
 
-			if @currentCommand == @commandIndex then return
+			if @currentCommand == @commandIndex
+				@waitingCommand = null
+				return
 			
 			deferred = @history[@currentCommand+@offset].toggle()
 
 			@waitingCommand = @history[@currentCommand+@offset]
 			
 			@currentCommand += @direction
+
+			if @waitingCommand.twin == @history[@currentCommand+@offset] && @currentCommand == @commandIndex
+				@commandIndex += @direction
 
 			if deferred
 				$('#loadingMask').css('visibility': 'visible')
@@ -52,7 +58,28 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command' ], (P, R, Utils, Command
 
 			return
 
+		nullifyWaitingCommand: ()=>
+			if event? and event.detail?
+				if event.detail != @waitingCommand then return
+				@waitingCommand = null
+				$('#loadingMask').css('visibility': 'hidden')
+			return
+
+		undo: ()->
+			if @currentCommand <= 0 then return
+
+			@commandClicked(@history[@currentCommand-1])
+			return
+
+		do: ()->
+			if @currentCommand >= @history.length-1 then return
+
+			@commandClicked(@history[@currentCommand+1])
+			return
+
 		commandClicked: (command)->
+			if @waitingCommand? then return
+
 			@commandIndex = @getCommandIndex(command)
 
 			if @currentCommand == @commandIndex then return

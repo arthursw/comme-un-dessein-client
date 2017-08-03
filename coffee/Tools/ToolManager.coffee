@@ -1,6 +1,7 @@
 dependencies = [
 	'Utils/Utils'
 	'Tools/Tool'
+	'UI/Button'
 	'Tools/MoveTool'
 	'Tools/SelectTool'
 	'Tools/PathTool'
@@ -13,10 +14,10 @@ dependencies = [
 ]
 
 if document?
-	dependencies.push('Tools/ScreenshotTool')
+	# dependencies.push('Tools/ScreenshotTool')
 	dependencies.push('Tools/CarTool')
 
-define dependencies, (Utils, Tool) ->
+define dependencies, (Utils, Tool, Button) ->
 
 	class ToolManager
 
@@ -210,19 +211,102 @@ define dependencies, (Utils, Tool) ->
 			# 	finger.Confidence
 			# 	finger.Sensitivity
 			# 	touchStates[finger.TouchState]
+
+
+			@createZoombuttons()
+			@createUndoRedoButtons()
+			
+			return
+
+		zoom: (value)->
+			if P.view.zoom * value < 0.125 or P.view.zoom * value > 4
+				return
+			P.view.zoom *= value
+			console.log(P.view.zoom)
+			R.view.moveBy(new P.Point())
+			return
+
+		createZoombuttons: ()->
+
+
+			@zoomInBtn = new Button(
+				name: 'Zoom +'
+				iconURL: 'glyphicon-zoom-in'
+				favorite: true
+				category: null
+				description: 'Zoom +'
+				popover: true
+				order: null
+			)
+
+			@zoomInBtn.btnJ.click ()=> @zoom(2)
+
+			@zoomOutBtn = new Button(
+				name: 'Zoom -'
+				iconURL: 'glyphicon-zoom-out'
+				favorite: true
+				category: null
+				description: 'Zoom -'
+				popover: true
+				order: null
+			)
+
+			@zoomOutBtn.btnJ.click ()=> @zoom(0.5)
+
+			return
+
+		createUndoRedoButtons: ()->
+
+			@undoBtn = new Button(
+				name: 'Undo'
+				iconURL: 'glyphicon-share-alt'
+				favorite: true
+				category: null
+				description: 'Undo'
+				popover: true
+				order: null
+				transform: 'scaleX(-1)'
+			)
+
+			@undoBtn.btnJ.click ()-> R.commandManager.undo()
+
+			@redoBtn = new Button(
+				name: 'Redo'
+				iconURL: 'glyphicon-share-alt'
+				favorite: true
+				category: null
+				description: 'Redo'
+				popover: true
+				order: null
+			)
+			
+			@redoBtn.btnJ.click ()-> R.commandManager.do()
+
 			return
 
 		enterDrawingMode: ()->
 			if R.selectedTool != R.tools['Precise path']
 				R.tools['Precise path'].select()
-			R.sidebar.favoriteToolsJ.find("[data-name='Select']").css( opacity: 0.25 )
+			# R.sidebar.favoriteToolsJ.find("[data-name='Select']").css( opacity: 0.25 )
+			for id, item of R.items
+				if R.items[id].owner == R.me
+					R.drawingPanel.showSubmitDrawing()
+					break
 			# @drawingMode = true
+			# R.view.showDraftLayer()
 			return
 
-		leaveDrawingMode: ()->
+		leaveDrawingMode: (selectTool=false)->
 			# @drawingMode = false
-			R.sidebar.favoriteToolsJ.find("[data-name='Select']").css( opacity: 1 )
-			R.tools.select.select()
+			# R.sidebar.favoriteToolsJ.find("[data-name='Select']").css( opacity: 1 )
+			if selectTool
+				R.tools.select.select(false, true, true)
+			R.drawingPanel.hideSubmitDrawing()
+			# R.view.hideDraftLayer()
+			return
+
+		disableDrawingButton: ()->
+			R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").css( opacity: 0.25 )
 			return
 
 	# todo: replace update by drag

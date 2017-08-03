@@ -7,6 +7,7 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Controllers/ControllerManager' ], (P, 
 			@liJ = $("<li>").text(name)
 			@liJ.click(@click)
 			@id = Math.random()
+			@twin = null # the other command which in pair with this one (CreateItems / DeleteItems are twins when using eraser)
 			return
 
 		# item: ()->

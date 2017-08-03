@@ -42,6 +42,8 @@
       };
 
       function Rasterizer() {
+        this.rasterizeCallback = bind(this.rasterizeCallback, this);
+        this.rasterizeImmediately = bind(this.rasterizeImmediately, this);
         R.rasterizerManager.rasterizers[this.constructor.TYPE] = this;
         this.rasterizeItems = true;
         return;
@@ -136,6 +138,91 @@
         return Rasterizer.areaToImageDataUrl(rectangle);
       };
 
+      Rasterizer.prototype.startLoading = function() {};
+
+      Rasterizer.prototype.stopLoading = function(cancelTimeout) {
+        if (cancelTimeout == null) {
+          cancelTimeout = true;
+        }
+      };
+
+      Rasterizer.prototype.rasterizeImmediately = function() {};
+
+      Rasterizer.prototype.updateLoadingBar = function(time) {};
+
+      Rasterizer.prototype.drawItemsAndHideRasters = function() {};
+
+      Rasterizer.prototype.rasterLoaded = function(raster) {};
+
+      Rasterizer.prototype.checkRasterizeAreasToUpdate = function(pathsCreated) {
+        if (pathsCreated == null) {
+          pathsCreated = false;
+        }
+      };
+
+      Rasterizer.prototype.createRaster = function(x, y, zoom, raster) {};
+
+      Rasterizer.prototype.getRasterBounds = function(x, y) {};
+
+      Rasterizer.prototype.removeRaster = function(raster, x, y) {};
+
+      Rasterizer.prototype.loadImageForRaster = function(raster, url) {};
+
+      Rasterizer.prototype.createRasters = function(rectangle) {};
+
+      Rasterizer.prototype.move = function() {};
+
+      Rasterizer.prototype.splitAreaToRasterize = function() {
+        return areas;
+      };
+
+      Rasterizer.prototype.rasterizeCanvasInRaster = function(x, y, canvas, rectangle, qZoom, clearRasters, sourceRectangle) {
+        if (clearRasters == null) {
+          clearRasters = false;
+        }
+        if (sourceRectangle == null) {
+          sourceRectangle = null;
+        }
+      };
+
+      Rasterizer.prototype.rasterizeCanvas = function(canvas, rectangle, clearRasters, sourceRectangle) {
+        if (clearRasters == null) {
+          clearRasters = false;
+        }
+        if (sourceRectangle == null) {
+          sourceRectangle = null;
+        }
+      };
+
+      Rasterizer.prototype.clearAreaInRasters = function(rectangle) {};
+
+      Rasterizer.prototype.rasterizeArea = function(area) {};
+
+      Rasterizer.prototype.rasterizeAreas = function(areas) {};
+
+      Rasterizer.prototype.prepareView = function() {};
+
+      Rasterizer.prototype.restoreView = function() {};
+
+      Rasterizer.prototype.rasterizeCallback = function(step) {};
+
+      Rasterizer.prototype.disableRasterization = function() {};
+
+      Rasterizer.prototype.enableRasterization = function(drawAllItems) {
+        if (drawAllItems == null) {
+          drawAllItems = true;
+        }
+      };
+
+      Rasterizer.prototype.refresh = function(callback, drawAllItems) {
+        if (callback == null) {
+          callback = null;
+        }
+        if (drawAllItems == null) {
+          drawAllItems = false;
+        }
+      };
+
       return Rasterizer;
 
     })();
@@ -159,9 +246,6 @@
           item = ref[i];
           if ((item.controller != null) && P.Group.prototype.isPrototypeOf(item)) {
             sortedItems.push(item.controller);
-            if (Drawing.prototype.isPrototypeOf(item.controller)) {
-              this.addChildren(item, sortedItems);
-            }
           }
         }
       };
@@ -265,6 +349,9 @@
 
       TileRasterizer.prototype.selectItem = function(item) {
         var ref, ref1;
+        if (item instanceof Drawing) {
+          return;
+        }
         this.drawItems();
         this.rasterize(item, true);
         switch (this.autoRasterization) {
@@ -287,6 +374,9 @@
       };
 
       TileRasterizer.prototype.deselectItem = function(item) {
+        if (item instanceof Drawing) {
+          return;
+        }
         if (this.rasterizeItems) {
           if (typeof item.rasterize === "function") {
             item.rasterize();
@@ -553,9 +643,6 @@
         if (!this.areaToRasterize) {
           return;
         }
-        console.log("rasterize");
-        Utils.logElapsedTime();
-        R.startTimer();
         if (this.autoRasterization === 'deferred' || this.autoRasterization === 'disabled') {
           this.showRasters();
         }
@@ -601,8 +688,6 @@
         this.areaToRasterize = null;
         this.itemsAreVisible = false;
         this.stopLoading();
-        R.stopTimer('Time to rasterize path: ');
-        Utils.logElapsedTime();
         if (typeof this.postRasterizationCallback === "function") {
           this.postRasterizationCallback();
         }
@@ -614,8 +699,6 @@
         if (this.rasterizationDisabled) {
           return;
         }
-        console.log("ask rasterize" + (excludeItems ? " excluding items." : ""));
-        Utils.logElapsedTime();
         if (!Utils.Array.isArray(items)) {
           items = [items];
         }
@@ -867,7 +950,6 @@
         image.height = R.scale;
         raster = new P.Raster(image);
         raster.name = 'raster: ' + x + ', ' + y;
-        console.log(raster.name);
         raster.position.x = x + 0.5 * R.scale * zoom;
         raster.position.y = y + 0.5 * R.scale * zoom;
         raster.width = R.scale;
@@ -949,6 +1031,9 @@
       };
 
       InstantPaperTileRasterizer.prototype.selectItem = function(item) {
+        if (item instanceof Drawing) {
+          return;
+        }
         if (!this.rasterizeItems) {
           item.removeDrawing();
         }

@@ -55,6 +55,9 @@
         if (justCreated) {
           this.select();
         }
+        if (R.userAuthenticated == null) {
+          R.toolManager.disableDrawingButton();
+        }
         return;
       }
 
@@ -62,12 +65,19 @@
         this.btnJ.remove();
       };
 
-      PathTool.prototype.select = function(deselectItems, updateParameters) {
+      PathTool.prototype.select = function(deselectItems, updateParameters, forceSelect) {
         if (deselectItems == null) {
           deselectItems = true;
         }
         if (updateParameters == null) {
           updateParameters = true;
+        }
+        if (forceSelect == null) {
+          forceSelect = false;
+        }
+        if (!R.userAuthenticated && !forceSelect) {
+          R.alertManager.alert('Log in before drawing', 'info');
+          return;
         }
         R.rasterizer.drawItems();
         PathTool.__super__.select.apply(this, arguments);
@@ -83,6 +93,7 @@
         PathTool.__super__.deselect.call(this);
         this.finish();
         R.view.tool.onMouseMove = null;
+        R.toolManager.leaveDrawingMode();
       };
 
       PathTool.prototype.begin = function(event, from, data) {
@@ -163,6 +174,7 @@
             return;
           }
           path.save(true);
+          path.rasterize();
         } else {
           path.endCreate(event.point, event);
         }

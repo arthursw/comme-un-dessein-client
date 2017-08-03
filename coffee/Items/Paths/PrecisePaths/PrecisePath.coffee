@@ -178,7 +178,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 					return
 
 			flattenedPath.remove()
-			console.log "Time to secure the path: " + ((Date.now()-time)/1000) + " sec."
 			return
 
 		deselectPoint: ()->
@@ -187,9 +186,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@removeSelectionHighlight()
 			return
 
-		performHitTest: (point)->
+		performHitTest: (point, options=@constructor.hitOptions)->
 			@controlPath.visible = true
-			hitResult = @controlPath.hitTest(point, @constructor.hitOptions)
+			hitResult = @controlPath.hitTest(point, options)
 			@controlPath.visible = false
 			return hitResult
 
@@ -356,6 +355,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# @param event [Event] the mouse event
 		updateCreate: (point, event)->
 			if not @data.polygonMode
+				console.log(@controlPath.lastSegment.point.getDistance(point, true))
+				if @controlPath.lastSegment.point.getDistance(point, true) < 20
+					return
 
 				# @controlPath.add(Utils.Snap.snap2D(point, 50))
 				@controlPath.add(point)
@@ -492,7 +494,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# @param simplified [Boolean] whether to draw in simplified mode or not (much faster)
 		draw: (simplified=false, redrawing=true)->
 
-			@drawn = false
+			if @drawn then return
 
 			if not R.rasterizer.requestDraw(@, simplified, redrawing) then return
 			# if R.rasterizer.disableDrawing then return

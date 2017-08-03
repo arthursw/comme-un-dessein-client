@@ -234,6 +234,12 @@ define [
 	# Initialize CommeUnDessein and handlers
 	$(document).ready () ->
 
+		# R.me is the username (or ID if not authenticated) of the user (sent by the server in each ajax "load")
+		username = $('#canvas').attr("data-username")
+		R.me = if username.length > 0 then username else null
+		userAuthenticated = $('#canvas').attr("data-is-authenticated")
+		R.userAuthenticated = userAuthenticated == 'True'
+
 		# parameters
 		R.catchErrors = false 					# the error will not be caught when drawing an RPath (let chrome catch them at the right time)
 		R.ignoreSockets = false 				# whether sockets messages are ignored
@@ -279,6 +285,14 @@ define [
 		R.fontManager = new FontManager()
 		R.view.initializePosition()
 		R.sidebar.initialize()
+
+		
+		# modal = Modal.createModal( title: 'Comme Un Dessein', submit: @createCity, postSubmit: 'load' )
+		# modal.addText('Welcome to comme un dessein !')
+		# modal.addText('Participate !')
+		# modal.addButton( type: 'primary', name: 'Sign in', submit: ()-> return location.pathname = '/accounts/login/' )
+		# modal.addButton( type: 'info', name: 'Sign up', submit: ()-> return location.pathname = '/accounts/signup/' )
+		# modal.show()
 
 		window?.setPageFullyLoaded?(true)
 		return

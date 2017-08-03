@@ -21,6 +21,11 @@
     	 - redefine means that it totally replace the method (super is never called)
      */
     $(document).ready(function() {
+      var userAuthenticated, username;
+      username = $('#canvas').attr("data-username");
+      R.me = username.length > 0 ? username : null;
+      userAuthenticated = $('#canvas').attr("data-is-authenticated");
+      R.userAuthenticated = userAuthenticated === 'True';
       R.catchErrors = false;
       R.ignoreSockets = false;
       R.currentPaths = {};

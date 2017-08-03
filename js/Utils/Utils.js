@@ -36,7 +36,6 @@
       }
     });
     R.commeUnDesseinURL = 'http://localhost:8000/';
-    R.me = null;
     R.OSName = "Unknown OS";
     if (navigator.appVersion.indexOf("Win") !== -1) {
       R.OSName = "Windows";

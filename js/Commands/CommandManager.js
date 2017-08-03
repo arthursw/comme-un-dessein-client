@@ -10,6 +10,7 @@
 
       function CommandManager() {
         this.endAction = bind(this.endAction, this);
+        this.nullifyWaitingCommand = bind(this.nullifyWaitingCommand, this);
         this.toggleCurrentCommand = bind(this.toggleCurrentCommand, this);
         this.history = [];
         this.itemToCommands = {};
@@ -49,17 +50,22 @@
           if (event.detail !== this.waitingCommand) {
             return;
           }
+          this.waitingCommand = null;
+          $('#loadingMask').css({
+            'visibility': 'hidden'
+          });
         }
-        $('#loadingMask').css({
-          'visibility': 'hidden'
-        });
         document.removeEventListener('command executed', this.toggleCurrentCommand);
         if (this.currentCommand === this.commandIndex) {
+          this.waitingCommand = null;
           return;
         }
         deferred = this.history[this.currentCommand + this.offset].toggle();
         this.waitingCommand = this.history[this.currentCommand + this.offset];
         this.currentCommand += this.direction;
+        if (this.waitingCommand.twin === this.history[this.currentCommand + this.offset] && this.currentCommand === this.commandIndex) {
+          this.commandIndex += this.direction;
+        }
         if (deferred) {
           $('#loadingMask').css({
             'visibility': 'visible'
@@ -70,7 +76,36 @@
         }
       };
 
+      CommandManager.prototype.nullifyWaitingCommand = function() {
+        if ((typeof event !== "undefined" && event !== null) && (event.detail != null)) {
+          if (event.detail !== this.waitingCommand) {
+            return;
+          }
+          this.waitingCommand = null;
+          $('#loadingMask').css({
+            'visibility': 'hidden'
+          });
+        }
+      };
+
+      CommandManager.prototype.undo = function() {
+        if (this.currentCommand <= 0) {
+          return;
+        }
+        this.commandClicked(this.history[this.currentCommand - 1]);
+      };
+
+      CommandManager.prototype["do"] = function() {
+        if (this.currentCommand >= this.history.length - 1) {
+          return;
+        }
+        this.commandClicked(this.history[this.currentCommand + 1]);
+      };
+
       CommandManager.prototype.commandClicked = function(command) {
+        if (this.waitingCommand != null) {
+          return;
+        }
         this.commandIndex = this.getCommandIndex(command);
         if (this.currentCommand === this.commandIndex) {
           return;

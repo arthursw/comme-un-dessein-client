@@ -12,6 +12,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			@submitDrawingBtnJ = $('button.submit-drawing')
 			@submitDrawingBtnJ.click(@submitDrawingClicked)
 
+			# @cancelDrawingBtnJ = $('button.cancel-drawing')
+			# @cancelDrawingBtnJ.click(@cancelDrawingClicked)
+
 			# editor
 			@drawingPanelJ = $("#drawingPanel")
 			@drawingPanelJ.bind "transitionend webkitTransitionEnd oTransitionEnd MSTransitionEnd", @resize
@@ -48,16 +51,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			@voteDownBtnJ = @drawingPanelJ.find('.vote-down')
 			@voteDownBtnJ.click(@voteDown)
 
-			@submitBtnJ = @drawingPanelJ.find('form.create button.submit')
-			@modifyBtnJ = @drawingPanelJ.find('form.create button.modify')
-			@cancelBtnJ = @drawingPanelJ.find('form.create button.cancel')
+			@submitBtnJ = @drawingPanelJ.find('.action-buttons button.submit')
+			@modifyBtnJ = @drawingPanelJ.find('.action-buttons button.modify')
+			@cancelBtnJ = @drawingPanelJ.find('.action-buttons button.cancel')
 
 			@submitBtnJ.click(@submitDrawing)
 			@modifyBtnJ.click(@modifyDrawing)
 			@cancelBtnJ.click(@cancelDrawing)
 
-			contentJ = @drawingPanelJ.find('.content')
-			descriptionJ = contentJ.find('#drawing-description')
+			@contentJ = @drawingPanelJ.find('.content-container')
+			descriptionJ = @contentJ.find('#drawing-description')
 			descriptionJ.keydown (event)=>
 				switch Utils.specialKeys[event.keyCode]
 					when 'enter'
@@ -123,6 +126,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			Utils.callNextFrame(@updateSelection, 'update drawing selection')
 			return
 
+		deselectDrawing: (drawing)->
+			if drawing == @currentDrawing
+				@currentDrawing = null
+			if R.selectedItems.length == 0
+				@close()
+				# @hideSubmitDrawing()
+			return
+
 		### open close ###
 
 		open: ()->
@@ -134,8 +145,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			if @currentDrawing? and not @currentDrawing.pk?
 				if removeDrawingIfNotSaved
 					@currentDrawing.remove()
-				@hideSubmitDrawing()
-				@showBeginDrawing()
+				# @showBeginDrawing()
 			@drawingPanelJ.hide()
 			@drawingPanelJ.removeClass('visible')
 			if R.selectedItems.length > 0
@@ -155,6 +165,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			titleJ.addClass('cd-grow cd-center')
 			titleJ.html(item.title)
 			deselectBtnJ = $('<button>')
+			deselectBtnJ.addClass('btn btn-default icon-only transparent')
 			deselectIconJ = $('<span>').addClass('glyphicon glyphicon-remove')
 			deselectBtnJ.click (event)->
 				item.deselect()
@@ -178,8 +189,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 		showSelectedDrawings: ()->
 			@drawingPanelTitleJ.text('Select a single drawing')
 
-			@drawingPanelJ.find('.content').children().hide()
-			selectedDrawingsJ = @drawingPanelJ.find('.content').children('.selected-drawings')
+			@drawingPanelJ.find('.content-container').children().hide()
+			selectedDrawingsJ = @drawingPanelJ.find('.selected-drawings')
 			selectedDrawingsJ.show()
 			listJ = selectedDrawingsJ.find('ul.drawing-list')
 			listJ.empty()
@@ -191,30 +202,33 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			return
 
 		showLoadAnimation: ()=>
-			@drawingPanelJ.find('.content').children().hide()
-			@drawingPanelJ.find('.content').children('.loading-animation').show()
+			@drawingPanelJ.find('.loading-animation').show()
+			@drawingPanelJ.find('.content').hide()
+			@drawingPanelJ.find('.selected-drawings').hide()
 			return
 
 		showContent: ()=>
-			@drawingPanelJ.find('.content').children().show()
-			@drawingPanelJ.find('.content').children('.loading-animation').hide()
-			@drawingPanelJ.find('.content').children('.selected-drawings').hide()
+			@drawingPanelJ.find('.content').show()
+			@drawingPanelJ.find('.selected-drawings').hide()
+			@drawingPanelJ.find('.loading-animation').hide()
 			return
 
 		showSubmitDrawing: ()->
 			@hideBeginDrawing()
 			@submitDrawingBtnJ.removeClass('hidden')
 			@submitDrawingBtnJ.show()
-			contentJ = @drawingPanelJ.find('.content')
-			contentJ.find('#drawing-title').focus()
+			# @cancelDrawingBtnJ.removeClass('hidden')
+			# @cancelDrawingBtnJ.show()
+			@contentJ.find('#drawing-title').focus()
 			return
 
 		hideSubmitDrawing: ()->
 			@submitDrawingBtnJ.hide()
+			# @cancelDrawingBtnJ.hide()
 			return
 
 		showBeginDrawing: ()->
-			@hideSubmitDrawing()
+			# @hideSubmitDrawing()
 			@beginDrawingBtnJ.show()
 			return
 
@@ -244,11 +258,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			return image
 
 		setDrawingThumbnail: ()->
-			contentJ = @drawingPanelJ.find('.content')
 			@currentDrawing.rasterize()
 			R.rasterizer.rasterize(@currentDrawing, false)
 
-			thumbnailJ = contentJ.find('.drawing-thumbnail')
+			thumbnailJ = @contentJ.find('.drawing-thumbnail')
 			thumbnailJ.empty().append(@getDrawingImage(@currentDrawing))
 			return
 
@@ -260,10 +273,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 				if item instanceof Item.Path
 					item.drawingId = drawingId
 
-			contentJ = @drawingPanelJ.find('.content')
 
-			title = contentJ.find('#drawing-title').val()
-			description = contentJ.find('#drawing-description').val()
+			title = @contentJ.find('#drawing-title').val()
+			description = @contentJ.find('#drawing-description').val()
 			@currentDrawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending')
 			
 			@setDrawingThumbnail()
@@ -296,17 +308,17 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			return
 
 		submitDrawingClicked: ()=>
-			R.toolManager.leaveDrawingMode()
-			# @submitDrawingBtnJ.hide()
+			R.toolManager.leaveDrawingMode(true)
+			@submitDrawingBtnJ.hide()
 			@drawingPanelTitleJ.text('Create drawing')
+			# @showBeginDrawing()
 			@open()
 			@showContent()
 			@currentDrawing = null
-			contentJ = @drawingPanelJ.find('.content')
-			contentJ.find('.read').hide()
-			contentJ.find('.modify').show()
-			contentJ.find('#drawing-title').val('')
-			contentJ.find('#drawing-description').val('')
+			@contentJ.find('.read').hide()
+			@contentJ.find('.modify').show()
+			@contentJ.find('#drawing-title').val('')
+			@contentJ.find('#drawing-description').val('')
 			@submitBtnJ.show()
 			@modifyBtnJ.hide()
 			@cancelBtnJ.show()
@@ -322,28 +334,42 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			@createDrawingFromItems(R.selectedItems)
 			return
 
+		# cancelDrawingClicked: ()=>
+		# 	# @showBeginDrawing()
+		# 	if R.toolManager.drawingMode
+		# 		R.toolManager.leaveDrawingMode()
+		# 		@cancelDrawing()
+		# 	return
+
 		setDrawing: (@currentDrawing, drawingData)->
-			@drawingPanelTitleJ.text(@currentDrawing.title)
+			@drawingPanelTitleJ.text('Drawing info')
 			@open()
 			@showContent()
 			
-			contentJ = @drawingPanelJ.find('.content')
+			latestDrawing = JSON.parse(drawingData.drawing)
+
 			@currentDrawing.votes = drawingData.votes
+			@currentDrawing.status = latestDrawing.status
+
+			@submitBtnJ.hide()
+			@modifyBtnJ.hide()
+			@cancelBtnJ.hide()
 
 			if @currentDrawing.owner == R.me || R.administrator
-				contentJ.find('.read').hide()
-				contentJ.find('.modify').show()
-				contentJ.find('#drawing-title').val(@currentDrawing.title)
-				contentJ.find('#drawing-description').val(@currentDrawing.description)
-				@submitBtnJ.hide()
-				@modifyBtnJ.show()
-				@cancelBtnJ.show()
+				@contentJ.find('.read').hide()
+				@contentJ.find('.modify').show()
+				@contentJ.find('#drawing-title').val(@currentDrawing.title)
+				@contentJ.find('#drawing-description').val(@currentDrawing.description)
+				
+				if latestDrawing.status == 'pending'
+					@modifyBtnJ.show()
+					@cancelBtnJ.show()
 			else
-				contentJ.find('.read').show()
-				contentJ.find('.modify').hide()
-				contentJ.find('.title').html(@currentDrawing.title)
-				contentJ.find('.description').html(@currentDrawing.description)
-				contentJ.find('.author').html(@currentDrawing.owner)
+				@contentJ.find('.read').show()
+				@contentJ.find('.modify').hide()
+				@contentJ.find('.title').html(@currentDrawing.title)
+				@contentJ.find('.description').html(@currentDrawing.description)
+				@contentJ.find('.author').html(@currentDrawing.owner)
 
 			@votesJ.show()
 			@voteUpBtnJ.removeClass('voted')
@@ -450,10 +476,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 				R.alertManager.alert "You must be logged in to submit a drawing.", "error"
 				return
 			
-			contentJ = @drawingPanelJ.find('.content')
+			title = @contentJ.find('#drawing-title').val()
+			description = @contentJ.find('#drawing-description').val()
 			
-			@currentDrawing.title = contentJ.find('#drawing-title').val()
-			@currentDrawing.description = contentJ.find('#drawing-description').val()
+			if title.length == 0
+				R.alertManager.alert "You must enter a title.", "error"
+				return
+
+			if description.length == 0
+				R.alertManager.alert "You must enter a description.", "error"
+				return
+
+			@currentDrawing.title = title
+			@currentDrawing.description = description
 
 			@currentDrawing.save()
 			@close(false)
@@ -470,17 +505,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 				R.alertManager.alert "You must select a drawing first.", "error"
 				return
 
-			contentJ = @drawingPanelJ.find('.content')
+			if @currentDrawing.status != 'pending'
+				R.alertManager.alert "The drawing is already validated, it cannot be modified anymore.", "error"
+				return				
 
-			@currentDrawing.update( { title: contentJ.find('#drawing-title').val(), data: contentJ.find('#drawing-description').val() } )
+			@currentDrawing.update( { title: @contentJ.find('#drawing-title').val(), data: @contentJ.find('#drawing-description').val() } )
 			
 			return
 
 		cancelDrawing: ()=>
-
-			if not R.me? or not _.isString(R.me)
-				R.alertManager.alert "You must be logged in to cancel a drawing.", "error"
-				return
 
 			if not @currentDrawing?
 				@close()
@@ -488,6 +521,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 
 			if not @currentDrawing.pk?
 				@close()
+				return
+
+			if @currentDrawing.status != 'pending'
+				R.alertManager.alert "The drawing is already validated, it cannot be cancelled anymore.", "error"
+				return	
+
+			if not R.me? or not _.isString(R.me)
+				R.alertManager.alert "You must be logged in to cancel a drawing.", "error"
 				return
 
 			@currentDrawing.deleteCommand()

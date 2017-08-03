@@ -41,14 +41,23 @@
         this.btnJ.attr("data-name", name);
         this.btnJ.attr("alt", name);
         if ((iconURL != null) && iconURL !== '') {
-          iconRootURL = 'static/images/icons/inverted/';
-          if (iconURL.indexOf('//') < 0 && iconURL.indexOf(iconRootURL) < 0) {
-            iconURL = iconRootURL + iconURL;
+          if (iconURL.indexOf('glyphicon') === 0) {
+            this.btnJ.append('<span class="glyphicon ' + iconURL + '" alt="' + name + '-icon">');
+            if (parameters.transform != null) {
+              this.btnJ.find('span.glyphicon').css({
+                transform: parameters.transform
+              });
+            }
+          } else {
+            iconRootURL = 'static/images/icons/inverted/';
+            if (iconURL.indexOf('//') < 0 && iconURL.indexOf(iconRootURL) < 0) {
+              iconURL = iconRootURL + iconURL;
+            }
+            if (iconURL.indexOf(iconRootURL) === 0) {
+              iconURL = location.origin + '/' + iconURL;
+            }
+            this.btnJ.append('<img src="' + iconURL + '" alt="' + name + '-icon">');
           }
-          if (iconURL.indexOf(iconRootURL) === 0) {
-            iconURL = location.origin + '/' + iconURL;
-          }
-          this.btnJ.append('<img src="' + iconURL + '" alt="' + name + '-icon">');
         } else {
           this.btnJ.addClass("text-btn");
           words = name.split(" ");
@@ -80,6 +89,9 @@
         }
         if ((parameters.description != null) || parameters.popover) {
           this.addPopover(parameters);
+        }
+        if (parameters.preload) {
+          this.onClickWhenNotLoaded();
         }
         return;
       }
