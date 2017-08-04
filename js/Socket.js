@@ -85,6 +85,7 @@
           this.initializeUserName();
         }
         this.socket.on("bounce", this.onBounce);
+        this.socket.on("drawing change", this.onDrawingChange);
         if (R.tipibot) {
           setTimeout(this.connectToTipibot, 3000);
         }
@@ -267,6 +268,10 @@
         } else {
           this.chatJ.find("#chatUserNameError").removeClass("hidden");
         }
+      };
+
+      Socket.prototype.onDrawingChange = function(data) {
+        R.drawingPanel.onDrawingChange(data);
       };
 
       Socket.prototype.onBounce = function(data) {

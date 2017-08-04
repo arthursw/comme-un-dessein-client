@@ -24,6 +24,8 @@
 
       EraserTool.drawItems = true;
 
+      EraserTool.emitSocket = false;
+
       function EraserTool(Path, justCreated) {
         this.Path = Path;
         if (justCreated == null) {
@@ -165,7 +167,7 @@
         this.pathsToCreate = [];
         this.pathsToDeleteResurectors = {};
         R.rasterizer.disableRasterization();
-        if ((R.me != null) && from === R.me) {
+        if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
           R.socket.emit("bounce", {
             tool: this.name,
             "function": "begin",
@@ -181,7 +183,7 @@
         console.log("update");
         this.circle.position = event.point;
         this.erase();
-        if ((R.me != null) && from === R.me) {
+        if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
           R.socket.emit("bounce", {
             tool: this.name,
             "function": "update",

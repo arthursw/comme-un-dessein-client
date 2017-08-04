@@ -334,10 +334,12 @@
         drawingId = drawingPk != null ? Item.Drawing.pkToId[drawingPk] || drawingPk : null;
         path = new R.tools[args.path.object_type].Path(args.date, args.data, args.id, args.pk, args.points, args.lock, args.owner, drawingId);
         path.lastUpdateDate = (ref1 = args.path.lastUpdate) != null ? ref1.$date : void 0;
+        return path;
       };
 
       Loader.prototype.createNewItems = function(itemsToLoad) {
-        var args, box, data, date, div, drawing, id, item, k, len, len1, lock, m, path, pk, planet, point, points, rdiv, ref, ref1, ref2, ref3, ref4, ref5, rpath;
+        var args, box, data, date, div, drawing, id, item, k, len, len1, lock, m, newItems, newPath, path, pk, planet, point, points, rdiv, ref, ref1, ref2, ref3, ref4, ref5, rpath;
+        newItems = [];
         for (k = 0, len = itemsToLoad.length; k < len; k++) {
           item = itemsToLoad[k];
           pk = item._id.$oid;
@@ -366,6 +368,9 @@
                   lock = new Item.VideoGame(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, (ref4 = box.module) != null ? ref4.$oid : void 0);
               }
               lock.lastUpdateDate = box.lastUpdate.$date;
+              if (lock != null) {
+                newItems.push(lock);
+              }
               break;
             case 'Div':
               div = item;
@@ -380,6 +385,9 @@
                   rdiv = new Item.Media(Utils.CS.rectangleFromBox(div), data, id, pk, date, lock);
               }
               rdiv.lastUpdateDate = div.lastUpdate.$date;
+              if (rdiv != null) {
+                newItems.push(rdiv);
+              }
               break;
             case 'Path':
               path = item;
@@ -398,6 +406,7 @@
                 points.push(Utils.CS.posOnPlanetToProject(point, planet));
               }
               rpath = null;
+              newPath = null;
               args = {
                 path: path,
                 date: date,
@@ -410,9 +419,12 @@
                 drawing: path.drawing
               };
               if (R.tools[path.object_type] != null) {
-                this.createPath(args);
+                newPath = this.createPath(args);
               } else {
                 this.loadModuleAndCreatePath(args);
+              }
+              if (newPath != null) {
+                newItems.push(newPath);
               }
               break;
             case 'AreaToUpdate':
@@ -423,11 +435,15 @@
                 console.log("Error: drawing has less than 5 points");
               }
               drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, id, item._id.$oid, item.owner, date, item.title, item.description, item.status);
+              if (drawing != null) {
+                newItems.push(drawing);
+              }
               break;
             default:
               continue;
           }
         }
+        return newItems;
       };
 
       Loader.prototype.endLoading = function() {
@@ -438,8 +454,11 @@
         this.dispatchLoadFinished();
       };
 
-      Loader.prototype.loadCallback = function(results) {
-        var itemsToLoad;
+      Loader.prototype.loadCallback = function(results, rasterizeItems) {
+        var itemsToLoad, newItems;
+        if (rasterizeItems == null) {
+          rasterizeItems = false;
+        }
         console.log("load callback");
         console.log(P.project.activeLayer.name);
         if (!this.checkError(results)) {
@@ -450,13 +469,20 @@
           return;
         }
         this.setMe(results.user);
+        if (results.qZoom == null) {
+          results.qZoom = 1;
+        }
         if (results.rasters != null) {
           R.rasterizer.load(results.rasters, results.qZoom);
         }
         this.removeDeletedItems(results.deletedItems);
         itemsToLoad = this.parseNewItems(results.items);
-        this.createNewItems(itemsToLoad);
+        newItems = this.createNewItems(itemsToLoad);
         R.rasterizer.setQZoomToUpdate(results.qZoom);
+        if (rasterizeItems) {
+          R.rasterizer.rasterize(newItems);
+          R.rasterizer.rasterizeRectangle();
+        }
         if ((results.rasters == null) || results.rasters.length === 0) {
           R.rasterizer.checkRasterizeAreasToUpdate();
         }

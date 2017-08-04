@@ -171,6 +171,8 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 
 			@socket.on "bounce", @onBounce
 
+			@socket.on "drawing change", @onDrawingChange
+
 			if R.tipibot
 				setTimeout(@connectToTipibot, 3000)
 
@@ -316,6 +318,10 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 				@chatJ.find("#chatUserNameError").addClass("hidden")
 			else
 				@chatJ.find("#chatUserNameError").removeClass("hidden")
+			return
+
+		onDrawingChange: (data) ->
+			R.drawingPanel.onDrawingChange(data)
 			return
 
 		onBounce: (data) ->

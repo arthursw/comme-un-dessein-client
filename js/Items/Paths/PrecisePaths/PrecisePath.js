@@ -116,6 +116,8 @@
 
       PrecisePath.createTool(PrecisePath);
 
+      PrecisePath.securePath = false;
+
       PrecisePath.getPointsFromPath = function(path) {
         var j, len, points, ref, segment;
         points = [];
@@ -176,7 +178,7 @@
       };
 
       PrecisePath.prototype.loadPath = function(points) {
-        var distanceMax, flattenedPath, i, index, j, recordedPoint, resultingPoint, time;
+        var distanceMax, flattenedPath, i, index, j, recordedPoint, resultingPoint;
         this.addControlPath();
         this.setControlPath(this.data.points, this.data.planet);
         this.rectangle = this.controlPath.bounds.clone();
@@ -184,7 +186,9 @@
           this.controlPath.smooth();
         }
         R.rasterizer.loadItem(this);
-        time = Date.now();
+        if (!this.constructor.securePath) {
+          return;
+        }
         flattenedPath = this.controlPath.copyTo(P.project);
         flattenedPath.flatten(this.constructor.secureStep);
         distanceMax = this.constructor.secureDistance * this.constructor.secureDistance;

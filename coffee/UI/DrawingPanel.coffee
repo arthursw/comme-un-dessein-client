@@ -379,6 +379,51 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 		# 		@cancelDrawing()
 		# 	return
 
+		setVotes: ()->
+
+			@votesJ.show()
+			@voteUpBtnJ.removeClass('voted')
+			@voteDownBtnJ.removeClass('voted')
+			positiveVoteListJ = @drawingPanelJ.find('.vote-list.positive')
+			negativeVoteListJ = @drawingPanelJ.find('.vote-list.negative')
+			positiveVoteListJ.empty()
+			negativeVoteListJ.empty()
+			nPositiveVotes = 0
+			nNegativeVotes = 0
+			for vote in @currentDrawing.votes
+				v = JSON.parse(vote.vote)
+				liJ = $('<li data-author-pk="'+vote.authorPk+'">'+vote.author+'</li>')
+				if v.positive
+					nPositiveVotes++
+					positiveVoteListJ.append(liJ)
+					if vote.author == R.me
+						@voteUpBtnJ.addClass('voted')
+				else
+					nNegativeVotes++
+					negativeVoteListJ.append(liJ)
+					if vote.author == R.me
+						@voteDownBtnJ.addClass('voted')
+
+			if nPositiveVotes > 0 then positiveVoteListJ.removeClass('hidden') else positiveVoteListJ.addClass('hidden')
+			if nNegativeVotes > 0 then negativeVoteListJ.removeClass('hidden') else negativeVoteListJ.addClass('hidden')
+
+			@votesJ.find('.n-votes.positive').html(nPositiveVotes)
+			@votesJ.find('.n-votes.negative').html(nNegativeVotes)
+			nVotes = nPositiveVotes+nNegativeVotes
+			@votesJ.find('.n-votes.total').html(nVotes)
+			@votesJ.find('.percentage-votes').html(if nVotes > 0 then 100*nPositiveVotes/nVotes else 0)
+			
+			@votesJ.find('.status').html(@currentDrawing.status)
+
+			@voteUpBtnJ.addClass('disabled')
+			@voteDownBtnJ.addClass('disabled')
+			if @currentDrawing.owner == R.me || R.administrator
+				if @currentDrawing.status == 'pending'
+					@voteUpBtnJ.removeClass('disabled')
+					@voteDownBtnJ.removeClass('disabled')
+
+			return
+
 		setDrawing: (@currentDrawing, drawingData)->
 			@drawingPanelTitleJ.text('Drawing info')
 			@open()
@@ -408,46 +453,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 				@contentJ.find('#drawing-description').attr('readonly', true)
 
 
-			@votesJ.show()
-			@voteUpBtnJ.removeClass('voted')
-			@voteDownBtnJ.removeClass('voted')
-			positiveVoteListJ = @drawingPanelJ.find('.vote-list.positive')
-			negativeVoteListJ = @drawingPanelJ.find('.vote-list.negative')
-			positiveVoteListJ.empty()
-			negativeVoteListJ.empty()
-			nPositiveVotes = 0
-			nNegativeVotes = 0
-			for vote in drawingData.votes
-				v = JSON.parse(vote.vote)
-				liJ = $('<li data-author-pk="'+vote.authorPk+'">'+vote.author+'</li>')
-				if v.positive
-					nPositiveVotes++
-					positiveVoteListJ.append(liJ)
-					if vote.author == R.me
-						@voteUpBtnJ.addClass('voted')
-				else
-					nNegativeVotes++
-					negativeVoteListJ.append(liJ)
-					if vote.author == R.me
-						@voteDownBtnJ.addClass('voted')
-
-			if nPositiveVotes > 0 then positiveVoteListJ.removeClass('hidden') else positiveVoteListJ.addClass('hidden')
-			if nNegativeVotes > 0 then negativeVoteListJ.removeClass('hidden') else negativeVoteListJ.addClass('hidden')
-
-			@votesJ.find('.n-votes.positive').html(nPositiveVotes)
-			@votesJ.find('.n-votes.negative').html(nNegativeVotes)
-			nVotes = nPositiveVotes+nNegativeVotes
-			@votesJ.find('.n-votes.total').html(nVotes)
-			@votesJ.find('.percentage-votes').html(if nVotes > 0 then 100*nPositiveVotes/nVotes else 0)
-			
-			@votesJ.find('.status').html(@currentDrawing.status)
-
-			@voteUpBtnJ.addClass('disabled')
-			@voteDownBtnJ.addClass('disabled')
-			if @currentDrawing.owner == R.me || R.administrator
-				if latestDrawing.status == 'pending'
-					@voteUpBtnJ.removeClass('disabled')
-					@voteDownBtnJ.removeClass('disabled')
+			@setVotes()
 
 			# load missing paths
 			pathsToLoad = []
@@ -459,6 +465,45 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			R.loader.createNewItems(pathsToLoad)
 
 			@setDrawingThumbnail()
+			return
+
+		onDrawingChange: (data)->
+
+			switch data.type
+				when 'votes'
+					drawing = R.items[data.drawingId]
+					if drawing?
+						drawing.votes = data.votes
+						if @currentDrawing == drawing
+							@setVotes()
+				when 'new'
+					args = {
+						itemsToLoad: [
+							{
+								itemType: 'Drawing'
+								pks: [data.pk]
+							},
+							{
+								itemType: 'Path'
+								pks: [data.pathPks]
+							}
+						]
+					}
+					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadItems', args: args } ).done((results)->
+						R.loader.loadCallback(results, true)
+						return)
+				when 'description'
+					drawing = R.items[data.drawingId]
+					if drawing?
+						drawing.title = data.title
+						drawing.description = data.description
+						if @currentDrawing == drawing
+							@contentJ.find('#drawing-title').val(data.title)
+							@contentJ.find('#drawing-description').val(data.description)
+				when 'delete'
+					drawing = R.items[data.drawingId]
+					if drawing?
+						drawing.remove()
 			return
 
 		### votes ###
@@ -478,6 +523,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 				R.alertManager.alert 'Your vote was successfully cancelled', 'success'
 				return
 
+			@currentDrawing.votes = result.votes
+
 			suffix = ''
 			if result.validates
 				suffix = ', the drawing will be validated in a minute if nobody cancels its vote!'
@@ -486,6 +533,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 
 			R.alertManager.alert 'You successfully voted' + suffix, 'success'
 
+			R.socket.emit "drawing change", type: 'votes', votes: @currentDrawing.votes
 			return
 
 		vote: (positive)=>

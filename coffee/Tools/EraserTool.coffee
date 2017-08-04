@@ -19,6 +19,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			name: 'crosshair'
 		@drawItems = true
 
+		@emitSocket = false
+
 		# Find or create a button for the tool in the sidebar (if the button is created, add it default or favorite tool list depending on the user settings stored in local storage, and whether the tool was just created in a newly created script)
 		# set its name and icon if an icon url is provided, or create an icon with the letters of the name otherwise
 		# the icon will be made with the first two letters of the name if the name is in one word, or the first letter of each words of the name otherwise
@@ -150,7 +152,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 			R.rasterizer.disableRasterization()
 
-			if R.me? and from==R.me
+			if @constructor.emitSocket and R.me? and from==R.me
 				# data = R.currentPaths[from].data
 				# data.id = R.currentPaths[from].id
 				R.socket.emit "bounce", tool: @name, function: "begin", arguments: [event, R.me, null]
@@ -170,7 +172,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 			# R.currentPaths[from].group.visible = true
 			# if R.me? and from==R.me then R.socket.emit( "update", R.me, R.eventToObject(event), @name)
-			if R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "update", arguments: [event, R.me]
+			if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "update", arguments: [event, R.me]
 			return
 
 		createCircle: (point)->

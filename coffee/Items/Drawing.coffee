@@ -289,6 +289,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 
 			R.alertManager.alert "Drawing successfully submitted. It will be drawn if it gets 100 votes.", "success"
 
+			R.socket.emit "drawing change", type: 'new', pk: result.pk, pathPks: result.pathPks
+
 			if @selectAfterSave?
 				@select(true, true, true)
 
@@ -311,6 +313,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 				contentJ.find('#drawing-description').val(@description)
 				return
 			R.alertManager.alert "Drawing successfully modified.", "success"
+			R.socket.emit "drawing change", type: 'description', title: @title, description: @description
 			return
 
 		update: (data) =>
@@ -336,6 +339,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 			return
 
 		deleteFromDatabaseCallback: ()=>
+			pk = @pk
 			if not R.loader.checkError()
 				if @pathIdsBeforeRemove?
 					for id in @pathIdsBeforeRemove
@@ -346,6 +350,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 				return
 			super()
 			R.alertManager.alert "Drawing successfully cancelled.", "success"
+			R.socket.emit "drawing change", type: 'delete', pk: pk
 			return
 
 		delete: ()->
@@ -425,7 +430,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 		getRaster: ()->
 			if @pathRaster? then return @pathRaster
 			if @paths.length == 0 then return null
-			
+
 			group = new P.Group()
 			for path in @paths
 				if path.raster?

@@ -106,6 +106,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		@parameters = @initializeParameters()
 		@createTool(@)
 
+		@securePath = false
+
 		@getPointsFromPath: (path)->
 			points = []
 			for segment in path.segments
@@ -156,7 +158,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 			R.rasterizer.loadItem(@)
 
-			time = Date.now()
+			if not @constructor.securePath
+				return
 
 			# check if points fit to the newly created control path:
 			# - flatten a copy of the control path, as it was flattened when the path was saved
@@ -178,6 +181,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 					return
 
 			flattenedPath.remove()
+
 			return
 
 		deselectPoint: ()->

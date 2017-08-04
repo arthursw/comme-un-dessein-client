@@ -24,6 +24,8 @@
 
       PathTool.drawItems = true;
 
+      PathTool.emitSocket = false;
+
       function PathTool(Path, justCreated) {
         this.Path = Path;
         if (justCreated == null) {
@@ -116,7 +118,7 @@
           R.currentPaths[from] = new this.Path(Date.now(), data, null, null, null, null, R.me);
         }
         R.currentPaths[from].beginCreate(event.point, event, false);
-        if ((R.me != null) && from === R.me) {
+        if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
           data = R.currentPaths[from].data;
           data.id = R.currentPaths[from].id;
           R.socket.emit("bounce", {
@@ -137,7 +139,7 @@
         if (R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))) {
           path.path.strokeColor = 'red';
         }
-        if ((R.me != null) && from === R.me) {
+        if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
           R.socket.emit("bounce", {
             tool: this.name,
             "function": "update",
@@ -162,7 +164,7 @@
           return;
         }
         if ((R.me != null) && from === R.me) {
-          if ((R.me != null) && from === R.me) {
+          if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
             R.socket.emit("bounce", {
               tool: this.name,
               "function": "createPath",

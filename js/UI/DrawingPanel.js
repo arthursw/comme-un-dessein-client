@@ -390,32 +390,8 @@
         this.createDrawingFromItems(R.selectedItems);
       };
 
-      DrawingPanel.prototype.setDrawing = function(currentDrawing, drawingData) {
-        var j, k, latestDrawing, len, len1, liJ, nNegativeVotes, nPositiveVotes, nVotes, negativeVoteListJ, p, path, pathsToLoad, positiveVoteListJ, ref, ref1, v, vote;
-        this.currentDrawing = currentDrawing;
-        this.drawingPanelTitleJ.text('Drawing info');
-        this.open();
-        this.showContent();
-        latestDrawing = JSON.parse(drawingData.drawing);
-        this.currentDrawing.votes = drawingData.votes;
-        this.currentDrawing.status = latestDrawing.status;
-        this.submitBtnJ.hide();
-        this.modifyBtnJ.hide();
-        this.cancelBtnJ.hide();
-        this.contentJ.find('#drawing-author').val(this.currentDrawing.owner);
-        this.contentJ.find('#drawing-title').val(this.currentDrawing.title);
-        this.contentJ.find('#drawing-description').val(this.currentDrawing.description);
-        if (this.currentDrawing.owner === R.me || R.administrator) {
-          if (latestDrawing.status === 'pending') {
-            this.modifyBtnJ.show();
-            this.cancelBtnJ.show();
-          }
-          this.contentJ.find('#drawing-title').removeAttr('readonly');
-          this.contentJ.find('#drawing-description').removeAttr('readonly');
-        } else {
-          this.contentJ.find('#drawing-title').attr('readonly', true);
-          this.contentJ.find('#drawing-description').attr('readonly', true);
-        }
+      DrawingPanel.prototype.setVotes = function() {
+        var j, len, liJ, nNegativeVotes, nPositiveVotes, nVotes, negativeVoteListJ, positiveVoteListJ, ref, v, vote;
         this.votesJ.show();
         this.voteUpBtnJ.removeClass('voted');
         this.voteDownBtnJ.removeClass('voted');
@@ -425,7 +401,7 @@
         negativeVoteListJ.empty();
         nPositiveVotes = 0;
         nNegativeVotes = 0;
-        ref = drawingData.votes;
+        ref = this.currentDrawing.votes;
         for (j = 0, len = ref.length; j < len; j++) {
           vote = ref[j];
           v = JSON.parse(vote.vote);
@@ -463,15 +439,44 @@
         this.voteUpBtnJ.addClass('disabled');
         this.voteDownBtnJ.addClass('disabled');
         if (this.currentDrawing.owner === R.me || R.administrator) {
-          if (latestDrawing.status === 'pending') {
+          if (this.currentDrawing.status === 'pending') {
             this.voteUpBtnJ.removeClass('disabled');
             this.voteDownBtnJ.removeClass('disabled');
           }
         }
+      };
+
+      DrawingPanel.prototype.setDrawing = function(currentDrawing, drawingData) {
+        var j, latestDrawing, len, p, path, pathsToLoad, ref;
+        this.currentDrawing = currentDrawing;
+        this.drawingPanelTitleJ.text('Drawing info');
+        this.open();
+        this.showContent();
+        latestDrawing = JSON.parse(drawingData.drawing);
+        this.currentDrawing.votes = drawingData.votes;
+        this.currentDrawing.status = latestDrawing.status;
+        this.submitBtnJ.hide();
+        this.modifyBtnJ.hide();
+        this.cancelBtnJ.hide();
+        this.contentJ.find('#drawing-author').val(this.currentDrawing.owner);
+        this.contentJ.find('#drawing-title').val(this.currentDrawing.title);
+        this.contentJ.find('#drawing-description').val(this.currentDrawing.description);
+        if (this.currentDrawing.owner === R.me || R.administrator) {
+          if (latestDrawing.status === 'pending') {
+            this.modifyBtnJ.show();
+            this.cancelBtnJ.show();
+          }
+          this.contentJ.find('#drawing-title').removeAttr('readonly');
+          this.contentJ.find('#drawing-description').removeAttr('readonly');
+        } else {
+          this.contentJ.find('#drawing-title').attr('readonly', true);
+          this.contentJ.find('#drawing-description').attr('readonly', true);
+        }
+        this.setVotes();
         pathsToLoad = [];
-        ref1 = drawingData.paths;
-        for (k = 0, len1 = ref1.length; k < len1; k++) {
-          p = ref1[k];
+        ref = drawingData.paths;
+        for (j = 0, len = ref.length; j < len; j++) {
+          p = ref[j];
           path = JSON.parse(p);
           if (!R.items[path.clientId]) {
             pathsToLoad.push(path);
@@ -479,6 +484,62 @@
         }
         R.loader.createNewItems(pathsToLoad);
         this.setDrawingThumbnail();
+      };
+
+      DrawingPanel.prototype.onDrawingChange = function(data) {
+        var args, drawing;
+        switch (data.type) {
+          case 'votes':
+            drawing = R.items[data.drawingId];
+            if (drawing != null) {
+              drawing.votes = data.votes;
+              if (this.currentDrawing === drawing) {
+                this.setVotes();
+              }
+            }
+            break;
+          case 'new':
+            args = {
+              itemsToLoad: [
+                {
+                  itemType: 'Drawing',
+                  pks: [data.pk]
+                }, {
+                  itemType: 'Path',
+                  pks: [data.pathPks]
+                }
+              ]
+            };
+            $.ajax({
+              method: "POST",
+              url: "ajaxCall/",
+              data: {
+                data: JSON.stringify({
+                  "function": 'loadItems',
+                  args: args
+                })
+              }
+            }).done(function(results) {
+              R.loader.loadCallback(results, true);
+            });
+            break;
+          case 'description':
+            drawing = R.items[data.drawingId];
+            if (drawing != null) {
+              drawing.title = data.title;
+              drawing.description = data.description;
+              if (this.currentDrawing === drawing) {
+                this.contentJ.find('#drawing-title').val(data.title);
+                this.contentJ.find('#drawing-description').val(data.description);
+              }
+            }
+            break;
+          case 'delete':
+            drawing = R.items[data.drawingId];
+            if (drawing != null) {
+              drawing.remove();
+            }
+        }
       };
 
 
@@ -506,6 +567,7 @@
           R.alertManager.alert('Your vote was successfully cancelled', 'success');
           return;
         }
+        this.currentDrawing.votes = result.votes;
         suffix = '';
         if (result.validates) {
           suffix = ', the drawing will be validated in a minute if nobody cancels its vote!';
@@ -513,6 +575,10 @@
           suffix = ', the drawing will be rejected in a minute if nobody cancels its vote!';
         }
         R.alertManager.alert('You successfully voted' + suffix, 'success');
+        R.socket.emit("drawing change", {
+          type: 'votes',
+          votes: this.currentDrawing.votes
+        });
       };
 
       DrawingPanel.prototype.vote = function(positive) {

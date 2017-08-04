@@ -19,6 +19,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 			name: 'crosshair'
 		@drawItems = true
 
+		@emitSocket = false
+
 		# Find or create a button for the tool in the sidebar (if the button is created, add it default or favorite tool list depending on the user settings stored in local storage, and whether the tool was just created in a newly created script)
 		# set its name and icon if an icon url is provided, or create an icon with the letters of the name otherwise
 		# the icon will be made with the first two letters of the name if the name is in one word, or the first letter of each words of the name otherwise
@@ -113,7 +115,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 			# emit event on websocket (if user is the author of the event)
 			# if R.me? and from==R.me then R.socket.emit( "begin", R.me, R.eventToObject(event), @name, R.currentPaths[from].data )
 
-			if R.me? and from==R.me
+			if @constructor.emitSocket and R.me? and from==R.me
 				data = R.currentPaths[from].data
 				data.id = R.currentPaths[from].id
 				R.socket.emit "bounce", tool: @name, function: "begin", arguments: [event, R.me, data]
@@ -132,7 +134,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 
 			# R.currentPaths[from].group.visible = true
 			# if R.me? and from==R.me then R.socket.emit( "update", R.me, R.eventToObject(event), @name)
-			if R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "update", arguments: [event, R.me]
+			if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "update", arguments: [event, R.me]
 			return
 
 		# Update path action (usually from a mouse move event, necessary for the polygon mode):
@@ -169,7 +171,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 				# 	delete R.currentPaths[from]
 				# 	return
 
-				if R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "createPath", arguments: [event, R.me]
+				if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "createPath", arguments: [event, R.me]
 
 				if (not R.me?) or not _.isString(R.me)
 					R.alertManager.alert("You must log in before drawing, your drawing won't be saved.", "Info")

@@ -302,9 +302,10 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			drawingId = if drawingPk? then (Item.Drawing.pkToId[drawingPk] or drawingPk) else null
 			path = new R.tools[args.path.object_type].Path(args.date, args.data, args.id, args.pk, args.points, args.lock, args.owner, drawingId)
 			path.lastUpdateDate = args.path.lastUpdate?.$date
-			return
+			return path
 
 		createNewItems: (itemsToLoad)->
+			newItems = []
 			for item in itemsToLoad
 
 				pk = item._id.$oid
@@ -331,6 +332,9 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 								lock = new Item.VideoGame(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, box.module?.$oid)
 
 						lock.lastUpdateDate = box.lastUpdate.$date
+						
+						if lock?
+							newItems.push(lock)
 
 					when 'Div'			# add RDivs (Text and Media)
 						div = item
@@ -346,7 +350,10 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 								rdiv = new Item.Media(Utils.CS.rectangleFromBox(div), data, id, pk, date, lock)
 
 						rdiv.lastUpdateDate = div.lastUpdate.$date
-
+						
+						if rdiv?
+							newItems.push(rdiv)
+							
 					when 'Path' 		# add RPaths
 						path = item
 						if not path.owner?
@@ -364,6 +371,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 
 						# create the RPath with the corresponding RTool
 						rpath = null
+						newPath = null
 						args =
 							path: path
 							date: date
@@ -375,9 +383,12 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 							owner: path.owner
 							drawing: path.drawing
 						if R.tools[path.object_type]?
-							@createPath(args)
+							newPath = @createPath(args)
 						else
 							@loadModuleAndCreatePath(args)
+
+						if newPath?
+							newItems.push(newPath)
 
 					when 'AreaToUpdate'
 						R.rasterizer.addAreaToUpdate(Utils.CS.rectangleFromBox(item).expand(5)) # expand because of stroke path
@@ -395,9 +406,12 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 							console.log "Error: drawing has less than 5 points"
 
 						drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, id, item._id.$oid, item.owner, date, item.title, item.description, item.status)
+
+						if drawing?
+							newItems.push(drawing)
 					else
 						continue
-			return
+			return newItems
 
 		endLoading: ()->
 			if Utils.isEmpty(@pathsToCreate)
@@ -407,7 +421,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			return
 
 		# load callback: add loaded RItems
-		loadCallback: (results)=>
+		loadCallback: (results, rasterizeItems=false)=>
 			console.log "load callback"
 			console.log P.project.activeLayer.name
 
@@ -419,6 +433,9 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 
 			@setMe(results.user)
 
+			if not results.qZoom?
+				results.qZoom = 1
+
 			if results.rasters? then R.rasterizer.load(results.rasters, results.qZoom)
 
 			# if R.rasterizerMode then R.removeItemsToUpdate(results.itemsToUpdate)
@@ -427,9 +444,13 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 
 			itemsToLoad = @parseNewItems(results.items)
 
-			@createNewItems(itemsToLoad)
+			newItems = @createNewItems(itemsToLoad)
 
 			R.rasterizer.setQZoomToUpdate(results.qZoom)
+
+			if rasterizeItems
+				R.rasterizer.rasterize(newItems)
+				R.rasterizer.rasterizeRectangle()
 
 			if not results.rasters? or results.rasters.length==0
 				R.rasterizer.checkRasterizeAreasToUpdate()
