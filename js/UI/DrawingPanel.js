@@ -136,16 +136,20 @@
       };
 
       DrawingPanel.prototype.deselectDrawing = function(drawing) {
-        if (drawing === this.currentDrawing) {
-          this.currentDrawing = null;
-        }
         if (R.selectedItems.length === 0) {
           this.close();
+        }
+        if (drawing === this.currentDrawing) {
+          this.currentDrawing = null;
         }
       };
 
 
       /* open close */
+
+      DrawingPanel.prototype.isOpened = function() {
+        return this.drawingPanelJ.hasClass('visible');
+      };
 
       DrawingPanel.prototype.open = function() {
         this.drawingPanelJ.show();
@@ -158,6 +162,7 @@
         }
         if ((this.currentDrawing != null) && (this.currentDrawing.pk == null)) {
           if (removeDrawingIfNotSaved) {
+            this.currentDrawing.removeChildren();
             this.currentDrawing.remove();
           }
         }
@@ -172,16 +177,18 @@
       /* set drawing */
 
       DrawingPanel.prototype.createSelectionLi = function(selectedDrawingsJ, listJ, item) {
-        var deselectBtnJ, deselectIconJ, liJ, thumbnailJ, titleJ;
+        var contentJ, deselectBtnJ, deselectIconJ, liJ, thumbnailJ, titleJ;
         liJ = $('<li>');
         liJ.addClass('drawing-selection cd-button');
         liJ.addClass('cd-row');
-        thumbnailJ = $('<div>');
-        thumbnailJ.addClass('thumbnail drawing-thumbnail');
-        thumbnailJ.append(this.getDrawingImage(item));
+        contentJ = $('<div>');
+        contentJ.addClass('cd-column cd-grow');
         titleJ = $('<h4>');
         titleJ.addClass('cd-grow cd-center');
         titleJ.html(item.title);
+        thumbnailJ = $('<div>');
+        thumbnailJ.addClass('thumbnail drawing-thumbnail');
+        thumbnailJ.append(this.getDrawingImage(item));
         deselectBtnJ = $('<button>');
         deselectBtnJ.addClass('btn btn-default icon-only transparent');
         deselectIconJ = $('<span>').addClass('glyphicon glyphicon-remove');
@@ -193,8 +200,9 @@
           return -1;
         });
         deselectBtnJ.append(deselectIconJ);
-        liJ.append(thumbnailJ);
-        liJ.append(titleJ);
+        contentJ.append(titleJ);
+        contentJ.append(thumbnailJ);
+        liJ.append(contentJ);
         liJ.append(deselectBtnJ);
         liJ.click(function() {
           selectedDrawingsJ.hide();
@@ -270,19 +278,19 @@
       };
 
       DrawingPanel.prototype.getDrawingImage = function(drawing) {
-        var image;
-        if (drawing.raster == null) {
-          drawing.rasterize();
-        }
+        var image, raster;
         image = new Image();
-        image.src = drawing.raster.toDataURL();
-        return image;
+        raster = drawing.getRaster();
+        if (raster != null) {
+          image.src = raster.toDataURL();
+          return image;
+        } else {
+          return $('<span>').addClass('badge label-default').text('No path loaded');
+        }
       };
 
       DrawingPanel.prototype.setDrawingThumbnail = function() {
         var thumbnailJ;
-        this.currentDrawing.rasterize();
-        R.rasterizer.rasterize(this.currentDrawing, false);
         thumbnailJ = this.contentJ.find('.drawing-thumbnail');
         thumbnailJ.empty().append(this.getDrawingImage(this.currentDrawing));
       };
@@ -299,8 +307,9 @@
         title = this.contentJ.find('#drawing-title').val();
         description = this.contentJ.find('#drawing-description').val();
         this.currentDrawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending');
-        this.setDrawingThumbnail();
         R.view.fitRectangle(this.currentDrawing.rectangle, true);
+        this.setDrawingThumbnail();
+        this.currentDrawing.select(true, false);
       };
 
       DrawingPanel.prototype.submitDrawingClickedCallback = function(results) {
@@ -326,7 +335,25 @@
           id = itemIds[k];
           items.push(R.items[id]);
         }
+        if (itemIds.length === 0) {
+          R.alertManager.alert('You must draw something before submitting.', 'error');
+          this.close();
+          return;
+        }
         this.createDrawingFromItems(items);
+        R.commandManager.clearHistory();
+      };
+
+      DrawingPanel.prototype.checkPathToSubmit = function() {
+        var id, item, ref;
+        ref = R.items;
+        for (id in ref) {
+          item = ref[id];
+          if (item instanceof Item.Path && item.owner === R.me && item.group.parent === R.view.mainLayer) {
+            return true;
+          }
+        }
+        return false;
       };
 
       DrawingPanel.prototype.submitDrawingClicked = function() {
@@ -336,13 +363,14 @@
         this.open();
         this.showContent();
         this.currentDrawing = null;
-        this.contentJ.find('.read').hide();
-        this.contentJ.find('.modify').show();
+        this.contentJ.find('#drawing-author').val(R.me);
         this.contentJ.find('#drawing-title').val('');
         this.contentJ.find('#drawing-description').val('');
         this.submitBtnJ.show();
         this.modifyBtnJ.hide();
         this.cancelBtnJ.show();
+        this.contentJ.find('#drawing-title').removeAttr('readonly');
+        this.contentJ.find('#drawing-description').removeAttr('readonly');
         this.votesJ.hide();
         this.currentDrawing = null;
         if (R.selectedItems.length === 0) {
@@ -374,21 +402,19 @@
         this.submitBtnJ.hide();
         this.modifyBtnJ.hide();
         this.cancelBtnJ.hide();
+        this.contentJ.find('#drawing-author').val(this.currentDrawing.owner);
+        this.contentJ.find('#drawing-title').val(this.currentDrawing.title);
+        this.contentJ.find('#drawing-description').val(this.currentDrawing.description);
         if (this.currentDrawing.owner === R.me || R.administrator) {
-          this.contentJ.find('.read').hide();
-          this.contentJ.find('.modify').show();
-          this.contentJ.find('#drawing-title').val(this.currentDrawing.title);
-          this.contentJ.find('#drawing-description').val(this.currentDrawing.description);
           if (latestDrawing.status === 'pending') {
             this.modifyBtnJ.show();
             this.cancelBtnJ.show();
           }
+          this.contentJ.find('#drawing-title').removeAttr('readonly');
+          this.contentJ.find('#drawing-description').removeAttr('readonly');
         } else {
-          this.contentJ.find('.read').show();
-          this.contentJ.find('.modify').hide();
-          this.contentJ.find('.title').html(this.currentDrawing.title);
-          this.contentJ.find('.description').html(this.currentDrawing.description);
-          this.contentJ.find('.author').html(this.currentDrawing.owner);
+          this.contentJ.find('#drawing-title').attr('readonly', true);
+          this.contentJ.find('#drawing-description').attr('readonly', true);
         }
         this.votesJ.show();
         this.voteUpBtnJ.removeClass('voted');
@@ -433,6 +459,15 @@
         nVotes = nPositiveVotes + nNegativeVotes;
         this.votesJ.find('.n-votes.total').html(nVotes);
         this.votesJ.find('.percentage-votes').html(nVotes > 0 ? 100 * nPositiveVotes / nVotes : 0);
+        this.votesJ.find('.status').html(this.currentDrawing.status);
+        this.voteUpBtnJ.addClass('disabled');
+        this.voteDownBtnJ.addClass('disabled');
+        if (this.currentDrawing.owner === R.me || R.administrator) {
+          if (latestDrawing.status === 'pending') {
+            this.voteUpBtnJ.removeClass('disabled');
+            this.voteDownBtnJ.removeClass('disabled');
+          }
+        }
         pathsToLoad = [];
         ref1 = drawingData.paths;
         for (k = 0, len1 = ref1.length; k < len1; k++) {
@@ -484,6 +519,10 @@
         var args;
         if (this.currentDrawing.owner === R.me) {
           R.alertManager.alert('You cannot vote for your own drawing', 'error');
+          return;
+        }
+        if (this.currentDrawing.status !== 'pending') {
+          R.alertManager.alert('The drawing is already validated.', 'error');
           return;
         }
         if (this.hasAlreadyVoted()) {

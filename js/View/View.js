@@ -196,6 +196,21 @@
         this.rejectedListJ = this.createLayerListItem('Rejected', this.rejectedLayer);
       };
 
+      View.prototype.getViewBounds = function(considerPanels) {
+        var bottomRight, drawingPanelWidth, sidebarWidth, topLeft;
+        if (window.innerWidth < 600) {
+          considerPanels = false;
+        }
+        if (considerPanels) {
+          sidebarWidth = R.sidebar.isOpened() ? R.sidebar.sidebarJ.outerWidth() : 0;
+          drawingPanelWidth = R.drawingPanel.isOpened() ? R.drawingPanel.drawingPanelJ.outerWidth() : 0;
+          topLeft = P.view.viewToProject(new P.Point(sidebarWidth, 0));
+          bottomRight = P.view.viewToProject(new P.Point(window.innerWidth - drawingPanelWidth, window.innerHeight - 50));
+          return new P.Rectangle(topLeft, bottomRight);
+        }
+        return P.view.bounds;
+      };
+
       View.prototype.moveTo = function(pos, delay, addCommand) {
         var initialPosition, somethingToLoad, tween;
         if (addCommand == null) {
@@ -216,7 +231,7 @@
       };
 
       View.prototype.moveBy = function(delta, addCommand) {
-        var area, div, i, j, len, len1, newEntireArea, newView, ref, ref1, restrictedAreaShrinked, somethingToLoad;
+        var area, div, i, j, len, len1, newEntireArea, newView, previousCenter, ref, ref1, restrictedAreaShrinked, somethingToLoad;
         if (addCommand == null) {
           addCommand = true;
         }
@@ -224,11 +239,12 @@
           if (!this.restrictedArea.contains(P.view.center)) {
             delta = this.restrictedArea.center.subtract(P.view.center);
           } else {
-            newView = P.view.bounds.clone();
+            newView = this.getViewBounds(true);
+            previousCenter = newView.center.clone();
             newView.center.x += delta.x;
             newView.center.y += delta.y;
             if (!this.restrictedArea.contains(newView)) {
-              restrictedAreaShrinked = this.restrictedArea.expand(P.view.size.multiply(-1));
+              restrictedAreaShrinked = this.restrictedArea.expand(newView.size.multiply(-1));
               if (restrictedAreaShrinked.width < 0) {
                 restrictedAreaShrinked.left = restrictedAreaShrinked.right = this.restrictedArea.center.x;
               }
@@ -237,7 +253,7 @@
               }
               newView.center.x = Utils.clamp(restrictedAreaShrinked.left, newView.center.x, restrictedAreaShrinked.right);
               newView.center.y = Utils.clamp(restrictedAreaShrinked.top, newView.center.y, restrictedAreaShrinked.bottom);
-              delta = newView.center.subtract(P.view.center);
+              delta = newView.center.subtract(previousCenter);
             }
           }
         }
@@ -282,8 +298,11 @@
           considerPanels = false;
         }
         windowSize = new P.Size(window.innerWidth, window.innerHeight);
-        sidebarWidth = considerPanels ? R.sidebar.sidebarJ.outerWidth() : 0;
-        drawingPanelWidth = considerPanels ? R.drawingPanel.drawingPanelJ.outerWidth() : 0;
+        if (window.innerWidth < 600) {
+          considerPanels = false;
+        }
+        sidebarWidth = considerPanels && R.sidebar.isOpened() ? R.sidebar.sidebarJ.outerWidth() : 0;
+        drawingPanelWidth = considerPanels && R.drawingPanel.isOpened() ? R.drawingPanel.drawingPanelJ.outerWidth() : 0;
         windowSize.width = windowSize.width - sidebarWidth - drawingPanelWidth;
         viewRatio = windowSize.width / windowSize.height;
         rectangleRatio = rectangle.width / rectangle.height;

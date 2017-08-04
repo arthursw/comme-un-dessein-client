@@ -92,6 +92,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi'
 			@handleJ.find("span").removeClass("glyphicon-chevron-right").addClass("glyphicon-chevron-left")
 			return
 
+		isOpened: ()->
+			return not @sidebarJ.hasClass("r-hidden")
+
 		hide: ()->
 			@sidebarJ.addClass("r-hidden")
 			R.codeEditor?.editorJ.addClass("r-hidden")

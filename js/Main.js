@@ -61,6 +61,7 @@
       R.fontManager = new FontManager();
       R.view.initializePosition();
       R.sidebar.initialize();
+      R.commandManager.updateButtons();
       if (typeof window !== "undefined" && window !== null) {
         if (typeof window.setPageFullyLoaded === "function") {
           window.setPageFullyLoaded(true);

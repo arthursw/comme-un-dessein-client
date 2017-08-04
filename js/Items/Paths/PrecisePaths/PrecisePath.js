@@ -321,7 +321,6 @@
       PrecisePath.prototype.updateCreate = function(point, event) {
         var lastSegment, previousSegment;
         if (!this.data.polygonMode) {
-          console.log(this.controlPath.lastSegment.point.getDistance(point, true));
           if (this.controlPath.lastSegment.point.getDistance(point, true) < 20) {
             return;
           }

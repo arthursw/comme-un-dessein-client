@@ -174,6 +174,19 @@ define dependencies, (P, R, Utils, Grid, Command, Div, Hammer) ->
 
 			return
 
+		getViewBounds: (considerPanels)->
+			if window.innerWidth < 600
+				considerPanels = false
+			if considerPanels
+				sidebarWidth = if R.sidebar.isOpened() then R.sidebar.sidebarJ.outerWidth() else 0
+				drawingPanelWidth = if R.drawingPanel.isOpened() then R.drawingPanel.drawingPanelJ.outerWidth() else 0
+
+				topLeft = P.view.viewToProject(new P.Point(sidebarWidth, 0))
+				bottomRight = P.view.viewToProject(new P.Point(window.innerWidth - drawingPanelWidth, window.innerHeight-50))
+
+				return new P.Rectangle(topLeft, bottomRight)
+			return P.view.bounds
+
 		## Move/scroll the commeUnDessein view
 
 		# Move the commeUnDessein view to *pos*
@@ -216,15 +229,16 @@ define dependencies, (P, R, Utils, Grid, Command, Div, Hammer) ->
 					# delta = @restrictedArea.center.subtract(P.view.size.multiply(0.5)).subtract(P.view.bounds.topLeft)
 					delta = @restrictedArea.center.subtract(P.view.center)
 				else
+					newView = @getViewBounds(true)
+					previousCenter = newView.center.clone()
 					# test if new pos is still in restricted area
-					newView = P.view.bounds.clone()
 					newView.center.x += delta.x
 					newView.center.y += delta.y
 
 					# if it does not contain the view, change delta so that it contains it
 					if not @restrictedArea.contains(newView)
 
-						restrictedAreaShrinked = @restrictedArea.expand(P.view.size.multiply(-1)) # restricted area shrinked by P.view.size
+						restrictedAreaShrinked = @restrictedArea.expand(newView.size.multiply(-1)) # restricted area shrinked by P.view.size
 
 						if restrictedAreaShrinked.width<0
 							restrictedAreaShrinked.left = restrictedAreaShrinked.right = @restrictedArea.center.x
@@ -233,7 +247,7 @@ define dependencies, (P, R, Utils, Grid, Command, Div, Hammer) ->
 
 						newView.center.x = Utils.clamp(restrictedAreaShrinked.left, newView.center.x, restrictedAreaShrinked.right)
 						newView.center.y = Utils.clamp(restrictedAreaShrinked.top, newView.center.y, restrictedAreaShrinked.bottom)
-						delta = newView.center.subtract(P.view.center)
+						delta = newView.center.subtract(previousCenter)
 
 			@previousPosition ?= P.view.center
 
@@ -290,10 +304,14 @@ define dependencies, (P, R, Utils, Grid, Command, Div, Hammer) ->
 		fitRectangle: (rectangle, considerPanels=false)->
 			windowSize = new P.Size(window.innerWidth, window.innerHeight)
 			
-			sidebarWidth = if considerPanels then R.sidebar.sidebarJ.outerWidth() else 0			
-			drawingPanelWidth = if considerPanels then R.drawingPanel.drawingPanelJ.outerWidth() else 0	
-			windowSize.width = windowSize.width - sidebarWidth - drawingPanelWidth
+			# WARNING: on small screen, the drawing panel takes the whole width, that would make window.width negative
+			if window.innerWidth < 600
+				considerPanels = false
 
+			sidebarWidth = if considerPanels and R.sidebar.isOpened() then R.sidebar.sidebarJ.outerWidth() else 0
+			drawingPanelWidth = if considerPanels and R.drawingPanel.isOpened() then R.drawingPanel.drawingPanelJ.outerWidth() else 0
+			windowSize.width = windowSize.width - sidebarWidth - drawingPanelWidth
+			
 			viewRatio = windowSize.width / windowSize.height
 			rectangleRatio = rectangle.width / rectangle.height
 

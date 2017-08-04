@@ -750,7 +750,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 			return
 
 		rasterize: ()->
-			if @drawingId? then return
+			# if @drawingId? then return
 			if @raster? or not @drawing? then return
 			if not R.rasterizer.rasterizeItems then return
 			if @drawing.bounds.width == 0 and @drawing.bounds.height == 0 then return

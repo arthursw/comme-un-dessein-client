@@ -26,6 +26,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command' ], (P, R, Utils, Command
 
 			@mapItemsToCommand(command)
 
+			@updateButtons()
+
 			if execute then command.do()
 			return
 
@@ -39,6 +41,9 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command' ], (P, R, Utils, Command
 
 			if @currentCommand == @commandIndex
 				@waitingCommand = null
+
+				@updateButtons()
+
 				return
 			
 			deferred = @history[@currentCommand+@offset].toggle()
@@ -102,12 +107,37 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command' ], (P, R, Utils, Command
 		getCurrentCommand: ()->
 			return @history[@currentCommand]
 
+		setButton: (name, enable)->
+			opacity = if enable then 1 else 0.25
+			R.sidebar.favoriteToolsJ.find("[data-name='"+name+"']").css( opacity: opacity )
+			return
+
+		setUndoButton: (enable)->
+			@setButton('Undo', enable)
+			return
+		
+		setRedoButton: (enable)->
+			@setButton('Redo', enable)
+			return
+
+		updateButtons: ()->
+			if @currentCommand >= @history.length-1
+				@setRedoButton(false)
+			else 
+				@setRedoButton(true)
+			
+			if @currentCommand == 0
+				@setUndoButton(false)
+			else 
+				@setUndoButton(true)
+			return
 
 		clearHistory: ()->
 			@historyJ.empty()
 			@history = []
 			@currentCommand = -1
 			@add(new Command("Load CommeUnDessein"), true)
+			@updateButtons()
 			return
 
 		# manage actions

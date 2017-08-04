@@ -39,6 +39,7 @@
         this.currentCommand++;
         this.history.splice(this.currentCommand, this.history.length - this.currentCommand, command);
         this.mapItemsToCommand(command);
+        this.updateButtons();
         if (execute) {
           command["do"]();
         }
@@ -58,6 +59,7 @@
         document.removeEventListener('command executed', this.toggleCurrentCommand);
         if (this.currentCommand === this.commandIndex) {
           this.waitingCommand = null;
+          this.updateButtons();
           return;
         }
         deferred = this.history[this.currentCommand + this.offset].toggle();
@@ -136,11 +138,41 @@
         return this.history[this.currentCommand];
       };
 
+      CommandManager.prototype.setButton = function(name, enable) {
+        var opacity;
+        opacity = enable ? 1 : 0.25;
+        R.sidebar.favoriteToolsJ.find("[data-name='" + name + "']").css({
+          opacity: opacity
+        });
+      };
+
+      CommandManager.prototype.setUndoButton = function(enable) {
+        this.setButton('Undo', enable);
+      };
+
+      CommandManager.prototype.setRedoButton = function(enable) {
+        this.setButton('Redo', enable);
+      };
+
+      CommandManager.prototype.updateButtons = function() {
+        if (this.currentCommand >= this.history.length - 1) {
+          this.setRedoButton(false);
+        } else {
+          this.setRedoButton(true);
+        }
+        if (this.currentCommand === 0) {
+          this.setUndoButton(false);
+        } else {
+          this.setUndoButton(true);
+        }
+      };
+
       CommandManager.prototype.clearHistory = function() {
         this.historyJ.empty();
         this.history = [];
         this.currentCommand = -1;
         this.add(new Command("Load CommeUnDessein"), true);
+        this.updateButtons();
       };
 
       CommandManager.prototype.beginAction = function(command, event) {

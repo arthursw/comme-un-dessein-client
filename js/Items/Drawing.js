@@ -70,6 +70,7 @@
         if (this.pk != null) {
           this.constructor.pkToId[this.pk] = this.id;
         }
+        this.paths = [];
         this.drawing = new P.Group();
         this.group.addChild(this.drawing);
         this.votes = [];
@@ -188,12 +189,10 @@
       };
 
       Drawing.prototype.computeRectangle = function() {
-        var bounds, child, path;
-        for (child in this.drawing.children) {
-          path = child.controller;
-          if (path == null) {
-            continue;
-          }
+        var bounds, i, len, path, ref;
+        ref = this.paths;
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
           bounds = path.getDrawingBounds();
           if (bounds != null) {
             if (this.rectangle == null) {
@@ -206,8 +205,8 @@
 
       Drawing.prototype.addChild = function(path) {
         var bounds;
+        this.paths.push(path);
         path.drawingId = this.id;
-        path.group.visible = true;
         if (this.pathPks == null) {
           this.pathPks = [];
         }
@@ -216,7 +215,19 @@
           return;
         }
         this.pathPks.push(path.pk);
-        this.drawing.addChild(path.group);
+        switch (this.status) {
+          case 'pending':
+            R.view.pendingLayer.addChild(path.group);
+            break;
+          case 'drawing':
+            R.view.drawingLayer.addChild(path.group);
+            break;
+          case 'drawn':
+            R.view.drawnLayer.addChild(path.group);
+            break;
+          case 'rejected':
+            R.view.rejectedLayer.addChild(path.group);
+        }
         bounds = path.getDrawingBounds();
         if (bounds != null) {
           if (this.rectangle == null) {
@@ -226,11 +237,6 @@
         }
         path.updateStrokeColor();
         path.removeFromListItem();
-        this.drawn = false;
-        if ((this.raster != null) && this.raster.parent !== null) {
-          this.replaceDrawing();
-          R.rasterizer.rasterize(this);
-        }
       };
 
       Drawing.prototype.replaceDrawing = function() {
@@ -252,13 +258,20 @@
         Drawing.__super__.replaceDrawing.call(this);
       };
 
-      Drawing.prototype.removeChild = function(path, updateRectangle, updateRaster) {
-        var pkIndex;
+      Drawing.prototype.removeChild = function(path, updateRectangle, removeID) {
+        var pathIndex, pkIndex;
         if (updateRectangle == null) {
           updateRectangle = true;
         }
-        if (updateRaster == null) {
-          updateRaster = false;
+        if (removeID == null) {
+          removeID = true;
+        }
+        if (removeID) {
+          path.drawingId = null;
+        }
+        pathIndex = this.paths.indexOf(path);
+        if (pathIndex >= 0) {
+          this.paths.splice(pathIndex, 1);
         }
         path.drawingId = null;
         pkIndex = this.pathPks.indexOf(path.pk);
@@ -272,14 +285,6 @@
         path.updateStrokeColor();
         path.addToListItem();
         this.drawn = false;
-        if (updateRaster && (this.raster != null) && this.raster.parent !== null) {
-          this.replaceDrawing();
-        }
-        R.rasterizer.rasterize(path, false);
-        if (typeof path.draw === "function") {
-          path.draw();
-        }
-        path.rasterize();
       };
 
       Drawing.prototype.setParameter = function(name, value, updateGUI, update) {
@@ -294,7 +299,7 @@
         if (R.view.grid.rectangleOverlapsTwoPlanets(this.rectangle)) {
           return;
         }
-        if (this.rectangle["with"] === 0 && this.rectangle.height === 0 || this.drawing.children.length === 0) {
+        if (this.rectangle["with"] === 0 && this.rectangle.height === 0 || this.paths.length === 0) {
           this.remove();
           R.alertManager.alert("Error: The drawing is empty.", "error");
           return;
@@ -529,28 +534,48 @@
         return true;
       };
 
-      Drawing.prototype.remove = function() {
+      Drawing.prototype.removeChildren = function() {
         var i, len, path, ref;
-        ref = this.children();
+        ref = this.children().slice();
         for (i = 0, len = ref.length; i < len; i++) {
           path = ref[i];
-          path.remove();
+          this.removeChild(path, false);
         }
+      };
+
+      Drawing.prototype.remove = function() {
         this.removeFromListItem();
         Drawing.__super__.remove.apply(this, arguments);
       };
 
-      Drawing.prototype.children = function() {
-        var child, i, len, paths, ref;
-        paths = [];
-        ref = this.drawing.children;
+      Drawing.prototype.getRaster = function() {
+        var group, i, len, path, ref;
+        if (this.pathRaster != null) {
+          return this.pathRaster;
+        }
+        if (this.paths.length === 0) {
+          return null;
+        }
+        group = new P.Group();
+        ref = this.paths;
         for (i = 0, len = ref.length; i < len; i++) {
-          child = ref[i];
-          if (child.controller != null) {
-            paths.push(child.controller);
+          path = ref[i];
+          if (path.raster != null) {
+            group.addChild(path.raster.clone());
+          } else {
+            if (path.drawing == null) {
+              path.draw();
+            }
+            group.addChild(path.drawing.clone());
           }
         }
-        return paths;
+        this.pathRaster = group.rasterize(P.view.resolution, false);
+        group.remove();
+        return this.pathRaster;
+      };
+
+      Drawing.prototype.children = function() {
+        return this.paths;
       };
 
       Drawing.prototype.highlight = function(color) {
@@ -562,29 +587,7 @@
         }
       };
 
-      Drawing.prototype.drawChildren = function() {
-        var child, i, len, ref, ref1;
-        if (this.drawing.children.length === 0) {
-          return;
-        }
-        ref = this.drawing.children;
-        for (i = 0, len = ref.length; i < len; i++) {
-          child = ref[i];
-          if ((ref1 = child.controller) != null) {
-            if (typeof ref1.draw === "function") {
-              ref1.draw();
-            }
-          }
-        }
-      };
-
-      Drawing.prototype.rasterize = function() {
-        if ((this.raster != null) || (this.drawing == null)) {
-          return;
-        }
-        this.drawChildren();
-        Drawing.__super__.rasterize.call(this);
-      };
+      Drawing.prototype.rasterize = function() {};
 
       return Drawing;
 

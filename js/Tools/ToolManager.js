@@ -51,7 +51,16 @@
       }
 
       ToolManager.prototype.zoom = function(value) {
+        var bounds;
         if (P.view.zoom * value < 0.125 || P.view.zoom * value > 4) {
+          return;
+        }
+        bounds = R.view.getViewBounds(true);
+        if (value < 1 && bounds.contains(R.view.grid.limitCD.bounds)) {
+          return;
+        }
+        if (bounds.contains(R.view.grid.limitCD.bounds.scale(value))) {
+          R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(200), true);
           return;
         }
         P.view.zoom *= value;

@@ -483,9 +483,6 @@
       };
 
       Item.prototype.rasterize = function() {
-        if (this.drawingId != null) {
-          return;
-        }
         if ((this.raster != null) || (this.drawing == null)) {
           return;
         }

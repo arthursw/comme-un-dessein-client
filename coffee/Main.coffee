@@ -293,6 +293,8 @@ define [
 		# modal.addButton( type: 'primary', name: 'Sign in', submit: ()-> return location.pathname = '/accounts/login/' )
 		# modal.addButton( type: 'info', name: 'Sign up', submit: ()-> return location.pathname = '/accounts/signup/' )
 		# modal.show()
+		
+		R.commandManager.updateButtons()
 
 		window?.setPageFullyLoaded?(true)
 		return

@@ -127,14 +127,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			return
 
 		deselectDrawing: (drawing)->
-			if drawing == @currentDrawing
-				@currentDrawing = null
 			if R.selectedItems.length == 0
 				@close()
-				# @hideSubmitDrawing()
+			if drawing == @currentDrawing
+				@currentDrawing = null
 			return
 
 		### open close ###
+
+		isOpened: ()->
+			return @drawingPanelJ.hasClass('visible')
 
 		open: ()->
 			@drawingPanelJ.show()
@@ -144,6 +146,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 		close: (removeDrawingIfNotSaved=true)=>
 			if @currentDrawing? and not @currentDrawing.pk?
 				if removeDrawingIfNotSaved
+					@currentDrawing.removeChildren()
 					@currentDrawing.remove()
 				# @showBeginDrawing()
 			@drawingPanelJ.hide()
@@ -158,15 +161,22 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			liJ = $('<li>')
 			liJ.addClass('drawing-selection cd-button')
 			liJ.addClass('cd-row')
-			thumbnailJ = $('<div>')
-			thumbnailJ.addClass('thumbnail drawing-thumbnail')
-			thumbnailJ.append(@getDrawingImage(item))
+
+			contentJ = $('<div>')
+			contentJ.addClass('cd-column cd-grow')
+
 			titleJ = $('<h4>')
 			titleJ.addClass('cd-grow cd-center')
 			titleJ.html(item.title)
+
+			thumbnailJ = $('<div>')
+			thumbnailJ.addClass('thumbnail drawing-thumbnail')
+			thumbnailJ.append(@getDrawingImage(item))
+			
 			deselectBtnJ = $('<button>')
 			deselectBtnJ.addClass('btn btn-default icon-only transparent')
 			deselectIconJ = $('<span>').addClass('glyphicon glyphicon-remove')
+
 			deselectBtnJ.click (event)->
 				item.deselect()
 				liJ.remove()
@@ -174,8 +184,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 				event.stopPropagation()
 				return -1
 			deselectBtnJ.append(deselectIconJ)
-			liJ.append(thumbnailJ)
-			liJ.append(titleJ)
+			
+			contentJ.append(titleJ)
+			contentJ.append(thumbnailJ)
+
+			liJ.append(contentJ)
+
 			liJ.append(deselectBtnJ)
 			liJ.click ()->
 				selectedDrawingsJ.hide()
@@ -249,17 +263,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			return
 
 		getDrawingImage: (drawing)->
-			if not drawing.raster?
-				drawing.rasterize()
 
 			image = new Image()
-			image.src = drawing.raster.toDataURL()
-
-			return image
+			raster = drawing.getRaster()
+			if raster?
+				image.src = raster.toDataURL()
+				return image
+			else
+				return $('<span>').addClass('badge label-default').text('No path loaded')
 
 		setDrawingThumbnail: ()->
-			@currentDrawing.rasterize()
-			R.rasterizer.rasterize(@currentDrawing, false)
+			# @currentDrawing.rasterize()
+			# R.rasterizer.rasterize(@currentDrawing, false)
 
 			thumbnailJ = @contentJ.find('.drawing-thumbnail')
 			thumbnailJ.empty().append(@getDrawingImage(@currentDrawing))
@@ -277,17 +292,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			title = @contentJ.find('#drawing-title').val()
 			description = @contentJ.find('#drawing-description').val()
 			@currentDrawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending')
-			
-			@setDrawingThumbnail()
 
 			R.view.fitRectangle(@currentDrawing.rectangle, true)
 
+			@setDrawingThumbnail()
+
+			@currentDrawing.select(true, false) # Important to deselect (for example when selecting a tool) and close the drawing panel
 			return
 
 		submitDrawingClickedCallback: (results)=>
 			@submitBtnJ.find('span.glyphicon').removeClass('glyphicon-refresh glyphicon-refresh-animate').addClass('glyphicon-ok')
 
 			if not R.loader.checkError(results) then return
+
 			itemsToLoad = []
 			itemIds = []
 			# parse items and remove them if they are on stage (they must be updated)
@@ -303,11 +320,28 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			for id in itemIds
 				items.push(R.items[id])
 
+			if itemIds.length == 0
+				R.alertManager.alert 'You must draw something before submitting.', 'error'
+				@close()
+				return
+
 			@createDrawingFromItems(items)
+
+			R.commandManager.clearHistory()
 
 			return
 
+		checkPathToSubmit: ()->
+			for id, item of R.items
+				if item instanceof Item.Path and item.owner == R.me and item.group.parent == R.view.mainLayer
+					return true
+			return false
+
 		submitDrawingClicked: ()=>
+			# if not @checkPathToSubmit()
+			# 	R.alertManager.alert 'You must draw something before submitting.', 'error'
+			# 	return
+
 			R.toolManager.leaveDrawingMode(true)
 			@submitDrawingBtnJ.hide()
 			@drawingPanelTitleJ.text('Create drawing')
@@ -315,13 +349,17 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			@open()
 			@showContent()
 			@currentDrawing = null
-			@contentJ.find('.read').hide()
-			@contentJ.find('.modify').show()
+
+			@contentJ.find('#drawing-author').val(R.me)
 			@contentJ.find('#drawing-title').val('')
 			@contentJ.find('#drawing-description').val('')
 			@submitBtnJ.show()
 			@modifyBtnJ.hide()
 			@cancelBtnJ.show()
+
+			@contentJ.find('#drawing-title').removeAttr('readonly')
+			@contentJ.find('#drawing-description').removeAttr('readonly')
+
 			@votesJ.hide()
 
 			@currentDrawing = null
@@ -355,21 +393,20 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			@modifyBtnJ.hide()
 			@cancelBtnJ.hide()
 
+			@contentJ.find('#drawing-author').val(@currentDrawing.owner)
+			@contentJ.find('#drawing-title').val(@currentDrawing.title)
+			@contentJ.find('#drawing-description').val(@currentDrawing.description)
+
 			if @currentDrawing.owner == R.me || R.administrator
-				@contentJ.find('.read').hide()
-				@contentJ.find('.modify').show()
-				@contentJ.find('#drawing-title').val(@currentDrawing.title)
-				@contentJ.find('#drawing-description').val(@currentDrawing.description)
-				
 				if latestDrawing.status == 'pending'
 					@modifyBtnJ.show()
 					@cancelBtnJ.show()
+				@contentJ.find('#drawing-title').removeAttr('readonly')
+				@contentJ.find('#drawing-description').removeAttr('readonly')
 			else
-				@contentJ.find('.read').show()
-				@contentJ.find('.modify').hide()
-				@contentJ.find('.title').html(@currentDrawing.title)
-				@contentJ.find('.description').html(@currentDrawing.description)
-				@contentJ.find('.author').html(@currentDrawing.owner)
+				@contentJ.find('#drawing-title').attr('readonly', true)
+				@contentJ.find('#drawing-description').attr('readonly', true)
+
 
 			@votesJ.show()
 			@voteUpBtnJ.removeClass('voted')
@@ -402,6 +439,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			nVotes = nPositiveVotes+nNegativeVotes
 			@votesJ.find('.n-votes.total').html(nVotes)
 			@votesJ.find('.percentage-votes').html(if nVotes > 0 then 100*nPositiveVotes/nVotes else 0)
+			
+			@votesJ.find('.status').html(@currentDrawing.status)
+
+			@voteUpBtnJ.addClass('disabled')
+			@voteDownBtnJ.addClass('disabled')
+			if @currentDrawing.owner == R.me || R.administrator
+				if latestDrawing.status == 'pending'
+					@voteUpBtnJ.removeClass('disabled')
+					@voteDownBtnJ.removeClass('disabled')
 
 			# load missing paths
 			pathsToLoad = []
@@ -446,7 +492,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			if @currentDrawing.owner == R.me
 				R.alertManager.alert 'You cannot vote for your own drawing', 'error'
 				return
-
+			
+			if @currentDrawing.status != 'pending'
+				R.alertManager.alert 'The drawing is already validated.', 'error'
+				return
+			
 			if @hasAlreadyVoted()
 				R.alertManager.alert 'You already voted for this drawing', 'error'
 				return

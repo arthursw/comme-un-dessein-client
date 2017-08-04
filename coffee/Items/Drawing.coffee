@@ -47,6 +47,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 			if @pk?
 				@constructor.pkToId[@pk] = @id
 
+			@paths = []
 			@drawing = new P.Group()
 
 			@group.addChild(@drawing)
@@ -170,9 +171,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 			return
 
 		computeRectangle: ()->
-			for child of @drawing.children
-				path = child.controller
-				if not path? then continue
+			for path in @paths
 				bounds = path.getDrawingBounds()
 				if bounds?
 					@rectangle ?= bounds.clone()
@@ -180,24 +179,36 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 			return
 
 		addChild: (path)->
+			@paths.push(path)
 			path.drawingId = @id
-			path.group.visible = true # can be hidden by rasterizer, must be shown here to update @drawing.bounds
+			# path.group.visible = true # can be hidden by rasterizer, must be shown here to update @drawing.bounds
 			@pathPks ?= []
 			if not path.pk?
 				R.alertManager.alert 'Error: a path has not been saved yet. Please wait until the path is saved before creating the drawing.', 'error'
 				return
 			@pathPks.push(path.pk)
-			@drawing.addChild(path.group)
+
+			switch @status
+				when 'pending'
+					R.view.pendingLayer.addChild(path.group)
+				when 'drawing'
+					R.view.drawingLayer.addChild(path.group)
+				when 'drawn'
+					R.view.drawnLayer.addChild(path.group)
+				when 'rejected'
+					R.view.rejectedLayer.addChild(path.group)
+
+			# @drawing.addChild(path.group)
+
 			bounds = path.getDrawingBounds()
 			if bounds?
 				@rectangle ?= bounds.clone()
 				@rectangle = @rectangle.unite(bounds)
 			path.updateStrokeColor()
 			path.removeFromListItem()
-			@drawn = false
-			if @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
-				@replaceDrawing()
-				R.rasterizer.rasterize(@)
+			# @drawn = false
+			# if @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
+				# @replaceDrawing()
 			return
 		
 		replaceDrawing: ()->
@@ -209,7 +220,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 			super()
 			return
 
-		removeChild: (path, updateRectangle=true, updateRaster=false)->
+		removeChild: (path, updateRectangle=true, removeID=true)->
+			if removeID
+				path.drawingId = null
+
+			pathIndex = @paths.indexOf(path)
+			if pathIndex >= 0
+				@paths.splice(pathIndex, 1)
+			
 			path.drawingId = null
 			pkIndex = @pathPks.indexOf(path.pk)
 			if pkIndex >= 0
@@ -220,11 +238,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 			path.updateStrokeColor()
 			path.addToListItem()
 			@drawn = false
-			if updateRaster and @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
-				@replaceDrawing()
-			R.rasterizer.rasterize(path, false)
-			path.draw?()
-			path.rasterize()
+			# if updateRaster and @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
+				# @replaceDrawing()
+			# R.rasterizer.rasterize(path, false)
+			# path.draw?()
+			# path.rasterize()
 			return
 
 		# @param name [String] the name of the value to change
@@ -240,7 +258,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
   				# R.alertManager.alert 'Your item overlaps with two planets.', 'error'
 				return
 
-			if @rectangle.with == 0 and @rectangle.height == 0 or @drawing.children.length == 0
+			if @rectangle.with == 0 and @rectangle.height == 0 or @paths.length == 0
 				@remove()
 				R.alertManager.alert "Error: The drawing is empty.", "error"
 				return
@@ -394,21 +412,38 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 			R.drawingPanel.deselectDrawing(@)
 			return true
 
-		remove: () ->
-			for path in @children()
-				# @removeChild(path)
-				path.remove()
+		removeChildren: () ->
+			for path in @children().slice()
+				@removeChild(path, false)
+			return
 
+		remove: () ->
 			@removeFromListItem()
 			super
 			return
 
+		getRaster: ()->
+			if @pathRaster? then return @pathRaster
+			if @paths.length == 0 then return null
+			
+			group = new P.Group()
+			for path in @paths
+				if path.raster?
+					group.addChild(path.raster.clone())
+				else
+					if not path.drawing?
+						path.draw()
+					group.addChild(path.drawing.clone())
+			@pathRaster = group.rasterize(P.view.resolution, false)
+			group.remove()
+			return @pathRaster
+
 		children: ()->
-			paths = []
-			for child in @drawing.children
-				if child.controller?
-					paths.push(child.controller)
-			return paths
+			# paths = []
+			# for child in @drawing.children
+			# 	if child.controller?
+			# 		paths.push(child.controller)
+			return @paths
 
 		highlight: (color)->
 			super()
@@ -418,21 +453,21 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 				@highlightRectangle.dashArray = []
 			return
 
-		drawChildren: ()->
-			if @drawing.children.length == 0 then return
+		# drawChildren: ()->
+		# 	if @drawing.children.length == 0 then return
 			
 			
-			for child in @drawing.children
-				child.controller?.draw?()
-			return
+		# 	for child in @drawing.children
+		# 		child.controller?.draw?()
+		# 	return
 
 		# disable rasterize if no children
 		rasterize: ()->	
-			if @raster? or not @drawing? then return
+			# if @raster? or not @drawing? then return
 			# make sure children are drawn BEFORE this, otherwise this can be rasterized before children are drawn, see Rasterizer.drawItems()
 
-			@drawChildren()
-			super()
+			# @drawChildren()
+			# super()
 			return
 
 	Item.Drawing = Drawing

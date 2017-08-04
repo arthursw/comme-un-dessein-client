@@ -117,6 +117,10 @@
         this.handleJ.find("span").removeClass("glyphicon-chevron-right").addClass("glyphicon-chevron-left");
       };
 
+      Sidebar.prototype.isOpened = function() {
+        return !this.sidebarJ.hasClass("r-hidden");
+      };
+
       Sidebar.prototype.hide = function() {
         var ref;
         this.sidebarJ.addClass("r-hidden");

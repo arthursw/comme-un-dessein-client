@@ -355,7 +355,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# @param event [Event] the mouse event
 		updateCreate: (point, event)->
 			if not @data.polygonMode
-				console.log(@controlPath.lastSegment.point.getDistance(point, true))
+				# console.log(@controlPath.lastSegment.point.getDistance(point, true))
 				if @controlPath.lastSegment.point.getDistance(point, true) < 20
 					return
 
