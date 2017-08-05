@@ -3,7 +3,8 @@ define ['paper', 'R', 'Utils/Utils','UI/Button', 'UI/Code'], (P, R, Utils, Butto
     ModuleLoader = {}
 
     buttons = [
-        { name: 'Precise path', description: "This path offers precise controls, one can modify points along with their handles and their type.", iconURL: 'static/images/icons/inverted/editCurve.png', file: "Items/Paths/PrecisePaths/PrecisePath", category: undefined, favorite: true, order: 8 }
+        # { name: 'Precise path', description: "This path offers precise controls, one can modify points along with their handles and their type.", iconURL: 'static/images/icons/inverted/editCurve.png', file: "Items/Paths/PrecisePaths/PrecisePath", category: undefined, favorite: true, order: 8 }
+        { name: 'Precise path', description: "This path offers precise controls, one can modify points along with their handles and their type.", iconURL: 'glyphicon-pencil', file: "Items/Paths/PrecisePaths/PrecisePath", category: undefined, favorite: true, order: 8 }
         # { name: 'Dynamic brush', description: "The stroke width is function of the drawing speed: the faster the wider.", iconURL: undefined, file: "Items/Paths/PrecisePaths/SpeedPaths/DynamicBrush", category: undefined, favorite: true, order: 9 }
         # { name: 'Thickness path', description: "The stroke width is function of the drawing speed: the faster the wider.", iconURL: 'static/images/icons/inverted/rollerBrush.png', file: "Items/Paths/PrecisePaths/SpeedPaths/ThicknessPath", category: undefined, favorite: true, order: 10 }
         # { name: 'Ellipse', description: "Simple ellipse, circle by default (use shift key to draw an ellipse).\nUse special key (command on a mac, control otherwise) to avoid the shape to be centered on the first point.", iconURL: 'static/images/icons/inverted/circle.png', file: "Items/Paths/Shapes/EllipseShape", category: 'Shape', favorite: true, order: 11 }

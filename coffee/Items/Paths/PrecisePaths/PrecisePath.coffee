@@ -49,7 +49,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 	class PrecisePath extends Path
 		@label = 'Precise path'
 		@description = "This path offers precise controls, one can modify points along with their handles and their type."
-		@iconURL = 'static/images/icons/inverted/editCurve.png'
+		@iconURL = 'glyphicon-pencil'
+		# @iconURL = 'static/images/icons/inverted/editCurve.png'
 
 		@hitOptions =
 			segments: true

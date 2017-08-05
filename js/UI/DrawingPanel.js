@@ -75,9 +75,6 @@
 
       DrawingPanel.prototype.onHandleDown = function() {
         this.draggingEditor = true;
-        $("body").css({
-          'user-select': 'none'
-        });
       };
 
       DrawingPanel.prototype.setHalfSize = function() {
@@ -108,9 +105,6 @@
 
       DrawingPanel.prototype.onMouseUp = function(event) {
         this.draggingEditor = false;
-        $("body").css({
-          'user-select': 'text'
-        });
       };
 
       DrawingPanel.prototype.updateSelection = function() {

@@ -15,7 +15,7 @@
 
       SelectTool.description = '';
 
-      SelectTool.iconURL = 'cursor.png';
+      SelectTool.iconURL = 'glyphicon-envelope';
 
       SelectTool.cursor = {
         position: {

@@ -12,7 +12,7 @@
 
       EraserTool.description = 'Erase paths';
 
-      EraserTool.iconURL = 'eraser.png';
+      EraserTool.iconURL = 'glyphicon-erase';
 
       EraserTool.cursor = {
         position: {

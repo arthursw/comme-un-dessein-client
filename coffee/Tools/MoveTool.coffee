@@ -5,7 +5,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 
 		@label = 'Move'
 		@description = ''
-		@iconURL = 'hand.png'
+		# @iconURL = 'hand.png'
+		@iconURL = 'glyphicon-move'
 		@favorite = true
 		@category = ''
 		@cursor =

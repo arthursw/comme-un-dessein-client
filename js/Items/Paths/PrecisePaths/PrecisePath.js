@@ -12,7 +12,7 @@
 
       PrecisePath.description = "This path offers precise controls, one can modify points along with their handles and their type.";
 
-      PrecisePath.iconURL = 'static/images/icons/inverted/editCurve.png';
+      PrecisePath.iconURL = 'glyphicon-pencil';
 
       PrecisePath.hitOptions = {
         segments: true,

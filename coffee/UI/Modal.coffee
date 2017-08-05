@@ -46,13 +46,31 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 
 			@modalBodyJ = @modalJ.find('.modal-body')
 			@modalBodyJ.empty()
+			
 			@modalJ.find(".modal-footer").show().find(".btn").show()
+
 			@modalJ.on 'shown.bs.modal', (event)=>
 				@modalJ.find('input.form-control:visible:first').focus()
 				zIndex = parseInt(@modalJ.css('z-index'))
 				$('body').find('.modal-backdrop:last').css('z-index', zIndex - 1)
 
 			@modalJ.on('hidden.bs.modal', @delete)
+
+			if args.submitButtonIcon?
+				iconJ = $('<span>')
+				iconJ.addClass('glyphicon ' + args.submitButtonIcon)
+				@modalJ.find('[name="submit"]').html(iconJ)
+
+			if args.submitButtonText?
+				@modalJ.find('[name="submit"]').append(args.submitButtonText)
+			
+			if args.cancelButtonIcon?
+				iconJ = $('<span>')
+				iconJ.addClass('glyphicon ' + args.cancelButtonIcon)
+				@modalJ.find('[name="cancel"]').html(iconJ)
+			
+			if args.cancelButtonText?
+				@modalJ.find('[name="cancel"]').append(args.cancelButtonText)
 
 			@modalJ.find('.btn-primary').click( (event)=> @modalSubmit() )
 
@@ -262,13 +280,24 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 		# - submit: submit function
 		addButton: (args)->
 			args.type ?= 'default'
-			buttonJ = $("<button type='button' class='btn btn-#{args.type}' name='#{args.name}'>#{args.name}</button>")
-			buttonJ.click (event)=>
-				args.submit(@data)
-				buttonJ.remove()
-				@hide()
-				return
-			@modalJ.find(".modal-footer .btn-primary").before(buttonJ)
+
+			icon = if args.icon? then "<span class='glyphicon #{args.icon}'></span>" else ''
+
+			buttonJ = $("<button type='button' class='btn btn-#{args.type}' name='#{args.name}'>" + icon + "#{args.name}</button>")
+			
+			if args.submit?
+				buttonJ.click (event)=>
+					args.submit(@data)
+					buttonJ.remove()
+					@hide()
+					return
+
+			submitButtonJ = @modalJ.find('.modal-footer .btn-primary[name="submit"]')
+			if submitButtonJ.length > 0
+				submitButtonJ.before(buttonJ)
+			else
+				@modalJ.find('.modal-footer .btn-primary').before(buttonJ)
+
 			return buttonJ
 
 		show: ()->

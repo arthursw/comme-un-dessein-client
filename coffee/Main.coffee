@@ -17,7 +17,8 @@ define [
 	'View/View'
 	'Tools/ToolManager'
 	'RasterizerBot'
-], (Utils, Global, FontManager, Loader, Socket, CityManager, RasterizerManager, Sidebar, FileManager, CodeEditor, DrawingPanel, Modal, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot) ->
+	'i18next'
+], (Utils, Global, FontManager, Loader, Socket, CityManager, RasterizerManager, Sidebar, FileManager, CodeEditor, DrawingPanel, Modal, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next) ->
 
 	console.log 'Main CommeUnDessein Repository'
 
@@ -286,13 +287,28 @@ define [
 		R.view.initializePosition()
 		R.sidebar.initialize()
 
-		
-		# modal = Modal.createModal( title: 'Comme Un Dessein', submit: @createCity, postSubmit: 'load' )
-		# modal.addText('Welcome to comme un dessein !')
-		# modal.addText('Participate !')
-		# modal.addButton( type: 'primary', name: 'Sign in', submit: ()-> return location.pathname = '/accounts/login/' )
-		# modal.addButton( type: 'info', name: 'Sign up', submit: ()-> return location.pathname = '/accounts/signup/' )
-		# modal.show()
+		if not R.userAuthenticated		
+			modal = Modal.createModal( 
+				title: 'Welcome to Comme Un Dessein', 
+				submit: ( ()-> return location.pathname = '/accounts/signup/' ), 
+				postSubmit: 'load', 
+				submitButtonText: 'Sign up', 
+				submitButtonIcon: 'glyphicon-user', 
+				cancelButtonText: 'Just visit', 
+				cancelButtonIcon: 'glyphicon-sunglasses' )
+			modal.addText('''
+				Comme un dessein is a participative piece created by the french collective IDLV (Indiens dans la Ville). 
+				With the help of a simple web interface and a monumental plotter, everyone can submit a drawing which takes part of a larger pictural composition, thus compose a collective utopian artwork.
+			''')
+			modal.addText('Participate !')
+			modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning')
+			# modal.addButton( type: 'info', name: 'Sign in', submit: (()-> return location.pathname = '/accounts/login/'), icon: 'glyphicon-log-in' )
+			modal.addButton( type: 'info', name: 'Sign in', icon: 'glyphicon-log-in' )
+
+			modal.modalJ.find('[name="Sign in"]').attr('data-toggle', 'dropdown').after($('#user-profile').find('.dropdown-menu').clone())
+			modal.modalJ.find('.dropdown-menu').find('li.sign-up').hide()
+
+			modal.show()
 		
 		R.commandManager.updateButtons()
 

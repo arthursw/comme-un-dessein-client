@@ -50,6 +50,7 @@
 
       function Modal(args) {
         this["delete"] = bind(this["delete"], this);
+        var iconJ;
         this.data = {
           data: args.data
         };
@@ -73,6 +74,22 @@
           };
         })(this));
         this.modalJ.on('hidden.bs.modal', this["delete"]);
+        if (args.submitButtonIcon != null) {
+          iconJ = $('<span>');
+          iconJ.addClass('glyphicon ' + args.submitButtonIcon);
+          this.modalJ.find('[name="submit"]').html(iconJ);
+        }
+        if (args.submitButtonText != null) {
+          this.modalJ.find('[name="submit"]').append(args.submitButtonText);
+        }
+        if (args.cancelButtonIcon != null) {
+          iconJ = $('<span>');
+          iconJ.addClass('glyphicon ' + args.cancelButtonIcon);
+          this.modalJ.find('[name="cancel"]').html(iconJ);
+        }
+        if (args.cancelButtonText != null) {
+          this.modalJ.find('[name="cancel"]').append(args.cancelButtonText);
+        }
         this.modalJ.find('.btn-primary').click((function(_this) {
           return function(event) {
             return _this.modalSubmit();
@@ -300,19 +317,27 @@
       };
 
       Modal.prototype.addButton = function(args) {
-        var buttonJ;
+        var buttonJ, icon, submitButtonJ;
         if (args.type == null) {
           args.type = 'default';
         }
-        buttonJ = $("<button type='button' class='btn btn-" + args.type + "' name='" + args.name + "'>" + args.name + "</button>");
-        buttonJ.click((function(_this) {
-          return function(event) {
-            args.submit(_this.data);
-            buttonJ.remove();
-            _this.hide();
-          };
-        })(this));
-        this.modalJ.find(".modal-footer .btn-primary").before(buttonJ);
+        icon = args.icon != null ? "<span class='glyphicon " + args.icon + "'></span>" : '';
+        buttonJ = $(("<button type='button' class='btn btn-" + args.type + "' name='" + args.name + "'>") + icon + (args.name + "</button>"));
+        if (args.submit != null) {
+          buttonJ.click((function(_this) {
+            return function(event) {
+              args.submit(_this.data);
+              buttonJ.remove();
+              _this.hide();
+            };
+          })(this));
+        }
+        submitButtonJ = this.modalJ.find('.modal-footer .btn-primary[name="submit"]');
+        if (submitButtonJ.length > 0) {
+          submitButtonJ.before(buttonJ);
+        } else {
+          this.modalJ.find('.modal-footer .btn-primary').before(buttonJ);
+        }
         return buttonJ;
       };
 

@@ -7,7 +7,7 @@
       {
         name: 'Precise path',
         description: "This path offers precise controls, one can modify points along with their handles and their type.",
-        iconURL: 'static/images/icons/inverted/editCurve.png',
+        iconURL: 'glyphicon-pencil',
         file: "Items/Paths/PrecisePaths/PrecisePath",
         category: void 0,
         favorite: true,

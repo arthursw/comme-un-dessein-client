@@ -73,7 +73,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 
 		onHandleDown: ()=>
 			@draggingEditor = true
-			$("body").css( 'user-select': 'none' )
+			# $("body").css( 'user-select': 'none' )
 			return
 
 		setHalfSize: ()=>
@@ -98,7 +98,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 
 		onMouseUp: (event)=>
 			@draggingEditor = false
-			$("body").css('user-select': 'text')
+			# $("body").css('user-select': 'text')
 			return
 
 		updateSelection: ()=>

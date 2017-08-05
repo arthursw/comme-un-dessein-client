@@ -12,7 +12,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 		@label = 'Eraser'
 		@description = 'Erase paths'
-		@iconURL = 'eraser.png'
+		# @iconURL = 'eraser.png'
+		@iconURL = 'glyphicon-erase'
+		
 		@cursor =
 			position:
 				x: 0, y: 0

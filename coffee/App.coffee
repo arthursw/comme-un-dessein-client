@@ -63,6 +63,7 @@ requirejs.config
 
 
 		'domReady': [libs + 'domReady']
+		'i18next': [libs + 'i18next.min']
 		'hammer': [libs + 'hammer.min']
 		# 'ace': [libs + 'ace']
 		'aceTools': [libs + 'ace/ext-language_tools']

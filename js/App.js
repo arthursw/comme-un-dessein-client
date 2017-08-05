@@ -40,6 +40,7 @@
     baseUrl: baseUrl,
     paths: {
       'domReady': [libs + 'domReady'],
+      'i18next': [libs + 'i18next.min'],
       'hammer': [libs + 'hammer.min'],
       'aceTools': [libs + 'ace/ext-language_tools'],
       'underscore': [libs + 'underscore-min'],
