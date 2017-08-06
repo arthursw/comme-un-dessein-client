@@ -774,14 +774,14 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 			# 		console.log("child.controller.drawing.parent == child.controller.group: " + (child.controller.drawing.parent == child.controller.group))
 			# 		console.log("child == child.controller.group: " + (child == child.controller.group))
 
-			if @drawing.data.rectangle?
-				@drawing.data.rectangle.remove()
+			# if @drawing.data.rectangle?
+			# 	@drawing.data.rectangle.remove()
 			
-			if not @drawing.data.rectangle
-				@drawing.data.rectangle = new P.Path.Rectangle(@drawing.bounds.expand(2*Item.Path.strokeWidth))	
-				@drawing.data.rectangle.fillColor = new P.Color(Math.random(), Math.random(), Math.random())
-				@drawing.addChild(@drawing.data.rectangle)
-				@drawing.data.rectangle.sendToBack()
+			# if not @drawing.data.rectangle
+			# 	@drawing.data.rectangle = new P.Path.Rectangle(@drawing.bounds.expand(2*Item.Path.strokeWidth))	
+			# 	@drawing.data.rectangle.fillColor = new P.Color(Math.random(), Math.random(), Math.random())
+			# 	@drawing.addChild(@drawing.data.rectangle)
+			# 	@drawing.data.rectangle.sendToBack()
 
 			@raster = @drawing.rasterize()
 
