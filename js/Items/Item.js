@@ -464,7 +464,6 @@
           return;
         }
         this.drawingRelativePosition = this.drawing.position.subtract(this.rectangle.center);
-        this.drawing.data.rectangle.remove();
         this.drawing.remove();
       };
 

@@ -736,7 +736,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 		removeDrawing: ()->
 			if not @drawing?.parent? then return
 			@drawingRelativePosition = @drawing.position.subtract(@rectangle.center)
-			@drawing.data.rectangle.remove()
+			# @drawing.data.rectangle.remove()
 			@drawing.remove()
 			return
 
