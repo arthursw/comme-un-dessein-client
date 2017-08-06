@@ -430,8 +430,8 @@
         this.votesJ.find('.n-votes.total').html(nVotes);
         this.votesJ.find('.percentage-votes').html(nVotes > 0 ? 100 * nPositiveVotes / nVotes : 0);
         this.votesJ.find('.status').html(this.currentDrawing.status);
-        this.voteUpBtnJ.addClass('disabled');
-        this.voteDownBtnJ.addClass('disabled');
+        this.voteUpBtnJ.removeClass('disabled');
+        this.voteDownBtnJ.removeClass('disabled');
         if (this.currentDrawing.owner === R.me || R.administrator) {
           if (this.currentDrawing.status === 'pending') {
             this.voteUpBtnJ.removeClass('disabled');

@@ -415,8 +415,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			
 			@votesJ.find('.status').html(@currentDrawing.status)
 
-			@voteUpBtnJ.addClass('disabled')
-			@voteDownBtnJ.addClass('disabled')
+			@voteUpBtnJ.removeClass('disabled')
+			@voteDownBtnJ.removeClass('disabled')
 			if @currentDrawing.owner == R.me || R.administrator
 				if @currentDrawing.status == 'pending'
 					@voteUpBtnJ.removeClass('disabled')

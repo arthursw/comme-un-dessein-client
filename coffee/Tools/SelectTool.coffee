@@ -7,8 +7,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Item', '
 
 		@label = 'Select'
 		@description = ''
-		@iconURL = 'glyphicon-envelope'
-		# @iconURL = 'cursor.png'
+		# @iconURL = 'glyphicon-envelope'
+		@iconURL = 'cursor.png'
 		@cursor =
 			position:
 				x: 0, y: 0

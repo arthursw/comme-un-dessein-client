@@ -12,7 +12,7 @@
 
       MoveTool.description = '';
 
-      MoveTool.iconURL = 'glyphicon-move';
+      MoveTool.iconURL = 'hand.png';
 
       MoveTool.favorite = true;
 
