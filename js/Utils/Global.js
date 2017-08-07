@@ -283,6 +283,48 @@
         }
       }).done(R.loader.checkError);
     };
+    R.setDrawingMode = function(mode) {
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'setDrawingMode',
+            args: {
+              mode: mode
+            }
+          })
+        }
+      }).done(R.loader.checkError);
+    };
+    R.setNegativeVoteThreshold = function(voteThreshold) {
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'setNegativeVoteThreshold',
+            args: {
+              voteThreshold: voteThreshold
+            }
+          })
+        }
+      }).done(R.loader.checkError);
+    };
+    R.setPositiveVoteThreshold = function(voteThreshold) {
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'setPositiveVoteThreshold',
+            args: {
+              voteThreshold: voteThreshold
+            }
+          })
+        }
+      }).done(R.loader.checkError);
+    };
     R.roughSizeOfObject = function(object, maxDepth) {
       var blackList, bytes, depth, ignoreBlackList, name, objectList, property, s, stack, value;
       if (maxDepth == null) {

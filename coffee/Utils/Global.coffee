@@ -617,8 +617,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'bootstrap', 'mousewheel', 's
 		return
 
 	R.setDebugMode = (debugMode)->
-#		Dajaxice.draw.setDebugMode(R.loader.checkError, debug: debugMode)
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDebugMode', args: debug: debugMode } ).done(R.loader.checkError)
+		return
+	
+	R.setDrawingMode = (mode)->
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingMode', args: mode: mode } ).done(R.loader.checkError)
+		return
+
+	R.setNegativeVoteThreshold = (voteThreshold)->
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setNegativeVoteThreshold', args: voteThreshold: voteThreshold } ).done(R.loader.checkError)
+		return
+
+	R.setPositiveVoteThreshold = (voteThreshold)->
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPositiveVoteThreshold', args: voteThreshold: voteThreshold } ).done(R.loader.checkError)
 		return
 
 	R.roughSizeOfObject = (object, maxDepth=4) ->
