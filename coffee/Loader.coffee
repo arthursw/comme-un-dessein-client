@@ -275,7 +275,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				if not @mustLoadItem(item) then continue
 				@unloadItem(item)
 
-				if item.rType == 'Box'
+				if item.rType == 'Box' or item.rType == 'Drawing'
 					itemsToLoad.unshift(item)
 				else
 					itemsToLoad.push(item)

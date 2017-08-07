@@ -26,6 +26,7 @@
       R.me = username.length > 0 ? username : null;
       userAuthenticated = $('#canvas').attr("data-is-authenticated");
       R.userAuthenticated = userAuthenticated === 'True';
+      R.drawingMode = $('#canvas').attr("data-drawing-mode");
       R.catchErrors = false;
       R.ignoreSockets = false;
       R.currentPaths = {};
@@ -55,6 +56,7 @@
       }
       R.rasterizerManager = new RasterizerManager();
       R.rasterizerManager.initializeRasterizers();
+      R.view.createBackground();
       R.commandManager = new CommandManager();
       R.toolManager = new ToolManager();
       R.drawingPanel = new DrawingPanel();

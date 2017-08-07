@@ -241,6 +241,8 @@ define [
 		userAuthenticated = $('#canvas').attr("data-is-authenticated")
 		R.userAuthenticated = userAuthenticated == 'True'
 
+		R.drawingMode = $('#canvas').attr("data-drawing-mode")
+
 		# parameters
 		R.catchErrors = false 					# the error will not be caught when drawing an RPath (let chrome catch them at the right time)
 		R.ignoreSockets = false 				# whether sockets messages are ignored
@@ -278,6 +280,8 @@ define [
 		
 		R.rasterizerManager = new RasterizerManager()
 		R.rasterizerManager.initializeRasterizers()
+		R.view.createBackground()
+		
 		R.commandManager = new CommandManager()
 		R.toolManager = new ToolManager()
 		# R.fileManager = new FileManager()

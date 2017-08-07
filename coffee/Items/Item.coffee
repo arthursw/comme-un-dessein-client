@@ -755,33 +755,14 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 			if not R.rasterizer.rasterizeItems then return
 			if @drawing.bounds.width == 0 and @drawing.bounds.height == 0 then return
 
-			# background = new P.Path.Rectangle(@drawing.bounds)
-			# background.fillColor = 'blue'
-			# @drawing.addChild(background)
-			# background.sendToBack()
-
-			# if @data.strokeWidth?
-			# 	rectangle = new P.Path.Rectangle(@drawing.bounds.expand(2*Item.Path.strokeWidth)
-			# 	rectangle.fillColor = new P.Color(Math.random(), Math.random(), Math.random())
-			# 	@drawing.addChild(rectangle)
-			# 	rectangle.sendToBack()
-
-			# for child in @drawing.children
-			# 	if @id == "9440088493130252-1501788953971" and child.controller?
-			# 		console.log('child id: ' + child.controller.id)
-			# 		console.log("child.controller.group.parent == @drawing: " + (child.controller.group.parent == @drawing))
-			# 		console.log("child.controller.group.children.length: " + (child.controller.group.children.length))
-			# 		console.log("child.controller.drawing.parent == child.controller.group: " + (child.controller.drawing.parent == child.controller.group))
-			# 		console.log("child == child.controller.group: " + (child == child.controller.group))
-
-			# if @drawing.data.rectangle?
-			# 	@drawing.data.rectangle.remove()
+			if @drawing.data.rectangle?
+				@drawing.data.rectangle.remove()
 			
-			# if not @drawing.data.rectangle
-			# 	@drawing.data.rectangle = new P.Path.Rectangle(@drawing.bounds.expand(2*Item.Path.strokeWidth))	
-			# 	@drawing.data.rectangle.fillColor = new P.Color(Math.random(), Math.random(), Math.random())
-			# 	@drawing.addChild(@drawing.data.rectangle)
-			# 	@drawing.data.rectangle.sendToBack()
+			if not @drawing.data.rectangle
+				@drawing.data.rectangle = new P.Path.Rectangle(@drawing.bounds.expand(2*Item.Path.strokeWidth))	
+				# @drawing.data.rectangle.fillColor = new P.Color(Math.random(), Math.random(), Math.random())
+				@drawing.addChild(@drawing.data.rectangle)
+				@drawing.data.rectangle.sendToBack()
 
 			@raster = @drawing.rasterize()
 

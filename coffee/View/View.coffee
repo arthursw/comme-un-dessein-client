@@ -102,11 +102,24 @@ define dependencies, (P, R, Utils, Grid, Command, Div, Hammer) ->
 
 			@firstHashChange = true
 			return
+		
+		createBackground: ()->
+			if R.drawingMode == 'image'
+				backgroundImage = new P.Raster('static/images/rennes.jpg')
+				backgroundImage.onLoad = ()=>
+					backgroundImage.width = @grid.limitCD.bounds.width
+					backgroundImage.height = @grid.limitCD.bounds.height
+					return
+				backgroundImage.opacity = 0.5
+				backgroundImage.sendToBack()
+				@backgroundListJ = @createLayerListItem('Background', backgroundImage, true, false, false)
+				
+			return
 
-		createLayerListItem: (title, layer, noArrow=false)->
+		createLayerListItem: (title, item, noArrow=false, prepend=true, badge=true)->
 			itemListJ = R.templatesJ.find(".layer").clone()
 
-			itemListJ.attr('data-name', layer.name)
+			itemListJ.attr('data-name', item.name)
 
 			nItemsJ = itemListJ.find(".n-items")
 			nItemsJ.addClass(title.toLowerCase() + '-color')
@@ -126,25 +139,32 @@ define dependencies, (P, R, Utils, Grid, Command, Div, Hammer) ->
 
 			showBtnJ = itemListJ.find(".show-btn")
 			
-			layer.data.setVisibility = (visible)=>
-				layer.visible = visible
+			item.data.setVisibility = (visible)=>
+				item.visible = visible
 				R.tools.select.deselectAll()
 				R.rasterizer.refresh()
 
 				eyeIconJ = itemListJ.find("span.eye")
-				if layer.visible
+				if item.visible
 					eyeIconJ.removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open')
 				else
 					eyeIconJ.removeClass('glyphicon-eye-open').addClass('glyphicon-eye-close')
 				return
 
 			showBtnJ.mousedown (event)=>
-				layer.data.setVisibility(!layer.visible)
+				item.data.setVisibility(!item.visible)
 				event.preventDefault()
 				event.stopPropagation()
 				return -1
 
-			R.sidebar.itemListsJ.prepend(itemListJ)
+			if prepend
+				R.sidebar.itemListsJ.prepend(itemListJ)
+			else
+				R.sidebar.itemListsJ.append(itemListJ)
+
+			if not badge
+				itemListJ.find('span.badge').hide()
+
 			return itemListJ
 		
 		hideDraftLayer: ()=>

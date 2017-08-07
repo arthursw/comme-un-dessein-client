@@ -4,144 +4,47 @@
     hasProp = {}.hasOwnProperty;
 
   define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands/Command'], function(P, R, Utils, Item, Path, Command) {
-    var PrecisePath;
-    PrecisePath = (function(superClass) {
-      extend(PrecisePath, superClass);
+    var PixelPath;
+    PixelPath = (function(superClass) {
+      extend(PixelPath, superClass);
 
-      PrecisePath.label = 'Precise path';
+      PixelPath.label = 'Pixel path';
 
-      PrecisePath.description = "This path offers precise controls, one can modify points along with their handles and their type.";
+      PixelPath.description = "This draws a pattern at each pixel of the path.";
 
-      PrecisePath.iconURL = 'glyphicon-pencil';
+      PixelPath.iconURL = 'glyphicon-pencil';
 
-      PrecisePath.hitOptions = {
-        segments: true,
-        stroke: true,
-        fill: true,
-        curves: true,
-        handles: true,
-        tolerance: 5
-      };
+      PixelPath.orthoGridSize = 10;
 
-      PrecisePath.secureStep = 25;
-
-      PrecisePath.polygonMode = true;
-
-      PrecisePath.orthoGridSize = 10;
-
-      PrecisePath.initializeParameters = function() {
+      PixelPath.initializeParameters = function() {
         var parameters;
-        parameters = PrecisePath.__super__.constructor.initializeParameters.call(this);
-        if (this.polygonMode) {
-          parameters['Items'].polygonMode = {
-            type: 'checkbox',
-            label: 'Polygon mode',
-            "default": R.polygonMode,
-            onChange: function(value) {
-              return R.polygonMode = value;
-            }
-          };
-        }
-        parameters['Edit curve'] = {
-          smooth: {
-            type: 'checkbox',
-            label: 'Smooth',
-            "default": false,
-            onChange: function(value) {
-              var item, j, len, ref;
-              ref = R.selectedItems;
-              for (j = 0, len = ref.length; j < len; j++) {
-                item = ref[j];
-                if (typeof item.setSmooth === "function") {
-                  item.setSmooth(value);
-                }
-              }
-            }
-          },
-          pointType: {
-            type: 'dropdown',
-            label: 'P.Point type',
-            values: ['smooth', 'corner', 'point'],
-            "default": 'smooth',
-            addController: true,
-            onChange: function(value) {
-              var item, j, len, ref;
-              ref = R.selectedItems;
-              for (j = 0, len = ref.length; j < len; j++) {
-                item = ref[j];
-                if (typeof item.modifyPointTypeCommand === "function") {
-                  item.modifyPointTypeCommand(value);
-                }
-              }
-            }
-          },
-          deletePoint: {
-            type: 'button',
-            label: 'Delete point',
-            "default": function() {
-              var item, j, len, ref;
-              ref = R.selectedItems;
-              for (j = 0, len = ref.length; j < len; j++) {
-                item = ref[j];
-                if (typeof item.deletePointCommand === "function") {
-                  item.deletePointCommand();
-                }
-              }
-            }
-          },
-          simplify: {
-            type: 'button',
-            label: 'Simplify',
-            "default": function(value) {
-              var item, j, len, ref;
-              ref = R.selectedItems;
-              for (j = 0, len = ref.length; j < len; j++) {
-                item = ref[j];
-                if (typeof item.simplifyControlPath === "function") {
-                  item.simplifyControlPath(value);
-                }
-              }
-            },
-            onChange: function(value) {}
-          },
-          showSelectionRectangle: {
-            type: 'checkbox',
-            label: 'Selection box',
-            "default": false,
-            onChange: R.tools.select.setSelectionRectangleVisibility
-          }
-        };
+        parameters = PixelPath.__super__.constructor.initializeParameters.call(this);
         return parameters;
       };
 
-      PrecisePath.parameters = PrecisePath.initializeParameters();
+      PixelPath.parameters = PixelPath.initializeParameters();
 
-      PrecisePath.createTool(PrecisePath);
+      PixelPath.createTool(PixelPath);
 
-      PrecisePath.securePath = false;
-
-      PrecisePath.getPointsFromPath = function(path) {
+      PixelPath.getPointsFromPath = function(path) {
         var j, len, points, ref, segment;
         points = [];
         ref = path.segments;
         for (j = 0, len = ref.length; j < len; j++) {
           segment = ref[j];
           points.push(Utils.CS.projectToPosOnPlanet(segment.point));
-          points.push(Utils.CS.pointToObj(segment.handleIn));
-          points.push(Utils.CS.pointToObj(segment.handleOut));
-          points.push(segment.rtype);
         }
         return points;
       };
 
-      PrecisePath.getPointsAndPlanetFromPath = function(path) {
+      PixelPath.getPointsAndPlanetFromPath = function(path) {
         return {
           planet: this.getPlanetFromPath(path),
           points: this.getPointsFromPath(path)
         };
       };
 
-      PrecisePath.getDataFromPath = function(path) {
+      PixelPath.getDataFromPath = function(path) {
         var data;
         data = {};
         data.planet = this.getPlanetFromPath(path);
@@ -149,7 +52,7 @@
         return data;
       };
 
-      function PrecisePath(date, data1, id, pk, points, lock, owner, drawingId) {
+      function PixelPath(date, data1, id, pk, points, lock, owner, drawingId) {
         this.date = date != null ? date : null;
         this.data = data1 != null ? data1 : null;
         this.id = id != null ? id : null;
@@ -160,61 +63,29 @@
         this.lock = lock != null ? lock : null;
         this.owner = owner != null ? owner : null;
         this.drawingId = drawingId != null ? drawingId : null;
-        PrecisePath.__super__.constructor.call(this, this.date, this.data, this.id, this.pk, points, this.lock, this.owner, this.drawingId);
-        if (this.constructor.polygonMode) {
-          this.data.polygonMode = R.polygonMode;
-        }
-        this.rotation = this.data.rotation = 0;
+        PixelPath.__super__.constructor.call(this, this.date, this.data, this.id, this.pk, points, this.lock, this.owner, this.drawingId);
         return;
       }
 
-      PrecisePath.prototype.setControlPath = function(points, planet) {
+      PixelPath.prototype.setControlPath = function(points, planet) {
         var i, j, len, point;
-        for (i = j = 0, len = points.length; j < len; i = j += 4) {
+        for (i = j = 0, len = points.length; j < len; i = ++j) {
           point = points[i];
           this.controlPath.add(Utils.CS.posOnPlanetToProject(point, planet));
-          this.controlPath.lastSegment.handleIn = new P.Point(points[i + 1]);
-          this.controlPath.lastSegment.handleOut = new P.Point(points[i + 2]);
-          this.controlPath.lastSegment.rtype = points[i + 3];
         }
       };
 
-      PrecisePath.prototype.loadPath = function(points) {
-        var distanceMax, flattenedPath, i, index, j, recordedPoint, resultingPoint;
+      PixelPath.prototype.loadPath = function(points) {
         this.addControlPath();
         this.setControlPath(this.data.points, this.data.planet);
         this.rectangle = this.controlPath.bounds.clone();
-        if (this.data.smooth) {
-          this.controlPath.smooth();
-        }
         R.rasterizer.loadItem(this);
         if (!this.constructor.securePath) {
           return;
         }
-        flattenedPath = this.controlPath.copyTo(P.project);
-        flattenedPath.flatten(this.constructor.secureStep);
-        distanceMax = this.constructor.secureDistance * this.constructor.secureDistance;
-        for (i = j = 1; j <= 10; i = ++j) {
-          index = Math.floor(Math.random() * points.length);
-          recordedPoint = new P.Point(points[index]);
-          resultingPoint = flattenedPath.segments[index].point;
-          if (recordedPoint.getDistance(resultingPoint, true) > distanceMax) {
-            flattenedPath.strokeColor = 'red';
-            P.view.center = flattenedPath.bounds.center;
-            console.log("Error: invalid path");
-            return;
-          }
-        }
-        flattenedPath.remove();
       };
 
-      PrecisePath.prototype.deselectPoint = function() {
-        this.selectedSegment = null;
-        this.selectedHandle = null;
-        this.removeSelectionHighlight();
-      };
-
-      PrecisePath.prototype.performHitTest = function(point, options) {
+      PixelPath.prototype.performHitTest = function(point, options) {
         var hitResult;
         if (options == null) {
           options = this.constructor.hitOptions;
@@ -225,275 +96,83 @@
         return hitResult;
       };
 
-      PrecisePath.prototype.hitTest = function(event) {
-        var hitResult, modifyPoint, specialKey, wasSelected;
-        this.deselectPoint();
-        wasSelected = this.selected;
-        hitResult = PrecisePath.__super__.hitTest.call(this, event);
-        if (!wasSelected || (hitResult == null)) {
-          return;
-        }
-        specialKey = R.specialKey(event);
-        this.selectedSegment = hitResult.segment;
-        modifyPoint = false;
-        if (hitResult.type === 'segment') {
-          if (specialKey && hitResult.item === this.controlPath) {
-            this.selectedSegment = hitResult.segment;
-            this.deletePointCommand();
-          } else {
-            if (hitResult.item === this.controlPath) {
-              this.selectedSegment = hitResult.segment;
-              modifyPoint = true;
-            }
-          }
-        }
-        if (!this.data.smooth) {
-          if (hitResult.type === "handle-in") {
-            this.selectedHandle = hitResult.segment.handleIn;
-            modifyPoint = true;
-          } else if (hitResult.type === "handle-out") {
-            this.selectedHandle = hitResult.segment.handleOut;
-            modifyPoint = true;
-          }
-        }
-        if (modifyPoint) {
-          R.commandManager.beginAction(new Command.ModifyPoint(this), event);
-        }
-      };
-
-      PrecisePath.prototype.initializeDrawing = function(createCanvas) {
-        var base;
-        if (createCanvas == null) {
-          createCanvas = false;
-        }
-        if ((base = this.data).step == null) {
-          base.step = 20;
-        }
-        this.drawingOffset = 0;
-        PrecisePath.__super__.initializeDrawing.call(this, createCanvas);
-      };
-
-      PrecisePath.prototype.beginDraw = function(redrawing) {
+      PixelPath.prototype.beginDraw = function(redrawing) {
         if (redrawing == null) {
           redrawing = false;
         }
         this.initializeDrawing(false);
-        if (R.drawingMode !== 'pixel') {
-          this.path = this.addPath();
-          this.path.segments = this.controlPath.segments;
-          this.path.selected = false;
-          this.path.strokeCap = this.data.strokeCap != null ? this.data.strokeCap : 'round';
-        }
       };
 
-      PrecisePath.prototype.updateDraw = function(segment, step, redrawing) {
+      PixelPath.prototype.updateDraw = function(segment, step, redrawing) {
         var circle;
-        if (R.drawingMode !== 'pixel') {
-          this.path.add(this.controlPath.lastSegment);
-        } else {
-          circle = this.addPath(new P.Path.Circle(segment.point, 5), false);
-          circle.fillColor = this.data.strokeColor;
-        }
+        circle = this.addPath(new P.Path.Circle(segment.point, this.data.strokeWidth / 16));
+        circle.fillColor = this.data.strokeColor;
       };
 
-      PrecisePath.prototype.endDraw = function(redrawing) {
+      PixelPath.prototype.endDraw = function(redrawing) {
         if (redrawing == null) {
           redrawing = false;
         }
       };
 
-      PrecisePath.prototype.checkUpdateDrawing = function(segment, redrawing) {
+      PixelPath.prototype.checkUpdateDrawing = function(segment, redrawing) {
         if (redrawing == null) {
           redrawing = true;
         }
-        if (R.drawingMode === 'pixel') {
-          this.updateDraw(segment);
-        } else if (!redrawing) {
-          this.updateDraw(segment);
-        }
+        this.updateDraw(segment);
       };
 
-      PrecisePath.prototype.beginCreate = function(point, event) {
-        PrecisePath.__super__.beginCreate.call(this);
-        if (!this.data.polygonMode) {
-          this.addControlPath();
-          if (R.drawingMode === 'orthoDiag' || R.drawingMode === 'ortho') {
-            this.controlPath.add(Utils.Snap.snap2D(point, this.constructor.orthoGridSize));
-          } else {
-            this.controlPath.add(point);
-          }
-          this.rectangle = this.controlPath.bounds.clone();
-          this.beginDraw(false);
-        } else {
-          if (this.controlPath == null) {
-            this.addControlPath();
-            this.controlPath.add(point);
-            this.rectangle = this.controlPath.bounds.clone();
-            this.controlPath.add(point);
-            this.beginDraw(false);
-          } else {
-            this.controlPath.add(point);
-          }
-          this.controlPath.lastSegment.rtype = 'point';
-        }
+      PixelPath.prototype.beginCreate = function(point, event) {
+        PixelPath.__super__.beginCreate.call(this);
+        console.log('beginCreate');
+        this.addControlPath();
+        this.controlPath.add(Utils.Snap.snap2D(point, this.constructor.orthoGridSize));
+        this.rectangle = this.controlPath.bounds.clone();
+        this.beginDraw(false);
       };
 
-      PrecisePath.prototype.updateCreate = function(point, event) {
-        var delta, lastSegment, previousDelta, previousSegment, target, updateDrawing;
-        if (!this.data.polygonMode) {
-          if (this.controlPath.lastSegment.point.getDistance(point, true) < 20) {
-            return;
-          }
-          updateDrawing = true;
-          if (R.drawingMode === 'orthoDiag') {
-            target = Utils.Snap.snap2D(point, this.constructor.orthoGridSize);
-            delta = target.subtract(this.controlPath.lastSegment.point);
-            if (delta.x !== 0 && delta.y !== 0 && Math.abs(delta.x) !== Math.abs(delta.y)) {
-              if (Math.abs(delta.x) > Math.abs(delta.y)) {
-                this.controlPath.add(this.controlPath.lastSegment.point.x + Math.sign(delta.x) * (Math.abs(delta.x) - Math.abs(delta.y)), this.controlPath.lastSegment.point.y);
-              } else {
-                this.controlPath.add(this.controlPath.lastSegment.point.x, this.controlPath.lastSegment.point.y + Math.sign(delta.y) * (Math.abs(delta.y) - Math.abs(delta.x)));
-              }
-              this.path.add(this.controlPath.lastSegment);
-            } else if (this.controlPath.segments.length > 2) {
-              previousDelta = this.controlPath.lastSegment.point.subtract(this.controlPath.segments[this.controlPath.segments.length - 2].point);
-              if (previousDelta.x === 0) {
-                if (delta.y === 0) {
-                  this.controlPath.lastSegment.remove();
-                  this.path.lastSegment.remove();
-                }
-              } else if (previousDelta.y === 0) {
-                if (delta.x === 0) {
-                  this.controlPath.lastSegment.remove();
-                  this.path.lastSegment.remove();
-                }
-              }
-            }
-            this.controlPath.add(target);
-          } else if (R.drawingMode === 'ortho') {
-            target = Utils.Snap.snap2D(point, this.constructor.orthoGridSize);
-            delta = target.subtract(this.controlPath.lastSegment.point);
-            if (delta.x !== 0 && delta.y !== 0) {
-              if (Math.abs(delta.x) > Math.abs(delta.y)) {
-                this.controlPath.add(target.x, this.controlPath.lastSegment.point.y);
-              } else {
-                this.controlPath.add(this.controlPath.lastSegment.point.x, target.y);
-              }
-              this.path.add(this.controlPath.lastSegment);
-            }
-            this.controlPath.add(target);
-          } else if (R.drawingMode === 'pixel') {
-            target = Utils.Snap.snap2D(point, this.constructor.orthoGridSize);
-            if (!this.controlPath.lastSegment.point.equals(target)) {
-              this.controlPath.add(target);
-            } else {
-              updateDrawing = false;
-            }
-          } else {
-            this.controlPath.add(point);
-          }
-          if (updateDrawing) {
-            this.checkUpdateDrawing(this.controlPath.lastSegment, false);
-          }
-        } else {
-          lastSegment = this.controlPath.lastSegment;
-          previousSegment = lastSegment.previous;
-          previousSegment.rtype = 'smooth';
-          previousSegment.handleOut = point.subtract(previousSegment.point);
-          if (lastSegment !== this.controlPath.firstSegment) {
-            previousSegment.handleIn = previousSegment.handleOut.multiply(-1);
-          }
-          lastSegment.handleIn = lastSegment.handleOut = null;
-          lastSegment.point = point;
-          this.draw(true, false);
+      PixelPath.prototype.updateCreate = function(point, event) {
+        var target;
+        if (this.controlPath.lastSegment.point.getDistance(point, true) < 20) {
+          return;
         }
+        console.log('updateCreate');
+        target = Utils.Snap.snap2D(point, this.constructor.orthoGridSize);
+        this.controlPath.add(target);
+        this.checkUpdateDrawing(this.controlPath.lastSegment, false);
       };
 
-      PrecisePath.prototype.createMove = function(event) {
+      PixelPath.prototype.createMove = function(event) {
         this.controlPath.lastSegment.point = event.point;
+        console.log('create move');
         this.draw(true, false);
       };
 
-      PrecisePath.prototype.endCreate = function(point, event) {
-        var j, len, ref, segment;
+      PixelPath.prototype.endCreate = function(point, event) {
         if (this.data.polygonMode) {
           return;
         }
-        if (this.controlPath.segments.length >= 2) {
-          if (R.drawingMode !== 'orthoDiag' && R.drawingMode !== 'ortho' && R.drawingMode !== 'pixel') {
-            this.controlPath.simplify(this.constructor.orthoGridSize);
-          }
-          ref = this.controlPath.segments;
-          for (j = 0, len = ref.length; j < len; j++) {
-            segment = ref[j];
-            if (segment.handleIn.length > 200) {
-              segment.handleIn = segment.handleIn.normalize().multiply(100);
-              console.log('ADJUSTING HANDLE LENGTH');
-            }
-            if (segment.handleOut.length > 200) {
-              segment.handleOut = segment.handleOut.normalize().multiply(100);
-              console.log('ADJUSTING HANDLE LENGTH');
-            }
-          }
-        }
+        console.log('endCreate');
         this.finish();
-        PrecisePath.__super__.endCreate.call(this);
+        PixelPath.__super__.endCreate.call(this);
       };
 
-      PrecisePath.prototype.finish = function() {
-        if (this.data.polygonMode) {
-          this.controlPath.lastSegment.remove();
-          this.controlPath.lastSegment.handleOut = null;
-        }
+      PixelPath.prototype.finish = function() {
         if (this.controlPath.segments.length < 2) {
           this.updateCreate(this.controlPath.firstSegment.point.add(new P.Point(0.25, 0.25)), null);
-        }
-        if (this.data.smooth) {
-          this.controlPath.smooth();
         }
         this.endDraw();
         this.draw();
         this.drawingOffset = 0;
         this.rectangle = this.controlPath.bounds.clone();
-        if (!PrecisePath.__super__.finish.call(this)) {
+        if (!PixelPath.__super__.finish.call(this)) {
           return false;
         }
         this.initialize();
         return true;
       };
 
-      PrecisePath.prototype.simplifiedModeOn = function() {
-        var folder, folderName, name, parameter, ref;
-        this.previousData = {};
-        ref = this.constructor.parameters;
-        for (folderName in ref) {
-          folder = ref[folderName];
-          for (name in folder) {
-            parameter = folder[name];
-            if ((parameter.simplified != null) && (this.data[name] != null)) {
-              this.previousData[name] = this.data[name];
-              this.data[name] = parameter.simplified;
-            }
-          }
-        }
-      };
-
-      PrecisePath.prototype.simplifiedModeOff = function() {
-        var folder, folderName, name, parameter, ref;
-        ref = this.constructor.parameters;
-        for (folderName in ref) {
-          folder = ref[folderName];
-          for (name in folder) {
-            parameter = folder[name];
-            if ((parameter.simplified != null) && (this.data[name] != null) && (this.previousData[name] != null)) {
-              this.data[name] = this.previousData[name];
-              delete this.previousData[name];
-            }
-          }
-        }
-      };
-
-      PrecisePath.prototype.processDrawing = function(redrawing) {
+      PixelPath.prototype.processDrawing = function(redrawing) {
         var i, j, len, ref, segment;
         this.beginDraw(redrawing);
         ref = this.controlPath.segments;
@@ -507,8 +186,8 @@
         this.endDraw(redrawing);
       };
 
-      PrecisePath.prototype.draw = function(simplified, redrawing) {
-        var controlPathLength, error, error1, nIteration, nf, offset, reminder, step;
+      PixelPath.prototype.draw = function(simplified, redrawing) {
+        var error, error1;
         if (simplified == null) {
           simplified = false;
         }
@@ -527,12 +206,6 @@
         if (simplified) {
           this.simplifiedModeOn();
         }
-        step = this.data.step;
-        controlPathLength = this.controlPath.length;
-        nf = controlPathLength / step;
-        nIteration = Math.floor(nf);
-        reminder = nf - nIteration;
-        offset = reminder * step / 2;
         this.drawingOffset = 0;
         try {
           this.processDrawing(redrawing);
@@ -548,15 +221,15 @@
         this.drawn = true;
       };
 
-      PrecisePath.prototype.pathOnPlanet = function() {
+      PixelPath.prototype.pathOnPlanet = function() {
         var flatennedPath;
         flatennedPath = this.controlPath.copyTo(P.project);
         flatennedPath.flatten(this.constructor.secureStep);
         flatennedPath.remove();
-        return PrecisePath.__super__.pathOnPlanet.call(this, flatennedPath.segments);
+        return PixelPath.__super__.pathOnPlanet.call(this, flatennedPath.segments);
       };
 
-      PrecisePath.prototype.getPoints = function() {
+      PixelPath.prototype.getPoints = function() {
         var j, len, points, ref, segment;
         points = [];
         ref = this.controlPath.segments;
@@ -570,24 +243,24 @@
         return points;
       };
 
-      PrecisePath.prototype.getPointsAndPlanet = function() {
+      PixelPath.prototype.getPointsAndPlanet = function() {
         return {
           planet: this.getPlanet(),
           points: this.getPoints()
         };
       };
 
-      PrecisePath.prototype.getData = function() {
+      PixelPath.prototype.getData = function() {
         this.data.planet = this.getPlanet();
         this.data.points = this.getPoints();
         return this.data;
       };
 
-      PrecisePath.prototype.select = function(updateOptions) {
+      PixelPath.prototype.select = function(updateOptions) {
         if (updateOptions == null) {
           updateOptions = true;
         }
-        if (!PrecisePath.__super__.select.call(this, updateOptions)) {
+        if (!PixelPath.__super__.select.call(this, updateOptions)) {
           return;
         }
         this.controlPath.selected = true;
@@ -597,12 +270,12 @@
         return true;
       };
 
-      PrecisePath.prototype.deselect = function(updateOptions) {
+      PixelPath.prototype.deselect = function(updateOptions) {
         var ref;
         if (updateOptions == null) {
           updateOptions = true;
         }
-        if (!PrecisePath.__super__.deselect.call(this, updateOptions)) {
+        if (!PixelPath.__super__.deselect.call(this, updateOptions)) {
           return false;
         }
         if ((ref = this.controlPath) != null) {
@@ -612,7 +285,7 @@
         return true;
       };
 
-      PrecisePath.prototype.highlightSelectedPoint = function() {
+      PixelPath.prototype.highlightSelectedPoint = function() {
         var base, offset, point, ref;
         if (!this.controlPath.selected) {
           return;
@@ -646,13 +319,13 @@
         }
       };
 
-      PrecisePath.prototype.updateSelectionHighlight = function() {
+      PixelPath.prototype.updateSelectionHighlight = function() {
         if ((this.selectedSegment != null) && this.selectionHighlight) {
           this.selectionHighlight.position = this.selectedSegment.point;
         }
       };
 
-      PrecisePath.prototype.removeSelectionHighlight = function() {
+      PixelPath.prototype.removeSelectionHighlight = function() {
         var ref;
         if ((ref = this.selectionHighlight) != null) {
           ref.remove();
@@ -660,15 +333,15 @@
         this.selectionHighlight = null;
       };
 
-      PrecisePath.prototype.moveTo = function(position, update) {
-        PrecisePath.__super__.moveTo.call(this, position, update);
+      PixelPath.prototype.moveTo = function(position, update) {
+        PixelPath.__super__.moveTo.call(this, position, update);
         this.updateSelectionHighlight();
       };
 
-      PrecisePath.prototype.setRectangle = function(rectangle, update) {
+      PixelPath.prototype.setRectangle = function(rectangle, update) {
         var previousRectangle;
         previousRectangle = this.rectangle.clone();
-        PrecisePath.__super__.setRectangle.call(this, rectangle, update);
+        PixelPath.__super__.setRectangle.call(this, rectangle, update);
         this.controlPath.pivot = previousRectangle.center;
         this.controlPath.rotate(-this.rotation);
         this.controlPath.scale(this.rectangle.width / previousRectangle.width, this.rectangle.height / previousRectangle.height);
@@ -678,12 +351,12 @@
         this.updateSelectionHighlight();
       };
 
-      PrecisePath.prototype.setRotation = function(rotation, center, update) {
-        PrecisePath.__super__.setRotation.call(this, rotation, center, update);
+      PixelPath.prototype.setRotation = function(rotation, center, update) {
+        PixelPath.__super__.setRotation.call(this, rotation, center, update);
         this.updateSelectionHighlight();
       };
 
-      PrecisePath.prototype.smoothPoint = function(segment, offset) {
+      PixelPath.prototype.smoothPoint = function(segment, offset) {
         var tangent;
         segment.rtype = 'smooth';
         segment.linear = false;
@@ -699,7 +372,7 @@
         }
       };
 
-      PrecisePath.prototype.doubleClick = function(event) {
+      PixelPath.prototype.doubleClick = function(event) {
         var hitResult, point, segment;
         point = P.view.viewToProject(Utils.Event.GetPoint(event));
         hitResult = this.performHitTest(point);
@@ -732,11 +405,11 @@
         }
       };
 
-      PrecisePath.prototype.addPointCommand = function(location) {
+      PixelPath.prototype.addPointCommand = function(location) {
         R.commandManager.add(new Command.AddPoint(this, location), true);
       };
 
-      PrecisePath.prototype.addPointAt = function(location, update) {
+      PixelPath.prototype.addPointAt = function(location, update) {
         if (update == null) {
           update = true;
         }
@@ -746,7 +419,7 @@
         return this.addPoint(location.index, location.point, location.offset, update);
       };
 
-      PrecisePath.prototype.addPoint = function(index, point, offset, update) {
+      PixelPath.prototype.addPoint = function(index, point, offset, update) {
         var segment;
         if (update == null) {
           update = true;
@@ -774,14 +447,14 @@
         return segment;
       };
 
-      PrecisePath.prototype.deletePointCommand = function() {
+      PixelPath.prototype.deletePointCommand = function() {
         if (this.selectedSegment == null) {
           return;
         }
         R.commandManager.add(new Command.DeletePoint(this, this.selectedSegment), true);
       };
 
-      PrecisePath.prototype.deletePoint = function(segment, update) {
+      PixelPath.prototype.deletePoint = function(segment, update) {
         var location;
         if (update == null) {
           update = true;
@@ -823,11 +496,11 @@
         return location;
       };
 
-      PrecisePath.prototype.deleteSelectedPoint = function() {
+      PixelPath.prototype.deleteSelectedPoint = function() {
         this.deletePoint(this.selectedSegment);
       };
 
-      PrecisePath.prototype.modifySelectedPoint = function(position, handleIn, handleOut, fastDraw, update) {
+      PixelPath.prototype.modifySelectedPoint = function(position, handleIn, handleOut, fastDraw, update) {
         if (fastDraw == null) {
           fastDraw = true;
         }
@@ -837,7 +510,7 @@
         this.modifyPoint(this.selectedSegment, position, handleIn, handleOut, fastDraw, update);
       };
 
-      PrecisePath.prototype.modifyPoint = function(segment, position, handleIn, handleOut, fastDraw, update) {
+      PixelPath.prototype.modifyPoint = function(segment, position, handleIn, handleOut, fastDraw, update) {
         if (fastDraw == null) {
           fastDraw = true;
         }
@@ -870,7 +543,7 @@
         }
       };
 
-      PrecisePath.prototype.updateModifyPoint = function(event) {
+      PixelPath.prototype.updateModifyPoint = function(event) {
         var handle, point, segment;
         segment = this.selectedSegment;
         handle = this.selectedHandle;
@@ -913,7 +586,7 @@
         this.modifyPoint(segment, segment.point, segment.handleIn, segment.handleOut, true, false);
       };
 
-      PrecisePath.prototype.endModifyPoint = function(update) {
+      PixelPath.prototype.endModifyPoint = function(update) {
         var ref;
         if (update) {
           if (this.data.smooth) {
@@ -928,11 +601,11 @@
         }
       };
 
-      PrecisePath.prototype.modifyPointTypeCommand = function(rtype) {
+      PixelPath.prototype.modifyPointTypeCommand = function(rtype) {
         R.commandManager.add(new Command.ModifyPointType(this, this.selectedSegment, rtype), true);
       };
 
-      PrecisePath.prototype.modifySelectedPointType = function(value, update) {
+      PixelPath.prototype.modifySelectedPointType = function(value, update) {
         if (update == null) {
           update = true;
         }
@@ -942,7 +615,7 @@
         this.modifyPointType(this.selectedSegment, value, update);
       };
 
-      PrecisePath.prototype.modifyPointType = function(segment, rtype, update) {
+      PixelPath.prototype.modifyPointType = function(segment, rtype, update) {
         if (update == null) {
           update = true;
         }
@@ -981,11 +654,11 @@
         }
       };
 
-      PrecisePath.prototype.modifyControlPathCommand = function(previousPointsAndPlanet, newPointsAndPlanet) {
+      PixelPath.prototype.modifyControlPathCommand = function(previousPointsAndPlanet, newPointsAndPlanet) {
         R.commandManager.add(new Command.ModifyControlPath(this, previousPointsAndPlanet, newPointsAndPlanet), false);
       };
 
-      PrecisePath.prototype.modifyControlPath = function(pointsAndPlanet, update) {
+      PixelPath.prototype.modifyControlPath = function(pointsAndPlanet, update) {
         var fullySelected, selected;
         if (update == null) {
           update = true;
@@ -1012,7 +685,7 @@
         }
       };
 
-      PrecisePath.prototype.setSmooth = function(smooth) {
+      PixelPath.prototype.setSmooth = function(smooth) {
         var j, len, previousPointsAndPlanet, ref, segment;
         this.data.smooth = smooth;
         if (this.data.smooth) {
@@ -1034,7 +707,7 @@
         }
       };
 
-      PrecisePath.prototype.simplifyControlPath = function() {
+      PixelPath.prototype.simplifyControlPath = function() {
         var previousPointsAndPlanet, ref;
         previousPointsAndPlanet = this.getPointsAndPlanet();
         if ((ref = this.controlPath) != null) {
@@ -1045,11 +718,11 @@
         this.modifyControlPathCommand(previousPointsAndPlanet, this.getPointsAndPlanet());
       };
 
-      PrecisePath.prototype.setParameter = function(name, value, updateGUI, update) {
-        PrecisePath.__super__.setParameter.call(this, name, value, updateGUI, update);
+      PixelPath.prototype.setParameter = function(name, value, updateGUI, update) {
+        PixelPath.__super__.setParameter.call(this, name, value, updateGUI, update);
       };
 
-      PrecisePath.prototype.remove = function() {
+      PixelPath.prototype.remove = function() {
         var ref;
         console.log("Remove precise path");
         if ((ref = this.canvasRaster) != null) {
@@ -1059,10 +732,10 @@
         if (this.liJ != null) {
           this.removeFromListItem();
         }
-        PrecisePath.__super__.remove.call(this);
+        PixelPath.__super__.remove.call(this);
       };
 
-      return PrecisePath;
+      return PixelPath;
 
     })(Path);
     Item.PrecisePath = PrecisePath;

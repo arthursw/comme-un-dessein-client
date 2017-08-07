@@ -297,7 +297,7 @@
             continue;
           }
           this.unloadItem(item);
-          if (item.rType === 'Box') {
+          if (item.rType === 'Box' || item.rType === 'Drawing') {
             itemsToLoad.unshift(item);
           } else {
             itemsToLoad.push(item);

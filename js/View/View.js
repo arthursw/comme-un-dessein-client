@@ -121,13 +121,35 @@
         return;
       }
 
-      View.prototype.createLayerListItem = function(title, layer, noArrow) {
+      View.prototype.createBackground = function() {
+        var backgroundImage;
+        if (R.drawingMode === 'image') {
+          backgroundImage = new P.Raster('static/images/rennes.jpg');
+          backgroundImage.onLoad = (function(_this) {
+            return function() {
+              backgroundImage.width = _this.grid.limitCD.bounds.width;
+              backgroundImage.height = _this.grid.limitCD.bounds.height;
+            };
+          })(this);
+          backgroundImage.opacity = 0.5;
+          backgroundImage.sendToBack();
+          this.backgroundListJ = this.createLayerListItem('Background', backgroundImage, true, false, false);
+        }
+      };
+
+      View.prototype.createLayerListItem = function(title, item, noArrow, prepend, badge) {
         var itemListJ, nItemsJ, showBtnJ, titleJ;
         if (noArrow == null) {
           noArrow = false;
         }
+        if (prepend == null) {
+          prepend = true;
+        }
+        if (badge == null) {
+          badge = true;
+        }
         itemListJ = R.templatesJ.find(".layer").clone();
-        itemListJ.attr('data-name', layer.name);
+        itemListJ.attr('data-name', item.name);
         nItemsJ = itemListJ.find(".n-items");
         nItemsJ.addClass(title.toLowerCase() + '-color');
         titleJ = itemListJ.find(".title");
@@ -146,14 +168,14 @@
           })(this));
         }
         showBtnJ = itemListJ.find(".show-btn");
-        layer.data.setVisibility = (function(_this) {
+        item.data.setVisibility = (function(_this) {
           return function(visible) {
             var eyeIconJ;
-            layer.visible = visible;
+            item.visible = visible;
             R.tools.select.deselectAll();
             R.rasterizer.refresh();
             eyeIconJ = itemListJ.find("span.eye");
-            if (layer.visible) {
+            if (item.visible) {
               eyeIconJ.removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open');
             } else {
               eyeIconJ.removeClass('glyphicon-eye-open').addClass('glyphicon-eye-close');
@@ -162,13 +184,20 @@
         })(this);
         showBtnJ.mousedown((function(_this) {
           return function(event) {
-            layer.data.setVisibility(!layer.visible);
+            item.data.setVisibility(!item.visible);
             event.preventDefault();
             event.stopPropagation();
             return -1;
           };
         })(this));
-        R.sidebar.itemListsJ.prepend(itemListJ);
+        if (prepend) {
+          R.sidebar.itemListsJ.prepend(itemListJ);
+        } else {
+          R.sidebar.itemListsJ.append(itemListJ);
+        }
+        if (!badge) {
+          itemListJ.find('span.badge').hide();
+        }
         return itemListJ;
       };
 
