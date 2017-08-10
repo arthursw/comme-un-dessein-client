@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils'], function(P, R, Utils) {
+  define(['paper', 'R', 'Utils/Utils', 'i18next'], function(P, R, Utils, i18next) {
     var AlertManager;
     AlertManager = (function() {
       AlertManager.hideDelay = 5000;
@@ -40,7 +40,7 @@
         previousType = (ref = this.alerts[this.currentAlert]) != null ? ref.type : void 0;
         this.currentAlert = index;
         alertJ = this.alertsContainer.find(".alert");
-        alertJ.removeClass(previousType).addClass(this.alerts[this.currentAlert].type).text(this.alerts[this.currentAlert].message);
+        alertJ.removeClass(previousType).addClass(this.alerts[this.currentAlert].type).attr('data-i18n', this.alerts[this.currentAlert].message).text(i18next.t(this.alerts[this.currentAlert].message));
         this.alertsContainer.find(".alert-number").text(this.currentAlert + 1);
       };
 

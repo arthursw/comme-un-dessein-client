@@ -4,7 +4,7 @@
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal'], function(P, R, Utils, Item, Modal) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next'], function(P, R, Utils, Item, Modal, i18next) {
     var Drawing;
     Drawing = (function(superClass) {
       extend(Drawing, superClass);
@@ -144,7 +144,7 @@
       Drawing.prototype.addToListItem = function(itemListJ1) {
         var nItemsJ, ref, ref1, title;
         this.itemListJ = itemListJ1;
-        title = '' + this.title + ' by ' + this.owner;
+        title = '' + this.title + ' <span data-i18n="by">' + i18next.t('by') + '</span> ' + this.owner;
         this.liJ = $("<li>");
         this.liJ.html(title);
         this.liJ.attr("data-id", this.id);

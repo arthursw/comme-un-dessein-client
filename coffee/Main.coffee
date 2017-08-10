@@ -18,7 +18,10 @@ define [
 	'Tools/ToolManager'
 	'RasterizerBot'
 	'i18next'
-], (Utils, Global, FontManager, Loader, Socket, CityManager, RasterizerManager, Sidebar, FileManager, CodeEditor, DrawingPanel, Modal, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next) ->
+	'i18nextXHRBackend'
+	'i18nextBrowserLanguageDetector'
+	'jqueryI18next'
+], (Utils, Global, FontManager, Loader, Socket, CityManager, RasterizerManager, Sidebar, FileManager, CodeEditor, DrawingPanel, Modal, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next) ->
 
 	console.log 'Main CommeUnDessein Repository'
 
@@ -234,6 +237,47 @@ define [
 
 	# Initialize CommeUnDessein and handlers
 	$(document).ready () ->
+		
+		# just set some content and react to language changes
+		updateContent = ()->
+			$("body").localize()
+			console.log('i18n tests:')
+			console.log(i18next.t('You are logged as username', {username: 'username'}))
+			console.log(i18next.t('key', { what: 'i18next', how: 'great' }))
+			return
+
+		i18next
+			.use(i18nextXHRBackend)
+			.use(i18nextBrowserLanguageDetector)
+			.init({
+				fallbackLng: 'en',
+				debug: true,
+				ns: ['special', 'common'],
+				defaultNS: 'common',
+				backend: {
+					loadPath: 'static/locales/{{lng}}/{{ns}}.json',
+					crossDomain: true
+				}
+			}, (err, t)->
+				# init set content
+				updateContent()
+				return
+			)
+
+		i18next.on('languageChanged', () => updateContent())
+
+		jqueryI18next.init(i18next, $, {
+			tName: 't', 						# --> appends $.t = i18next.t
+			i18nName: 'i18n', 					# --> appends $.i18n = i18next
+			handleName: 'localize', 			# --> appends $(selector).localize(opts);
+			selectorAttr: 'data-i18n', 			# selector for translating elements
+			targetAttr: 'i18n-target', 			# data-() attribute to grab target element to translate (if diffrent then itself)
+			optionsAttr: 'i18n-options', 		# data-() attribute that contains options, will load/set if useOptionsAttr = true
+			useOptionsAttr: false, 				# see optionsAttr
+			parseDefaultValueFromContent: true 	# parses default values from content ele.val or ele.text
+		});
+
+		i18next.changeLanguage('fr');
 
 		# R.me is the username (or ID if not authenticated) of the user (sent by the server in each ajax "load")
 		username = $('#canvas').attr("data-username")
@@ -303,7 +347,7 @@ define [
 			modal.addText('''
 				Comme un dessein is a participative piece created by the french collective IDLV (Indiens dans la Ville). 
 				With the help of a simple web interface and a monumental plotter, everyone can submit a drawing which takes part of a larger pictural composition, thus compose a collective utopian artwork.
-			''')
+			''', 'welcome message')
 			modal.addText('Participate !')
 			modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning')
 			# modal.addButton( type: 'info', name: 'Sign in', submit: (()-> return location.pathname = '/accounts/login/'), icon: 'glyphicon-log-in' )

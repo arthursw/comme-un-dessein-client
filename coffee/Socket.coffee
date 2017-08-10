@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
+define ['paper', 'R', 'Utils/Utils', 'socket.io', 'i18next' ], (P, R, Utils, ioo, i18next) ->
 
 	class Socket
 
@@ -52,7 +52,7 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 			# on nicknames:
 			@socket.on "nicknames", (nicknames) =>
 				console.log 'nicknames'
-				@chatUsernamesJ.empty().append $("<span>Online: </span>")
+				@chatUsernamesJ.empty().append("<span data-i18n='Online'>"+i18next.t('Online')+"</span>: ")
 				for i of nicknames
 					@chatUsernamesJ.append $("<b>").text( if i>0 then ', ' + nicknames[i] else nicknames[i] )
 				return
@@ -240,7 +240,7 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 				author = if from == R.me then "me" else from
 				@chatMessagesJ.append( $("<p>").append($("<b>").text(author + ": "), message) )
 			else
-				@chatMessagesJ.append( $("<p>").append(message) )
+				@chatMessagesJ.append( $("<p data-i18n='#{message}'>").append(i18next.t(message)) )
 			@chatMessageJ.val('')
 
 			# if I am the one talking: scroll both sidebar and chat box to bottom
@@ -259,7 +259,8 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 			return
 
 		onConnectionError: ()=>
-			@chatMainJ.find("#chatConnectingMessage").text("Impossible to connect to chat.")
+			error = "Impossible to connect to chat."
+			@chatMainJ.find("#chatConnectingMessage").attr('data-i18n', error).text(i18next.t(error))
 			return
 
 		onSignInClick: (event)->
@@ -296,7 +297,7 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 		updateRoom: ()=>
 			room = @getChatRoom()
 			if R.room != room
-				@chatRoomJ.empty().append("<span>Room: </span>" + room)
+				@chatRoomJ.empty().append("<span><span data-i18n='Room'>#{i18next.t('Room')}</span>: </span>" + room)
 				@socket.emit("join", room)
 				R.room = room
 
@@ -307,7 +308,7 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io' ], (P, R, Utils, ioo) ->
 			if realUsername
 				@chatJ.find("#chatLogin").addClass("hidden")
 			else
-				@chatJ.find("#chatLogin p.default-username-message").html("You are logged as <strong>" + username + "</strong>")
+				@chatJ.find("#chatLogin p.default-username-message").html("<span data-i18n='You are logged as'>#{i18next.t('You are logged as')}</span> <strong>" + username + "</strong>")
 			return
 
 		onSetUserName: (set)=>

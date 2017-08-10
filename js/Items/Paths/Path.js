@@ -653,8 +653,10 @@
       };
 
       Path.prototype.requireAndSendToSpacebrew = function() {
+        var spacebrewPath;
         if (typeof spacebrew === "undefined" || spacebrew === null) {
-          require(['Spacebrew'], this.sendToSpacebrew);
+          spacebrewPath = 'Spacebrew';
+          require([spacebrewPath], this.sendToSpacebrew);
         }
       };
 

@@ -55,7 +55,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 		# load the car image, and initialize the car and the sound
 		select: (deselectItems=true, updateParameters=true)->
 			super
-			require(['howler'], @howlerLoaded)
+			howlerPath = 'howler'
+			require([howlerPath], @howlerLoaded)
 			return
 
 		howlerLoaded: ()=>

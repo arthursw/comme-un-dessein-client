@@ -48,7 +48,8 @@ define ['paper', 'R', 'Utils/Utils', 'coffeescript-compiler', 'typeahead' ], (P,
 
 		initializeEditor: (callback, args)->
 			@initialized = false
-			require ['ace/ace'], (ace)=>
+			acePath = 'ace/ace'
+			require [acePath], (ace)=>
 				@aceLoaded(ace)
 				callback.apply(@, args)
 				return
@@ -381,7 +382,8 @@ define ['paper', 'R', 'Utils/Utils', 'coffeescript-compiler', 'typeahead' ], (P,
 
 		initializeDifferenceValidation: (@differences)->
 			if not @initialized then return @initializeEditor(@initializeDifferenceValidation, [@differences])
-			require ['aceDiff'], @aceDiffLoaded
+			aceDiffPath = 'aceDiff'
+			require [aceDiffPath], @aceDiffLoaded
 			return
 
 		aceDiffLoaded: (AceDiff)=>

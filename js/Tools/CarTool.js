@@ -81,6 +81,7 @@
       }
 
       CarTool.prototype.select = function(deselectItems, updateParameters) {
+        var howlerPath;
         if (deselectItems == null) {
           deselectItems = true;
         }
@@ -88,7 +89,8 @@
           updateParameters = true;
         }
         CarTool.__super__.select.apply(this, arguments);
-        require(['howler'], this.howlerLoaded);
+        howlerPath = 'howler';
+        require([howlerPath], this.howlerLoaded);
       };
 
       CarTool.prototype.howlerLoaded = function() {

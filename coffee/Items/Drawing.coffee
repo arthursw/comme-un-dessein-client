@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, Item, Modal) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, R, Utils, Item, Modal, i18next) ->
 
 	# Drawing can only be modified by their author
 
@@ -132,7 +132,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 
 		addToListItem: (@itemListJ)->
 
-			title = '' + @title + ' by ' + @owner
+			title = '' + @title + ' <span data-i18n="by">' + i18next.t('by') + '</span> ' + @owner
 			@liJ = $("<li>")
 			@liJ.html(title)
 			@liJ.attr("data-id", @id)

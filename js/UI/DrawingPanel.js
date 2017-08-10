@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typeahead'], function(P, R, Utils, Item, CoffeeScript) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'i18next', 'typeahead'], function(P, R, Utils, Item, CoffeeScript, i18next) {
     var DrawingPanel;
     DrawingPanel = (function() {
       function DrawingPanel() {
@@ -209,7 +209,7 @@
 
       DrawingPanel.prototype.showSelectedDrawings = function() {
         var item, j, len, listJ, ref, selectedDrawingsJ;
-        this.drawingPanelTitleJ.text('Select a single drawing');
+        this.drawingPanelTitleJ.attr('data-i18n', 'Select a single drawing').text(i18next.t('Select a single drawing'));
         this.drawingPanelJ.find('.content-container').children().hide();
         selectedDrawingsJ = this.drawingPanelJ.find('.selected-drawings');
         selectedDrawingsJ.show();
@@ -279,7 +279,7 @@
           image.src = raster.toDataURL();
           return image;
         } else {
-          return $('<span>').addClass('badge label-default').text('No path loaded');
+          return $('<span>').addClass('badge label-default').attr('data-i18n', 'No path loaded').text(i18next.t('No path loaded'));
         }
       };
 
@@ -353,7 +353,7 @@
       DrawingPanel.prototype.submitDrawingClicked = function() {
         R.toolManager.leaveDrawingMode(true);
         this.submitDrawingBtnJ.hide();
-        this.drawingPanelTitleJ.text('Create drawing');
+        this.drawingPanelTitleJ.attr('data-i18n', 'Create drawing').text(i18next.t('Create drawing'));
         this.open();
         this.showContent();
         this.currentDrawing = null;
@@ -443,7 +443,7 @@
       DrawingPanel.prototype.setDrawing = function(currentDrawing, drawingData) {
         var j, latestDrawing, len, p, path, pathsToLoad, ref;
         this.currentDrawing = currentDrawing;
-        this.drawingPanelTitleJ.text('Drawing info');
+        this.drawingPanelTitleJ.attr('data-i18n', 'Drawing info').text(i18next.t('Drawing info'));
         this.open();
         this.showContent();
         latestDrawing = JSON.parse(drawingData.drawing);

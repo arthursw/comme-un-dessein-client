@@ -6,12 +6,13 @@
   dependencies = ['paper', 'R', 'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Divs/Div'];
 
   if (typeof document !== "undefined" && document !== null) {
+    dependencies.push('i18next');
     dependencies.push('hammer');
     dependencies.push('tween');
     dependencies.push('mousewheel');
   }
 
-  define(dependencies, function(P, R, Utils, Grid, Command, Div, Hammer) {
+  define(dependencies, function(P, R, Utils, Grid, Command, Div, i18next, Hammer) {
     var View;
     View = (function() {
       function View() {
@@ -132,6 +133,7 @@
             };
           })(this);
           backgroundImage.opacity = 0.5;
+          P.project.layers[1].addChild(backgroundImage);
           backgroundImage.sendToBack();
           this.backgroundListJ = this.createLayerListItem('Background', backgroundImage, true, false, false);
         }
@@ -153,7 +155,8 @@
         nItemsJ = itemListJ.find(".n-items");
         nItemsJ.addClass(title.toLowerCase() + '-color');
         titleJ = itemListJ.find(".title");
-        titleJ.text(title);
+        titleJ.attr('data-i18n', title);
+        titleJ.text(i18next.t(title));
         if (noArrow) {
           titleJ.addClass('no-arrow');
         }

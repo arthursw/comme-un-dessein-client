@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils'], function(P, R, Utils) {
+  define(['paper', 'R', 'Utils/Utils', 'i18next'], function(P, R, Utils, i18next) {
     var Modal;
     Modal = (function() {
       Modal.modalJ = $('#customModal');
@@ -50,7 +50,7 @@
 
       function Modal(args) {
         this["delete"] = bind(this["delete"], this);
-        var iconJ;
+        var iconJ, spanJ;
         this.data = {
           data: args.data
         };
@@ -80,7 +80,9 @@
           this.modalJ.find('[name="submit"]').html(iconJ);
         }
         if (args.submitButtonText != null) {
-          this.modalJ.find('[name="submit"]').append(args.submitButtonText);
+          spanJ = $('<span>');
+          spanJ.attr('data-i18n', args.submitButtonText).append(i18next.t(args.submitButtonText));
+          this.modalJ.find('[name="submit"]').append(spanJ);
         }
         if (args.cancelButtonIcon != null) {
           iconJ = $('<span>');
@@ -88,7 +90,9 @@
           this.modalJ.find('[name="cancel"]').html(iconJ);
         }
         if (args.cancelButtonText != null) {
-          this.modalJ.find('[name="cancel"]').append(args.cancelButtonText);
+          spanJ = $('<span>');
+          spanJ.attr('data-i18n', args.cancelButtonText).append(i18next.t(args.cancelButtonText));
+          this.modalJ.find('[name="cancel"]').append(spanJ);
         }
         this.modalJ.find('.btn-primary').click((function(_this) {
           return function(event) {
@@ -96,12 +100,18 @@
           };
         })(this));
         this.extractors = {};
-        this.modalJ.find("h4.modal-title").html(args.title);
+        this.modalJ.find("h4.modal-title").attr('data-i18n', args.title).html(i18next.t(args.title));
         return;
       }
 
-      Modal.prototype.addText = function(text) {
-        this.modalBodyJ.append("<p>" + text + "</p>");
+      Modal.prototype.addText = function(text, textKey) {
+        if (textKey == null) {
+          textKey = null;
+        }
+        if (textKey == null) {
+          textKey = text;
+        }
+        this.modalBodyJ.append("<p data-i18n='" + textKey + "'>" + (i18next.t(text)) + "</p>");
       };
 
       Modal.prototype.addTextInput = function(args) {
@@ -220,10 +230,11 @@
       };
 
       Modal.prototype.addTable = function(data) {
-        var tableJ;
+        var tableJ, tablePath;
         tableJ = $("<table class='.table'>");
         this.modalBodyJ.append(tableJ);
-        require(['table'], function() {
+        tablePath = 'table';
+        require([tablePath], function() {
           tableJ.bootstrapTable(data);
         });
         return tableJ;
@@ -317,12 +328,13 @@
       };
 
       Modal.prototype.addButton = function(args) {
-        var buttonJ, icon, submitButtonJ;
+        var buttonJ, icon, submitButtonJ, text;
         if (args.type == null) {
           args.type = 'default';
         }
         icon = args.icon != null ? "<span class='glyphicon " + args.icon + "'></span>" : '';
-        buttonJ = $(("<button type='button' class='btn btn-" + args.type + "' name='" + args.name + "'>") + icon + (args.name + "</button>"));
+        text = "<span data-i18n='" + args.name + "'>" + (i18next.t(args.name)) + "</span>";
+        buttonJ = $(("<button type='button' class='btn btn-" + args.type + "' name='" + args.name + "'>") + icon + text + "</button>");
         if (args.submit != null) {
           buttonJ.click((function(_this) {
             return function(event) {

@@ -711,7 +711,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 		# send path to spacebrew
 		requireAndSendToSpacebrew: ()->
 			if not spacebrew?
-				require(['Spacebrew'], @sendToSpacebrew)
+				spacebrewPath = 'Spacebrew'
+				require([spacebrewPath], @sendToSpacebrew)
 			return
 
 		sendToSpacebrew: (spacebrew)=>

@@ -64,6 +64,9 @@ requirejs.config
 
 		'domReady': [libs + 'domReady']
 		'i18next': [libs + 'i18next.min']
+		'i18nextXHRBackend': [libs + 'i18nextXHRBackend']
+		'i18nextBrowserLanguageDetector': [libs + 'i18nextBrowserLanguageDetector']
+		'jqueryI18next': [libs + 'jquery-i18next.min']
 		'hammer': [libs + 'hammer.min']
 		# 'ace': [libs + 'ace']
 		'aceTools': [libs + 'ace/ext-language_tools']
@@ -116,6 +119,9 @@ requirejs.config
 		'js-cookie': ['jquery']
 		'jqtree': ['jquery']
 		'aceDiff': ['jquery', 'diffMatch', 'ace/ace']
+		'i18nextXHRBackend': ['i18next']
+		'i18nextBrowserLanguageDetector': ['i18next']
+		'jqueryI18next': ['i18next']
 		# 'modal': ['bootstrap', 'modalManager']
 		'colorpickersliders':
 			deps: ['jquery', 'tinycolor2']

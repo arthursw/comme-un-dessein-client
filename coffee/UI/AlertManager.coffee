@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
+define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 
 	class AlertManager
 
@@ -25,7 +25,7 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			previousType = @alerts[@currentAlert]?.type
 			@currentAlert = index
 			alertJ = @alertsContainer.find(".alert")
-			alertJ.removeClass(previousType).addClass(@alerts[@currentAlert].type).text(@alerts[@currentAlert].message)
+			alertJ.removeClass(previousType).addClass(@alerts[@currentAlert].type).attr('data-i18n', @alerts[@currentAlert].message).text(i18next.t(@alerts[@currentAlert].message))
 
 			@alertsContainer.find(".alert-number").text(@currentAlert+1)
 			return

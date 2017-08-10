@@ -1,10 +1,11 @@
 dependencies = ['paper', 'R',  'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Divs/Div' ]
 if document?
+	dependencies.push('i18next')
 	dependencies.push('hammer')
 	dependencies.push('tween')
 	dependencies.push('mousewheel')
 
-define dependencies, (P, R, Utils, Grid, Command, Div, Hammer) ->
+define dependencies, (P, R, Utils, Grid, Command, Div, i18next, Hammer) ->
 
 	class View
 
@@ -111,6 +112,7 @@ define dependencies, (P, R, Utils, Grid, Command, Div, Hammer) ->
 					backgroundImage.height = @grid.limitCD.bounds.height
 					return
 				backgroundImage.opacity = 0.5
+				P.project.layers[1].addChild(backgroundImage)
 				backgroundImage.sendToBack()
 				@backgroundListJ = @createLayerListItem('Background', backgroundImage, true, false, false)
 				
@@ -125,7 +127,8 @@ define dependencies, (P, R, Utils, Grid, Command, Div, Hammer) ->
 			nItemsJ.addClass(title.toLowerCase() + '-color')
 
 			titleJ = itemListJ.find(".title")
-			titleJ.text(title)
+			titleJ.attr('data-i18n', title)
+			titleJ.text(i18next.t(title))
 			
 			if noArrow
 				titleJ.addClass('no-arrow')

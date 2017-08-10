@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
+define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 
 	class Modal
 
@@ -62,7 +62,9 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 				@modalJ.find('[name="submit"]').html(iconJ)
 
 			if args.submitButtonText?
-				@modalJ.find('[name="submit"]').append(args.submitButtonText)
+				spanJ = $('<span>')
+				spanJ.attr('data-i18n', args.submitButtonText).append(i18next.t(args.submitButtonText))
+				@modalJ.find('[name="submit"]').append(spanJ)
 			
 			if args.cancelButtonIcon?
 				iconJ = $('<span>')
@@ -70,17 +72,20 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 				@modalJ.find('[name="cancel"]').html(iconJ)
 			
 			if args.cancelButtonText?
-				@modalJ.find('[name="cancel"]').append(args.cancelButtonText)
+				spanJ = $('<span>')
+				spanJ.attr('data-i18n', args.cancelButtonText).append(i18next.t(args.cancelButtonText))
+				@modalJ.find('[name="cancel"]').append(spanJ)
 
 			@modalJ.find('.btn-primary').click( (event)=> @modalSubmit() )
 
 			@extractors = {}
-			@modalJ.find("h4.modal-title").html(args.title)
+			@modalJ.find("h4.modal-title").attr('data-i18n', args.title).html(i18next.t(args.title))
 
 			return
 
-		addText: (text)->
-			@modalBodyJ.append("<p>#{text}</p>")
+		addText: (text, textKey=null)->
+			textKey ?= text
+			@modalBodyJ.append("<p data-i18n='#{textKey}'>#{i18next.t(text)}</p>")
 			return
 
 		addTextInput: (args)->
@@ -177,7 +182,8 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 		addTable: (data)->
 			tableJ = $("<table class='.table'>")
 			@modalBodyJ.append(tableJ)
-			require ['table'], ()->
+			tablePath = 'table'
+			require [tablePath], ()->
 				tableJ.bootstrapTable(data)
 				return
 			return tableJ
@@ -282,8 +288,9 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			args.type ?= 'default'
 
 			icon = if args.icon? then "<span class='glyphicon #{args.icon}'></span>" else ''
+			text = "<span data-i18n='#{args.name}'>#{i18next.t(args.name)}</span>"
 
-			buttonJ = $("<button type='button' class='btn btn-#{args.type}' name='#{args.name}'>" + icon + "#{args.name}</button>")
+			buttonJ = $("<button type='button' class='btn btn-#{args.type}' name='#{args.name}'>" + icon + text + "</button>")
 			
 			if args.submit?
 				buttonJ.click (event)=>

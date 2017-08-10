@@ -57,8 +57,10 @@
       }
 
       CodeEditor.prototype.initializeEditor = function(callback, args) {
+        var acePath;
         this.initialized = false;
-        require(['ace/ace'], (function(_this) {
+        acePath = 'ace/ace';
+        require([acePath], (function(_this) {
           return function(ace) {
             _this.aceLoaded(ace);
             callback.apply(_this, args);
@@ -426,11 +428,13 @@
       };
 
       CodeEditor.prototype.initializeDifferenceValidation = function(differences) {
+        var aceDiffPath;
         this.differences = differences;
         if (!this.initialized) {
           return this.initializeEditor(this.initializeDifferenceValidation, [this.differences]);
         }
-        require(['aceDiff'], this.aceDiffLoaded);
+        aceDiffPath = 'aceDiff';
+        require([aceDiffPath], this.aceDiffLoaded);
       };
 
       CodeEditor.prototype.aceDiffLoaded = function(AceDiff) {

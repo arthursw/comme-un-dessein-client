@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typeahead' ], (P, R, Utils, Item, CoffeeScript) -> 			# 'ace/ext-language_tools', required?
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'i18next', 'typeahead' ], (P, R, Utils, Item, CoffeeScript, i18next) -> 			# 'ace/ext-language_tools', required?
 
 	class DrawingPanel
 
@@ -201,7 +201,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			return
 
 		showSelectedDrawings: ()->
-			@drawingPanelTitleJ.text('Select a single drawing')
+			@drawingPanelTitleJ.attr('data-i18n', 'Select a single drawing').text(i18next.t('Select a single drawing'))
 
 			@drawingPanelJ.find('.content-container').children().hide()
 			selectedDrawingsJ = @drawingPanelJ.find('.selected-drawings')
@@ -270,7 +270,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 				image.src = raster.toDataURL()
 				return image
 			else
-				return $('<span>').addClass('badge label-default').text('No path loaded')
+				return $('<span>').addClass('badge label-default').attr('data-i18n', 'No path loaded').text(i18next.t('No path loaded'))
 
 		setDrawingThumbnail: ()->
 			# @currentDrawing.rasterize()
@@ -344,7 +344,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 
 			R.toolManager.leaveDrawingMode(true)
 			@submitDrawingBtnJ.hide()
-			@drawingPanelTitleJ.text('Create drawing')
+			@drawingPanelTitleJ.attr('data-i18n', 'Create drawing').text(i18next.t('Create drawing'))
 			# @showBeginDrawing()
 			@open()
 			@showContent()
@@ -425,7 +425,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'typ
 			return
 
 		setDrawing: (@currentDrawing, drawingData)->
-			@drawingPanelTitleJ.text('Drawing info')
+			@drawingPanelTitleJ.attr('data-i18n', 'Drawing info').text(i18next.t('Drawing info'))
 			@open()
 			@showContent()
 			

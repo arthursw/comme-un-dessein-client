@@ -3,7 +3,7 @@
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  define(['paper', 'R', 'Utils/Utils', 'socket.io'], function(P, R, Utils, ioo) {
+  define(['paper', 'R', 'Utils/Utils', 'socket.io', 'i18next'], function(P, R, Utils, ioo, i18next) {
     var Socket;
     Socket = (function() {
       function Socket() {
@@ -45,7 +45,7 @@
           return function(nicknames) {
             var i;
             console.log('nicknames');
-            _this.chatUsernamesJ.empty().append($("<span>Online: </span>"));
+            _this.chatUsernamesJ.empty().append("<span data-i18n='Online'>" + i18next.t('Online') + "</span>: ");
             for (i in nicknames) {
               _this.chatUsernamesJ.append($("<b>").text(i > 0 ? ', ' + nicknames[i] : nicknames[i]));
             }
@@ -174,7 +174,7 @@
           author = from === R.me ? "me" : from;
           this.chatMessagesJ.append($("<p>").append($("<b>").text(author + ": "), message));
         } else {
-          this.chatMessagesJ.append($("<p>").append(message));
+          this.chatMessagesJ.append($("<p data-i18n='" + message + "'>").append(i18next.t(message)));
         }
         this.chatMessageJ.val('');
         if (from === R.me) {
@@ -192,7 +192,9 @@
       };
 
       Socket.prototype.onConnectionError = function() {
-        this.chatMainJ.find("#chatConnectingMessage").text("Impossible to connect to chat.");
+        var error;
+        error = "Impossible to connect to chat.";
+        this.chatMainJ.find("#chatConnectingMessage").attr('data-i18n', error).text(i18next.t(error));
       };
 
       Socket.prototype.onSignInClick = function(event) {
@@ -235,7 +237,7 @@
         var room;
         room = this.getChatRoom();
         if (R.room !== room) {
-          this.chatRoomJ.empty().append("<span>Room: </span>" + room);
+          this.chatRoomJ.empty().append(("<span><span data-i18n='Room'>" + (i18next.t('Room')) + "</span>: </span>") + room);
           this.socket.emit("join", room);
           return R.room = room;
         }
@@ -255,7 +257,7 @@
         if (realUsername) {
           this.chatJ.find("#chatLogin").addClass("hidden");
         } else {
-          this.chatJ.find("#chatLogin p.default-username-message").html("You are logged as <strong>" + username + "</strong>");
+          this.chatJ.find("#chatLogin p.default-username-message").html(("<span data-i18n='You are logged as'>" + (i18next.t('You are logged as')) + "</span> <strong>") + username + "</strong>");
         }
       };
 
