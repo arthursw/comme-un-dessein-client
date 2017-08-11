@@ -2,6 +2,9 @@
 (function() {
   define([], function() {
     var R;
+    if ((typeof window !== "undefined" && window !== null) && (window.R == null)) {
+      window.R = {};
+    }
     R = (typeof window !== "undefined" && window !== null ? window.R : void 0) || {};
     R.offline = false;
     R.canvasWidth = 1000;

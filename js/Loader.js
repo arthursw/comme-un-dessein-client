@@ -4,7 +4,7 @@
     hasProp = {}.hasOwnProperty,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  define(['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Lock', 'Items/Divs/Div', 'Items/Divs/Media', 'Items/Drawing', 'Items/Divs/Text'], function(P, R, Utils, Command, Item, ModuleLoader) {
+  define(['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Drawing', 'Items/Divs/Text'], function(P, R, Utils, Command, Item, ModuleLoader, Drawing, Text) {
     var Loader, RasterizerLoader;
     Loader = (function() {
       function Loader() {
@@ -130,7 +130,7 @@
         for (id in ref) {
           if (!hasProp.call(ref, id)) continue;
           item = ref[id];
-          if (!item.getBounds().intersects(limit)) {
+          if ((!item.getBounds().intersects(limit)) && (!item.isDraft())) {
             itemsOutsideLimit.push(item);
           }
         }
@@ -338,7 +338,7 @@
       };
 
       Loader.prototype.createNewItems = function(itemsToLoad) {
-        var args, box, data, date, div, drawing, id, item, k, len, len1, lock, m, newItems, newPath, path, pk, planet, point, points, rdiv, ref, ref1, ref2, ref3, ref4, ref5, rpath;
+        var args, data, date, drawing, id, item, k, len, len1, lock, m, newItems, newPath, path, pk, planet, point, points, ref, ref1, rpath;
         newItems = [];
         for (k = 0, len = itemsToLoad.length; k < len; k++) {
           item = itemsToLoad[k];
@@ -348,47 +348,6 @@
           data = (item.data != null) && item.data.length > 0 ? JSON.parse(item.data) : null;
           lock = item.lock != null ? R.items[item.lock] : null;
           switch (item.rType) {
-            case 'Box':
-              box = item;
-              if (box.box.coordinates[0].length < 5) {
-                console.log("Error: box has less than 5 points");
-              }
-              lock = null;
-              switch (box.object_type) {
-                case 'lock':
-                  lock = new Item.Lock(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, (ref1 = box.module) != null ? ref1.$oid : void 0);
-                  break;
-                case 'link':
-                  lock = new Item.Link(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, (ref2 = box.module) != null ? ref2.$oid : void 0);
-                  break;
-                case 'website':
-                  lock = new Item.Website(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, (ref3 = box.module) != null ? ref3.$oid : void 0);
-                  break;
-                case 'video-game':
-                  lock = new Item.VideoGame(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, (ref4 = box.module) != null ? ref4.$oid : void 0);
-              }
-              lock.lastUpdateDate = box.lastUpdate.$date;
-              if (lock != null) {
-                newItems.push(lock);
-              }
-              break;
-            case 'Div':
-              div = item;
-              if (div.box.coordinates[0].length < 5) {
-                console.log("Error: box has less than 5 points");
-              }
-              switch (div.object_type) {
-                case 'text':
-                  rdiv = new Item.Text(Utils.CS.rectangleFromBox(div), data, id, pk, date, lock);
-                  break;
-                case 'media':
-                  rdiv = new Item.Media(Utils.CS.rectangleFromBox(div), data, id, pk, date, lock);
-              }
-              rdiv.lastUpdateDate = div.lastUpdate.$date;
-              if (rdiv != null) {
-                newItems.push(rdiv);
-              }
-              break;
             case 'Path':
               path = item;
               if (path.owner == null) {
@@ -400,9 +359,9 @@
                 data.planet = planet;
               }
               points = [];
-              ref5 = path.points.coordinates;
-              for (m = 0, len1 = ref5.length; m < len1; m++) {
-                point = ref5[m];
+              ref1 = path.points.coordinates;
+              for (m = 0, len1 = ref1.length; m < len1; m++) {
+                point = ref1[m];
                 points.push(Utils.CS.posOnPlanetToProject(point, planet));
               }
               rpath = null;

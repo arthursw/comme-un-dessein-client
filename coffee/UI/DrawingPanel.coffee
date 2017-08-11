@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'i18next', 'typeahead' ], (P, R, Utils, Item, CoffeeScript, i18next) -> 			# 'ace/ext-language_tools', required?
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next' ], (P, R, Utils, Item, i18next) -> 			# 'ace/ext-language_tools', required?
 
 	class DrawingPanel
 
@@ -322,6 +322,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'i18
 
 			if itemIds.length == 0
 				R.alertManager.alert 'You must draw something before submitting.', 'error'
+				@close()
+				return
+
+			if R.Tools.Path.draftIsTooBig(items)
+				R.Tools.Path.displayDraftIsTooBigError()
 				@close()
 				return
 

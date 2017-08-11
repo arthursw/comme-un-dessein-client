@@ -659,6 +659,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			# R.paths[pk] = @
 			# delete R.paths[@id]
 			return
+		
+		isDraft: ()->
+			return not @drawingId?
 
 		# common to all RItems
 		# called by @delete() and to update users view through websockets

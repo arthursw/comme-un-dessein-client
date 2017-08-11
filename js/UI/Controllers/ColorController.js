@@ -4,7 +4,7 @@
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['paper', 'R', 'Utils/Utils', 'UI/Controllers/Controller', 'colorpickersliders'], function(P, R, Utils, Controller) {
+  define(['paper', 'R', 'Utils/Utils', 'UI/Controllers/Controller', 'colorpickersliders'], function(P, R, Utils, Controller, cps) {
     var ColorController;
     ColorController = (function(superClass) {
       extend(ColorController, superClass);

@@ -5,7 +5,7 @@ if document?
 	dependencies.push('tween')
 	dependencies.push('mousewheel')
 
-define dependencies, (P, R, Utils, Grid, Command, Div, i18next, Hammer) ->
+define 'View/View', dependencies, (P, R, Utils, Grid, Command, Div, i18next, Hammer, tw, mousewheel) ->
 
 	class View
 
@@ -634,6 +634,10 @@ define dependencies, (P, R, Utils, Grid, Command, Div, i18next, Hammer) ->
 				R.selectedTool.updateNative(event)
 				return
 
+			if R.selectedTool?.name == 'Select'
+				paperEvent = Utils.Event.jEventToPaperEvent(event, @previousMousePosition, @initialMousePosition, 'mousemove')
+				R.selectedTool?.move?(paperEvent)
+
 			Div.updateHiddenDivs(event)
 
 			# update selected RDivs
@@ -674,7 +678,7 @@ define dependencies, (P, R, Utils, Grid, Command, Div, i18next, Hammer) ->
 
 				# deselect move tool and select previous tool if middle mouse button
 				if event.which == 2 # middle mouse button
-					R.previousTool?.select()
+					R.previousTool?.select(null, null, null, true)
 				return
 
 

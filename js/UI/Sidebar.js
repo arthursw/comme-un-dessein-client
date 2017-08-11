@@ -2,12 +2,11 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi', 'scrollbar', 'typeahead'], function(P, R, Utils, Item, ModuleLoader) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi', 'scrollbar'], function(P, R, Utils, Item, ModuleLoader, jqui, sb) {
     var Sidebar;
     Sidebar = (function() {
       function Sidebar() {
         this.displayDesiredTool = bind(this.displayDesiredTool, this);
-        this.queryDesiredTool = bind(this.queryDesiredTool, this);
         this.toggleSidebar = bind(this.toggleSidebar, this);
         this.toggleToolToFavorite = bind(this.toggleToolToFavorite, this);
         this.sidebarJ = $("#sidebar");
@@ -44,7 +43,6 @@
 
       Sidebar.prototype.initialize = function() {
         ModuleLoader.initialize();
-        this.initializeTypeahead();
       };
 
       Sidebar.prototype.initializeFavoriteTools = function() {
@@ -140,37 +138,6 @@
         } else {
           this.hide();
         }
-      };
-
-      Sidebar.prototype.initializeTypeahead = function() {
-        var toolValues;
-        toolValues = this.allToolsJ.find('.tool-btn,.category').map(function() {
-          return {
-            value: this.getAttribute('data-name')
-          };
-        }).get();
-        this.typeaheadModuleEngine = new Bloodhound({
-          name: 'Tools',
-          local: toolValues,
-          datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
-          queryTokenizer: Bloodhound.tokenizers.whitespace
-        });
-        this.typeaheadModuleEngine.initialize();
-        this.searchToolInputJ = this.allToolsContainerJ.find("input.search-tool");
-        this.searchToolInputJ.keyup(this.queryDesiredTool);
-      };
-
-      Sidebar.prototype.queryDesiredTool = function(event) {
-        var query;
-        query = this.searchToolInputJ.val();
-        if (query === "") {
-          this.allToolsJ.find('.tool-btn').show();
-          this.allToolsJ.find('.category').removeClass('closed').show();
-          return;
-        }
-        this.allToolsJ.find('.tool-btn').hide();
-        this.allToolsJ.find('.category').addClass('closed').hide();
-        this.typeaheadModuleEngine.get(query, this.displayDesiredTool);
       };
 
       Sidebar.prototype.displayDesiredTool = function(suggestions) {

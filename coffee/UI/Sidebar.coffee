@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi', 'scrollbar', 'typeahead' ], (P, R, Utils, Item, ModuleLoader) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi', 'scrollbar' ], (P, R, Utils, Item, ModuleLoader, jqui, sb ) ->
 
 	class Sidebar
 
@@ -34,7 +34,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi'
 
 		initialize: ()->
 			ModuleLoader.initialize()
-			@initializeTypeahead()
+			# @initializeTypeahead()
 			return
 
 		initializeFavoriteTools: ()->
@@ -113,30 +113,30 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi'
 				@hide()
 			return
 
-		initializeTypeahead: ()->
-			toolValues = @allToolsJ.find('.tool-btn,.category').map(()->return value: this.getAttribute('data-name')).get()
-			@typeaheadModuleEngine = new Bloodhound({
-				name: 'Tools',
-				local: toolValues,
-				datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
-				queryTokenizer: Bloodhound.tokenizers.whitespace
-			})
-			@typeaheadModuleEngine.initialize()
+		# initializeTypeahead: ()->
+		# 	toolValues = @allToolsJ.find('.tool-btn,.category').map(()->return value: this.getAttribute('data-name')).get()
+		# 	@typeaheadModuleEngine = new Bloodhound({
+		# 		name: 'Tools',
+		# 		local: toolValues,
+		# 		datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+		# 		queryTokenizer: Bloodhound.tokenizers.whitespace
+		# 	})
+		# 	@typeaheadModuleEngine.initialize()
 
-			@searchToolInputJ = @allToolsContainerJ.find("input.search-tool")
-			@searchToolInputJ.keyup @queryDesiredTool
-			return
+		# 	@searchToolInputJ = @allToolsContainerJ.find("input.search-tool")
+		# 	@searchToolInputJ.keyup @queryDesiredTool
+		# 	return
 
-		queryDesiredTool: (event)=>
-			query = @searchToolInputJ.val()
-			if query == ""
-				@allToolsJ.find('.tool-btn').show()
-				@allToolsJ.find('.category').removeClass('closed').show()
-				return
-			@allToolsJ.find('.tool-btn').hide()
-			@allToolsJ.find('.category').addClass('closed').hide()
-			@typeaheadModuleEngine.get(query, @displayDesiredTool)
-			return
+		# queryDesiredTool: (event)=>
+		# 	query = @searchToolInputJ.val()
+		# 	if query == ""
+		# 		@allToolsJ.find('.tool-btn').show()
+		# 		@allToolsJ.find('.category').removeClass('closed').show()
+		# 		return
+		# 	@allToolsJ.find('.tool-btn').hide()
+		# 	@allToolsJ.find('.category').addClass('closed').hide()
+		# 	@typeaheadModuleEngine.get(query, @displayDesiredTool)
+		# 	return
 
 		displayDesiredTool: (suggestions)=>
 			for suggestion in suggestions

@@ -9,7 +9,7 @@
     dependencies.push('gui');
   }
 
-  define(dependencies, function(P, R, Utils, Controller, ColorController, Folder, GUI) {
+  define('UI/Controllers/ControllerManager', dependencies, function(P, R, Utils, Controller, ColorController, Folder, GUI) {
     var ControllerManager;
     console.log('ControllerManager');
     ControllerManager = (function() {

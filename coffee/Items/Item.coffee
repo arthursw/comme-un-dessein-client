@@ -619,6 +619,9 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 		isSelected: ()->
 			return @selectionRectangle?
 
+		isDraft: ()->
+			return false
+		
 		# select the Item: (only if it has no selection rectangle i.e. not already selected)
 		# - update the selection rectangle,
 		# - (optionally) update controller in the gui accordingly

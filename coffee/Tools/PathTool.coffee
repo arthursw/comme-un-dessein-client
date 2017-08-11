@@ -20,6 +20,33 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 		@drawItems = true
 
 		@emitSocket = false
+		@maxDraftSize = 1000
+
+		@computeDraftBounds: (paths=null)->
+			bounds = null
+			
+			if not paths
+				paths = []
+				for id, path of R.paths
+					if path.owner == R.me and path.isDraft()
+						paths.push(path)
+
+			for path in paths
+				bounds = if bounds? then bounds.unite(path.getDrawingBounds()) else path.getDrawingBounds()
+
+			return bounds
+
+		@draftIsTooBig: (paths=null, tolerance=0)->
+			draftBounds = @computeDraftBounds(paths)
+			console.log(draftBounds.width, draftBounds.height)
+			return @draftBoundsIsTooBig(draftBounds, tolerance)
+
+		@draftBoundsIsTooBig: (draftBounds, tolerance=0)->
+			return draftBounds? and draftBounds.width > @maxDraftSize - tolerance or draftBounds.height > @maxDraftSize - tolerance
+
+		@displayDraftIsTooBigError: ()->
+			R.alertManager.alert 'Your drawing cannot be bigger than 1000x1000 pixels.', 'error'
+			return
 
 		# Find or create a button for the tool in the sidebar (if the button is created, add it default or favorite tool list depending on the user settings stored in local storage, and whether the tool was just created in a newly created script)
 		# set its name and icon if an icon url is provided, or create an icon with the letters of the name otherwise
@@ -65,7 +92,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 
 		# Select: add the mouse move listener on the tool (userful when creating a path in polygon mode)
 		# todo: move this to main, have a global onMouseMove handler like other handlers
-		select: (deselectItems=true, updateParameters=true, forceSelect=false)->
+		select: (deselectItems=true, updateParameters=true, forceSelect=false, fromMiddleMouseButton=false)->
 			if not R.userAuthenticated and not forceSelect
 				R.alertManager.alert 'Log in before drawing', 'info'
 				return
@@ -76,6 +103,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 
 			R.view.tool.onMouseMove = @move
 			R.toolManager.enterDrawingMode()
+
+			if not fromMiddleMouseButton
+				draftBounds = @constructor.computeDraftBounds()
+				if draftBounds? and not P.view.bounds.contains(draftBounds)
+					R.view.fitRectangle(draftBounds, true)
+
 			return
 
 		updateParameters: ()->
@@ -103,6 +136,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 			if 100 * P.view.zoom < 10
 				R.alertManager.alert("You can not draw path at a zoom smaller than 10.", "Info")
 				return
+			
+			draftBounds = @constructor.computeDraftBounds()
+			
+			if draftBounds? and @constructor.draftBoundsIsTooBig(draftBounds.include(event.point))
+				@constructor.displayDraftIsTooBigError()
+				return
 
 			# deselect all and create new P.Path in all case except in polygonMode
 			if not (R.currentPaths[from]? and R.currentPaths[from].data?.polygonMode) 	# if not in polygon mode
@@ -127,10 +166,20 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 		# @param [String] author (username) of the event
 		update: (event, from=R.me) ->
 			path = R.currentPaths[from]
+			
+			if not path? then return 		# when the path has been deleted because too big
+
 			path.updateCreate(event.point, event, false)
 
 			if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))
 				path.path.strokeColor = 'red'
+
+			if @constructor.draftIsTooBig(null, 50)
+				path.path.strokeColor = 'red'
+				path.controlPath.lastSegment.remove()
+				@constructor.displayDraftIsTooBigError()
+				@end(event, from)
+				return
 
 			# R.currentPaths[from].group.visible = true
 			# if R.me? and from==R.me then R.socket.emit( "update", R.me, R.eventToObject(event), @name)
@@ -145,6 +194,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 
 		createPath: (event, from)->
 			path = R.currentPaths[from]
+			if not path? then return 		# when the path has been deleted because too big
 			if not path.group then return
 
 			if R.me? and from==R.me 						# if user is the author of the event: select and save path and emit event on websocket
@@ -192,9 +242,16 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 		# @param [String] author (username) of the event
 		end: (event, from=R.me) ->
 			path = R.currentPaths[from]
+			if not path? then return false		# when the path has been deleted because too big
 			
 			if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))
 				R.alertManager.alert 'Your path must be in the drawing area.', 'error'
+				R.currentPaths[from].remove()
+				delete R.currentPaths[from]
+				return false
+			
+			if @constructor.draftIsTooBig()
+				@constructor.displayDraftIsTooBigError()
 				R.currentPaths[from].remove()
 				delete R.currentPaths[from]
 				return false

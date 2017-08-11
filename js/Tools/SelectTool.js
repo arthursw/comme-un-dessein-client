@@ -100,6 +100,13 @@
         SelectTool.__super__.select.call(this, false, updateParameters);
       };
 
+      SelectTool.prototype.deselect = function() {
+        R.canvasJ.css({
+          cursor: 'auto'
+        });
+        SelectTool.__super__.deselect.apply(this, arguments);
+      };
+
       SelectTool.prototype.updateParameters = function() {
         R.controllerManager.updateParametersForSelectedItems();
       };
@@ -300,6 +307,23 @@
         } else if (R.currentPaths[R.me] != null) {
           this.updateSelectionHighlight(event);
         }
+      };
+
+      SelectTool.prototype.move = function(event) {
+        var id, item, ref;
+        ref = R.items;
+        for (id in ref) {
+          item = ref[id];
+          if (item.getBounds().contains(event.point)) {
+            R.canvasJ.css({
+              cursor: 'pointer'
+            });
+            return;
+          }
+        }
+        R.canvasJ.css({
+          cursor: 'auto'
+        });
       };
 
       SelectTool.prototype.end = function(event) {

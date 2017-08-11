@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtree', 'typeahead' ], (P, R, Utils, Modal, CoffeeScript) ->
+define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtree', 'typeahead' ], (P, R, Utils, Modal, CoffeeScript, jqt, th) ->
 
 	class FileManager
 

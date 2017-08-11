@@ -62,6 +62,11 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Item', '
 			super(false, updateParameters)
 			return
 
+		deselect: ()->
+			R.canvasJ.css({cursor: 'auto'})
+			super
+			return
+
 		updateParameters: ()->
 			R.controllerManager.updateParametersForSelectedItems()
 			return
@@ -276,6 +281,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Item', '
 			# 	# 		item.updateMoveBy?(event)
 			# else 									# update selection rectangle if there is one
 			# 	@createSelectionRectangle(event)
+			return
+
+		move: (event) ->
+			for id, item of R.items
+				if item.getBounds().contains(event.point)
+					R.canvasJ.css({cursor: 'pointer'})
+					return
+			R.canvasJ.css({cursor: 'auto'})
 			return
 
 		# End selection:

@@ -1,5 +1,5 @@
-define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Lock', 'Items/Divs/Div', 'Items/Divs/Media', 'Items/Drawing', 'Items/Divs/Text' ], (P, R, Utils, Command, Item, ModuleLoader) ->
-
+define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Drawing', 'Items/Divs/Text' ], (P, R, Utils, Command, Item, ModuleLoader, Drawing, Text) ->
+# define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Lock', 'Items/Divs/Div', 'Items/Divs/Media', 'Items/Drawing', 'Items/Divs/Text' ], (P, R, Utils, Command, Item, ModuleLoader, Lock, Div, Media, Drawing, Text) ->
 	# --- load --- #
 
 	class Loader
@@ -113,7 +113,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			# remove RItems which are not on within limit anymore AND in area which must be unloaded
 			# (do not remove items on an area which is not unloaded, otherwise they wont be reloaded if user comes back on it)
 			for own id, item of R.items
-				if not item.getBounds().intersects(limit)
+				if (not item.getBounds().intersects(limit)) and (not item.isDraft())
 					itemsOutsideLimit.push(item)
 
 			i = @loadedAreas.length
@@ -315,44 +315,44 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				lock = if item.lock? then R.items[item.lock] else null
 
 				switch item.rType
-					when 'Box'
-						box = item
-						if box.box.coordinates[0].length<5
-							console.log "Error: box has less than 5 points"
+					# when 'Box'
+					# 	box = item
+					# 	if box.box.coordinates[0].length<5
+					# 		console.log "Error: box has less than 5 points"
 
-						lock = null
-						switch box.object_type
-							when 'lock'
-								lock = new Item.Lock(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, box.module?.$oid)
-							when 'link'
-								lock = new Item.Link(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, box.module?.$oid)
-							when 'website'
-								lock = new Item.Website(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, box.module?.$oid)
-							when 'video-game'
-								lock = new Item.VideoGame(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, box.module?.$oid)
+					# 	lock = null
+					# 	switch box.object_type
+					# 		when 'lock'
+					# 			lock = new Item.Lock(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, box.module?.$oid)
+					# 		when 'link'
+					# 			lock = new Item.Link(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, box.module?.$oid)
+					# 		when 'website'
+					# 			lock = new Item.Website(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, box.module?.$oid)
+					# 		when 'video-game'
+					# 			lock = new Item.VideoGame(Utils.CS.rectangleFromBox(box), data, id, box._id.$oid, box.owner, date, box.module?.$oid)
 
-						lock.lastUpdateDate = box.lastUpdate.$date
+					# 	lock.lastUpdateDate = box.lastUpdate.$date
 						
-						if lock?
-							newItems.push(lock)
+					# 	if lock?
+					# 		newItems.push(lock)
 
-					when 'Div'			# add RDivs (Text and Media)
-						div = item
-						if div.box.coordinates[0].length<5
-							console.log "Error: box has less than 5 points"
+					# when 'Div'			# add RDivs (Text and Media)
+					# 	div = item
+					# 	if div.box.coordinates[0].length<5
+					# 		console.log "Error: box has less than 5 points"
 
-						# rdiv = new R.g[div.object_type](Utils.CS.rectangleFromBox(box), data, div._id.$oid, date, div.lock)
+					# 	# rdiv = new R.g[div.object_type](Utils.CS.rectangleFromBox(box), data, div._id.$oid, date, div.lock)
 
-						switch div.object_type
-							when 'text'
-								rdiv = new Item.Text(Utils.CS.rectangleFromBox(div), data, id, pk, date, lock)
-							when 'media'
-								rdiv = new Item.Media(Utils.CS.rectangleFromBox(div), data, id, pk, date, lock)
+					# 	switch div.object_type
+					# 		when 'text'
+					# 			rdiv = new Item.Text(Utils.CS.rectangleFromBox(div), data, id, pk, date, lock)
+					# 		when 'media'
+					# 			rdiv = new Item.Media(Utils.CS.rectangleFromBox(div), data, id, pk, date, lock)
 
-						rdiv.lastUpdateDate = div.lastUpdate.$date
+					# 	rdiv.lastUpdateDate = div.lastUpdate.$date
 						
-						if rdiv?
-							newItems.push(rdiv)
+					# 	if rdiv?
+					# 		newItems.push(rdiv)
 							
 					when 'Path' 		# add RPaths
 						path = item

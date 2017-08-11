@@ -328,6 +328,10 @@
         return this.selectionRectangle != null;
       };
 
+      Item.prototype.isDraft = function() {
+        return false;
+      };
+
       Item.prototype.select = function(updateOptions, force) {
         var ref;
         if (updateOptions == null) {

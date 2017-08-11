@@ -25,7 +25,7 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Modal' ], (P, R, Utils, Modal) ->
 
 		createCityCallback: (result)=>
 			modal = Modal.getModalByTitle('Create city')
-			modal.hide()
+			modal?.hide()
 			if not R.loader.checkError(result) then return
 			city = JSON.parse(result.city)
 			@addCity(city, true)

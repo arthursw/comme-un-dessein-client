@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Items/Lock', 'Items/Drawing' ], (P, R, Utils, Lock, Drawing) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Drawing' ], (P, R, Utils, Drawing) ->
 
 	#  values: ['one raster per shape', 'paper.js only', 'tiled canvas', 'hide inactives', 'single canvas']
 

@@ -2,13 +2,13 @@
 (function() {
   var dependencies;
 
-  dependencies = ['Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool', 'Tools/LockTool', 'Tools/MediaTool', 'Tools/TextTool', 'Tools/GradientTool'];
+  dependencies = ['Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool', 'Tools/TextTool', 'Tools/GradientTool'];
 
   if (typeof document !== "undefined" && document !== null) {
     dependencies.push('Tools/CarTool');
   }
 
-  define(dependencies, function(Utils, Tool, Button) {
+  define('Tools/ToolManager', dependencies, function(Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, TextTool, GradientTool, CarTool) {
     var ToolManager;
     ToolManager = (function() {
       function ToolManager() {

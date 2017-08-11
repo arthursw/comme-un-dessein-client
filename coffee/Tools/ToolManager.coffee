@@ -7,8 +7,6 @@ dependencies = [
 	'Tools/PathTool'
 	'Tools/EraserTool'
 	'Tools/ItemTool'
-	'Tools/LockTool'
-	'Tools/MediaTool'
 	'Tools/TextTool'
 	'Tools/GradientTool'
 ]
@@ -17,7 +15,7 @@ if document?
 	# dependencies.push('Tools/ScreenshotTool')
 	dependencies.push('Tools/CarTool')
 
-define dependencies, (Utils, Tool, Button) ->
+define 'Tools/ToolManager', dependencies, (Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, TextTool, GradientTool, CarTool) ->
 
 	class ToolManager
 

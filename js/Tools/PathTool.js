@@ -26,6 +26,55 @@
 
       PathTool.emitSocket = false;
 
+      PathTool.maxDraftSize = 1000;
+
+      PathTool.computeDraftBounds = function(paths) {
+        var bounds, i, id, len, path, ref;
+        if (paths == null) {
+          paths = null;
+        }
+        bounds = null;
+        if (!paths) {
+          paths = [];
+          ref = R.paths;
+          for (id in ref) {
+            path = ref[id];
+            if (path.owner === R.me && path.isDraft()) {
+              paths.push(path);
+            }
+          }
+        }
+        for (i = 0, len = paths.length; i < len; i++) {
+          path = paths[i];
+          bounds = bounds != null ? bounds.unite(path.getDrawingBounds()) : path.getDrawingBounds();
+        }
+        return bounds;
+      };
+
+      PathTool.draftIsTooBig = function(paths, tolerance) {
+        var draftBounds;
+        if (paths == null) {
+          paths = null;
+        }
+        if (tolerance == null) {
+          tolerance = 0;
+        }
+        draftBounds = this.computeDraftBounds(paths);
+        console.log(draftBounds.width, draftBounds.height);
+        return this.draftBoundsIsTooBig(draftBounds, tolerance);
+      };
+
+      PathTool.draftBoundsIsTooBig = function(draftBounds, tolerance) {
+        if (tolerance == null) {
+          tolerance = 0;
+        }
+        return (draftBounds != null) && draftBounds.width > this.maxDraftSize - tolerance || draftBounds.height > this.maxDraftSize - tolerance;
+      };
+
+      PathTool.displayDraftIsTooBigError = function() {
+        R.alertManager.alert('Your drawing cannot be bigger than 1000x1000 pixels.', 'error');
+      };
+
       function PathTool(Path, justCreated) {
         this.Path = Path;
         if (justCreated == null) {
@@ -67,7 +116,8 @@
         this.btnJ.remove();
       };
 
-      PathTool.prototype.select = function(deselectItems, updateParameters, forceSelect) {
+      PathTool.prototype.select = function(deselectItems, updateParameters, forceSelect, fromMiddleMouseButton) {
+        var draftBounds;
         if (deselectItems == null) {
           deselectItems = true;
         }
@@ -77,6 +127,9 @@
         if (forceSelect == null) {
           forceSelect = false;
         }
+        if (fromMiddleMouseButton == null) {
+          fromMiddleMouseButton = false;
+        }
         if (!R.userAuthenticated && !forceSelect) {
           R.alertManager.alert('Log in before drawing', 'info');
           return;
@@ -85,6 +138,12 @@
         PathTool.__super__.select.apply(this, arguments);
         R.view.tool.onMouseMove = this.move;
         R.toolManager.enterDrawingMode();
+        if (!fromMiddleMouseButton) {
+          draftBounds = this.constructor.computeDraftBounds();
+          if ((draftBounds != null) && !P.view.bounds.contains(draftBounds)) {
+            R.view.fitRectangle(draftBounds, true);
+          }
+        }
       };
 
       PathTool.prototype.updateParameters = function() {
@@ -99,7 +158,7 @@
       };
 
       PathTool.prototype.begin = function(event, from, data) {
-        var ref;
+        var draftBounds, ref;
         if (from == null) {
           from = R.me;
         }
@@ -111,6 +170,11 @@
         }
         if (100 * P.view.zoom < 10) {
           R.alertManager.alert("You can not draw path at a zoom smaller than 10.", "Info");
+          return;
+        }
+        draftBounds = this.constructor.computeDraftBounds();
+        if ((draftBounds != null) && this.constructor.draftBoundsIsTooBig(draftBounds.include(event.point))) {
+          this.constructor.displayDraftIsTooBigError();
           return;
         }
         if (!((R.currentPaths[from] != null) && ((ref = R.currentPaths[from].data) != null ? ref.polygonMode : void 0))) {
@@ -135,9 +199,19 @@
           from = R.me;
         }
         path = R.currentPaths[from];
+        if (path == null) {
+          return;
+        }
         path.updateCreate(event.point, event, false);
         if (R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))) {
           path.path.strokeColor = 'red';
+        }
+        if (this.constructor.draftIsTooBig(null, 50)) {
+          path.path.strokeColor = 'red';
+          path.controlPath.lastSegment.remove();
+          this.constructor.displayDraftIsTooBigError();
+          this.end(event, from);
+          return;
         }
         if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
           R.socket.emit("bounce", {
@@ -160,6 +234,9 @@
       PathTool.prototype.createPath = function(event, from) {
         var path;
         path = R.currentPaths[from];
+        if (path == null) {
+          return;
+        }
         if (!path.group) {
           return;
         }
@@ -189,8 +266,17 @@
           from = R.me;
         }
         path = R.currentPaths[from];
+        if (path == null) {
+          return false;
+        }
         if (R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))) {
           R.alertManager.alert('Your path must be in the drawing area.', 'error');
+          R.currentPaths[from].remove();
+          delete R.currentPaths[from];
+          return false;
+        }
+        if (this.constructor.draftIsTooBig()) {
+          this.constructor.displayDraftIsTooBigError();
           R.currentPaths[from].remove();
           delete R.currentPaths[from];
           return false;

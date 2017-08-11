@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'coffeescript-compiler', 'typeahead' ], (P, R, Utils, CoffeeScript) -> 			# 'ace/ext-language_tools', required?
+define ['paper', 'R', 'Utils/Utils', 'coffeescript-compiler', 'typeahead' ], (P, R, Utils, CoffeeScript, th) -> 			# 'ace/ext-language_tools', required?
 
 	class CodeEditor
 

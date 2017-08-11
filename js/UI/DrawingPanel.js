@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'coffeescript-compiler', 'i18next', 'typeahead'], function(P, R, Utils, Item, CoffeeScript, i18next) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next'], function(P, R, Utils, Item, i18next) {
     var DrawingPanel;
     DrawingPanel = (function() {
       function DrawingPanel() {
@@ -331,6 +331,11 @@
         }
         if (itemIds.length === 0) {
           R.alertManager.alert('You must draw something before submitting.', 'error');
+          this.close();
+          return;
+        }
+        if (R.Tools.Path.draftIsTooBig(items)) {
+          R.Tools.Path.displayDraftIsTooBigError();
           this.close();
           return;
         }

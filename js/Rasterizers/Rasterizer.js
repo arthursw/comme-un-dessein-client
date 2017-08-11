@@ -5,7 +5,7 @@
     hasProp = {}.hasOwnProperty,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  define(['paper', 'R', 'Utils/Utils', 'Items/Lock', 'Items/Drawing'], function(P, R, Utils, Lock, Drawing) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Drawing'], function(P, R, Utils, Drawing) {
     var CanvasTileRasterizer, InstantPaperTileRasterizer, PaperTileRasterizer, Rasterizer, TileRasterizer;
     Rasterizer = (function() {
       Rasterizer.TYPE = 'default';

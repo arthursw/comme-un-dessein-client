@@ -578,6 +578,10 @@
         Path.__super__.setPK.apply(this, arguments);
       };
 
+      Path.prototype.isDraft = function() {
+        return this.drawingId == null;
+      };
+
       Path.prototype.remove = function() {
         if (!this.group) {
           return;

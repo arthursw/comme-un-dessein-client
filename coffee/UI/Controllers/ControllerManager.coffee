@@ -2,7 +2,7 @@ dependencies = ['paper', 'R', 'Utils/Utils', 'UI/Controllers/Controller', 'UI/Co
 if document?
 	dependencies.push('gui')
 
-define dependencies, (P, R, Utils, Controller, ColorController, Folder, GUI) ->
+define 'UI/Controllers/ControllerManager', dependencies, (P, R, Utils, Controller, ColorController, Folder, GUI) ->
 
 	console.log 'ControllerManager'
 

@@ -5,7 +5,7 @@
     hasProp = {}.hasOwnProperty,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Divs/Div', 'UI/Modal', 'oembed'], function(P, R, Utils, Item, Div, Modal) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Divs/Div', 'UI/Modal', 'oembed'], function(P, R, Utils, Item, Div, Modal, oe) {
     var Media;
     Media = (function(superClass) {
       extend(Media, superClass);

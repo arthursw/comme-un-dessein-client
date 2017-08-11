@@ -59,7 +59,9 @@
       CityManager.prototype.createCityCallback = function(result) {
         var city, modal;
         modal = Modal.getModalByTitle('Create city');
-        modal.hide();
+        if (modal != null) {
+          modal.hide();
+        }
         if (!R.loader.checkError(result)) {
           return;
         }

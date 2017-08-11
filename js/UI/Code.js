@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtree', 'typeahead'], function(P, R, Utils, Modal, CoffeeScript) {
+  define(['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtree', 'typeahead'], function(P, R, Utils, Modal, CoffeeScript, jqt, th) {
     var FileManager;
     FileManager = (function() {
       function FileManager() {

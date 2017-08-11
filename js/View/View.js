@@ -12,7 +12,7 @@
     dependencies.push('mousewheel');
   }
 
-  define(dependencies, function(P, R, Utils, Grid, Command, Div, i18next, Hammer) {
+  define('View/View', dependencies, function(P, R, Utils, Grid, Command, Div, i18next, Hammer, tw, mousewheel) {
     var View;
     View = (function() {
       function View() {
@@ -591,18 +591,26 @@
       };
 
       View.prototype.mousemove = function(event) {
-        var base, paperEvent, ref, ref1, ref2;
+        var base, paperEvent, ref, ref1, ref2, ref3, ref4;
         this.mousePosition.set(Utils.Event.GetPoint(event));
         if (((ref = R.selectedTool) != null ? ref.name : void 0) === 'Move' && R.selectedTool.dragging) {
           R.selectedTool.updateNative(event);
           return;
         }
-        Div.updateHiddenDivs(event);
-        if ((ref1 = R.codeEditor) != null) {
-          ref1.onMouseMove(event);
+        if (((ref1 = R.selectedTool) != null ? ref1.name : void 0) === 'Select') {
+          paperEvent = Utils.Event.jEventToPaperEvent(event, this.previousMousePosition, this.initialMousePosition, 'mousemove');
+          if ((ref2 = R.selectedTool) != null) {
+            if (typeof ref2.move === "function") {
+              ref2.move(paperEvent);
+            }
+          }
         }
-        if ((ref2 = R.drawingPanel) != null) {
-          ref2.onMouseMove(event);
+        Div.updateHiddenDivs(event);
+        if ((ref3 = R.codeEditor) != null) {
+          ref3.onMouseMove(event);
+        }
+        if ((ref4 = R.drawingPanel) != null) {
+          ref4.onMouseMove(event);
         }
         if (R.currentDiv != null) {
           paperEvent = Utils.Event.jEventToPaperEvent(event, this.previousMousePosition, this.initialMousePosition, 'mousemove');
@@ -631,7 +639,7 @@
           R.selectedTool.endNative(event);
           if (event.which === 2) {
             if ((ref3 = R.previousTool) != null) {
-              ref3.select();
+              ref3.select(null, null, null, true);
             }
           }
           return;

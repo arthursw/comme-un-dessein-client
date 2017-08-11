@@ -1,4 +1,4 @@
-define [ 'paper', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2', 'bootstrap'], (P, CS, _, $, tinycolor) ->
+define [ 'paper', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2', 'bootstrap'], (P, CS, _, $, tinycolor, bs) ->
 
 	# window._ = _
 	window?.tinycolor = tinycolor
@@ -653,4 +653,60 @@ define [ 'paper', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2
 			window[resultName] = result
 		return
 	# window.Utils = Utils
+
+	R.startTime = Date.now()
+
+
+	R.startTimer = ()->
+		R.timerStartTime = Date.now()
+		return
+
+	R.stopTimer = (message)->
+		time = (Date.now() - R.timerStartTime) / 1000
+		console.log "" + message + ": " + time + " sec."
+		return
+
+	R.setDebugMode = (debugMode)->
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDebugMode', args: debug: debugMode } ).done(R.loader.checkError)
+		return
+	
+	R.setDrawingMode = (mode)->
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingMode', args: mode: mode } ).done(R.loader.checkError)
+		return
+
+	R.setNegativeVoteThreshold = (voteThreshold)->
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setNegativeVoteThreshold', args: voteThreshold: voteThreshold } ).done(R.loader.checkError)
+		return
+
+	R.setPositiveVoteThreshold = (voteThreshold)->
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPositiveVoteThreshold', args: voteThreshold: voteThreshold } ).done(R.loader.checkError)
+		return
+
+	R.deleteAllItems = (confirm)->
+		args =
+			confirm: confirm
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteAllItems', args: args } ).done(R.loader.checkError)
+		return
+
+	R.deleteItems = (itemsToDelete, confirm)->
+
+		console.log """
+		itemsToDelete: [
+			{
+				itemType: 'Drawing'
+				pks: [data.pk]
+			},
+			{
+				itemType: 'Path'
+				pks: [data.pathPks]
+			}
+		]
+		"""
+
+		args =
+			itemsToDelete: itemsToDelete
+			confirm: confirm
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteItems', args: args } ).done(R.loader.checkError)
+		return
+
 	return Utils

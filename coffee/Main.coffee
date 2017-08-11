@@ -1,14 +1,10 @@
 define [
 	'Utils/Utils'
-	'Utils/Global'
-	'Utils/FontManager'
 	'Loader'
 	'Socket'
 	'City'
 	'Rasterizers/RasterizerManager'
 	'UI/Sidebar'
-	'UI/Code'
-	'UI/Editor'
 	'UI/DrawingPanel'
 	'UI/Modal'
 	'UI/AlertManager'
@@ -21,7 +17,7 @@ define [
 	'i18nextXHRBackend'
 	'i18nextBrowserLanguageDetector'
 	'jqueryI18next'
-], (Utils, Global, FontManager, Loader, Socket, CityManager, RasterizerManager, Sidebar, FileManager, CodeEditor, DrawingPanel, Modal, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next) ->
+], (Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, DrawingPanel, Modal, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next) ->
 
 	console.log 'Main CommeUnDessein Repository'
 
@@ -314,7 +310,7 @@ define [
 
 		R.socket = new Socket()
 		R.sidebar = new Sidebar()
-		# R.cityManager = new CityManager()
+		R.cityManager = new CityManager()
 		R.view = new View()
 		R.alertManager = new AlertManager()
 		
@@ -331,7 +327,7 @@ define [
 		# R.fileManager = new FileManager()
 		# R.codeEditor = new CodeEditor()
 		R.drawingPanel = new DrawingPanel()
-		R.fontManager = new FontManager()
+		# R.fontManager = new FontManager()
 		R.view.initializePosition()
 		R.sidebar.initialize()
 
