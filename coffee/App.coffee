@@ -66,6 +66,7 @@ requirejs.config
 		'i18next': [libs + 'i18next.min']
 		'i18nextXHRBackend': [libs + 'i18nextXHRBackend']
 		'i18nextBrowserLanguageDetector': [libs + 'i18nextBrowserLanguageDetector']
+		'moment': [libs + 'moment.min']
 		'jqueryI18next': [libs + 'jquery-i18next.min']
 		'hammer': [libs + 'hammer.min']
 		# 'ace': [libs + 'ace']

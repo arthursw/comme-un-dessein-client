@@ -6,6 +6,7 @@
       'i18next': '../../comme-un-dessein-server/CommeUnDessein/static/libs/i18next.min',
       'i18nextXHRBackend': '../../comme-un-dessein-server/CommeUnDessein/static/libs/i18nextXHRBackend',
       'i18nextBrowserLanguageDetector': '../../comme-un-dessein-server/CommeUnDessein/static/libs/i18nextBrowserLanguageDetector',
+      'moment': '../../comme-un-dessein-server/CommeUnDessein/static/libs/moment.min',
       'jqueryI18next': '../../comme-un-dessein-server/CommeUnDessein/static/libs/jquery-i18next.min',
       'hammer': '../../comme-un-dessein-server/CommeUnDessein/static/libs/hammer.min',
       'aceTools': '../../comme-un-dessein-server/CommeUnDessein/static/libs/ace/ext-language_tools',

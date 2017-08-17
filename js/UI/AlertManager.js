@@ -33,24 +33,37 @@
       }
 
       AlertManager.prototype.showAlert = function(index) {
-        var alertJ, previousType, ref;
+        var alertData, alertJ, messageOptions, newAlertJ, previousType, ref, text;
         if (this.alerts.length <= 0 || index < 0 || index >= this.alerts.length) {
           return;
         }
         previousType = (ref = this.alerts[this.currentAlert]) != null ? ref.type : void 0;
         this.currentAlert = index;
+        alertData = this.alerts[this.currentAlert];
         alertJ = this.alertsContainer.find(".alert");
-        alertJ.removeClass(previousType).addClass(this.alerts[this.currentAlert].type).attr('data-i18n', this.alerts[this.currentAlert].message).text(i18next.t(this.alerts[this.currentAlert].message));
+        messageOptions = '';
+        if (alertData.messageOptions != null) {
+          messageOptions = "data-i18n-options='" + JSON.stringify(alertData.messageOptions) + "'";
+        }
+        newAlertJ = $("<div class='alert fade in' data-i18n='" + alertData.message + "' " + messageOptions + ">");
+        newAlertJ.addClass(alertData.type);
+        text = alertData.messageOptions != null ? i18next.t(alertData.message, alertData.messageOptions) : i18next.t(alertData.message);
+        newAlertJ.text(text);
+        newAlertJ.insertAfter(alertJ);
+        alertJ.remove();
         this.alertsContainer.find(".alert-number").text(this.currentAlert + 1);
       };
 
-      AlertManager.prototype.alert = function(message, type, delay) {
+      AlertManager.prototype.alert = function(message, type, delay, messageOptions) {
         var alertJ;
         if (type == null) {
           type = "";
         }
         if (delay == null) {
           delay = this.constructor.hideDelay;
+        }
+        if (messageOptions == null) {
+          messageOptions = null;
         }
         if (type.length === 0) {
           type = "info";
@@ -62,7 +75,8 @@
         this.alertsContainer.removeClass("r-hidden");
         this.alerts.push({
           type: type,
-          message: message
+          message: message,
+          messageOptions: messageOptions
         });
         if (this.alerts.length > 0) {
           this.alertsContainer.addClass("activated");

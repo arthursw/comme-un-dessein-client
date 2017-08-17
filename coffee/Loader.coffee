@@ -504,7 +504,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				if result.message == 'invalid_url'
 					R.alertManager.alert("Your URL is invalid or does not point to an existing page.", "error")
 				else
-					R.alertManager.alert("Error: " + result.message, "error")
+					R.alertManager.alert(result.message, "error")
 				@hideLoadingBar()
 				return false
 			else if result.state == 'system_error'

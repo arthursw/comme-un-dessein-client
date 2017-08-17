@@ -206,6 +206,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				@rectangle = @rectangle.unite(bounds)
 			path.updateStrokeColor()
 			path.removeFromListItem()
+
+			if path.drawn
+				path.drawn = false
+				path.draw()
+				path.rasterize()
 			# @drawn = false
 			# if @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
 				# @replaceDrawing()
@@ -220,7 +225,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			super()
 			return
 
-		removeChild: (path, updateRectangle=true, removeID=true)->
+		removeChild: (path, updateRectangle=false, removeID=true)->
 			if removeID
 				path.drawingId = null
 
@@ -238,6 +243,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			path.updateStrokeColor()
 			path.addToListItem()
 			@drawn = false
+			if path.drawn
+				path.drawn = false
+				path.draw()
+				path.rasterize()
 			# if updateRaster and @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
 				# @replaceDrawing()
 			# R.rasterizer.rasterize(path, false)
@@ -287,7 +296,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@owner = result.owner
 			@setPK(result.pk)
 
-			R.alertManager.alert "Drawing successfully submitted. It will be drawn if it gets 100 votes.", "success"
+			R.alertManager.alert "Drawing successfully submitted", "success"
 
 			R.socket.emit "drawing change", type: 'new', pk: result.pk, pathPks: result.pathPks
 
@@ -312,8 +321,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				contentJ.find('#drawing-title').val(@title)
 				contentJ.find('#drawing-description').val(@description)
 				return
-			R.alertManager.alert "Drawing successfully modified.", "success"
-			R.socket.emit "drawing change", type: 'description', title: @title, description: @description
+			R.alertManager.alert "Drawing successfully modified", "success"
+			R.socket.emit "drawing change", type: 'description', title: @title, description: @description, drawingId: @id
 			return
 
 		update: (data) =>
@@ -339,7 +348,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		deleteFromDatabaseCallback: ()=>
-			pk = @pk
+			id = @id
 			if not R.loader.checkError()
 				if @pathIdsBeforeRemove?
 					for id in @pathIdsBeforeRemove
@@ -349,12 +358,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 					R.rasterizer.rasterize(@, false)
 				return
 			super()
-			R.alertManager.alert "Drawing successfully cancelled.", "success"
-			R.socket.emit "drawing change", type: 'delete', pk: pk
+			R.alertManager.alert "Drawing successfully cancelled", "success"
+			R.socket.emit "drawing change", type: 'delete', drawingId: id
 			return
 
 		delete: ()->
 			@pathIdsBeforeRemove = @getPathIds()
+			@removeChildren()
 			super
 			return
 
@@ -400,6 +410,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			)
 			return
 
+		updateStatus: (@status)->
+			for path in @paths
+				path.updateStrokeColor()
+				path.drawn = false
+				path.draw()
+				path.rasterize()
+				path.group.visible = true
+			R.rasterizer.rasterizeRectangle(@rectangle)
+			return
+
 		# can not select a drawing which the user does not own
 		select: (updateOptions=true, showPanelAndLoad=true, force=false) =>
 			if not super(updateOptions, force) then return false
@@ -424,6 +444,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 		remove: () ->
 			@removeFromListItem()
+			R.rasterizer.rasterizeRectangle(@rectangle)
 			super
 			return
 

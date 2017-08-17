@@ -24,13 +24,27 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 
 			previousType = @alerts[@currentAlert]?.type
 			@currentAlert = index
+
+			alertData = @alerts[@currentAlert]
+
 			alertJ = @alertsContainer.find(".alert")
-			alertJ.removeClass(previousType).addClass(@alerts[@currentAlert].type).attr('data-i18n', @alerts[@currentAlert].message).text(i18next.t(@alerts[@currentAlert].message))
+
+			messageOptions = ''
+			if alertData.messageOptions?
+				messageOptions = "data-i18n-options='" + JSON.stringify(alertData.messageOptions) + "'"
+			newAlertJ = $("<div class='alert fade in' data-i18n='" + alertData.message + "' " + messageOptions + ">")
+			newAlertJ.addClass(alertData.type)
+			
+			text = if alertData.messageOptions? then i18next.t(alertData.message, alertData.messageOptions) else i18next.t(alertData.message)
+			newAlertJ.text(text)
+
+			newAlertJ.insertAfter(alertJ)
+			alertJ.remove()
 
 			@alertsContainer.find(".alert-number").text(@currentAlert+1)
 			return
 
-		alert: (message, type="", delay=@constructor.hideDelay) ->
+		alert: (message, type="", delay=@constructor.hideDelay, messageOptions=null) ->
 			# set type ('info' to default, 'error' == 'danger')
 			if type.length==0
 				type = "info"
@@ -44,7 +58,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			@alertsContainer.removeClass("r-hidden")
 
 			# append alert to alert array
-			@alerts.push( { type: type, message: message } )
+			@alerts.push( { type: type, message: message, messageOptions: messageOptions } )
 
 			if @alerts.length>0 then @alertsContainer.addClass("activated") 		# activate alert box (required for the first time)
 

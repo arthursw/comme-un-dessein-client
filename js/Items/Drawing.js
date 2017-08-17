@@ -49,12 +49,12 @@
         return copy;
       };
 
-      function Drawing(rectangle1, data1, id1, pk1, owner, date, title1, description, status) {
+      function Drawing(rectangle1, data1, id1, pk, owner, date, title1, description, status) {
         var id, path, ref, ref1;
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
         this.id = id1 != null ? id1 : null;
-        this.pk = pk1 != null ? pk1 : null;
+        this.pk = pk != null ? pk : null;
         this.owner = owner != null ? owner : null;
         this.date = date;
         this.title = title1;
@@ -237,6 +237,11 @@
         }
         path.updateStrokeColor();
         path.removeFromListItem();
+        if (path.drawn) {
+          path.drawn = false;
+          path.draw();
+          path.rasterize();
+        }
       };
 
       Drawing.prototype.replaceDrawing = function() {
@@ -261,7 +266,7 @@
       Drawing.prototype.removeChild = function(path, updateRectangle, removeID) {
         var pathIndex, pkIndex;
         if (updateRectangle == null) {
-          updateRectangle = true;
+          updateRectangle = false;
         }
         if (removeID == null) {
           removeID = true;
@@ -285,6 +290,11 @@
         path.updateStrokeColor();
         path.addToListItem();
         this.drawn = false;
+        if (path.drawn) {
+          path.drawn = false;
+          path.draw();
+          path.rasterize();
+        }
       };
 
       Drawing.prototype.setParameter = function(name, value, updateGUI, update) {
@@ -332,7 +342,7 @@
         }
         this.owner = result.owner;
         this.setPK(result.pk);
-        R.alertManager.alert("Drawing successfully submitted. It will be drawn if it gets 100 votes.", "success");
+        R.alertManager.alert("Drawing successfully submitted", "success");
         R.socket.emit("drawing change", {
           type: 'new',
           pk: result.pk,
@@ -366,11 +376,12 @@
           contentJ.find('#drawing-description').val(this.description);
           return;
         }
-        R.alertManager.alert("Drawing successfully modified.", "success");
+        R.alertManager.alert("Drawing successfully modified", "success");
         R.socket.emit("drawing change", {
           type: 'description',
           title: this.title,
-          description: this.description
+          description: this.description,
+          drawingId: this.id
         });
       };
 
@@ -403,8 +414,8 @@
       };
 
       Drawing.prototype.deleteFromDatabaseCallback = function() {
-        var i, id, len, pk, ref;
-        pk = this.pk;
+        var i, id, len, ref;
+        id = this.id;
         if (!R.loader.checkError()) {
           if (this.pathIdsBeforeRemove != null) {
             ref = this.pathIdsBeforeRemove;
@@ -420,15 +431,16 @@
           return;
         }
         Drawing.__super__.deleteFromDatabaseCallback.call(this);
-        R.alertManager.alert("Drawing successfully cancelled.", "success");
+        R.alertManager.alert("Drawing successfully cancelled", "success");
         R.socket.emit("drawing change", {
           type: 'delete',
-          pk: pk
+          drawingId: id
         });
       };
 
       Drawing.prototype["delete"] = function() {
         this.pathIdsBeforeRemove = this.getPathIds();
+        this.removeChildren();
         Drawing.__super__["delete"].apply(this, arguments);
       };
 
@@ -513,6 +525,21 @@
         })(this));
       };
 
+      Drawing.prototype.updateStatus = function(status) {
+        var i, len, path, ref;
+        this.status = status;
+        ref = this.paths;
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
+          path.updateStrokeColor();
+          path.drawn = false;
+          path.draw();
+          path.rasterize();
+          path.group.visible = true;
+        }
+        R.rasterizer.rasterizeRectangle(this.rectangle);
+      };
+
       Drawing.prototype.select = function(updateOptions, showPanelAndLoad, force) {
         var i, item, len, ref;
         if (updateOptions == null) {
@@ -560,6 +587,7 @@
 
       Drawing.prototype.remove = function() {
         this.removeFromListItem();
+        R.rasterizer.rasterizeRectangle(this.rectangle);
         Drawing.__super__.remove.apply(this, arguments);
       };
 

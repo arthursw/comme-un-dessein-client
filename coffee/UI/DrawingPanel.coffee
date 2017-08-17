@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next' ], (P, R, Utils, Item, i18next) -> 			# 'ace/ext-language_tools', required?
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R, Utils, Item, i18next, moment) -> 			# 'ace/ext-language_tools', required?
 
 	class DrawingPanel
 
@@ -148,10 +148,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next' ], (P, R, Utils, It
 				if removeDrawingIfNotSaved
 					@currentDrawing.removeChildren()
 					@currentDrawing.remove()
+					
+
 				# @showBeginDrawing()
 			@drawingPanelJ.hide()
 			@drawingPanelJ.removeClass('visible')
 			if R.selectedItems.length > 0
+				@currentDrawing = null
 				R.tools.select.deselectAll()
 			return
 
@@ -293,6 +296,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next' ], (P, R, Utils, It
 			description = @contentJ.find('#drawing-description').val()
 			@currentDrawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending')
 
+			R.rasterizer.rasterizeRectangle(@currentDrawing.rectangle)
+
 			R.view.fitRectangle(@currentDrawing.rectangle, true)
 
 			@setDrawingThumbnail()
@@ -346,6 +351,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next' ], (P, R, Utils, It
 			# if not @checkPathToSubmit()
 			# 	R.alertManager.alert 'You must draw something before submitting.', 'error'
 			# 	return
+			R.tools.select.deselectAll()
 
 			R.toolManager.leaveDrawingMode(true)
 			@submitDrawingBtnJ.hide()
@@ -368,13 +374,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next' ], (P, R, Utils, It
 			@votesJ.hide()
 
 			@currentDrawing = null
+			@submitBtnJ.find('span.glyphicon').removeClass('glyphicon-ok').addClass('glyphicon-refresh glyphicon-refresh-animate')
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getDrafts', args: {} } ).done(@submitDrawingClickedCallback)
 
-			if R.selectedItems.length == 0
-				@submitBtnJ.find('span.glyphicon').removeClass('glyphicon-ok').addClass('glyphicon-refresh glyphicon-refresh-animate')
-				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getDrafts', args: {} } ).done(@submitDrawingClickedCallback)
-				return
-
-			@createDrawingFromItems(R.selectedItems)
 			return
 
 		# cancelDrawingClicked: ()=>
@@ -490,7 +492,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next' ], (P, R, Utils, It
 							},
 							{
 								itemType: 'Path'
-								pks: [data.pathPks]
+								pks: data.pathPks
 							}
 						]
 					}
@@ -505,6 +507,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next' ], (P, R, Utils, It
 						if @currentDrawing == drawing
 							@contentJ.find('#drawing-title').val(data.title)
 							@contentJ.find('#drawing-description').val(data.description)
+				when 'status'
+					drawing = R.items[data.drawingId]
+					if drawing?
+						drawing.updateStatus(data.status)
 				when 'delete'
 					drawing = R.items[data.drawingId]
 					if drawing?
@@ -529,16 +535,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next' ], (P, R, Utils, It
 				return
 
 			@currentDrawing.votes = result.votes
+			
+			delay = moment.duration(result.delay, 'seconds').humanize()
 
 			suffix = ''
 			if result.validates
-				suffix = ', the drawing will be validated in a minute if nobody cancels its vote!'
+				suffix = 'validated'
+
 			else if result.rejects
-				suffix = ', the drawing will be rejected in a minute if nobody cancels its vote!'
+				suffix = 'rejected'
 
-			R.alertManager.alert 'You successfully voted' + suffix, 'success'
+			R.alertManager.alert 'You successfully voted, the drawing will be ' + suffix, 'success', null, {duration: delay}
 
-			R.socket.emit "drawing change", type: 'votes', votes: @currentDrawing.votes
+			R.socket.emit "drawing change", type: 'votes', votes: @currentDrawing.votes, drawingId: @currentDrawing.id
 			return
 
 		vote: (positive)=>
@@ -623,6 +632,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next' ], (P, R, Utils, It
 				return
 
 			if not @currentDrawing.pk?
+				@showSubmitDrawing()
 				@close()
 				return
 

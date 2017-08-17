@@ -503,7 +503,7 @@
           if (result.message === 'invalid_url') {
             R.alertManager.alert("Your URL is invalid or does not point to an existing page.", "error");
           } else {
-            R.alertManager.alert("Error: " + result.message, "error");
+            R.alertManager.alert(result.message, "error");
           }
           this.hideLoadingBar();
           return false;

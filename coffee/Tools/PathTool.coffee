@@ -120,7 +120,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 			super()
 			@finish()
 			R.view.tool.onMouseMove = null
-			R.toolManager.leaveDrawingMode()
+			# R.toolManager.leaveDrawingMode()
 			return
 
 		# Begin path action:

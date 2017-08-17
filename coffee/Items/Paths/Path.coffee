@@ -293,6 +293,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			if @drawingId? and R.items[@drawingId]?
 				R.items[@drawingId].select()
 				return null
+
+			if not @drawingId? and not R.administrator
+				R.drawingPanel.submitDrawingClicked()
+				return false
+
 			if not R.administrator then return false
 			if not super(updateOptions) or not @controlPath? then return false
 			# if not @drawing? then @draw()

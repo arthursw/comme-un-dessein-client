@@ -146,7 +146,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 				divJ.append(helpMessageJ)
 
 			extractor = (data, checkboxJ, name)->
-				data[name] = checkboxJ.is(':checked')
+				data[name] = checkboxJ.find('input').is(':checked')
 				return true
 
 			@addCustomContent( { name: name, divJ: divJ, extractor: extractor, args: checkboxJ } )

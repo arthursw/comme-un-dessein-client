@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next'], function(P, R, Utils, Item, i18next) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment'], function(P, R, Utils, Item, i18next, moment) {
     var DrawingPanel;
     DrawingPanel = (function() {
       function DrawingPanel() {
@@ -163,6 +163,7 @@
         this.drawingPanelJ.hide();
         this.drawingPanelJ.removeClass('visible');
         if (R.selectedItems.length > 0) {
+          this.currentDrawing = null;
           R.tools.select.deselectAll();
         }
       };
@@ -301,6 +302,7 @@
         title = this.contentJ.find('#drawing-title').val();
         description = this.contentJ.find('#drawing-description').val();
         this.currentDrawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending');
+        R.rasterizer.rasterizeRectangle(this.currentDrawing.rectangle);
         R.view.fitRectangle(this.currentDrawing.rectangle, true);
         this.setDrawingThumbnail();
         this.currentDrawing.select(true, false);
@@ -356,6 +358,7 @@
       };
 
       DrawingPanel.prototype.submitDrawingClicked = function() {
+        R.tools.select.deselectAll();
         R.toolManager.leaveDrawingMode(true);
         this.submitDrawingBtnJ.hide();
         this.drawingPanelTitleJ.attr('data-i18n', 'Create drawing').text(i18next.t('Create drawing'));
@@ -372,21 +375,17 @@
         this.contentJ.find('#drawing-description').removeAttr('readonly');
         this.votesJ.hide();
         this.currentDrawing = null;
-        if (R.selectedItems.length === 0) {
-          this.submitBtnJ.find('span.glyphicon').removeClass('glyphicon-ok').addClass('glyphicon-refresh glyphicon-refresh-animate');
-          $.ajax({
-            method: "POST",
-            url: "ajaxCall/",
-            data: {
-              data: JSON.stringify({
-                "function": 'getDrafts',
-                args: {}
-              })
-            }
-          }).done(this.submitDrawingClickedCallback);
-          return;
-        }
-        this.createDrawingFromItems(R.selectedItems);
+        this.submitBtnJ.find('span.glyphicon').removeClass('glyphicon-ok').addClass('glyphicon-refresh glyphicon-refresh-animate');
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'getDrafts',
+              args: {}
+            })
+          }
+        }).done(this.submitDrawingClickedCallback);
       };
 
       DrawingPanel.prototype.setVotes = function() {
@@ -505,7 +504,7 @@
                   pks: [data.pk]
                 }, {
                   itemType: 'Path',
-                  pks: [data.pathPks]
+                  pks: data.pathPks
                 }
               ]
             };
@@ -533,6 +532,12 @@
               }
             }
             break;
+          case 'status':
+            drawing = R.items[data.drawingId];
+            if (drawing != null) {
+              drawing.updateStatus(data.status);
+            }
+            break;
           case 'delete':
             drawing = R.items[data.drawingId];
             if (drawing != null) {
@@ -557,7 +562,7 @@
       };
 
       DrawingPanel.prototype.voteCallback = function(result) {
-        var suffix;
+        var delay, suffix;
         if (!R.loader.checkError(result)) {
           return;
         }
@@ -567,16 +572,20 @@
           return;
         }
         this.currentDrawing.votes = result.votes;
+        delay = moment.duration(result.delay, 'seconds').humanize();
         suffix = '';
         if (result.validates) {
-          suffix = ', the drawing will be validated in a minute if nobody cancels its vote!';
+          suffix = 'validated';
         } else if (result.rejects) {
-          suffix = ', the drawing will be rejected in a minute if nobody cancels its vote!';
+          suffix = 'rejected';
         }
-        R.alertManager.alert('You successfully voted' + suffix, 'success');
+        R.alertManager.alert('You successfully voted, the drawing will be ' + suffix, 'success', null, {
+          duration: delay
+        });
         R.socket.emit("drawing change", {
           type: 'votes',
-          votes: this.currentDrawing.votes
+          votes: this.currentDrawing.votes,
+          drawingId: this.currentDrawing.id
         });
       };
 
@@ -669,6 +678,7 @@
           return;
         }
         if (this.currentDrawing.pk == null) {
+          this.showSubmitDrawing();
           this.close();
           return;
         }

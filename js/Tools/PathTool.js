@@ -154,7 +154,6 @@
         PathTool.__super__.deselect.call(this);
         this.finish();
         R.view.tool.onMouseMove = null;
-        R.toolManager.leaveDrawingMode();
       };
 
       PathTool.prototype.begin = function(event, from, data) {

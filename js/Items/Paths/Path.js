@@ -270,6 +270,10 @@
           R.items[this.drawingId].select();
           return null;
         }
+        if ((this.drawingId == null) && !R.administrator) {
+          R.drawingPanel.submitDrawingClicked();
+          return false;
+        }
         if (!R.administrator) {
           return false;
         }

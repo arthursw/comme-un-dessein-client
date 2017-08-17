@@ -183,7 +183,7 @@
           divJ.append(helpMessageJ);
         }
         extractor = function(data, checkboxJ, name) {
-          data[name] = checkboxJ.is(':checked');
+          data[name] = checkboxJ.find('input').is(':checked');
           return true;
         };
         this.addCustomContent({
