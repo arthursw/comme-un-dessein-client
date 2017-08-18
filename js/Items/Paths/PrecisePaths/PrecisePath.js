@@ -299,8 +299,8 @@
       };
 
       PrecisePath.prototype.updateDraw = function(segment, step, redrawing) {
-        var circle, cross, ref, square;
-        if (ref = R.drawingMode, indexOf.call(this.constructor.drawingModes, ref) < 0) {
+        var circle, cross, ref, ref1, square;
+        if ((ref = R.drawingMode, indexOf.call(this.constructor.pixelModes, ref) < 0) && (ref1 = R.drawingMode, indexOf.call(this.constructor.lineModes, ref1) < 0)) {
           this.path.add(this.controlPath.lastSegment);
         } else if (R.drawingMode === 'line' || R.drawingMode === 'lineOrthoDiag') {
           if (this.path.segments.length < 2) {
