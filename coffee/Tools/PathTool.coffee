@@ -44,7 +44,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 			return draftBounds? and draftBounds.width > @maxDraftSize - tolerance or draftBounds.height > @maxDraftSize - tolerance
 
 		@displayDraftIsTooBigError: ()->
-			R.alertManager.alert 'Your drawing cannot be bigger than 1000x1000 pixels.', 'error'
+			R.alertManager.alert 'Your drawing is too big', 'error'
 			return
 
 		# Find or create a button for the tool in the sidebar (if the button is created, add it default or favorite tool list depending on the user settings stored in local storage, and whether the tool was just created in a newly created script)
@@ -81,7 +81,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 				@select()
 
 			if not R.userAuthenticated?
-				R.toolManager.disableDrawingButton()
+				R.toolManager.enableDrawingButton(false)
 			return
 
 		# Remove tool button, useful when user create a tool which already existed (overwrite the tool)
@@ -94,6 +94,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 		select: (deselectItems=true, updateParameters=true, forceSelect=false, fromMiddleMouseButton=false)->
 			if not R.userAuthenticated and not forceSelect
 				R.alertManager.alert 'Log in before drawing', 'info'
+				return
+
+			if P.view.zoom < 1
+				R.alertManager.alert 'Please zoom before drawing', 'info'
 				return
 
 			R.rasterizer.drawItems()
@@ -198,6 +202,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 		hideDraftLimits: ()->
 			if @limit?
 				@limit.remove()
+			@draftLimit = null
 			return
 
 		# Update path action:
@@ -214,8 +219,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 			draftIsTooBig = draftLimit? and not draftLimit.expand(-20).contains(event.point)
 			
 			if draftIsTooBig
-				@previousPathColor ?= path.path.strokeColor
-				path.path.strokeColor = 'red'
+				if path.path?
+					@previousPathColor ?= path.path.strokeColor
+					path.path.strokeColor = 'red'
 				
 				if R.drawingMode != 'line' and R.drawingMode != 'lineOrthoDiag'
 					@constructor.displayDraftIsTooBigError()
@@ -234,12 +240,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 				# 	@constructor.displayDraftIsTooBigError()
 				# 	@end(event, from)
 				return
-			else if @previousPathColor?
+			else if @previousPathColor? and path.path?
 				path.path.strokeColor = @previousPathColor
 
 			path.updateCreate(event.point, event, false)
 
-			if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))
+			if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth)) and path.path?
 				path.path.strokeColor = 'red'
 
 			# R.currentPaths[from].group.visible = true

@@ -87,10 +87,12 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Modal', 'i18next' ], (P, R, Utils, Mod
 				owner: owner
 				name: name
 				site: null
-			R.drawingMode = if name in ['pixel', 'ortho', 'orthoDiag', 'image', 'line', 'lineOrthoDiag'] then name else null
+			R.drawingMode = if name in ['pixel', 'ortho', 'orthoDiag', 'image', 'line', 'lineOrthoDiag', 'dot', 'cross'] then name else null
 			R.loader.load()
 			R.view.updateHash()
 			R.view.createBackground()
+			if R.selectedTool instanceof R.Tools.Path
+				R.selectedTool.showDraftLimits()
 			return
 
 		openCitySettings: (event)=>

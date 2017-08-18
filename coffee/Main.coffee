@@ -426,6 +426,8 @@ define [
 
 		window?.setPageFullyLoaded?(true)
 		
+		R.view.fitRectangle(R.view.grid.limitCD.bounds)
+
 		return
 
 	R.debugDatabase = ()-> return $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'debugDatabase', args: {} } )

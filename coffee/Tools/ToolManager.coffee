@@ -216,7 +216,7 @@ define 'Tools/ToolManager', dependencies, (Utils, Tool, Button, MoveTool, Select
 			
 			return
 
-		zoom: (value)->
+		zoom: (value, snap=true)->
 			if P.view.zoom * value < 0.125 or P.view.zoom * value > 4
 				return
 			bounds = R.view.getViewBounds(true)
@@ -225,8 +225,40 @@ define 'Tools/ToolManager', dependencies, (Utils, Tool, Button, MoveTool, Select
 			if bounds.contains(R.view.grid.limitCD.bounds.scale(value))
 				R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(200), true)
 				return
-			P.view.zoom *= value
+			
+			if snap
+				newZoom = 1
+				zoomValues = [0.25, 0.5, 1, 2, 4]
+				if value < 1
+					for v in zoomValues
+						if P.view.zoom > v
+							newZoom = v
+						else
+							break
+				else
+					for v in zoomValues
+						if P.view.zoom < v
+							newZoom = v
+							break
+				P.view.zoom = newZoom
+				# # 0.125 | 0.25 | 0.5 | 1 | 2 | 4
+				# #     0.1875  0.375  0.75 1.5 3
+				# if P.view.zoom < 0.1875
+				# 	P.view.zoom = 0.125
+				# else if P.view.zoom < 0.375
+				# 	P.view.zoom = 0.25
+				# else if P.view.zoom < 0.75
+				# 	P.view.zoom = 0.5
+				# else if P.view.zoom < 1.5
+				# 	P.view.zoom = 1
+				# else if P.view.zoom < 3
+				# 	P.view.zoom = 2
+				# else
+				# 	P.view.zoom = 4
+			else 
+				P.view.zoom *= value
 			console.log(P.view.zoom)
+			@enableDrawingButton(P.view.zoom >= 1)
 			R.view.moveBy(new P.Point())
 			return
 
@@ -310,8 +342,11 @@ define 'Tools/ToolManager', dependencies, (Utils, Tool, Button, MoveTool, Select
 			# R.view.hideDraftLayer()
 			return
 
-		disableDrawingButton: ()->
-			R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").css( opacity: 0.25 )
+		enableDrawingButton: (enable)->
+			if enable
+				R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").css( opacity: 1 )
+			else
+				R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").css( opacity: 0.25 )
 			return
 
 	# todo: replace update by drag

@@ -119,7 +119,7 @@
           } else {
             drawing.selectAfterSave = true;
           }
-        } else {
+        } else if (R.selectedItems.length > 0) {
           this.showSelectedDrawings();
           this.open();
         }
@@ -156,6 +156,7 @@
         }
         if ((this.currentDrawing != null) && (this.currentDrawing.pk == null)) {
           if (removeDrawingIfNotSaved) {
+            this.showSubmitDrawing();
             this.currentDrawing.removeChildren();
             this.currentDrawing.remove();
           }
@@ -360,7 +361,6 @@
       DrawingPanel.prototype.submitDrawingClicked = function() {
         R.tools.select.deselectAll();
         R.toolManager.leaveDrawingMode(true);
-        this.submitDrawingBtnJ.hide();
         this.drawingPanelTitleJ.attr('data-i18n', 'Create drawing').text(i18next.t('Create drawing'));
         this.open();
         this.showContent();
@@ -680,7 +680,6 @@
           return;
         }
         if (this.currentDrawing.pk == null) {
-          this.showSubmitDrawing();
           this.close();
           return;
         }

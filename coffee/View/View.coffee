@@ -94,7 +94,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Div, i18next, Ham
 				hammertime.get('pinch').set({ enable: true })
 				hammertime.on 'pinch', (event)=>
 					console.log(event.scale)
-					R.toolManager.zoom(event.scale)
+					R.toolManager.zoom(event.scale, false)
 					return
 
 			@mousePosition = new P.Point() 			# the mouse position in window coordinates (updated everytime the mouse moves)
@@ -102,10 +102,11 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Div, i18next, Ham
 			@initialMousePosition = null 			# the initial position of the mouse in the mousedown/move/up
 
 			@firstHashChange = true
+
 			return
 		
 		createBackground: ()->
-			if R.drawingMode == 'image'
+			if R.drawingMode == 'image' and not @backgroundImage?
 				@backgroundImage = new P.Raster('static/images/rennes.jpg')
 				@backgroundImage.onLoad = ()=>
 					@backgroundImage.width = @grid.limitCD.bounds.width
@@ -115,7 +116,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Div, i18next, Ham
 				P.project.layers[1].addChild(@backgroundImage)
 				@backgroundImage.sendToBack()
 				@backgroundListJ = @createLayerListItem('Background', @backgroundImage, true, false, false)
-			else if @backgroundImage?
+			else if R.drawingMode != 'image' and @backgroundImage?
 				@backgroundImage.remove()
 				@backgroundImage = null
 				@backgroundListJ.remove()
@@ -345,6 +346,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Div, i18next, Ham
 				P.view.zoom = Math.min(windowSize.width / rectangle.width, 1)
 			else
 				P.view.zoom = Math.min(windowSize.height / rectangle.height, 1)
+
+			R.toolManager.enableDrawingButton(P.view.zoom >= 1)
 
 			if considerPanels
 				windowCenterInView = P.view.viewToProject(new P.Point(window.innerWidth / 2, window.innerHeight / 2))

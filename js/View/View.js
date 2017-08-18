@@ -111,7 +111,7 @@
           hammertime.on('pinch', (function(_this) {
             return function(event) {
               console.log(event.scale);
-              R.toolManager.zoom(event.scale);
+              R.toolManager.zoom(event.scale, false);
             };
           })(this));
         }
@@ -123,7 +123,7 @@
       }
 
       View.prototype.createBackground = function() {
-        if (R.drawingMode === 'image') {
+        if (R.drawingMode === 'image' && (this.backgroundImage == null)) {
           this.backgroundImage = new P.Raster('static/images/rennes.jpg');
           this.backgroundImage.onLoad = (function(_this) {
             return function() {
@@ -135,7 +135,7 @@
           P.project.layers[1].addChild(this.backgroundImage);
           this.backgroundImage.sendToBack();
           this.backgroundListJ = this.createLayerListItem('Background', this.backgroundImage, true, false, false);
-        } else if (this.backgroundImage != null) {
+        } else if (R.drawingMode !== 'image' && (this.backgroundImage != null)) {
           this.backgroundImage.remove();
           this.backgroundImage = null;
           this.backgroundListJ.remove();
@@ -346,6 +346,7 @@
         } else {
           P.view.zoom = Math.min(windowSize.height / rectangle.height, 1);
         }
+        R.toolManager.enableDrawingButton(P.view.zoom >= 1);
         if (considerPanels) {
           windowCenterInView = P.view.viewToProject(new P.Point(window.innerWidth / 2, window.innerHeight / 2));
           visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + windowSize.width / 2, window.innerHeight / 2));

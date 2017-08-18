@@ -698,8 +698,9 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 
 		finish: ()->
 			if @rectangle.width == 0 and @rectangle.height == 0
-				@remove()
-				return false
+				# @remove()
+				# return false
+				@rectangle = @rectangle.expand(2)
 			return true
 
 		save: (addCreateCommand)->

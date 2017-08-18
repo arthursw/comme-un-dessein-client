@@ -142,10 +142,13 @@
           name: name,
           site: null
         };
-        R.drawingMode = name === 'pixel' || name === 'ortho' || name === 'orthoDiag' || name === 'image' || name === 'line' || name === 'lineOrthoDiag' ? name : null;
+        R.drawingMode = name === 'pixel' || name === 'ortho' || name === 'orthoDiag' || name === 'image' || name === 'line' || name === 'lineOrthoDiag' || name === 'dot' || name === 'cross' ? name : null;
         R.loader.load();
         R.view.updateHash();
         R.view.createBackground();
+        if (R.selectedTool instanceof R.Tools.Path) {
+          R.selectedTool.showDraftLimits();
+        }
       };
 
       CityManager.prototype.openCitySettings = function(event) {

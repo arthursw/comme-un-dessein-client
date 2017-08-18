@@ -50,8 +50,11 @@
         return;
       }
 
-      ToolManager.prototype.zoom = function(value) {
-        var bounds;
+      ToolManager.prototype.zoom = function(value, snap) {
+        var bounds, i, j, len, len1, newZoom, v, zoomValues;
+        if (snap == null) {
+          snap = true;
+        }
         if (P.view.zoom * value < 0.125 || P.view.zoom * value > 4) {
           return;
         }
@@ -63,8 +66,33 @@
           R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(200), true);
           return;
         }
-        P.view.zoom *= value;
+        if (snap) {
+          newZoom = 1;
+          zoomValues = [0.25, 0.5, 1, 2, 4];
+          if (value < 1) {
+            for (i = 0, len = zoomValues.length; i < len; i++) {
+              v = zoomValues[i];
+              if (P.view.zoom > v) {
+                newZoom = v;
+              } else {
+                break;
+              }
+            }
+          } else {
+            for (j = 0, len1 = zoomValues.length; j < len1; j++) {
+              v = zoomValues[j];
+              if (P.view.zoom < v) {
+                newZoom = v;
+                break;
+              }
+            }
+          }
+          P.view.zoom = newZoom;
+        } else {
+          P.view.zoom *= value;
+        }
         console.log(P.view.zoom);
+        this.enableDrawingButton(P.view.zoom >= 1);
         R.view.moveBy(new P.Point());
       };
 
@@ -152,10 +180,16 @@
         R.drawingPanel.hideSubmitDrawing();
       };
 
-      ToolManager.prototype.disableDrawingButton = function() {
-        R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").css({
-          opacity: 0.25
-        });
+      ToolManager.prototype.enableDrawingButton = function(enable) {
+        if (enable) {
+          R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").css({
+            opacity: 1
+          });
+        } else {
+          R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").css({
+            opacity: 0.25
+          });
+        }
       };
 
       return ToolManager;

@@ -71,7 +71,7 @@
       };
 
       PathTool.displayDraftIsTooBigError = function() {
-        R.alertManager.alert('Your drawing cannot be bigger than 1000x1000 pixels.', 'error');
+        R.alertManager.alert('Your drawing is too big', 'error');
       };
 
       function PathTool(Path, justCreated) {
@@ -106,7 +106,7 @@
           this.select();
         }
         if (R.userAuthenticated == null) {
-          R.toolManager.disableDrawingButton();
+          R.toolManager.enableDrawingButton(false);
         }
         return;
       }
@@ -131,6 +131,10 @@
         }
         if (!R.userAuthenticated && !forceSelect) {
           R.alertManager.alert('Log in before drawing', 'info');
+          return;
+        }
+        if (P.view.zoom < 1) {
+          R.alertManager.alert('Please zoom before drawing', 'info');
           return;
         }
         R.rasterizer.drawItems();
@@ -223,6 +227,7 @@
         if (this.limit != null) {
           this.limit.remove();
         }
+        this.draftLimit = null;
       };
 
       PathTool.prototype.update = function(event, from) {
@@ -237,20 +242,22 @@
         draftLimit = this.showDraftLimits();
         draftIsTooBig = (draftLimit != null) && !draftLimit.expand(-20).contains(event.point);
         if (draftIsTooBig) {
-          if (this.previousPathColor == null) {
-            this.previousPathColor = path.path.strokeColor;
+          if (path.path != null) {
+            if (this.previousPathColor == null) {
+              this.previousPathColor = path.path.strokeColor;
+            }
+            path.path.strokeColor = 'red';
           }
-          path.path.strokeColor = 'red';
           if (R.drawingMode !== 'line' && R.drawingMode !== 'lineOrthoDiag') {
             this.constructor.displayDraftIsTooBigError();
             this.end(event, from);
           }
           return;
-        } else if (this.previousPathColor != null) {
+        } else if ((this.previousPathColor != null) && (path.path != null)) {
           path.path.strokeColor = this.previousPathColor;
         }
         path.updateCreate(event.point, event, false);
-        if (R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))) {
+        if (R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth)) && (path.path != null)) {
           path.path.strokeColor = 'red';
         }
         if (this.constructor.emitSocket && (R.me != null) && from === R.me) {

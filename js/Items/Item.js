@@ -406,8 +406,7 @@
 
       Item.prototype.finish = function() {
         if (this.rectangle.width === 0 && this.rectangle.height === 0) {
-          this.remove();
-          return false;
+          this.rectangle = this.rectangle.expand(2);
         }
         return true;
       };

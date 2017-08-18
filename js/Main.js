@@ -198,6 +198,7 @@
           window.setPageFullyLoaded(true);
         }
       }
+      R.view.fitRectangle(R.view.grid.limitCD.bounds);
     });
     R.debugDatabase = function() {
       return $.ajax({

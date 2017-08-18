@@ -115,7 +115,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 				else
 					drawing.selectAfterSave = true
 
-			else
+			else if R.selectedItems.length > 0
 				@showSelectedDrawings()
 
 				@open()
@@ -146,6 +146,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 		close: (removeDrawingIfNotSaved=true)=>
 			if @currentDrawing? and not @currentDrawing.pk?
 				if removeDrawingIfNotSaved
+					@showSubmitDrawing()
 					@currentDrawing.removeChildren()
 					@currentDrawing.remove()
 					
@@ -354,7 +355,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 			R.tools.select.deselectAll()
 
 			R.toolManager.leaveDrawingMode(true)
-			@submitDrawingBtnJ.hide()
+			# @submitDrawingBtnJ.hide()
 			@drawingPanelTitleJ.attr('data-i18n', 'Create drawing').text(i18next.t('Create drawing'))
 			# @showBeginDrawing()
 			@open()
@@ -632,7 +633,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 				return
 
 			if not @currentDrawing.pk?
-				@showSubmitDrawing()
 				@close()
 				return
 

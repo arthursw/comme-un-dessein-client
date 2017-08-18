@@ -271,7 +271,9 @@
           return null;
         }
         if ((this.drawingId == null) && !R.administrator) {
-          R.drawingPanel.submitDrawingClicked();
+          Utils.callNextFrame((function() {
+            return R.drawingPanel.submitDrawingClicked();
+          }), 'select draft');
           return false;
         }
         if (!R.administrator) {

@@ -295,7 +295,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 				return null
 
 			if not @drawingId? and not R.administrator
-				R.drawingPanel.submitDrawingClicked()
+				Utils.callNextFrame((()-> return R.drawingPanel.submitDrawingClicked()), 'select draft')
 				return false
 
 			if not R.administrator then return false
