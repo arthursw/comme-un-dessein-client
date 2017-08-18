@@ -62,7 +62,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 		@secureStep = 25
 		@polygonMode = true
-		@orthoGridSize = 10
+		@orthoGridSize = 20
 
 		@initializeParameters: ()->
 
@@ -285,9 +285,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# @param offset [Number] the offset along the control path to begin drawing
 		# @param step [Boolean] whether it is a key step or not (we must draw something special or not)
 		updateDraw: (segment, step, redrawing)->
-			if R.drawingMode != 'pixel'
+			if R.drawingMode != 'pixel' and R.drawingMode != 'line' and R.drawingMode != 'lineOrthoDiag'
 				@path.add(@controlPath.lastSegment)
-			else
+			else if R.drawingMode == 'line' or R.drawingMode == 'lineOrthoDiag'
+				if @path.segments.length < 2
+					@path.add(@controlPath.lastSegment)
+				@path.lastSegment.point = @controlPath.lastSegment.point
+			else if R.drawingMode == 'pixel'
 				circle = @addPath(new P.Path.Circle(segment.point, 5), false)
 				circle.fillColor = @data.strokeColor
 				# circle.strokeColor = @data.strokeColor
@@ -338,12 +342,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		beginCreate: (point, event)->
 			super()
 
+			console.log 'beginCreate'
+
 			if not @data.polygonMode 				# in normal mode: just initialize the control path and begin drawing
 				@addControlPath()
-				if R.drawingMode == 'orthoDiag' or R.drawingMode == 'ortho'
+				if R.drawingMode == 'orthoDiag' or R.drawingMode == 'ortho' or R.drawingMode == 'lineOrthoDiag'
 					@controlPath.add(Utils.Snap.snap2D(point, @constructor.orthoGridSize))
 				else 
 					@controlPath.add(point)
+				if R.drawingMode == 'line' or R.drawingMode == 'lineOrthoDiag'
+					@controlPath.add(@controlPath.firstSegment.point)
 				@rectangle = @controlPath.bounds.clone()
 				@beginDraw(false)
 			else 									# in polygon mode:
@@ -375,6 +383,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 				if @controlPath.lastSegment.point.getDistance(point, true) < 20
 					return
+
+				console.log 'updateCreate'
 
 				updateDrawing = true
 
@@ -418,6 +428,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 						@controlPath.add(target)
 					else
 						updateDrawing = false
+				else if R.drawingMode == 'line'
+					@controlPath.lastSegment.point = point
+				else if R.drawingMode == 'lineOrthoDiag'
+
+					delta = point.subtract(@controlPath.firstSegment.point)
+					delta.angle = Utils.Snap.snap1D(delta.angle, 45)
+					@controlPath.lastSegment.point = Utils.Snap.snap2D(@controlPath.firstSegment.point.add(delta), @constructor.orthoGridSize)
 				else
 					@controlPath.add(point)
 
@@ -442,6 +459,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# called on mouse move
 		# @param event [Event] the mouse event
 		createMove: (event)->
+			console.log 'createMove'
 			@controlPath.lastSegment.point = event.point
 
 			@draw(true, false)
@@ -454,12 +472,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# @param point [P.Point] the point to add
 		# @param event [Event] the mouse event
 		endCreate: (point, event)->
+			console.log 'endCreate'
 			if @data.polygonMode then return 	# in polygon mode, finish is called by the path tool
 
 			if @controlPath.segments.length>=2
 				# if @speeds? then @computeSpeed()
 				
-				if R.drawingMode != 'orthoDiag' and R.drawingMode != 'ortho' and R.drawingMode != 'pixel'
+				if R.drawingMode != 'orthoDiag' and R.drawingMode != 'ortho' and R.drawingMode != 'pixel' and R.drawingMode != 'line' and R.drawingMode != 'lineOrthoDiag'
 					@controlPath.simplify(@constructor.orthoGridSize)
 
 				for segment in @controlPath.segments

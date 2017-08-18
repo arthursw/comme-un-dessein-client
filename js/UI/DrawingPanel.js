@@ -382,7 +382,9 @@
           data: {
             data: JSON.stringify({
               "function": 'getDrafts',
-              args: {}
+              args: {
+                city: R.city
+              }
             })
           }
         }).done(this.submitDrawingClickedCallback);

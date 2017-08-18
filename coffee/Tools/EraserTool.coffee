@@ -28,7 +28,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		# the icon will be made with the first two letters of the name if the name is in one word, or the first letter of each words of the name otherwise
 		constructor: (@Path, justCreated=false) ->
 			@name = @constructor.label
-			@radius = 50
+			@radius = 15
 			R.tools[@name] = @
 
 			# check if a button already exists (when created fom a module)

@@ -27,7 +27,7 @@
 
       PrecisePath.polygonMode = true;
 
-      PrecisePath.orthoGridSize = 10;
+      PrecisePath.orthoGridSize = 20;
 
       PrecisePath.initializeParameters = function() {
         var parameters;
@@ -288,9 +288,14 @@
 
       PrecisePath.prototype.updateDraw = function(segment, step, redrawing) {
         var circle;
-        if (R.drawingMode !== 'pixel') {
+        if (R.drawingMode !== 'pixel' && R.drawingMode !== 'line' && R.drawingMode !== 'lineOrthoDiag') {
           this.path.add(this.controlPath.lastSegment);
-        } else {
+        } else if (R.drawingMode === 'line' || R.drawingMode === 'lineOrthoDiag') {
+          if (this.path.segments.length < 2) {
+            this.path.add(this.controlPath.lastSegment);
+          }
+          this.path.lastSegment.point = this.controlPath.lastSegment.point;
+        } else if (R.drawingMode === 'pixel') {
           circle = this.addPath(new P.Path.Circle(segment.point, 5), false);
           circle.fillColor = this.data.strokeColor;
         }
@@ -315,12 +320,16 @@
 
       PrecisePath.prototype.beginCreate = function(point, event) {
         PrecisePath.__super__.beginCreate.call(this);
+        console.log('beginCreate');
         if (!this.data.polygonMode) {
           this.addControlPath();
-          if (R.drawingMode === 'orthoDiag' || R.drawingMode === 'ortho') {
+          if (R.drawingMode === 'orthoDiag' || R.drawingMode === 'ortho' || R.drawingMode === 'lineOrthoDiag') {
             this.controlPath.add(Utils.Snap.snap2D(point, this.constructor.orthoGridSize));
           } else {
             this.controlPath.add(point);
+          }
+          if (R.drawingMode === 'line' || R.drawingMode === 'lineOrthoDiag') {
+            this.controlPath.add(this.controlPath.firstSegment.point);
           }
           this.rectangle = this.controlPath.bounds.clone();
           this.beginDraw(false);
@@ -344,6 +353,7 @@
           if (this.controlPath.lastSegment.point.getDistance(point, true) < 20) {
             return;
           }
+          console.log('updateCreate');
           updateDrawing = true;
           if (R.drawingMode === 'orthoDiag') {
             target = Utils.Snap.snap2D(point, this.constructor.orthoGridSize);
@@ -389,6 +399,12 @@
             } else {
               updateDrawing = false;
             }
+          } else if (R.drawingMode === 'line') {
+            this.controlPath.lastSegment.point = point;
+          } else if (R.drawingMode === 'lineOrthoDiag') {
+            delta = point.subtract(this.controlPath.firstSegment.point);
+            delta.angle = Utils.Snap.snap1D(delta.angle, 45);
+            this.controlPath.lastSegment.point = Utils.Snap.snap2D(this.controlPath.firstSegment.point.add(delta), this.constructor.orthoGridSize);
           } else {
             this.controlPath.add(point);
           }
@@ -410,17 +426,19 @@
       };
 
       PrecisePath.prototype.createMove = function(event) {
+        console.log('createMove');
         this.controlPath.lastSegment.point = event.point;
         this.draw(true, false);
       };
 
       PrecisePath.prototype.endCreate = function(point, event) {
         var j, len, ref, segment;
+        console.log('endCreate');
         if (this.data.polygonMode) {
           return;
         }
         if (this.controlPath.segments.length >= 2) {
-          if (R.drawingMode !== 'orthoDiag' && R.drawingMode !== 'ortho' && R.drawingMode !== 'pixel') {
+          if (R.drawingMode !== 'orthoDiag' && R.drawingMode !== 'ortho' && R.drawingMode !== 'pixel' && R.drawingMode !== 'line' && R.drawingMode !== 'lineOrthoDiag') {
             this.controlPath.simplify(this.constructor.orthoGridSize);
           }
           ref = this.controlPath.segments;

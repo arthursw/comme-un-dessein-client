@@ -60,7 +60,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			rejected: '#EB5A46'
 		}
 
-		@strokeWidth = Utils.CS.mmToPixel(10)
+		@strokeWidth = Utils.CS.mmToPixel(5)
 		@strokeColor = 'black'
 
 		# parameters are defined as in {RTool}

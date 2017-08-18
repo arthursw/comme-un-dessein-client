@@ -350,7 +350,6 @@ define [
 		userAuthenticated = $('#canvas').attr("data-is-authenticated")
 		R.userAuthenticated = userAuthenticated == 'True'
 
-		R.drawingMode = $('#canvas').attr("data-drawing-mode")
 
 		# parameters
 		R.catchErrors = false 					# the error will not be caught when drawing an RPath (let chrome catch them at the right time)
@@ -427,9 +426,6 @@ define [
 
 		window?.setPageFullyLoaded?(true)
 		
-		if R.drawingMode? and R.drawingMode != 'None'
-			setTimeout (()->R.cityManager.loadCity(R.drawingMode)), 1000
-
 		return
 
 	R.debugDatabase = ()-> return $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'debugDatabase', args: {} } )

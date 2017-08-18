@@ -32,7 +32,7 @@
           justCreated = false;
         }
         this.name = this.constructor.label;
-        this.radius = 50;
+        this.radius = 15;
         R.tools[this.name] = this;
         this.btnJ = R.sidebar.favoriteToolsJ.find('li[data-name="' + this.name + '"]');
         EraserTool.__super__.constructor.call(this, this.btnJ.length === 0);

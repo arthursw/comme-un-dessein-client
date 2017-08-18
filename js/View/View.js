@@ -123,19 +123,22 @@
       }
 
       View.prototype.createBackground = function() {
-        var backgroundImage;
         if (R.drawingMode === 'image') {
-          backgroundImage = new P.Raster('static/images/rennes.jpg');
-          backgroundImage.onLoad = (function(_this) {
+          this.backgroundImage = new P.Raster('static/images/rennes.jpg');
+          this.backgroundImage.onLoad = (function(_this) {
             return function() {
-              backgroundImage.width = _this.grid.limitCD.bounds.width;
-              backgroundImage.height = _this.grid.limitCD.bounds.height;
+              _this.backgroundImage.width = _this.grid.limitCD.bounds.width;
+              _this.backgroundImage.height = _this.grid.limitCD.bounds.height;
             };
           })(this);
-          backgroundImage.opacity = 0.5;
-          P.project.layers[1].addChild(backgroundImage);
-          backgroundImage.sendToBack();
-          this.backgroundListJ = this.createLayerListItem('Background', backgroundImage, true, false, false);
+          this.backgroundImage.opacity = 0.5;
+          P.project.layers[1].addChild(this.backgroundImage);
+          this.backgroundImage.sendToBack();
+          this.backgroundListJ = this.createLayerListItem('Background', this.backgroundImage, true, false, false);
+        } else if (this.backgroundImage != null) {
+          this.backgroundImage.remove();
+          this.backgroundImage = null;
+          this.backgroundListJ.remove();
         }
       };
 
@@ -367,8 +370,7 @@
           hashParameters['repository-commit'] = R.repository.commit;
         }
         if ((R.city.owner != null) && (R.city.name != null) && R.city.owner !== 'CommeUnDesseinOrg' && R.city.name !== 'CommeUnDessein') {
-          hashParameters['city-owner'] = R.city.owner;
-          hashParameters['city-name'] = R.city.name;
+          hashParameters['mode'] = R.city.name;
         }
         hashParameters['location'] = Utils.pointToString(P.view.center);
         if (R.tipibot != null) {

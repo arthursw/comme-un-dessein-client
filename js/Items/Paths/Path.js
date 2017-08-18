@@ -31,7 +31,7 @@
         rejected: '#EB5A46'
       };
 
-      Path.strokeWidth = Utils.CS.mmToPixel(10);
+      Path.strokeWidth = Utils.CS.mmToPixel(5);
 
       Path.strokeColor = 'black';
 

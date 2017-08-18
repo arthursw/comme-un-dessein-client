@@ -132,7 +132,6 @@
       R.me = username.length > 0 ? username : null;
       userAuthenticated = $('#canvas').attr("data-is-authenticated");
       R.userAuthenticated = userAuthenticated === 'True';
-      R.drawingMode = $('#canvas').attr("data-drawing-mode");
       R.catchErrors = false;
       R.ignoreSockets = false;
       R.currentPaths = {};
@@ -198,11 +197,6 @@
         if (typeof window.setPageFullyLoaded === "function") {
           window.setPageFullyLoaded(true);
         }
-      }
-      if ((R.drawingMode != null) && R.drawingMode !== 'None') {
-        setTimeout((function() {
-          return R.cityManager.loadCity(R.drawingMode);
-        }), 1000);
       }
     });
     R.debugDatabase = function() {

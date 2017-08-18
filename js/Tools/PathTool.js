@@ -60,7 +60,6 @@
           tolerance = 0;
         }
         draftBounds = this.computeDraftBounds(paths);
-        console.log(draftBounds.width, draftBounds.height);
         return this.draftBoundsIsTooBig(draftBounds, tolerance);
       };
 
@@ -135,6 +134,7 @@
           return;
         }
         R.rasterizer.drawItems();
+        this.showDraftLimits();
         PathTool.__super__.select.apply(this, arguments);
         R.view.tool.onMouseMove = this.move;
         R.toolManager.enterDrawingMode();
@@ -153,11 +153,12 @@
       PathTool.prototype.deselect = function() {
         PathTool.__super__.deselect.call(this);
         this.finish();
+        this.hideDraftLimits();
         R.view.tool.onMouseMove = null;
       };
 
       PathTool.prototype.begin = function(event, from, data) {
-        var draftBounds, ref;
+        var ref;
         if (from == null) {
           from = R.me;
         }
@@ -171,8 +172,7 @@
           R.alertManager.alert("You can not draw path at a zoom smaller than 10.", "Info");
           return;
         }
-        draftBounds = this.constructor.computeDraftBounds();
-        if ((draftBounds != null) && this.constructor.draftBoundsIsTooBig(draftBounds.include(event.point))) {
+        if ((this.draftLimit != null) && !this.draftLimit.contains(event.point)) {
           this.constructor.displayDraftIsTooBigError();
           return;
         }
@@ -192,8 +192,41 @@
         }
       };
 
+      PathTool.prototype.showDraftLimits = function() {
+        var child, draftBounds, i, l1, l2, l3, l4, len, ref, viewBounds;
+        this.hideDraftLimits();
+        draftBounds = this.constructor.computeDraftBounds();
+        if (draftBounds == null) {
+          return null;
+        }
+        viewBounds = R.view.grid.limitCD.bounds.clone();
+        this.draftLimit = draftBounds.expand(2 * (this.constructor.maxDraftSize - draftBounds.width), 2 * (this.constructor.maxDraftSize - draftBounds.height));
+        this.limit = new P.Group();
+        l1 = new P.Path.Rectangle(viewBounds.topLeft, new P.Point(viewBounds.right, this.draftLimit.top));
+        l2 = new P.Path.Rectangle(new P.Point(viewBounds.left, this.draftLimit.top), new P.Point(this.draftLimit.left, this.draftLimit.bottom));
+        l3 = new P.Path.Rectangle(new P.Point(this.draftLimit.right, this.draftLimit.top), new P.Point(viewBounds.right, this.draftLimit.bottom));
+        l4 = new P.Path.Rectangle(new P.Point(viewBounds.left, this.draftLimit.bottom), viewBounds.bottomRight);
+        this.limit.addChild(l1);
+        this.limit.addChild(l2);
+        this.limit.addChild(l3);
+        this.limit.addChild(l4);
+        ref = this.limit.children;
+        for (i = 0, len = ref.length; i < len; i++) {
+          child = ref[i];
+          child.fillColor = new P.Color(0, 0, 0, 0.25);
+        }
+        R.view.selectionLayer.addChild(this.limit);
+        return this.draftLimit;
+      };
+
+      PathTool.prototype.hideDraftLimits = function() {
+        if (this.limit != null) {
+          this.limit.remove();
+        }
+      };
+
       PathTool.prototype.update = function(event, from) {
-        var path;
+        var draftIsTooBig, draftLimit, path;
         if (from == null) {
           from = R.me;
         }
@@ -201,16 +234,24 @@
         if (path == null) {
           return;
         }
+        draftLimit = this.showDraftLimits();
+        draftIsTooBig = (draftLimit != null) && !draftLimit.expand(-20).contains(event.point);
+        if (draftIsTooBig) {
+          if (this.previousPathColor == null) {
+            this.previousPathColor = path.path.strokeColor;
+          }
+          path.path.strokeColor = 'red';
+          if (R.drawingMode !== 'line' && R.drawingMode !== 'lineOrthoDiag') {
+            this.constructor.displayDraftIsTooBigError();
+            this.end(event, from);
+          }
+          return;
+        } else if (this.previousPathColor != null) {
+          path.path.strokeColor = this.previousPathColor;
+        }
         path.updateCreate(event.point, event, false);
         if (R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))) {
           path.path.strokeColor = 'red';
-        }
-        if (this.constructor.draftIsTooBig(null, 50)) {
-          path.path.strokeColor = 'red';
-          path.controlPath.lastSegment.remove();
-          this.constructor.displayDraftIsTooBigError();
-          this.end(event, from);
-          return;
         }
         if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
           R.socket.emit("bounce", {
@@ -274,7 +315,7 @@
           delete R.currentPaths[from];
           return false;
         }
-        if (this.constructor.draftIsTooBig()) {
+        if ((this.draftLimit != null) && !this.draftLimit.contains(R.currentPaths[from].controlPath.bounds)) {
           this.constructor.displayDraftIsTooBigError();
           R.currentPaths[from].remove();
           delete R.currentPaths[from];

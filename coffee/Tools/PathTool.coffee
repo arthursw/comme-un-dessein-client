@@ -38,7 +38,6 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 
 		@draftIsTooBig: (paths=null, tolerance=0)->
 			draftBounds = @computeDraftBounds(paths)
-			console.log(draftBounds.width, draftBounds.height)
 			return @draftBoundsIsTooBig(draftBounds, tolerance)
 
 		@draftBoundsIsTooBig: (draftBounds, tolerance=0)->
@@ -99,6 +98,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 
 			R.rasterizer.drawItems()
 
+			@showDraftLimits()
+
 			super
 
 			R.view.tool.onMouseMove = @move
@@ -119,6 +120,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 		deselect: ()->
 			super()
 			@finish()
+			
+			@hideDraftLimits()
+
 			R.view.tool.onMouseMove = null
 			# R.toolManager.leaveDrawingMode()
 			return
@@ -137,9 +141,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 				R.alertManager.alert("You can not draw path at a zoom smaller than 10.", "Info")
 				return
 			
-			draftBounds = @constructor.computeDraftBounds()
-			
-			if draftBounds? and @constructor.draftBoundsIsTooBig(draftBounds.include(event.point))
+			if @draftLimit? and not @draftLimit.contains(event.point)
 				@constructor.displayDraftIsTooBigError()
 				return
 
@@ -160,6 +162,44 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 				R.socket.emit "bounce", tool: @name, function: "begin", arguments: [event, R.me, data]
 			return
 
+		showDraftLimits: ()->
+			@hideDraftLimits()
+
+			draftBounds = @constructor.computeDraftBounds()
+			
+			if not draftBounds? then return null
+
+			viewBounds = R.view.grid.limitCD.bounds.clone()
+			@draftLimit = draftBounds.expand(2 * (@constructor.maxDraftSize - draftBounds.width), 2 * (@constructor.maxDraftSize - draftBounds.height))
+			
+			# draftLimitRectangle = new P.Path.Rectangle(@draftLimit)
+			# @limit = R.view.grid.limitCD.clone().subtract(draftLimitRectangle)
+			# @limit.fillColor = new P.Color(0,0,0,0.25)
+
+			@limit = new P.Group()
+
+			l1 = new P.Path.Rectangle(viewBounds.topLeft, new P.Point(viewBounds.right, @draftLimit.top))
+			l2 = new P.Path.Rectangle(new P.Point(viewBounds.left, @draftLimit.top), new P.Point(@draftLimit.left, @draftLimit.bottom))
+			l3 = new P.Path.Rectangle(new P.Point(@draftLimit.right, @draftLimit.top), new P.Point(viewBounds.right, @draftLimit.bottom))
+			l4 = new P.Path.Rectangle(new P.Point(viewBounds.left, @draftLimit.bottom), viewBounds.bottomRight)
+
+			@limit.addChild(l1)
+			@limit.addChild(l2)
+			@limit.addChild(l3)
+			@limit.addChild(l4)
+			
+			for child in @limit.children
+				child.fillColor = new P.Color(0,0,0,0.25)
+
+			R.view.selectionLayer.addChild(@limit)
+
+			return @draftLimit
+		
+		hideDraftLimits: ()->
+			if @limit?
+				@limit.remove()
+			return
+
 		# Update path action:
 		# update path action and emit event on websocket (if user is the author of the event)
 		# @param [Paper event or REvent] (usually) mouse drag event
@@ -169,17 +209,38 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 			
 			if not path? then return 		# when the path has been deleted because too big
 
+			draftLimit = @showDraftLimits()
+
+			draftIsTooBig = draftLimit? and not draftLimit.expand(-20).contains(event.point)
+			
+			if draftIsTooBig
+				@previousPathColor ?= path.path.strokeColor
+				path.path.strokeColor = 'red'
+				
+				if R.drawingMode != 'line' and R.drawingMode != 'lineOrthoDiag'
+					@constructor.displayDraftIsTooBigError()
+					@end(event, from)
+
+				# lastSegmentToPoint = new P.Path()
+				# lastSegmentToPoint.add(path.controlPath.lastSegment)
+				# lastSegmentToPoint.add(event.point)
+				# draftLimitRectangle = new P.Path.Rectangle(draftLimit.expand(-10))
+				# intersections = draftLimitRectangle.getIntersections(lastSegmentToPoint)
+				# draftLimitRectangle.remove()
+				# lastSegmentToPoint.remove()
+
+				# if intersections.length > 0
+				# 	path.updateCreate(intersections[0].point, event, false)
+				# 	@constructor.displayDraftIsTooBigError()
+				# 	@end(event, from)
+				return
+			else if @previousPathColor?
+				path.path.strokeColor = @previousPathColor
+
 			path.updateCreate(event.point, event, false)
 
 			if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))
 				path.path.strokeColor = 'red'
-
-			if @constructor.draftIsTooBig(null, 50)
-				path.path.strokeColor = 'red'
-				path.controlPath.lastSegment.remove()
-				@constructor.displayDraftIsTooBigError()
-				@end(event, from)
-				return
 
 			# R.currentPaths[from].group.visible = true
 			# if R.me? and from==R.me then R.socket.emit( "update", R.me, R.eventToObject(event), @name)
@@ -244,13 +305,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 			path = R.currentPaths[from]
 			if not path? then return false		# when the path has been deleted because too big
 			
+
 			if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))
 				R.alertManager.alert 'Your path must be in the drawing area.', 'error'
 				R.currentPaths[from].remove()
 				delete R.currentPaths[from]
 				return false
 			
-			if @constructor.draftIsTooBig()
+			if @draftLimit? and not @draftLimit.contains(R.currentPaths[from].controlPath.bounds)
 				@constructor.displayDraftIsTooBigError()
 				R.currentPaths[from].remove()
 				delete R.currentPaths[from]

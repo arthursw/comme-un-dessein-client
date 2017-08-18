@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'UI/Modal'], function(P, R, Utils, Modal) {
+  define(['paper', 'R', 'Utils/Utils', 'UI/Modal', 'i18next'], function(P, R, Utils, Modal, i18next) {
     var CityManager;
     CityManager = (function() {
       function CityManager() {
@@ -96,18 +96,9 @@
       CityManager.prototype.addCity = function(city, userCity) {
         var btnJ, cityJ;
         cityJ = $("<li>");
-        cityJ.append($('<span>').addClass('name').text(city.name));
+        cityJ.append($('<span>').addClass('name').attr('data-i18n', city.name).text(i18next.t(city.name)));
         cityJ.attr('data-owner', city.owner).attr('data-pk', city._id.$oid).attr('data-public', city["public"] || 0).attr('data-name', city.name);
         cityJ.click(this.onCityClicked);
-        cityJ.attr('data-placement', 'right');
-        cityJ.attr('data-container', 'body');
-        cityJ.attr('data-trigger', 'hover');
-        cityJ.attr('data-delay', {
-          show: 500,
-          hide: 100
-        });
-        cityJ.attr('data-content', 'by ' + city.owner);
-        cityJ.popover();
         if (userCity) {
           btnJ = $('<button type="button"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></button>');
           btnJ.click(this.openCitySettings);
@@ -151,8 +142,10 @@
           name: name,
           site: null
         };
+        R.drawingMode = name === 'pixel' || name === 'ortho' || name === 'orthoDiag' || name === 'image' || name === 'line' || name === 'lineOrthoDiag' ? name : null;
         R.loader.load();
         R.view.updateHash();
+        R.view.createBackground();
       };
 
       CityManager.prototype.openCitySettings = function(event) {

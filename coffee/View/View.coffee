@@ -106,16 +106,19 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Div, i18next, Ham
 		
 		createBackground: ()->
 			if R.drawingMode == 'image'
-				backgroundImage = new P.Raster('static/images/rennes.jpg')
-				backgroundImage.onLoad = ()=>
-					backgroundImage.width = @grid.limitCD.bounds.width
-					backgroundImage.height = @grid.limitCD.bounds.height
+				@backgroundImage = new P.Raster('static/images/rennes.jpg')
+				@backgroundImage.onLoad = ()=>
+					@backgroundImage.width = @grid.limitCD.bounds.width
+					@backgroundImage.height = @grid.limitCD.bounds.height
 					return
-				backgroundImage.opacity = 0.5
-				P.project.layers[1].addChild(backgroundImage)
-				backgroundImage.sendToBack()
-				@backgroundListJ = @createLayerListItem('Background', backgroundImage, true, false, false)
-				
+				@backgroundImage.opacity = 0.5
+				P.project.layers[1].addChild(@backgroundImage)
+				@backgroundImage.sendToBack()
+				@backgroundListJ = @createLayerListItem('Background', @backgroundImage, true, false, false)
+			else if @backgroundImage?
+				@backgroundImage.remove()
+				@backgroundImage = null
+				@backgroundListJ.remove()
 			return
 
 		createLayerListItem: (title, item, noArrow=false, prepend=true, badge=true)->
@@ -368,8 +371,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Div, i18next, Ham
 				hashParameters['repository-owner'] = R.repository.owner
 				hashParameters['repository-commit'] = R.repository.commit
 			if R.city.owner? and R.city.name? and R.city.owner != 'CommeUnDesseinOrg' and R.city.name != 'CommeUnDessein'
-				hashParameters['city-owner'] = R.city.owner
-				hashParameters['city-name'] = R.city.name
+				# hashParameters['city-owner'] = R.city.owner
+				hashParameters['mode'] = R.city.name
 			hashParameters['location'] = Utils.pointToString(P.view.center)
 			if R.tipibot?
 				hashParameters['tipibot'] = true

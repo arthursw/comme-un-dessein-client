@@ -1,4 +1,4 @@
-define ['paper', 'R',  'Utils/Utils', 'UI/Modal' ], (P, R, Utils, Modal) ->
+define ['paper', 'R',  'Utils/Utils', 'UI/Modal', 'i18next' ], (P, R, Utils, Modal, i18next) ->
 
 	class CityManager
 
@@ -41,17 +41,17 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Modal' ], (P, R, Utils, Modal) ->
 
 		addCity: (city, userCity)->
 			cityJ = $("<li>")
-			cityJ.append($('<span>').addClass('name').text(city.name))
+			cityJ.append($('<span>').addClass('name').attr('data-i18n', city.name).text(i18next.t(city.name)))
 			cityJ.attr('data-owner', city.owner).attr('data-pk', city._id.$oid).attr('data-public', city.public or 0).attr('data-name', city.name)
 			cityJ.click @onCityClicked
 			# popover
-			cityJ.attr('data-placement', 'right')
-			cityJ.attr('data-container', 'body')
-			cityJ.attr('data-trigger', 'hover')
-			cityJ.attr('data-delay', {show: 500, hide: 100})
-			cityJ.attr('data-content', 'by ' + city.owner)
-			# cityJ.attr('data-content', 'by '+city.owner)
-			cityJ.popover()
+			# cityJ.attr('data-placement', 'right')
+			# cityJ.attr('data-container', 'body')
+			# cityJ.attr('data-trigger', 'hover')
+			# cityJ.attr('data-delay', {show: 500, hide: 100})
+			# cityJ.attr('data-content', 'by ' + city.owner)
+			# # cityJ.attr('data-content', 'by '+city.owner)
+			# cityJ.popover()
 
 			if userCity
 				btnJ = $('<button type="button"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></button>')
@@ -87,8 +87,10 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Modal' ], (P, R, Utils, Modal) ->
 				owner: owner
 				name: name
 				site: null
+			R.drawingMode = if name in ['pixel', 'ortho', 'orthoDiag', 'image', 'line', 'lineOrthoDiag'] then name else null
 			R.loader.load()
 			R.view.updateHash()
+			R.view.createBackground()
 			return
 
 		openCitySettings: (event)=>
