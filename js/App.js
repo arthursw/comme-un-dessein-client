@@ -105,6 +105,7 @@
   requirejs(['R'], function(R) {
     R.repository = repository;
     R.tipibot = parameters['tipibot'];
+    R.style = parameters['style'];
     R.getParameters = getParameters;
     requirejs(['Main']);
   });

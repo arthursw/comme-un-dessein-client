@@ -132,6 +132,9 @@
       R.me = username.length > 0 ? username : null;
       userAuthenticated = $('#canvas').attr("data-is-authenticated");
       R.userAuthenticated = userAuthenticated === 'True';
+      if (R.style != null) {
+        $('body').addClass(R.style);
+      }
       R.catchErrors = false;
       R.ignoreSockets = false;
       R.currentPaths = {};

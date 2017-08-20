@@ -15,7 +15,7 @@
 
       SelectTool.description = '';
 
-      SelectTool.iconURL = 'cursor.png';
+      SelectTool.iconURL = R.style === 'line' ? 'icones_icon_arrow.png' : 'cursor.png';
 
       SelectTool.cursor = {
         position: {

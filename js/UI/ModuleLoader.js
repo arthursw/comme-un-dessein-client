@@ -7,13 +7,14 @@
       {
         name: 'Precise path',
         description: "This path offers precise controls, one can modify points along with their handles and their type.",
-        iconURL: 'glyphicon-pencil',
+        iconURL: 'icones_icon_pen.png',
         file: "Items/Paths/PrecisePaths/PrecisePath",
         category: void 0,
         favorite: true,
         order: 8
       }
     ];
+    buttons[0].iconURL = R.style === 'line' ? 'icones_icon_pen.png' : R.style === 'romanesco' ? 'editCurve.png' : 'glyphicon-pencil';
     ModuleLoader.initialize = function() {
       var b, button, i, len;
       for (i = 0, len = buttons.length; i < len; i++) {

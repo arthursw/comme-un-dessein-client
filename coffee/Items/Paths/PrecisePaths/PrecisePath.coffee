@@ -49,8 +49,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 	class PrecisePath extends Path
 		@label = 'Precise path'
 		@description = "This path offers precise controls, one can modify points along with their handles and their type."
-		@iconURL = 'glyphicon-pencil'
+		
 		# @iconURL = 'static/images/icons/inverted/editCurve.png'
+		# @iconURL = 'glyphicon-pencil'
+		@iconURL = if R.style == 'line' then 'icones_icon_pen.png' else if R.style == 'romanesco' then 'editCurve.png' else 'glyphicon-pencil'
 
 		@hitOptions =
 			segments: true
@@ -291,7 +293,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# @param offset [Number] the offset along the control path to begin drawing
 		# @param step [Boolean] whether it is a key step or not (we must draw something special or not)
 		updateDraw: (segment, step, redrawing)->
-			if R.drawingMode not in @constructor.drawingModes
+			if R.drawingMode not in @constructor.pixelModes and R.drawingMode not in @constructor.lineModes
 				@path.add(@controlPath.lastSegment)
 			else if R.drawingMode == 'line' or R.drawingMode == 'lineOrthoDiag'
 				if @path.segments.length < 2

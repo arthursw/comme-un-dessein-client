@@ -99,7 +99,7 @@
       ToolManager.prototype.createZoombuttons = function() {
         this.zoomInBtn = new Button({
           name: 'Zoom +',
-          iconURL: 'glyphicon-zoom-in',
+          iconURL: R.style === 'line' ? 'icones_icon_zoomin.png' : 'glyphicon-zoom-in',
           favorite: true,
           category: null,
           description: 'Zoom +',
@@ -113,7 +113,7 @@
         })(this));
         this.zoomOutBtn = new Button({
           name: 'Zoom -',
-          iconURL: 'glyphicon-zoom-out',
+          iconURL: R.style === 'line' ? 'icones_icon_zoomout.png' : 'glyphicon-zoom-out',
           favorite: true,
           category: null,
           description: 'Zoom -',
@@ -130,7 +130,7 @@
       ToolManager.prototype.createUndoRedoButtons = function() {
         this.undoBtn = new Button({
           name: 'Undo',
-          iconURL: 'glyphicon-share-alt',
+          iconURL: R.style === 'line' ? 'icones_icon_back.png' : 'glyphicon-share-alt',
           favorite: true,
           category: null,
           description: 'Undo',
@@ -143,7 +143,7 @@
         });
         this.redoBtn = new Button({
           name: 'Redo',
-          iconURL: 'glyphicon-share-alt',
+          iconURL: R.style === 'line' ? 'icones_icon_forward.png' : 'glyphicon-share-alt',
           favorite: true,
           category: null,
           description: 'Redo',

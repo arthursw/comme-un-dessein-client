@@ -12,7 +12,7 @@
 
       MoveTool.description = '';
 
-      MoveTool.iconURL = 'hand.png';
+      MoveTool.iconURL = R.style === 'line' ? 'icones_icon_hand.png' : 'hand.png';
 
       MoveTool.favorite = true;
 
@@ -24,7 +24,7 @@
           y: 32
         },
         name: 'default',
-        icon: 'hand'
+        icon: R.style === 'line' ? 'icones_hand_mouse' : 'hand'
       };
 
       MoveTool.order = 0;

@@ -4,7 +4,7 @@ define ['paper', 'R', 'Utils/Utils','UI/Button', 'UI/Code'], (P, R, Utils, Butto
 
     buttons = [
         # { name: 'Precise path', description: "This path offers precise controls, one can modify points along with their handles and their type.", iconURL: 'static/images/icons/inverted/editCurve.png', file: "Items/Paths/PrecisePaths/PrecisePath", category: undefined, favorite: true, order: 8 }
-        { name: 'Precise path', description: "This path offers precise controls, one can modify points along with their handles and their type.", iconURL: 'glyphicon-pencil', file: "Items/Paths/PrecisePaths/PrecisePath", category: undefined, favorite: true, order: 8 }
+        { name: 'Precise path', description: "This path offers precise controls, one can modify points along with their handles and their type.", iconURL: 'icones_icon_pen.png', file: "Items/Paths/PrecisePaths/PrecisePath", category: undefined, favorite: true, order: 8 }
         # { name: 'Dynamic brush', description: "The stroke width is function of the drawing speed: the faster the wider.", iconURL: undefined, file: "Items/Paths/PrecisePaths/SpeedPaths/DynamicBrush", category: undefined, favorite: true, order: 9 }
         # { name: 'Thickness path', description: "The stroke width is function of the drawing speed: the faster the wider.", iconURL: 'static/images/icons/inverted/rollerBrush.png', file: "Items/Paths/PrecisePaths/SpeedPaths/ThicknessPath", category: undefined, favorite: true, order: 10 }
         # { name: 'Ellipse', description: "Simple ellipse, circle by default (use shift key to draw an ellipse).\nUse special key (command on a mac, control otherwise) to avoid the shape to be centered on the first point.", iconURL: 'static/images/icons/inverted/circle.png', file: "Items/Paths/Shapes/EllipseShape", category: 'Shape', favorite: true, order: 11 }
@@ -35,6 +35,8 @@ define ['paper', 'R', 'Utils/Utils','UI/Button', 'UI/Code'], (P, R, Utils, Butto
         # { name: 'Vector field GL', description: "Creates a vector field with three.js", iconURL: undefined, file: "Scripts/VectorFieldGL", category: undefined }
         # { name: 'Totem', description: "Blabl", iconURL: undefined, file: "Items/Paths/Shapes/TotemShape", category: 'Shape/Animated/Spiral'  }
     ]
+    
+    buttons[0].iconURL = if R.style == 'line' then 'icones_icon_pen.png' else if R.style == 'romanesco' then 'editCurve.png' else 'glyphicon-pencil'
 
     ModuleLoader.initialize = ()->
         for button in buttons

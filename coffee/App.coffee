@@ -136,6 +136,7 @@ requirejs.config
 requirejs [ 'R' ], (R) ->
 	R.repository = repository
 	R.tipibot = parameters['tipibot']
+	R.style = parameters['style']
 	R.getParameters = getParameters
 	requirejs [ 'Main' ]
 	return

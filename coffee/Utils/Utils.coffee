@@ -48,6 +48,7 @@ define [ 'paper', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2
 	# )
 
 	# static
+	window.R ?= {}
 	R.commeUnDesseinURL = 'http://localhost:8000/'
 
 	R.OSName = "Unknown OS" 				# user's operating system

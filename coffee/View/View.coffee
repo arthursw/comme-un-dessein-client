@@ -379,6 +379,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Div, i18next, Ham
 			hashParameters['location'] = Utils.pointToString(P.view.center)
 			if R.tipibot?
 				hashParameters['tipibot'] = true
+			if R.style?
+				hashParameters['style'] = R.style
 			location.hash = Utils.URL.setParameters(hashParameters)
 			return
 
@@ -403,6 +405,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Div, i18next, Ham
 				p = Utils.stringToPoint(parameters['location'])
 
 			R.tipibot = parameters['tipibot']
+			R.style = parameters['style']
 
 			# if R.city.name != parameters['city-name'] or R.city.owner != parameters['city-owner']
 			# 	R.cityManager.loadCity(parameters['city-name'], parameters['city-owner'], p)

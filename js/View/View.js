@@ -377,6 +377,9 @@
         if (R.tipibot != null) {
           hashParameters['tipibot'] = true;
         }
+        if (R.style != null) {
+          hashParameters['style'] = R.style;
+        }
         location.hash = Utils.URL.setParameters(hashParameters);
       };
 
@@ -399,6 +402,7 @@
           p = Utils.stringToPoint(parameters['location']);
         }
         R.tipibot = parameters['tipibot'];
+        R.style = parameters['style'];
         this.moveTo(p, null, !this.firstHashChange);
         this.firstHashChange = true;
       };

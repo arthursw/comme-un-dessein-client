@@ -5,15 +5,17 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 
 		@label = 'Move'
 		@description = ''
-		@iconURL = 'hand.png'
+		# @iconURL = 'hand.png'
 		# @iconURL = 'glyphicon-move'
+		@iconURL = if R.style == 'line' then 'icones_icon_hand.png' else 'hand.png'
+
 		@favorite = true
 		@category = ''
 		@cursor =
 			position:
 				x: 32, y: 32
 			name: 'default'
-			icon: 'hand'
+			icon: if R.style == 'line' then 'icones_hand_mouse' else 'hand'
 		@order = 0
 
 		constructor: () ->

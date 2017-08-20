@@ -267,7 +267,9 @@ define 'Tools/ToolManager', dependencies, (Utils, Tool, Button, MoveTool, Select
 
 			@zoomInBtn = new Button(
 				name: 'Zoom +'
-				iconURL: 'glyphicon-zoom-in'
+				# iconURL: 'glyphicon-zoom-in'
+				# iconURL: 'icones_icon_zoomin.png'
+				iconURL: if R.style == 'line' then 'icones_icon_zoomin.png' else 'glyphicon-zoom-in'
 				favorite: true
 				category: null
 				description: 'Zoom +'
@@ -279,7 +281,9 @@ define 'Tools/ToolManager', dependencies, (Utils, Tool, Button, MoveTool, Select
 
 			@zoomOutBtn = new Button(
 				name: 'Zoom -'
-				iconURL: 'glyphicon-zoom-out'
+				# iconURL: 'glyphicon-zoom-out'
+				# iconURL: 'icones_icon_zoomout.png'
+				iconURL: if R.style == 'line' then 'icones_icon_zoomout.png' else 'glyphicon-zoom-out'
 				favorite: true
 				category: null
 				description: 'Zoom -'
@@ -295,7 +299,9 @@ define 'Tools/ToolManager', dependencies, (Utils, Tool, Button, MoveTool, Select
 
 			@undoBtn = new Button(
 				name: 'Undo'
-				iconURL: 'glyphicon-share-alt'
+				# iconURL: 'glyphicon-share-alt'
+				# iconURL: 'icones_icon_back.png'
+				iconURL: if R.style == 'line' then 'icones_icon_back.png' else 'glyphicon-share-alt'
 				favorite: true
 				category: null
 				description: 'Undo'
@@ -308,7 +314,9 @@ define 'Tools/ToolManager', dependencies, (Utils, Tool, Button, MoveTool, Select
 
 			@redoBtn = new Button(
 				name: 'Redo'
-				iconURL: 'glyphicon-share-alt'
+				# iconURL: 'glyphicon-share-alt'
+				# iconURL: 'icones_icon_forward.png'
+				iconURL: if R.style == 'line' then 'icones_icon_forward.png' else 'glyphicon-share-alt'
 				favorite: true
 				category: null
 				description: 'Redo'

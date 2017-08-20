@@ -350,6 +350,8 @@ define [
 		userAuthenticated = $('#canvas').attr("data-is-authenticated")
 		R.userAuthenticated = userAuthenticated == 'True'
 
+		if R.style?
+			$('body').addClass(R.style)
 
 		# parameters
 		R.catchErrors = false 					# the error will not be caught when drawing an RPath (let chrome catch them at the right time)

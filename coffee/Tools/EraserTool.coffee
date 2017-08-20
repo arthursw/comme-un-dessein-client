@@ -12,8 +12,11 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 		@label = 'Eraser'
 		@description = 'Erase paths'
+		
 		# @iconURL = 'eraser.png'
-		@iconURL = 'glyphicon-erase'
+		# @iconURL = 'glyphicon-erase'
+		# @iconURL = 'icones_icon_rubber.png'
+		@iconURL = if R.style == 'line' then 'icones_icon_rubber.png' else if R.style == 'romanesco' then 'eraser.png' else 'glyphicon-erase'
 		
 		@cursor =
 			position:
