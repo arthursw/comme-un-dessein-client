@@ -1,4 +1,4 @@
-define [ 'paper', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2', 'bootstrap'], (P, CS, _, $, tinycolor, bs) ->
+define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2', 'bootstrap'], (P, R, CS, _, $, tinycolor, bs) ->
 
 	# window._ = _
 	window?.tinycolor = tinycolor
@@ -48,7 +48,6 @@ define [ 'paper', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2
 	# )
 
 	# static
-	window.R ?= {}
 	R.commeUnDesseinURL = 'http://localhost:8000/'
 
 	R.OSName = "Unknown OS" 				# user's operating system

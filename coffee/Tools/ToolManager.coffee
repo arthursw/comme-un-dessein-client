@@ -1,4 +1,5 @@
 dependencies = [
+	'R'
 	'Utils/Utils'
 	'Tools/Tool'
 	'UI/Button'
@@ -15,7 +16,7 @@ if document?
 	# dependencies.push('Tools/ScreenshotTool')
 	dependencies.push('Tools/CarTool')
 
-define 'Tools/ToolManager', dependencies, (Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, TextTool, GradientTool, CarTool) ->
+define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, TextTool, GradientTool, CarTool) ->
 
 	class ToolManager
 

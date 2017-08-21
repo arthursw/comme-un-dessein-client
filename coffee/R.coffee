@@ -1,6 +1,8 @@
 define [], () ->
+	
 	if window? and not window.R?
 		window.R = {}
+
 	R = window?.R or {}
 	R.offline = false
 	# R.DajaxiceXMLHttpRequest = window.XMLHttpRequest

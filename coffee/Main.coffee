@@ -1,4 +1,5 @@
 define [
+	'R'
 	'Utils/Utils'
 	'Loader'
 	'Socket'
@@ -18,7 +19,7 @@ define [
 	'i18nextBrowserLanguageDetector'
 	'jqueryI18next'
 	'moment'
-], (Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, DrawingPanel, Modal, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
+], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, DrawingPanel, Modal, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
 
 	console.log 'Main CommeUnDessein Repository'
 
