@@ -105,13 +105,16 @@
             switch (message.type) {
               case 'getNextValidatedDrawing':
                 if (!_this.requestedNextDrawing) {
+                  args = {
+                    city: R.city
+                  };
                   $.ajax({
                     method: "POST",
                     url: "ajaxCall/",
                     data: {
                       data: JSON.stringify({
                         "function": 'getNextValidatedDrawing',
-                        args: {}
+                        args: args
                       })
                     }
                   }).done(function(results) {

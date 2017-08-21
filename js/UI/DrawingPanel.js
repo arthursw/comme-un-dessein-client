@@ -577,11 +577,11 @@
         delay = moment.duration(result.delay, 'seconds').humanize();
         suffix = '';
         if (result.validates) {
-          suffix = 'validated';
+          suffix = ', the drawing will be validated';
         } else if (result.rejects) {
-          suffix = 'rejected';
+          suffix = ', the drawing will be rejected';
         }
-        R.alertManager.alert('You successfully voted, the drawing will be ' + suffix, 'success', null, {
+        R.alertManager.alert('You successfully voted' + suffix, 'success', null, {
           duration: delay
         });
         R.socket.emit("drawing change", {

@@ -3,7 +3,7 @@
   var dependencies,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  dependencies = ['paper', 'R', 'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Divs/Div'];
+  dependencies = ['paper', 'R', 'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Paths/Path', 'Items/Divs/Div'];
 
   if (typeof document !== "undefined" && document !== null) {
     dependencies.push('i18next');
@@ -12,7 +12,7 @@
     dependencies.push('mousewheel');
   }
 
-  define('View/View', dependencies, function(P, R, Utils, Grid, Command, Div, i18next, Hammer, tw, mousewheel) {
+  define('View/View', dependencies, function(P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, tw, mousewheel) {
     var View;
     View = (function() {
       function View() {
@@ -176,9 +176,21 @@
         showBtnJ = itemListJ.find(".show-btn");
         item.data.setVisibility = (function(_this) {
           return function(visible) {
-            var eyeIconJ;
-            item.visible = visible;
+            var base, base1, child, eyeIconJ, i, len, ref;
             R.tools.select.deselectAll();
+            item.visible = visible;
+            ref = item.children;
+            for (i = 0, len = ref.length; i < len; i++) {
+              child = ref[i];
+              if ((child.controller != null) && child.controller instanceof Path && (child.controller.drawing == null)) {
+                if (typeof (base = child.controller).draw === "function") {
+                  base.draw();
+                }
+                if (typeof (base1 = child.controller).rasterize === "function") {
+                  base1.rasterize();
+                }
+              }
+            }
             R.rasterizer.refresh();
             eyeIconJ = itemListJ.find("span.eye");
             if (item.visible) {
@@ -188,6 +200,9 @@
             }
           };
         })(this);
+        if (!item.visible) {
+          itemListJ.find("span.eye").removeClass('glyphicon-eye-open').addClass('glyphicon-eye-close');
+        }
         showBtnJ.mousedown((function(_this) {
           return function(event) {
             item.data.setVisibility(!item.visible);
@@ -218,6 +233,7 @@
       View.prototype.createLayers = function() {
         this.rejectedLayer = new P.Layer();
         this.rejectedLayer.name = 'rejectedLayer';
+        this.rejectedLayer.visible = false;
         this.pendingLayer = new P.Layer();
         this.pendingLayer.name = 'pendingLayer';
         this.drawingLayer = new P.Layer();

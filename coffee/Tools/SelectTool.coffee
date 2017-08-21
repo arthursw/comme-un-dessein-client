@@ -9,7 +9,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Item', '
 		@description = ''
 		# @iconURL = 'glyphicon-envelope'
 		# @iconURL = 'cursor.png'
-		@iconURL = if R.style == 'line' then 'icones_icon_arrow.png' else 'cursor.png'
+		@iconURL = if R.style == 'line' then 'icones_icon_arrow.png' else if R.style == 'hand' then 'a-cursor.png' else 'cursor.png'
 
 		@cursor =
 			position:

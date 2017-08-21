@@ -192,7 +192,9 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io', 'i18next' ], (P, R, Utils, ioo
 				switch message.type
 					when 'getNextValidatedDrawing'
 						if not @requestedNextDrawing
-							$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getNextValidatedDrawing', args: {} } ).done((results)=>
+							args = 
+								city: R.city
+							$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getNextValidatedDrawing', args: args } ).done((results)=>
 								@requestedNextDrawing = false
 								if results.message == 'no path' then return
 								R.loader.loadCallbackTipibot(results)

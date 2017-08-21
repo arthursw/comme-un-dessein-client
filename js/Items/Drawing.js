@@ -203,18 +203,7 @@
         }
       };
 
-      Drawing.prototype.addChild = function(path) {
-        var bounds;
-        this.paths.push(path);
-        path.drawingId = this.id;
-        if (this.pathPks == null) {
-          this.pathPks = [];
-        }
-        if (path.pk == null) {
-          R.alertManager.alert('Error: a path has not been saved yet. Please wait until the path is saved before creating the drawing.', 'error');
-          return;
-        }
-        this.pathPks.push(path.pk);
+      Drawing.prototype.addPathToProperLayer = function(path) {
         switch (this.status) {
           case 'pending':
             R.view.pendingLayer.addChild(path.group);
@@ -228,6 +217,21 @@
           case 'rejected':
             R.view.rejectedLayer.addChild(path.group);
         }
+      };
+
+      Drawing.prototype.addChild = function(path) {
+        var bounds;
+        this.paths.push(path);
+        path.drawingId = this.id;
+        if (this.pathPks == null) {
+          this.pathPks = [];
+        }
+        if (path.pk == null) {
+          R.alertManager.alert('Error: a path has not been saved yet. Please wait until the path is saved before creating the drawing.', 'error');
+          return;
+        }
+        this.pathPks.push(path.pk);
+        this.addPathToProperLayer(path);
         bounds = path.getDrawingBounds();
         if (bounds != null) {
           if (this.rectangle == null) {
@@ -528,9 +532,12 @@
       Drawing.prototype.updateStatus = function(status) {
         var i, len, path, ref;
         this.status = status;
+        this.removeFromListItem();
+        this.addToListItem(this.getListItem());
         ref = this.paths;
         for (i = 0, len = ref.length; i < len; i++) {
           path = ref[i];
+          this.addPathToProperLayer(path);
           path.updateStrokeColor();
           path.drawn = false;
           path.draw();

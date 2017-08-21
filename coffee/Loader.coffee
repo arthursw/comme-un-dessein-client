@@ -464,29 +464,39 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			if not @checkError(results) then return
 			itemsToLoad = []
 
+			paths = []
+			bounds = R.view.grid.limitCD.bounds
+
 			# parse items and remove them if they are on stage (they must be updated)
 			for i in results.items
 				item = JSON.parse(i)
-				if R.items[item.clientId]
-					R.items[item.clientId].remove()
-				itemsToLoad.push(item)
 
-			@createNewItems(itemsToLoad)
+				pk = item._id.$oid
+				id = item.clientId
+				date = item.date?.$date
+				data = if item.data? and item.data.length>0 then JSON.parse(item.data) else null
 
-			paths = []
+				points = data.points
+				planet = data.planet
 
-			bounds = R.view.grid.limitCD.bounds
+				controlPath = new P.Path()
 
-			for item in itemsToLoad
-				path = R.items[item.clientId]
-				segmentedPath = path.controlPath.clone()
-				segmentedPath.flatten(5)
-				points = []
-				for segment in segmentedPath.segments
-					points.push(segment.point)
-					console.log(segment.point)
-					console.log(segment.point.subtract(bounds.topLeft).divide(bounds.size))
-				paths.push(points)
+				for point, i in points by 4
+					controlPath.add(Utils.CS.posOnPlanetToProject(point, planet))
+					controlPath.lastSegment.handleIn = new P.Point(points[i+1])
+					controlPath.lastSegment.handleOut = new P.Point(points[i+2])
+					controlPath.lastSegment.rtype = points[i+3]
+
+				controlPath.flatten(5)
+
+				path = []
+
+				for segment in controlPath.segments
+					path.push(segment.point)
+
+				paths.push(path)
+
+				controlPath.remove()
 
 			R.socket.tipibotSocket.send(JSON.stringify( bounds: bounds, paths: paths, type: 'setNextDrawing', drawingPk: results.pk ))
 			return

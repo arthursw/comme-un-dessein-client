@@ -7,7 +7,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 		@description = ''
 		# @iconURL = 'hand.png'
 		# @iconURL = 'glyphicon-move'
-		@iconURL = if R.style == 'line' then 'icones_icon_hand.png' else 'hand.png'
+		@iconURL = if R.style == 'line' then 'icones_icon_hand.png' else if R.style == 'hand' then 'a-hand1.png' else 'hand.png'
 
 		@favorite = true
 		@category = ''

@@ -52,7 +52,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		
 		# @iconURL = 'static/images/icons/inverted/editCurve.png'
 		# @iconURL = 'glyphicon-pencil'
-		@iconURL = if R.style == 'line' then 'icones_icon_pen.png' else if R.style == 'romanesco' then 'editCurve.png' else 'glyphicon-pencil'
+		@iconURL = if R.style == 'line' then 'icones_icon_pen.png' else if R.style == 'romanesco' then 'editCurve.png' else if R.style == 'hand' then 'a-pen3.png' else 'glyphicon-pencil'
 
 		@hitOptions =
 			segments: true

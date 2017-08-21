@@ -12,7 +12,7 @@
 
       EraserTool.description = 'Erase paths';
 
-      EraserTool.iconURL = R.style === 'line' ? 'icones_icon_rubber.png' : R.style === 'romanesco' ? 'eraser.png' : 'glyphicon-erase';
+      EraserTool.iconURL = R.style === 'line' ? 'icones_icon_rubber.png' : R.style === 'romanesco' ? 'eraser.png' : R.style === 'hand' ? 'a-eraser.png' : 'glyphicon-erase';
 
       EraserTool.cursor = {
         position: {

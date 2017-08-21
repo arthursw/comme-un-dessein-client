@@ -14,7 +14,7 @@
         order: 8
       }
     ];
-    buttons[0].iconURL = R.style === 'line' ? 'icones_icon_pen.png' : R.style === 'romanesco' ? 'editCurve.png' : 'glyphicon-pencil';
+    buttons[0].iconURL = R.style === 'line' ? 'icones_icon_pen.png' : R.style === 'romanesco' ? 'editCurve.png' : R.style === 'hand' ? 'a-pen3.png' : 'glyphicon-pencil';
     ModuleLoader.initialize = function() {
       var b, button, i, len;
       for (i = 0, len = buttons.length; i < len; i++) {

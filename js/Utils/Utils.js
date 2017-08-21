@@ -660,6 +660,56 @@
         }
       }).done(R.loader.checkError);
     };
+    R.setVoteValidationDelay = function(hours, minutes, seconds) {
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'setVoteValidationDelay',
+            args: {
+              hours: hours,
+              minutes: minutes,
+              seconds: seconds
+            }
+          })
+        }
+      }).done(R.loader.checkError);
+    };
+    R.setVoteMinDuration = function(hours, minutes, seconds) {
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'setVoteMinDuration',
+            args: {
+              hours: hours,
+              minutes: minutes,
+              seconds: seconds
+            }
+          })
+        }
+      }).done(R.loader.checkError);
+    };
+    R.setTestVoteParameters = function(negativeVoteThreshold, positiveVoteThreshold, voteValidationDelayInSeconds, voteMinDurationInSeconds) {
+      if (negativeVoteThreshold == null) {
+        negativeVoteThreshold = 2;
+      }
+      if (positiveVoteThreshold == null) {
+        positiveVoteThreshold = 2;
+      }
+      if (voteValidationDelayInSeconds == null) {
+        voteValidationDelayInSeconds = 1;
+      }
+      if (voteMinDurationInSeconds == null) {
+        voteMinDurationInSeconds = 5;
+      }
+      R.setNegativeVoteThreshold(negativeVoteThreshold);
+      R.setPositiveVoteThreshold(positiveVoteThreshold);
+      R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds);
+      R.setVoteMinDuration(0, 0, voteMinDurationInSeconds);
+    };
     R.deleteAllItems = function(confirm) {
       var args;
       args = {

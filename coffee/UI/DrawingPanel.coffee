@@ -541,12 +541,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 
 			suffix = ''
 			if result.validates
-				suffix = 'validated'
+				suffix = ', the drawing will be validated'
 
 			else if result.rejects
-				suffix = 'rejected'
+				suffix = ', the drawing will be rejected'
 
-			R.alertManager.alert 'You successfully voted, the drawing will be ' + suffix, 'success', null, {duration: delay}
+			R.alertManager.alert 'You successfully voted' + suffix, 'success', null, {duration: delay}
 
 			R.socket.emit "drawing change", type: 'votes', votes: @currentDrawing.votes, drawingId: @currentDrawing.id
 			return

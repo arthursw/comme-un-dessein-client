@@ -36,7 +36,7 @@ define ['paper', 'R', 'Utils/Utils','UI/Button', 'UI/Code'], (P, R, Utils, Butto
         # { name: 'Totem', description: "Blabl", iconURL: undefined, file: "Items/Paths/Shapes/TotemShape", category: 'Shape/Animated/Spiral'  }
     ]
     
-    buttons[0].iconURL = if R.style == 'line' then 'icones_icon_pen.png' else if R.style == 'romanesco' then 'editCurve.png' else 'glyphicon-pencil'
+    buttons[0].iconURL = if R.style == 'line' then 'icones_icon_pen.png' else if R.style == 'romanesco' then 'editCurve.png' else if R.style == 'hand' then 'a-pen3.png' else 'glyphicon-pencil'
 
     ModuleLoader.initialize = ()->
         for button in buttons

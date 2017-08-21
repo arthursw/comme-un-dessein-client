@@ -683,6 +683,21 @@ define [ 'paper', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPositiveVoteThreshold', args: voteThreshold: voteThreshold } ).done(R.loader.checkError)
 		return
 
+	R.setVoteValidationDelay = (hours, minutes, seconds)->
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteValidationDelay', args: { hours: hours, minutes: minutes, seconds: seconds } } ).done(R.loader.checkError)
+		return
+
+	R.setVoteMinDuration = (hours, minutes, seconds)->
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteMinDuration', args: { hours: hours, minutes: minutes, seconds: seconds } } ).done(R.loader.checkError)
+		return
+
+	R.setTestVoteParameters = (negativeVoteThreshold=2, positiveVoteThreshold=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5)->
+		R.setNegativeVoteThreshold(negativeVoteThreshold)
+		R.setPositiveVoteThreshold(positiveVoteThreshold)
+		R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds)
+		R.setVoteMinDuration(0, 0, voteMinDurationInSeconds)
+		return
+
 	R.deleteAllItems = (confirm)->
 		args =
 			confirm: confirm

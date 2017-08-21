@@ -178,15 +178,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 					@rectangle = @rectangle.unite(bounds)
 			return
 
-		addChild: (path)->
-			@paths.push(path)
-			path.drawingId = @id
-			# path.group.visible = true # can be hidden by rasterizer, must be shown here to update @drawing.bounds
-			@pathPks ?= []
-			if not path.pk?
-				R.alertManager.alert 'Error: a path has not been saved yet. Please wait until the path is saved before creating the drawing.', 'error'
-				return
-			@pathPks.push(path.pk)
+		addPathToProperLayer: (path)->
 
 			switch @status
 				when 'pending'
@@ -197,6 +189,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 					R.view.drawnLayer.addChild(path.group)
 				when 'rejected'
 					R.view.rejectedLayer.addChild(path.group)
+			return
+
+		addChild: (path)->
+			@paths.push(path)
+			path.drawingId = @id
+			# path.group.visible = true # can be hidden by rasterizer, must be shown here to update @drawing.bounds
+			@pathPks ?= []
+			if not path.pk?
+				R.alertManager.alert 'Error: a path has not been saved yet. Please wait until the path is saved before creating the drawing.', 'error'
+				return
+			@pathPks.push(path.pk)
+
+			@addPathToProperLayer(path)
 
 			# @drawing.addChild(path.group)
 
@@ -411,7 +416,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		updateStatus: (@status)->
+			# we could just move liJ but we would have to update the number of items anyway
+			@removeFromListItem()
+			@addToListItem(@getListItem())
+			
 			for path in @paths
+				@addPathToProperLayer(path)
 				path.updateStrokeColor()
 				path.drawn = false
 				path.draw()

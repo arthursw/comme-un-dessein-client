@@ -1,11 +1,11 @@
-dependencies = ['paper', 'R',  'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Divs/Div' ]
+dependencies = ['paper', 'R',  'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Paths/Path', 'Items/Divs/Div' ]
 if document?
 	dependencies.push('i18next')
 	dependencies.push('hammer')
 	dependencies.push('tween')
 	dependencies.push('mousewheel')
 
-define 'View/View', dependencies, (P, R, Utils, Grid, Command, Div, i18next, Hammer, tw, mousewheel) ->
+define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, tw, mousewheel) ->
 
 	class View
 
@@ -147,8 +147,15 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Div, i18next, Ham
 			showBtnJ = itemListJ.find(".show-btn")
 			
 			item.data.setVisibility = (visible)=>
-				item.visible = visible
 				R.tools.select.deselectAll()
+
+				item.visible = visible
+				
+				for child in item.children
+					if child.controller? and child.controller instanceof Path and not child.controller.drawing?
+						child.controller.draw?()
+						child.controller.rasterize?()
+
 				R.rasterizer.refresh()
 
 				eyeIconJ = itemListJ.find("span.eye")
@@ -157,6 +164,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Div, i18next, Ham
 				else
 					eyeIconJ.removeClass('glyphicon-eye-open').addClass('glyphicon-eye-close')
 				return
+
+			if not item.visible
+				itemListJ.find("span.eye").removeClass('glyphicon-eye-open').addClass('glyphicon-eye-close')
 
 			showBtnJ.mousedown (event)=>
 				item.data.setVisibility(!item.visible)
@@ -186,6 +196,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Div, i18next, Ham
 
 			@rejectedLayer = new P.Layer()
 			@rejectedLayer.name  = 'rejectedLayer'
+			@rejectedLayer.visible = false
 			@pendingLayer = new P.Layer()
 			@pendingLayer.name  = 'pendingLayer'
 			@drawingLayer = new P.Layer()

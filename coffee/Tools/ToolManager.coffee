@@ -269,7 +269,7 @@ define 'Tools/ToolManager', dependencies, (Utils, Tool, Button, MoveTool, Select
 				name: 'Zoom +'
 				# iconURL: 'glyphicon-zoom-in'
 				# iconURL: 'icones_icon_zoomin.png'
-				iconURL: if R.style == 'line' then 'icones_icon_zoomin.png' else 'glyphicon-zoom-in'
+				iconURL: if R.style == 'line' then 'icones_icon_zoomin.png' else if R.style == 'hand' then 'a-zoomIn.png' else 'glyphicon-zoom-in'
 				favorite: true
 				category: null
 				description: 'Zoom +'
@@ -283,7 +283,7 @@ define 'Tools/ToolManager', dependencies, (Utils, Tool, Button, MoveTool, Select
 				name: 'Zoom -'
 				# iconURL: 'glyphicon-zoom-out'
 				# iconURL: 'icones_icon_zoomout.png'
-				iconURL: if R.style == 'line' then 'icones_icon_zoomout.png' else 'glyphicon-zoom-out'
+				iconURL: if R.style == 'line' then 'icones_icon_zoomout.png' else if R.style == 'hand' then 'a-zoomOut.png' else 'glyphicon-zoom-out'
 				favorite: true
 				category: null
 				description: 'Zoom -'
@@ -301,7 +301,7 @@ define 'Tools/ToolManager', dependencies, (Utils, Tool, Button, MoveTool, Select
 				name: 'Undo'
 				# iconURL: 'glyphicon-share-alt'
 				# iconURL: 'icones_icon_back.png'
-				iconURL: if R.style == 'line' then 'icones_icon_back.png' else 'glyphicon-share-alt'
+				iconURL: if R.style == 'line' then 'icones_icon_back.png' else if R.style == 'hand' then 'a-undo.png' else 'glyphicon-share-alt'
 				favorite: true
 				category: null
 				description: 'Undo'
@@ -316,7 +316,7 @@ define 'Tools/ToolManager', dependencies, (Utils, Tool, Button, MoveTool, Select
 				name: 'Redo'
 				# iconURL: 'glyphicon-share-alt'
 				# iconURL: 'icones_icon_forward.png'
-				iconURL: if R.style == 'line' then 'icones_icon_forward.png' else 'glyphicon-share-alt'
+				iconURL: if R.style == 'line' then 'icones_icon_forward.png' else if R.style == 'hand' then 'a-redo.png' else 'glyphicon-share-alt'
 				favorite: true
 				category: null
 				description: 'Redo'

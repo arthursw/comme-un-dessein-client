@@ -450,37 +450,40 @@
       };
 
       Loader.prototype.loadCallbackTipibot = function(results) {
-        var bounds, i, item, itemsToLoad, k, len, len1, len2, m, n, path, paths, points, ref, ref1, segment, segmentedPath;
+        var bounds, controlPath, data, date, i, id, item, itemsToLoad, k, len, len1, len2, m, n, path, paths, pk, planet, point, points, ref, ref1, ref2, segment;
         if (!this.checkError(results)) {
           return;
         }
         itemsToLoad = [];
+        paths = [];
+        bounds = R.view.grid.limitCD.bounds;
         ref = results.items;
         for (k = 0, len = ref.length; k < len; k++) {
           i = ref[k];
           item = JSON.parse(i);
-          if (R.items[item.clientId]) {
-            R.items[item.clientId].remove();
+          pk = item._id.$oid;
+          id = item.clientId;
+          date = (ref1 = item.date) != null ? ref1.$date : void 0;
+          data = (item.data != null) && item.data.length > 0 ? JSON.parse(item.data) : null;
+          points = data.points;
+          planet = data.planet;
+          controlPath = new P.Path();
+          for (i = m = 0, len1 = points.length; m < len1; i = m += 4) {
+            point = points[i];
+            controlPath.add(Utils.CS.posOnPlanetToProject(point, planet));
+            controlPath.lastSegment.handleIn = new P.Point(points[i + 1]);
+            controlPath.lastSegment.handleOut = new P.Point(points[i + 2]);
+            controlPath.lastSegment.rtype = points[i + 3];
           }
-          itemsToLoad.push(item);
-        }
-        this.createNewItems(itemsToLoad);
-        paths = [];
-        bounds = R.view.grid.limitCD.bounds;
-        for (m = 0, len1 = itemsToLoad.length; m < len1; m++) {
-          item = itemsToLoad[m];
-          path = R.items[item.clientId];
-          segmentedPath = path.controlPath.clone();
-          segmentedPath.flatten(5);
-          points = [];
-          ref1 = segmentedPath.segments;
-          for (n = 0, len2 = ref1.length; n < len2; n++) {
-            segment = ref1[n];
-            points.push(segment.point);
-            console.log(segment.point);
-            console.log(segment.point.subtract(bounds.topLeft).divide(bounds.size));
+          controlPath.flatten(5);
+          path = [];
+          ref2 = controlPath.segments;
+          for (n = 0, len2 = ref2.length; n < len2; n++) {
+            segment = ref2[n];
+            path.push(segment.point);
           }
-          paths.push(points);
+          paths.push(path);
+          controlPath.remove();
         }
         R.socket.tipibotSocket.send(JSON.stringify({
           bounds: bounds,
