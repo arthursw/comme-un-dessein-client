@@ -35,9 +35,6 @@
         }
       }
     });
-    if (window.R == null) {
-      window.R = {};
-    }
     R.commeUnDesseinURL = 'http://localhost:8000/';
     R.OSName = "Unknown OS";
     if (navigator.appVersion.indexOf("Win") !== -1) {
