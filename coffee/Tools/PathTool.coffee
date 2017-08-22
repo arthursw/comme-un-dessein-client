@@ -111,8 +111,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 
 			if not fromMiddleMouseButton
 				draftBounds = @constructor.computeDraftBounds()
-				if draftBounds? and not P.view.bounds.contains(draftBounds)
-					R.view.fitRectangle(draftBounds, true)
+				if draftBounds? and not P.view.bounds.intersects(draftBounds)
+					R.view.fitRectangle(draftBounds, true, 1)
 
 			return
 
@@ -291,11 +291,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 				if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "createPath", arguments: [event, R.me]
 
 				if (not R.me?) or not _.isString(R.me)
-					R.alertManager.alert("You must log in before drawing, your drawing won't be saved.", "Info")
+					R.alertManager.alert("You must log in before drawing, your drawing won't be saved", "Info")
 					return
 
 				path.save(true)
 				path.rasterize()
+				R.rasterizer.rasterize(path)
 				# path.select(false)
 			else
 				path.endCreate(event.point, event)
@@ -313,7 +314,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 			
 
 			if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))
-				R.alertManager.alert 'Your path must be in the drawing area.', 'error'
+				R.alertManager.alert 'Your path must be in the drawing area', 'error'
 				R.currentPaths[from].remove()
 				delete R.currentPaths[from]
 				return false

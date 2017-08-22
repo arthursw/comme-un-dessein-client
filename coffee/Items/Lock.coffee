@@ -81,7 +81,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal' ], (P, R, Utils, I
 
 			if item.getDrawingBounds?() > R.rasterizer.maxArea()
 				if highlight
-					R.alertManager.alert('The path is too big.', 'Warning')
+					R.alertManager.alert('The path is too big', 'Warning')
 				else
 					return false
 

@@ -247,7 +247,7 @@
       };
 
       Content.prototype.finish = function() {
-        var bounds, j, len, lock, locks;
+        var bounds;
         if (!Content.__super__.finish.call(this)) {
           return false;
         }
@@ -256,19 +256,6 @@
           R.alertManager.alert("The item is too big", "Warning");
           this.remove();
           return false;
-        }
-        locks = Item.Lock.getLocksWhichIntersect(bounds);
-        for (j = 0, len = locks.length; j < len; j++) {
-          lock = locks[j];
-          if (lock.rectangle.intersects(bounds)) {
-            if (lock.rectangle.contains(bounds) && lock.owner === R.me) {
-              lock.addItem(this);
-            } else if (lock.owner !== R.me) {
-              R.alertManager.alert("The item intersects with a lock", "Warning");
-              this.remove();
-              return false;
-            }
-          }
         }
         return true;
       };

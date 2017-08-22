@@ -970,7 +970,6 @@
             segment.point.y += event.delta.y;
           }
         }
-        Item.Lock.highlightValidity(this, null, true);
         this.modifyPoint(segment, segment.point, segment.handleIn, segment.handleOut, true, false);
       };
 

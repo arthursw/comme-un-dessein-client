@@ -715,7 +715,7 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Controllers/ControllerManager' ], (P, 
 			@waitingSaveCallback = @item.id
 			R.commandManager.resurrectItem(@duplicateData.id, @item)
 			# @setDuplicatedItemToCommands()
-			@item.select()
+			# @item.select()
 			return true
 
 		deleteItem: ()->
@@ -783,7 +783,7 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Controllers/ControllerManager' ], (P, 
 				item = itemResurector.constructor.create(itemResurector.data)
 				@items[itemResurector.data.id] = item
 				R.commandManager.resurrectItem(itemResurector.data.id, item)
-				item.select()
+				# item.select()
 				@waitingSaveCallbacks.push(item.id)
 			return @waitingSaveCallbacks.length > 0
 

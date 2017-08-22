@@ -8,15 +8,15 @@ dependencies = [
 	'Tools/PathTool'
 	'Tools/EraserTool'
 	'Tools/ItemTool'
-	'Tools/TextTool'
-	'Tools/GradientTool'
+	# 'Tools/TextTool'
+	# 'Tools/GradientTool'
 ]
 
-if document?
+# if document?
 	# dependencies.push('Tools/ScreenshotTool')
-	dependencies.push('Tools/CarTool')
+	# dependencies.push('Tools/CarTool')
 
-define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, TextTool, GradientTool, CarTool) ->
+define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool) -> # , TextTool, GradientTool, CarTool) ->
 
 	class ToolManager
 
@@ -229,7 +229,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 			
 			if snap
 				newZoom = 1
-				zoomValues = [0.25, 0.5, 1, 2, 4]
+				zoomValues = [0.125, 0.25, 0.5, 1, 2, 4]
 				if value < 1
 					for v in zoomValues
 						if P.view.zoom > v
@@ -260,6 +260,9 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				P.view.zoom *= value
 			console.log(P.view.zoom)
 			@enableDrawingButton(P.view.zoom >= 1)
+			if P.view.zoom < 1 and R.selectedTool == R.tools['Precise path']
+				R.tools.move.select()
+				R.alertManager.alert 'Please zoom before drawing', 'info'
 			R.view.moveBy(new P.Point())
 			return
 

@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R, Utils, Item, i18next, moment) -> 			# 'ace/ext-language_tools', required?
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command', 'i18next', 'moment' ], (P, R, Utils, Item, Modal, Command, i18next, moment) -> 			# 'ace/ext-language_tools', required?
 
 	class DrawingPanel
 
@@ -54,10 +54,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 			@submitBtnJ = @drawingPanelJ.find('.action-buttons button.submit')
 			@modifyBtnJ = @drawingPanelJ.find('.action-buttons button.modify')
 			@cancelBtnJ = @drawingPanelJ.find('.action-buttons button.cancel')
+			@deleteBtnJ = @drawingPanelJ.find('.action-buttons button.delete')
 
 			@submitBtnJ.click(@submitDrawing)
 			@modifyBtnJ.click(@modifyDrawing)
 			@cancelBtnJ.click(@cancelDrawing)
+			@deleteBtnJ.click(@deleteDrawing)
 
 			@contentJ = @drawingPanelJ.find('.content-container')
 			descriptionJ = @contentJ.find('#drawing-description')
@@ -327,7 +329,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 				items.push(R.items[id])
 
 			if itemIds.length == 0
-				R.alertManager.alert 'You must draw something before submitting.', 'error'
+				R.alertManager.alert 'You must draw something before submitting', 'error'
 				@close()
 				return
 
@@ -350,7 +352,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 
 		submitDrawingClicked: ()=>
 			# if not @checkPathToSubmit()
-			# 	R.alertManager.alert 'You must draw something before submitting.', 'error'
+			# 	R.alertManager.alert 'You must draw something before submitting', 'error'
 			# 	return
 			R.tools.select.deselectAll()
 
@@ -368,6 +370,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 			@submitBtnJ.show()
 			@modifyBtnJ.hide()
 			@cancelBtnJ.show()
+			@cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel').text(i18next.t('Cancel'))
+			@deleteBtnJ.show()
 
 			@contentJ.find('#drawing-title').removeAttr('readonly')
 			@contentJ.find('#drawing-description').removeAttr('readonly')
@@ -445,6 +449,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 			@submitBtnJ.hide()
 			@modifyBtnJ.hide()
 			@cancelBtnJ.hide()
+			@deleteBtnJ.hide()
 
 			@contentJ.find('#drawing-author').val(@currentDrawing.owner)
 			@contentJ.find('#drawing-title').val(@currentDrawing.title)
@@ -454,6 +459,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 				if latestDrawing.status == 'pending'
 					@modifyBtnJ.show()
 					@cancelBtnJ.show()
+					@cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel vote').text(i18next.t('Cancel vote'))
 				@contentJ.find('#drawing-title').removeAttr('readonly')
 				@contentJ.find('#drawing-description').removeAttr('readonly')
 			else
@@ -485,6 +491,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 						if @currentDrawing == drawing
 							@setVotes()
 				when 'new'
+					# ok if both are undefined: corresponds to CommeUnDessein
+					if data.city.name != R.city.name then return
 					args = {
 						itemsToLoad: [
 							{
@@ -557,7 +565,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 				return
 			
 			if @currentDrawing.status != 'pending'
-				R.alertManager.alert 'The drawing is already validated.', 'error'
+				R.alertManager.alert 'The drawing is already validated', 'error'
 				return
 			
 			if @hasAlreadyVoted()
@@ -586,18 +594,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 		submitDrawing: ()=>
 
 			if not R.me? or not _.isString(R.me)
-				R.alertManager.alert "You must be logged in to submit a drawing.", "error"
+				R.alertManager.alert "You must be logged in to submit a drawing", "error"
 				return
 			
 			title = @contentJ.find('#drawing-title').val()
 			description = @contentJ.find('#drawing-description').val()
 			
 			if title.length == 0
-				R.alertManager.alert "You must enter a title.", "error"
+				R.alertManager.alert "You must enter a title", "error"
 				return
 
 			if description.length == 0
-				R.alertManager.alert "You must enter a description.", "error"
+				R.alertManager.alert "You must enter a description", "error"
 				return
 
 			@currentDrawing.title = title
@@ -611,15 +619,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 		modifyDrawing: ()=>
 
 			if not R.me? or not _.isString(R.me)
-				R.alertManager.alert "You must be logged in to modify a drawing.", "error"
+				R.alertManager.alert "You must be logged in to modify a drawing", "error"
 				return
 
 			if not @currentDrawing?
-				R.alertManager.alert "You must select a drawing first.", "error"
+				R.alertManager.alert "You must select a drawing first", "error"
 				return
 
 			if @currentDrawing.status != 'pending'
-				R.alertManager.alert "The drawing is already validated, it cannot be modified anymore.", "error"
+				R.alertManager.alert "The drawing is already validated, it cannot be modified anymore", "error"
 				return				
 
 			@currentDrawing.update( { title: @contentJ.find('#drawing-title').val(), data: @contentJ.find('#drawing-description').val() } )
@@ -637,15 +645,57 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 				return
 
 			if @currentDrawing.status != 'pending'
-				R.alertManager.alert "The drawing is already validated, it cannot be cancelled anymore.", "error"
+				R.alertManager.alert "The drawing is already validated, it cannot be cancelled anymore", "error"
 				return	
 
 			if not R.me? or not _.isString(R.me)
-				R.alertManager.alert "You must be logged in to cancel a drawing.", "error"
+				R.alertManager.alert "You must be logged in to cancel a drawing", "error"
 				return
 
 			@currentDrawing.deleteCommand()
 			@close()
+			return
+
+		deletePaths: ()=>
+			paths = @currentDrawing.paths.slice()
+			@currentDrawing.removeChildren()
+			@currentDrawing.remove()
+
+			pathsToDelete = []
+			pathsToDeleteResurectors = {}
+
+			for path in paths
+				if path.pk?
+					pathsToDelete.push(path)
+					pathsToDeleteResurectors[path.id] = data: path.getDuplicateData(), constructor: path.constructor
+				else
+					path.remove()
+
+			if pathsToDelete.length > 0
+				deleteCommand = new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors)
+				R.commandManager.add(deleteCommand, true)
+
+			return
+
+		deleteDrawing: ()=>
+
+			if not R.me? or not _.isString(R.me)
+				R.alertManager.alert "You must be logged in to delete a drawing", "error"
+				return
+
+			if not @currentDrawing?
+				@close()
+				return
+
+			if @currentDrawing.pk?
+				R.alertManager.alert "Please cancel the drawing before deleting its paths", "error"
+				@close()
+				return
+
+			modal = Modal.createModal( title: 'Delete all paths', submit: @deletePaths, postSubmit: 'hide' )
+			modal.addText('Do you really want to delete the selected paths?')
+			modal.show()
+
 			return
 
 	return DrawingPanel

@@ -236,7 +236,7 @@
       };
 
       Item.prototype.validatePosition = function() {
-        return Item.Lock.validatePosition(this);
+        return true;
       };
 
       Item.prototype.moveTo = function(position, update) {

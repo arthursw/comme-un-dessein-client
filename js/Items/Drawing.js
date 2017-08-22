@@ -136,7 +136,7 @@
             itemListJ = R.view.rejectedListJ;
             break;
           default:
-            R.alertManager.alert("Error: drawing status is invalid.", "error");
+            R.alertManager.alert("Error: drawing status is invalid", "error");
         }
         return itemListJ;
       };
@@ -227,7 +227,7 @@
           this.pathPks = [];
         }
         if (path.pk == null) {
-          R.alertManager.alert('Error: a path has not been saved yet. Please wait until the path is saved before creating the drawing.', 'error');
+          R.alertManager.alert('Error: a path has not been saved yet, please wait until the path is saved before creating the drawing', 'error');
           return;
         }
         this.pathPks.push(path.pk);
@@ -315,7 +315,7 @@
         }
         if (this.rectangle["with"] === 0 && this.rectangle.height === 0 || this.paths.length === 0) {
           this.remove();
-          R.alertManager.alert("Error: The drawing is empty.", "error");
+          R.alertManager.alert("Error: The drawing is empty", "error");
           return;
         }
         args = {
@@ -350,7 +350,8 @@
         R.socket.emit("drawing change", {
           type: 'new',
           pk: result.pk,
-          pathPks: result.pathPks
+          pathPks: result.pathPks,
+          city: R.city
         });
         if (this.selectAfterSave != null) {
           this.select(true, true, true);

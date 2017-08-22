@@ -549,6 +549,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Drawing' ], (P, R, Utils, Drawing) -
 					@clearAreaInRasters(area)
 					for item in sortedItems
 						if item.raster?.bounds.intersects(area) and item not in @itemsToExclude
+							# r = item.raster.clone()
+							# r.position.x += r.bounds.width
+							# console.log(r.getAverageColor(r.bounds))
+							# R.view.debugLayer.addChild(r)
+							# p = new P.Path.Rectangle(r.bounds)
+							# p.strokeColor = 'green'
+							# p.strokeWidth = 1
+							# R.view.debugLayer.addChild(p)
 							@rasterizeCanvas(item.raster.canvas, item.raster.bounds.intersect(area), false, item.raster.bounds)
 
 			# hide all items except selected ones and the ones being created
@@ -628,6 +636,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Drawing' ], (P, R, Utils, Drawing) -
 			P.view.zoom = 1.0 / @areasToUpdateQZoom
 
 			@itemsToExclude = []
+
+			# remove duplilcated areas to update or the one which are contained within bigger ones (should not happen)
+			# newAreasToUpdate = []
+			# areasToUpdateToIgnore = []
+			# for area, i in @areasToUpdate
+			# 	if i in areasToUpdateToIgnore then continue
+			# 	newAreasToUpdate.push(area)
+			# 	for j in [i .. @areasToUpdate.length-1]
+			# 		if area.contains(@areasToUpdate[j])
+			# 			areasToUpdateToIgnore.push(j)
+
+			# @areasToUpdate = newAreasToUpdate
+
 			for area in @areasToUpdate
 				# @createRasters(area)
 				@areaToRasterize = area

@@ -136,7 +136,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 		# 			when 'width'
 		# 				width = parseFloat(value[1])
 		# 				if not R.isNumber(width)
-		# 					R.alertManager.alert 'P.Size invalid.', 'Warning'
+		# 					R.alertManager.alert 'Size invalid', 'Warning'
 		# 					return
 		# 				for item in R.selectedItems
 		# 					height = item.rectangle.size.height
@@ -458,7 +458,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 			return
 
 		validatePosition: ()->
-			return Item.Lock.validatePosition(@)
+			return true # Item.Lock.validatePosition(@)
 		# updateSetRectangle: (event)->
 
 		# 	event.point = Utils.Snap.snap2D(event.point)

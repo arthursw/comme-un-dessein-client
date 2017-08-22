@@ -343,10 +343,13 @@
         return somethingToLoad;
       };
 
-      View.prototype.fitRectangle = function(rectangle, considerPanels) {
+      View.prototype.fitRectangle = function(rectangle, considerPanels, zoom) {
         var drawingPanelWidth, offset, rectangleRatio, sidebarWidth, viewRatio, visibleViewCenterInView, windowCenterInView, windowSize;
         if (considerPanels == null) {
           considerPanels = false;
+        }
+        if (zoom == null) {
+          zoom = null;
         }
         windowSize = new P.Size(window.innerWidth, window.innerHeight);
         if (window.innerWidth < 600) {
@@ -357,10 +360,14 @@
         windowSize.width = windowSize.width - sidebarWidth - drawingPanelWidth;
         viewRatio = windowSize.width / windowSize.height;
         rectangleRatio = rectangle.width / rectangle.height;
-        if (viewRatio < rectangleRatio) {
-          P.view.zoom = Math.min(windowSize.width / rectangle.width, 1);
+        if (zoom == null) {
+          if (viewRatio < rectangleRatio) {
+            P.view.zoom = Math.min(windowSize.width / rectangle.width, 1);
+          } else {
+            P.view.zoom = Math.min(windowSize.height / rectangle.height, 1);
+          }
         } else {
-          P.view.zoom = Math.min(windowSize.height / rectangle.height, 1);
+          P.view.zoom = zoom;
         }
         R.toolManager.enableDrawingButton(P.view.zoom >= 1);
         if (considerPanels) {

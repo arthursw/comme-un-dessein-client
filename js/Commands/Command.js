@@ -795,7 +795,6 @@
         this.item = this.itemConstructor.create(this.duplicateData);
         this.waitingSaveCallback = this.item.id;
         R.commandManager.resurrectItem(this.duplicateData.id, this.item);
-        this.item.select();
         return true;
       };
 
@@ -896,7 +895,6 @@
           item = itemResurector.constructor.create(itemResurector.data);
           this.items[itemResurector.data.id] = item;
           R.commandManager.resurrectItem(itemResurector.data.id, item);
-          item.select();
           this.waitingSaveCallbacks.push(item.id);
         }
         return this.waitingSaveCallbacks.length > 0;

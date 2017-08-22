@@ -2,10 +2,12 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment'], function(P, R, Utils, Item, i18next, moment) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command', 'i18next', 'moment'], function(P, R, Utils, Item, Modal, Command, i18next, moment) {
     var DrawingPanel;
     DrawingPanel = (function() {
       function DrawingPanel() {
+        this.deleteDrawing = bind(this.deleteDrawing, this);
+        this.deletePaths = bind(this.deletePaths, this);
         this.cancelDrawing = bind(this.cancelDrawing, this);
         this.modifyDrawing = bind(this.modifyDrawing, this);
         this.submitDrawing = bind(this.submitDrawing, this);
@@ -52,9 +54,11 @@
         this.submitBtnJ = this.drawingPanelJ.find('.action-buttons button.submit');
         this.modifyBtnJ = this.drawingPanelJ.find('.action-buttons button.modify');
         this.cancelBtnJ = this.drawingPanelJ.find('.action-buttons button.cancel');
+        this.deleteBtnJ = this.drawingPanelJ.find('.action-buttons button.delete');
         this.submitBtnJ.click(this.submitDrawing);
         this.modifyBtnJ.click(this.modifyDrawing);
         this.cancelBtnJ.click(this.cancelDrawing);
+        this.deleteBtnJ.click(this.deleteDrawing);
         this.contentJ = this.drawingPanelJ.find('.content-container');
         descriptionJ = this.contentJ.find('#drawing-description');
         descriptionJ.keydown((function(_this) {
@@ -333,7 +337,7 @@
           items.push(R.items[id]);
         }
         if (itemIds.length === 0) {
-          R.alertManager.alert('You must draw something before submitting.', 'error');
+          R.alertManager.alert('You must draw something before submitting', 'error');
           this.close();
           return;
         }
@@ -371,6 +375,8 @@
         this.submitBtnJ.show();
         this.modifyBtnJ.hide();
         this.cancelBtnJ.show();
+        this.cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel').text(i18next.t('Cancel'));
+        this.deleteBtnJ.show();
         this.contentJ.find('#drawing-title').removeAttr('readonly');
         this.contentJ.find('#drawing-description').removeAttr('readonly');
         this.votesJ.hide();
@@ -458,6 +464,7 @@
         this.submitBtnJ.hide();
         this.modifyBtnJ.hide();
         this.cancelBtnJ.hide();
+        this.deleteBtnJ.hide();
         this.contentJ.find('#drawing-author').val(this.currentDrawing.owner);
         this.contentJ.find('#drawing-title').val(this.currentDrawing.title);
         this.contentJ.find('#drawing-description').val(this.currentDrawing.description);
@@ -465,6 +472,7 @@
           if (latestDrawing.status === 'pending') {
             this.modifyBtnJ.show();
             this.cancelBtnJ.show();
+            this.cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel vote').text(i18next.t('Cancel vote'));
           }
           this.contentJ.find('#drawing-title').removeAttr('readonly');
           this.contentJ.find('#drawing-description').removeAttr('readonly');
@@ -499,6 +507,9 @@
             }
             break;
           case 'new':
+            if (data.city.name !== R.city.name) {
+              return;
+            }
             args = {
               itemsToLoad: [
                 {
@@ -598,7 +609,7 @@
           return;
         }
         if (this.currentDrawing.status !== 'pending') {
-          R.alertManager.alert('The drawing is already validated.', 'error');
+          R.alertManager.alert('The drawing is already validated', 'error');
           return;
         }
         if (this.hasAlreadyVoted()) {
@@ -636,17 +647,17 @@
       DrawingPanel.prototype.submitDrawing = function() {
         var description, title;
         if ((R.me == null) || !_.isString(R.me)) {
-          R.alertManager.alert("You must be logged in to submit a drawing.", "error");
+          R.alertManager.alert("You must be logged in to submit a drawing", "error");
           return;
         }
         title = this.contentJ.find('#drawing-title').val();
         description = this.contentJ.find('#drawing-description').val();
         if (title.length === 0) {
-          R.alertManager.alert("You must enter a title.", "error");
+          R.alertManager.alert("You must enter a title", "error");
           return;
         }
         if (description.length === 0) {
-          R.alertManager.alert("You must enter a description.", "error");
+          R.alertManager.alert("You must enter a description", "error");
           return;
         }
         this.currentDrawing.title = title;
@@ -657,15 +668,15 @@
 
       DrawingPanel.prototype.modifyDrawing = function() {
         if ((R.me == null) || !_.isString(R.me)) {
-          R.alertManager.alert("You must be logged in to modify a drawing.", "error");
+          R.alertManager.alert("You must be logged in to modify a drawing", "error");
           return;
         }
         if (this.currentDrawing == null) {
-          R.alertManager.alert("You must select a drawing first.", "error");
+          R.alertManager.alert("You must select a drawing first", "error");
           return;
         }
         if (this.currentDrawing.status !== 'pending') {
-          R.alertManager.alert("The drawing is already validated, it cannot be modified anymore.", "error");
+          R.alertManager.alert("The drawing is already validated, it cannot be modified anymore", "error");
           return;
         }
         this.currentDrawing.update({
@@ -684,15 +695,64 @@
           return;
         }
         if (this.currentDrawing.status !== 'pending') {
-          R.alertManager.alert("The drawing is already validated, it cannot be cancelled anymore.", "error");
+          R.alertManager.alert("The drawing is already validated, it cannot be cancelled anymore", "error");
           return;
         }
         if ((R.me == null) || !_.isString(R.me)) {
-          R.alertManager.alert("You must be logged in to cancel a drawing.", "error");
+          R.alertManager.alert("You must be logged in to cancel a drawing", "error");
           return;
         }
         this.currentDrawing.deleteCommand();
         this.close();
+      };
+
+      DrawingPanel.prototype.deletePaths = function() {
+        var deleteCommand, j, len, path, paths, pathsToDelete, pathsToDeleteResurectors;
+        paths = this.currentDrawing.paths.slice();
+        this.currentDrawing.removeChildren();
+        this.currentDrawing.remove();
+        pathsToDelete = [];
+        pathsToDeleteResurectors = {};
+        for (j = 0, len = paths.length; j < len; j++) {
+          path = paths[j];
+          if (path.pk != null) {
+            pathsToDelete.push(path);
+            pathsToDeleteResurectors[path.id] = {
+              data: path.getDuplicateData(),
+              constructor: path.constructor
+            };
+          } else {
+            path.remove();
+          }
+        }
+        if (pathsToDelete.length > 0) {
+          deleteCommand = new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors);
+          R.commandManager.add(deleteCommand, true);
+        }
+      };
+
+      DrawingPanel.prototype.deleteDrawing = function() {
+        var modal;
+        if ((R.me == null) || !_.isString(R.me)) {
+          R.alertManager.alert("You must be logged in to delete a drawing", "error");
+          return;
+        }
+        if (this.currentDrawing == null) {
+          this.close();
+          return;
+        }
+        if (this.currentDrawing.pk != null) {
+          R.alertManager.alert("Please cancel the drawing before deleting its paths", "error");
+          this.close();
+          return;
+        }
+        modal = Modal.createModal({
+          title: 'Delete all paths',
+          submit: this.deletePaths,
+          postSubmit: 'hide'
+        });
+        modal.addText('Do you really want to delete the selected paths?');
+        modal.show();
       };
 
       return DrawingPanel;

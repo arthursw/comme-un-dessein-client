@@ -2,13 +2,9 @@
 (function() {
   var dependencies;
 
-  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool', 'Tools/TextTool', 'Tools/GradientTool'];
+  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool'];
 
-  if (typeof document !== "undefined" && document !== null) {
-    dependencies.push('Tools/CarTool');
-  }
-
-  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, TextTool, GradientTool, CarTool) {
+  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool) {
     var ToolManager;
     ToolManager = (function() {
       function ToolManager() {
@@ -68,7 +64,7 @@
         }
         if (snap) {
           newZoom = 1;
-          zoomValues = [0.25, 0.5, 1, 2, 4];
+          zoomValues = [0.125, 0.25, 0.5, 1, 2, 4];
           if (value < 1) {
             for (i = 0, len = zoomValues.length; i < len; i++) {
               v = zoomValues[i];
@@ -93,6 +89,10 @@
         }
         console.log(P.view.zoom);
         this.enableDrawingButton(P.view.zoom >= 1);
+        if (P.view.zoom < 1 && R.selectedTool === R.tools['Precise path']) {
+          R.tools.move.select();
+          R.alertManager.alert('Please zoom before drawing', 'info');
+        }
         R.view.moveBy(new P.Point());
       };
 

@@ -110,7 +110,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 
 			itemsOutsideLimit = []
 
-			# remove RItems which are not on within limit anymore AND in area which must be unloaded
+			# remove RItems which are not within limit anymore AND in area which must be unloaded
 			# (do not remove items on an area which is not unloaded, otherwise they wont be reloaded if user comes back on it)
 			for own id, item of R.items
 				if (not item.getBounds().intersects(limit)) and (not item.isDraft())
@@ -507,12 +507,12 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			# console.log result
 			if not result? then return true
 			if result.state == 'not_logged_in'
-				R.alertManager.alert("You must be logged in to update drawings to the database.", "info")
+				R.alertManager.alert("You must be logged in to update drawings to the database", "info")
 				@hideLoadingBar()
 				return false
 			if result.state == 'error'
 				if result.message == 'invalid_url'
-					R.alertManager.alert("Your URL is invalid or does not point to an existing page.", "error")
+					R.alertManager.alert("Your URL is invalid or does not point to an existing page", "error")
 				else
 					R.alertManager.alert(result.message, "error")
 				@hideLoadingBar()

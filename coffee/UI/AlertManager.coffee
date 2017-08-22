@@ -35,7 +35,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			newAlertJ = $("<div class='alert fade in' data-i18n='" + alertData.message + "' " + messageOptions + ">")
 			newAlertJ.addClass(alertData.type)
 			
-			text = if alertData.messageOptions? then i18next.t(alertData.message, alertData.messageOptions) else i18next.t(alertData.message)
+			text = if alertData.messageOptions? then i18next.t(alertData.message.replace(/\./g, ''), alertData.messageOptions) else i18next.t(alertData.message)
 			newAlertJ.text(text)
 
 			newAlertJ.insertAfter(alertJ)

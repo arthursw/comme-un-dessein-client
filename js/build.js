@@ -63,7 +63,16 @@
         exports: '$'
       }
     },
-    include: ["requirejs", "js-cookie", "Main"],
+    include: ["requirejs", 
+              "js-cookie", 
+              "Main", 
+              "View/Grid", 
+              "Items/Paths/Path", 
+              "Tools/MoveTool",
+              "Tools/SelectTool",
+              "Tools/PathTool",
+              "Tools/EraserTool",
+              "Tools/ItemTool"],
     name: "App",
     out: "App-built.js"
 })

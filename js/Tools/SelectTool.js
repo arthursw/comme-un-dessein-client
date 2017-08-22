@@ -4,7 +4,7 @@
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Lock', 'Items/Item', 'Commands/Command', 'View/SelectionRectangle'], function(P, R, Utils, Tool, Lock, Item, Command, SelectionRectangle) {
+  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Command', 'View/SelectionRectangle'], function(P, R, Utils, Tool, Item, Command, SelectionRectangle) {
     var SelectTool;
     SelectTool = (function(superClass) {
       extend(SelectTool, superClass);

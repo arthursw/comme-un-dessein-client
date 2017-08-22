@@ -81,7 +81,7 @@
         }
         if ((typeof item.getDrawingBounds === "function" ? item.getDrawingBounds() : void 0) > R.rasterizer.maxArea()) {
           if (highlight) {
-            R.alertManager.alert('The path is too big.', 'Warning');
+            R.alertManager.alert('The path is too big', 'Warning');
           } else {
             return false;
           }

@@ -51,7 +51,7 @@
       };
 
       ItemTool.prototype.update = function(event, from) {
-        var bounds, i, len, lock, locks, point;
+        var bounds, point;
         if (from == null) {
           from = R.me;
         }
@@ -61,13 +61,6 @@
         R.currentPaths[from].segments[3].point.y = point.y;
         R.currentPaths[from].fillColor = null;
         bounds = R.currentPaths[from].bounds;
-        locks = this.constructor.Item.Lock.getLocksWhichIntersect(bounds);
-        for (i = 0, len = locks.length; i < len; i++) {
-          lock = locks[i];
-          if (lock.owner !== R.me || (this.name !== 'Lock' && !lock.rectangle.contains(bounds))) {
-            R.currentPaths[from].fillColor = 'red';
-          }
-        }
         if (R.view.grid.rectangleOverlapsTwoPlanets(bounds)) {
           R.currentPaths[from].fillColor = 'red';
         }
@@ -81,7 +74,7 @@
       };
 
       ItemTool.prototype.end = function(event, from) {
-        var bounds, i, len, lock, locks, point;
+        var bounds, point;
         if (from == null) {
           from = R.me;
         }
@@ -93,16 +86,8 @@
         point = event.point;
         R.currentPaths[from].remove();
         bounds = R.currentPaths[from].bounds;
-        locks = this.constructor.Item.Lock.getLocksWhichIntersect(bounds);
-        for (i = 0, len = locks.length; i < len; i++) {
-          lock = locks[i];
-          if (lock.owner !== R.me || (this.name !== 'Lock' && !lock.rectangle.contains(bounds))) {
-            R.alertManager.alert('Your item intersects with a locked area.', 'error');
-            return false;
-          }
-        }
         if (R.view.grid.rectangleOverlapsTwoPlanets(bounds)) {
-          R.alertManager.alert('Your item overlaps with two planets.', 'error');
+          R.alertManager.alert('Your item overlaps with two planets', 'error');
           return false;
         }
         if (R.currentPaths[from].bounds.area < 100) {

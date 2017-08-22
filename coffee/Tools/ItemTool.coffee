@@ -60,10 +60,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 			R.currentPaths[from].fillColor = null
 
 			bounds = R.currentPaths[from].bounds
-			locks = @constructor.Item.Lock.getLocksWhichIntersect(bounds)
-			for lock in locks
-				if lock.owner != R.me or (@name != 'Lock' and not lock.rectangle.contains(bounds))
-					R.currentPaths[from].fillColor = 'red'
+			# locks = @constructor.Item.Lock.getLocksWhichIntersect(bounds)
+			# for lock in locks
+			# 	if lock.owner != R.me or (@name != 'Lock' and not lock.rectangle.contains(bounds))
+			# 		R.currentPaths[from].fillColor = 'red'
 
 			if R.view.grid.rectangleOverlapsTwoPlanets(bounds)
 				R.currentPaths[from].fillColor = 'red'
@@ -90,15 +90,15 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 			R.currentPaths[from].remove()
 
 			bounds = R.currentPaths[from].bounds
-			locks = @constructor.Item.Lock.getLocksWhichIntersect(bounds)
-			for lock in locks
-				if lock.owner != R.me or (@name != 'Lock' and not lock.rectangle.contains(bounds))
-					R.alertManager.alert 'Your item intersects with a locked area.', 'error'
-					return false
+			# locks = @constructor.Item.Lock.getLocksWhichIntersect(bounds)
+			# for lock in locks
+			# 	if lock.owner != R.me or (@name != 'Lock' and not lock.rectangle.contains(bounds))
+			# 		R.alertManager.alert 'Your item intersects with a locked area.', 'error'
+			# 		return false
 
 			# check if div if valid (does not overlap two planets, and does not intersects with an Lock), return false otherwise
 			if R.view.grid.rectangleOverlapsTwoPlanets(bounds)
-				R.alertManager.alert 'Your item overlaps with two planets.', 'error'
+				R.alertManager.alert 'Your item overlaps with two planets', 'error'
 				return false
 
 			if R.currentPaths[from].bounds.area < 100 			# resize div to 10x10 if area if lower than 100

@@ -1018,7 +1018,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 					segment.point.x += event.delta.x
 					segment.point.y += event.delta.y
 
-			Item.Lock.highlightValidity(@, null, true)
+			# Item.Lock.highlightValidity(@, null, true)
 			@modifyPoint(segment, segment.point, segment.handleIn, segment.handleOut, true, false)
 
 			return

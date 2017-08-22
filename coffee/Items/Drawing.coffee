@@ -126,7 +126,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 					R.view.rejectedLayer.addChild(@group)
 					itemListJ = R.view.rejectedListJ
 				else
-					R.alertManager.alert "Error: drawing status is invalid.", "error"
+					R.alertManager.alert "Error: drawing status is invalid", "error"
 
 			return itemListJ
 
@@ -197,7 +197,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# path.group.visible = true # can be hidden by rasterizer, must be shown here to update @drawing.bounds
 			@pathPks ?= []
 			if not path.pk?
-				R.alertManager.alert 'Error: a path has not been saved yet. Please wait until the path is saved before creating the drawing.', 'error'
+				R.alertManager.alert 'Error: a path has not been saved yet, please wait until the path is saved before creating the drawing', 'error'
 				return
 			@pathPks.push(path.pk)
 
@@ -269,12 +269,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		save: (addCreateCommand=true) ->
 
 			if R.view.grid.rectangleOverlapsTwoPlanets(@rectangle)
-  				# R.alertManager.alert 'Your item overlaps with two planets.', 'error'
+  				# R.alertManager.alert 'Your item overlaps with two planets', 'error'
 				return
 
 			if @rectangle.with == 0 and @rectangle.height == 0 or @paths.length == 0
 				@remove()
-				R.alertManager.alert "Error: The drawing is empty.", "error"
+				R.alertManager.alert "Error: The drawing is empty", "error"
 				return
 
 			args = {
@@ -303,7 +303,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			R.alertManager.alert "Drawing successfully submitted", "success"
 
-			R.socket.emit "drawing change", type: 'new', pk: result.pk, pathPks: result.pathPks
+			R.socket.emit "drawing change", type: 'new', pk: result.pk, pathPks: result.pathPks, city: R.city
 
 			if @selectAfterSave?
 				@select(true, true, true)

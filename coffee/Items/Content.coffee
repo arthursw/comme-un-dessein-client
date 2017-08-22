@@ -290,16 +290,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item' ], (P, R, Utils, Item) ->
 				@remove()
 				return false
 
-			locks = Item.Lock.getLocksWhichIntersect(bounds)
+			# locks = Item.Lock.getLocksWhichIntersect(bounds)
 
-			for lock in locks
-				if lock.rectangle.intersects(bounds)
-					if lock.rectangle.contains(bounds) and lock.owner == R.me
-						lock.addItem(@)
-					else if lock.owner != R.me
-						R.alertManager.alert("The item intersects with a lock", "Warning")
-						@remove()
-						return false
+			# for lock in locks
+			# 	if lock.rectangle.intersects(bounds)
+			# 		if lock.rectangle.contains(bounds) and lock.owner == R.me
+			# 			lock.addItem(@)
+			# 		else if lock.owner != R.me
+			# 			R.alertManager.alert("The item intersects with a lock", "Warning")
+			# 			@remove()
+			# 			return false
 
 			return true
 

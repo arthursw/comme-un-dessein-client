@@ -261,7 +261,7 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io', 'i18next' ], (P, R, Utils, ioo
 			return
 
 		onConnectionError: ()=>
-			error = "Impossible to connect to chat."
+			error = "Impossible to connect to chat"
 			@chatMainJ.find("#chatConnectingMessage").attr('data-i18n', error).text(i18next.t(error))
 			return
 

@@ -196,7 +196,7 @@
 
       Socket.prototype.onConnectionError = function() {
         var error;
-        error = "Impossible to connect to chat.";
+        error = "Impossible to connect to chat";
         this.chatMainJ.find("#chatConnectingMessage").attr('data-i18n', error).text(i18next.t(error));
       };
 

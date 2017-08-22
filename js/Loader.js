@@ -498,13 +498,13 @@
           return true;
         }
         if (result.state === 'not_logged_in') {
-          R.alertManager.alert("You must be logged in to update drawings to the database.", "info");
+          R.alertManager.alert("You must be logged in to update drawings to the database", "info");
           this.hideLoadingBar();
           return false;
         }
         if (result.state === 'error') {
           if (result.message === 'invalid_url') {
-            R.alertManager.alert("Your URL is invalid or does not point to an existing page.", "error");
+            R.alertManager.alert("Your URL is invalid or does not point to an existing page", "error");
           } else {
             R.alertManager.alert(result.message, "error");
           }

@@ -339,7 +339,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			return somethingToLoad
 
 
-		fitRectangle: (rectangle, considerPanels=false)->
+		fitRectangle: (rectangle, considerPanels=false, zoom=null)->
 			windowSize = new P.Size(window.innerWidth, window.innerHeight)
 			
 			# WARNING: on small screen, the drawing panel takes the whole width, that would make window.width negative
@@ -353,10 +353,13 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			viewRatio = windowSize.width / windowSize.height
 			rectangleRatio = rectangle.width / rectangle.height
 
-			if viewRatio < rectangleRatio
-				P.view.zoom = Math.min(windowSize.width / rectangle.width, 1)
+			if not zoom?
+				if viewRatio < rectangleRatio
+					P.view.zoom = Math.min(windowSize.width / rectangle.width, 1)
+				else
+					P.view.zoom = Math.min(windowSize.height / rectangle.height, 1)
 			else
-				P.view.zoom = Math.min(windowSize.height / rectangle.height, 1)
+				P.view.zoom = zoom
 
 			R.toolManager.enableDrawingButton(P.view.zoom >= 1)
 

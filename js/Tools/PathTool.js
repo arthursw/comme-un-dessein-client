@@ -144,8 +144,8 @@
         R.toolManager.enterDrawingMode();
         if (!fromMiddleMouseButton) {
           draftBounds = this.constructor.computeDraftBounds();
-          if ((draftBounds != null) && !P.view.bounds.contains(draftBounds)) {
-            R.view.fitRectangle(draftBounds, true);
+          if ((draftBounds != null) && !P.view.bounds.intersects(draftBounds)) {
+            R.view.fitRectangle(draftBounds, true, 1);
           }
         }
       };
@@ -296,11 +296,12 @@
             });
           }
           if ((R.me == null) || !_.isString(R.me)) {
-            R.alertManager.alert("You must log in before drawing, your drawing won't be saved.", "Info");
+            R.alertManager.alert("You must log in before drawing, your drawing won't be saved", "Info");
             return;
           }
           path.save(true);
           path.rasterize();
+          R.rasterizer.rasterize(path);
         } else {
           path.endCreate(event.point, event);
         }
@@ -317,7 +318,7 @@
           return false;
         }
         if (R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))) {
-          R.alertManager.alert('Your path must be in the drawing area.', 'error');
+          R.alertManager.alert('Your path must be in the drawing area', 'error');
           R.currentPaths[from].remove();
           delete R.currentPaths[from];
           return false;
