@@ -183,7 +183,9 @@
           cancelButtonText: 'Just visit',
           cancelButtonIcon: 'glyphicon-sunglasses'
         });
-        modal.addText('Comme un dessein is a participative piece created by the french collective IDLV (Indiens dans la Ville). \nWith the help of a simple web interface and a monumental plotter, everyone can submit a drawing which takes part of a larger pictural composition, thus compose a collective utopian artwork.', 'welcome message');
+        modal.addText('Comme un dessein is a participative piece created by the french collective IDLV (Indiens dans la Ville). \nWith the help of a simple web interface and a monumental plotter, everyone can submit a drawing which takes part of a larger pictural composition, thus compose a collective utopian artwork.', 'welcome message 1', false);
+        modal.addText('', 'welcome message 2', false);
+        modal.addText('', 'welcome message 3', false);
         modal.addText('Participate !');
         modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning');
         modal.addButton({

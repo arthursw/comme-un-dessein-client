@@ -104,14 +104,23 @@
         return;
       }
 
-      Modal.prototype.addText = function(text, textKey) {
+      Modal.prototype.addText = function(text, textKey, escapeValue) {
+        var content;
         if (textKey == null) {
           textKey = null;
+        }
+        if (escapeValue == null) {
+          escapeValue = true;
         }
         if (textKey == null) {
           textKey = text;
         }
-        this.modalBodyJ.append("<p data-i18n='" + textKey + "'>" + (i18next.t(text)) + "</p>");
+        content = i18next.t(textKey, {
+          interpolation: {
+            escapeValue: false
+          }
+        });
+        this.modalBodyJ.append("<p data-i18n='[html]" + textKey + "'>" + content + "</p>");
       };
 
       Modal.prototype.addTextInput = function(args) {
