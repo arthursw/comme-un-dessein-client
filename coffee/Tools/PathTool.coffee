@@ -97,8 +97,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 				return
 
 			if P.view.zoom < 1
-				R.alertManager.alert 'Please zoom before drawing', 'info'
-				return
+				R.alertManager.alert 'You can zoom in to draw more easily', 'info'
 
 			R.rasterizer.drawItems()
 

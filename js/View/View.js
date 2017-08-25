@@ -369,7 +369,6 @@
         } else {
           P.view.zoom = zoom;
         }
-        R.toolManager.enableDrawingButton(P.view.zoom >= 1);
         if (considerPanels) {
           windowCenterInView = P.view.viewToProject(new P.Point(window.innerWidth / 2, window.innerHeight / 2));
           visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + windowSize.width / 2, window.innerHeight / 2));

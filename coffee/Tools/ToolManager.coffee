@@ -242,27 +242,15 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 							newZoom = v
 							break
 				P.view.zoom = newZoom
-				# # 0.125 | 0.25 | 0.5 | 1 | 2 | 4
-				# #     0.1875  0.375  0.75 1.5 3
-				# if P.view.zoom < 0.1875
-				# 	P.view.zoom = 0.125
-				# else if P.view.zoom < 0.375
-				# 	P.view.zoom = 0.25
-				# else if P.view.zoom < 0.75
-				# 	P.view.zoom = 0.5
-				# else if P.view.zoom < 1.5
-				# 	P.view.zoom = 1
-				# else if P.view.zoom < 3
-				# 	P.view.zoom = 2
-				# else
-				# 	P.view.zoom = 4
 			else 
 				P.view.zoom *= value
 			console.log(P.view.zoom)
-			@enableDrawingButton(P.view.zoom >= 1)
-			if P.view.zoom < 1 and R.selectedTool == R.tools['Precise path']
-				R.tools.move.select()
-				R.alertManager.alert 'Please zoom before drawing', 'info'
+			
+			# @enableDrawingButton(P.view.zoom >= 1)
+			# if P.view.zoom < 1 and R.selectedTool == R.tools['Precise path']
+			# 	R.tools.move.select()
+			# 	R.alertManager.alert 'Please zoom before drawing', 'info'
+			
 			R.view.moveBy(new P.Point())
 			return
 

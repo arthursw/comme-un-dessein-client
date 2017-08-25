@@ -235,7 +235,7 @@ define [
 
 	# Initialize CommeUnDessein and handlers
 	$(document).ready () ->
-		
+
 		# just set some content and react to language changes
 		updateContent = ()->
 			$("body").localize()

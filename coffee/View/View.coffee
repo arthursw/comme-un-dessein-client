@@ -361,7 +361,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			else
 				P.view.zoom = zoom
 
-			R.toolManager.enableDrawingButton(P.view.zoom >= 1)
+			# R.toolManager.enableDrawingButton(P.view.zoom >= 1)
 
 			if considerPanels
 				windowCenterInView = P.view.viewToProject(new P.Point(window.innerWidth / 2, window.innerHeight / 2))

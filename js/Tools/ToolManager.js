@@ -88,11 +88,6 @@
           P.view.zoom *= value;
         }
         console.log(P.view.zoom);
-        this.enableDrawingButton(P.view.zoom >= 1);
-        if (P.view.zoom < 1 && R.selectedTool === R.tools['Precise path']) {
-          R.tools.move.select();
-          R.alertManager.alert('Please zoom before drawing', 'info');
-        }
         R.view.moveBy(new P.Point());
       };
 
