@@ -83,9 +83,10 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 
 			return
 
-		addText: (text, textKey=null)->
+		addText: (text, textKey=null, escapeValue=true)->
 			textKey ?= text
-			@modalBodyJ.append("<p data-i18n='#{textKey}'>#{i18next.t(text)}</p>")
+			content = i18next.t(textKey, { interpolation: { escapeValue: false } })
+			@modalBodyJ.append("<p data-i18n='[html]#{textKey}'>#{content}</p>")
 			return
 
 		addTextInput: (args)->
@@ -277,7 +278,8 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			args.args ?= args.divJ
 			args.divJ.attr('id', 'modal-' + args.name)
 			@modalBodyJ.append(args.divJ)
-			@extractors[args.name] = args
+			if args.extractor?
+				@extractors[args.name] = args
 			return
 
 		# args:

@@ -346,7 +346,9 @@
         }
         this.owner = result.owner;
         this.setPK(result.pk);
-        R.alertManager.alert("Drawing successfully submitted", "success");
+        R.alertManager.alert("Drawing successfully submitted", "success", null, {
+          positiveVoteThreshold: result.positiveVoteThreshold
+        });
         R.socket.emit("drawing change", {
           type: 'new',
           pk: result.pk,

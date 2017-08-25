@@ -333,7 +333,9 @@
         }
         args.divJ.attr('id', 'modal-' + args.name);
         this.modalBodyJ.append(args.divJ);
-        this.extractors[args.name] = args;
+        if (args.extractor != null) {
+          this.extractors[args.name] = args;
+        }
       };
 
       Modal.prototype.addButton = function(args) {

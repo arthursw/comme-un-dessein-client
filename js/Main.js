@@ -204,6 +204,42 @@
         }
       }
       R.view.fitRectangle(R.view.grid.limitCD.bounds);
+      $('#about-link').click(function(event) {
+        var divJ;
+        modal = Modal.createModal({
+          title: 'About Comme Un Dessein',
+          postSubmit: 'hide',
+          submitButtonText: 'Close',
+          submitButtonIcon: 'glyphicon-remove'
+        });
+        divJ = $('<iframe>');
+        divJ.attr('style', 'width: 100%; border: none;');
+        divJ.attr('src', 'about.html');
+        divJ.html(i18next.t('welcome message 1', {
+          interpolation: {
+            escapeValue: false
+          }
+        }));
+        divJ.html(i18next.t('welcome message 2', {
+          interpolation: {
+            escapeValue: false
+          }
+        }));
+        divJ.html(i18next.t('welcome message 3', {
+          interpolation: {
+            escapeValue: false
+          }
+        }));
+        modal.addCustomContent({
+          divJ: divJ,
+          name: 'about-page'
+        });
+        modal.modalJ.find('[name="cancel"]').hide();
+        modal.show();
+        event.preventDefault();
+        event.stopPropagation();
+        return -1;
+      });
     });
     R.debugDatabase = function() {
       return $.ajax({

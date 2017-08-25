@@ -414,7 +414,9 @@ define [
 			modal.addText('''
 				Comme un dessein is a participative piece created by the french collective IDLV (Indiens dans la Ville). 
 				With the help of a simple web interface and a monumental plotter, everyone can submit a drawing which takes part of a larger pictural composition, thus compose a collective utopian artwork.
-			''', 'welcome message')
+			''', 'welcome message 1', false)
+			modal.addText('', 'welcome message 2', false)
+			modal.addText('', 'welcome message 3', false)
 			modal.addText('Participate !')
 			modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning')
 			# modal.addButton( type: 'info', name: 'Sign in', submit: (()-> return location.pathname = '/accounts/login/'), icon: 'glyphicon-log-in' )
@@ -431,7 +433,68 @@ define [
 		
 		R.view.fitRectangle(R.view.grid.limitCD.bounds)
 
+		# Improve about links
+
+		$('#about-link').click (event)->
+			
+			modal = Modal.createModal( 
+				title: 'About Comme Un Dessein', 
+				postSubmit: 'hide', 
+				submitButtonText: 'Close', 
+				submitButtonIcon: 'glyphicon-remove')
+			divJ = $('<iframe>')
+			divJ.attr('style', 'width: 100%; border: none;')
+			divJ.attr('src', 'about.html')
+			divJ.html(i18next.t('welcome message 1', { interpolation: { escapeValue: false } }))
+			divJ.html(i18next.t('welcome message 2', { interpolation: { escapeValue: false } }))
+			divJ.html(i18next.t('welcome message 3', { interpolation: { escapeValue: false } }))
+			modal.addCustomContent(divJ: divJ, name: 'about-page')
+			modal.modalJ.find('[name="cancel"]').hide()
+			modal.show()
+
+			event.preventDefault()
+			event.stopPropagation()
+			return -1
+
+
+		# $('#terms-of-service-link').click (event)->
+			
+		# 	modal = Modal.createModal( 
+		# 		title: 'Terms of Service', 
+		# 		postSubmit: 'hide', 
+		# 		submitButtonText: 'Close', 
+		# 		submitButtonIcon: 'glyphicon-remove')
+		# 	divJ = $('<iframe>')
+		# 	divJ.attr('style', 'width: 100%; border: none;')
+		# 	divJ.attr('src', 'terms-of-service.html')
+		# 	modal.addCustomContent(divJ: divJ, name: 'terms-of-service-page')
+		# 	modal.modalJ.find('[name="cancel"]').hide()
+		# 	modal.show()
+
+		# 	event.preventDefault()
+		# 	event.stopPropagation()
+		# 	return -1
+
+		# $('#privacy-policy-link').click (event)->
+			
+		# 	modal = Modal.createModal( 
+		# 		title: 'Privacy Policy', 
+		# 		postSubmit: 'hide', 
+		# 		submitButtonText: 'Close', 
+		# 		submitButtonIcon: 'glyphicon-remove')
+		# 	divJ = $('<iframe>')
+		# 	divJ.attr('style', 'width: 100%; border: none;')
+		# 	divJ.attr('src', 'privacy-policy.html')
+		# 	modal.addCustomContent(divJ: divJ, name: 'privacy-policy-page')
+		# 	modal.modalJ.find('[name="cancel"]').hide()
+		# 	modal.show()
+
+		# 	event.preventDefault()
+		# 	event.stopPropagation()
+		# 	return -1
+
 		return
+
 
 	R.debugDatabase = ()-> return $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'debugDatabase', args: {} } )
 

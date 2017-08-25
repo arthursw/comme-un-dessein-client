@@ -20,7 +20,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command' ], (P, R, Utils, Command
 			currentLiJ = @history[@currentCommand]?.liJ
 			currentLiJ?.nextAll().remove()
 			@historyJ.append(command.liJ)
-			$("#History .mCustomScrollbar").mCustomScrollbar("scrollTo","bottom")
+			# $("#History .mCustomScrollbar").mCustomScrollbar("scrollTo","bottom")
 			@currentCommand++
 			@history.splice(@currentCommand, @history.length-@currentCommand, command)
 

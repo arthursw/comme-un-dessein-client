@@ -35,7 +35,6 @@
           currentLiJ.nextAll().remove();
         }
         this.historyJ.append(command.liJ);
-        $("#History .mCustomScrollbar").mCustomScrollbar("scrollTo", "bottom");
         this.currentCommand++;
         this.history.splice(this.currentCommand, this.history.length - this.currentCommand, command);
         this.mapItemsToCommand(command);

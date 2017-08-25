@@ -494,6 +494,7 @@
       };
 
       Loader.prototype.checkError = function(result) {
+        var k, len, option, options, ref;
         if (result == null) {
           return true;
         }
@@ -506,7 +507,13 @@
           if (result.message === 'invalid_url') {
             R.alertManager.alert("Your URL is invalid or does not point to an existing page", "error");
           } else {
-            R.alertManager.alert(result.message, "error");
+            options = [];
+            ref = result.messageOptions;
+            for (k = 0, len = ref.length; k < len; k++) {
+              option = ref[k];
+              options[option] = result[option];
+            }
+            R.alertManager.alert(result.message, "error", null, options);
           }
           this.hideLoadingBar();
           return false;

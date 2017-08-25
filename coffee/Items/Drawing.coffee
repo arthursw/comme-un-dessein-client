@@ -301,7 +301,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@owner = result.owner
 			@setPK(result.pk)
 
-			R.alertManager.alert "Drawing successfully submitted", "success"
+			R.alertManager.alert "Drawing successfully submitted", "success", null, {positiveVoteThreshold: result.positiveVoteThreshold}
 
 			R.socket.emit "drawing change", type: 'new', pk: result.pk, pathPks: result.pathPks, city: R.city
 
