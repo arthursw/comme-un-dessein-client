@@ -402,7 +402,14 @@ define [
 		R.view.initializePosition()
 		R.sidebar.initialize()
 
-		if not R.userAuthenticated		
+		if not R.userAuthenticated
+			
+			# voteMinDuration = $('#canvas').attr("data-voteMinDuration")
+			# negativeVoteThreshold = $('#canvas').attr("data-negativeVoteThreshold")
+			# positiveVoteThreshold = $('#canvas').attr("data-positiveVoteThreshold")
+
+			welcomeTextJ = $('#welcome-text')
+
 			modal = Modal.createModal( 
 				title: 'Welcome to Comme Un Dessein', 
 				submit: ( ()-> return location.pathname = '/accounts/signup/' ), 
@@ -411,13 +418,13 @@ define [
 				submitButtonIcon: 'glyphicon-user', 
 				cancelButtonText: 'Just visit', 
 				cancelButtonIcon: 'glyphicon-sunglasses' )
-			modal.addText('''
-				Comme un dessein is a participative piece created by the french collective IDLV (Indiens dans la Ville). 
-				With the help of a simple web interface and a monumental plotter, everyone can submit a drawing which takes part of a larger pictural composition, thus compose a collective utopian artwork.
-			''', 'welcome message 1', false)
-			modal.addText('', 'welcome message 2', false)
-			modal.addText('', 'welcome message 3', false)
-			modal.addText('Participate !')
+			# modal.addText('''
+			# 	Comme un dessein is a participative piece created by the french collective IDLV (Indiens dans la Ville). 
+			# 	With the help of a simple web interface and a monumental plotter, everyone can submit a drawing which takes part of a larger pictural composition, thus compose a collective utopian artwork.
+			# ''', 'welcome message 1', false)
+			# modal.addText('', 'welcome message 2', false)
+			# modal.addText('', 'welcome message 3', false)
+			modal.addCustomContent(divJ: welcomeTextJ, name: 'welcome-text')
 			modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning')
 			# modal.addButton( type: 'info', name: 'Sign in', submit: (()-> return location.pathname = '/accounts/login/'), icon: 'glyphicon-log-in' )
 			modal.addButton( type: 'info', name: 'Sign in', icon: 'glyphicon-log-in' )

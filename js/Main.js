@@ -21,7 +21,7 @@
     	 - redefine means that it totally replace the method (super is never called)
      */
     $(document).ready(function() {
-      var isPM, meridiem, modal, ordinal, updateContent, userAuthenticated, username;
+      var isPM, meridiem, modal, ordinal, updateContent, userAuthenticated, username, welcomeTextJ;
       updateContent = function() {
         $("body").localize();
         console.log('i18n tests:');
@@ -172,6 +172,7 @@
       R.view.initializePosition();
       R.sidebar.initialize();
       if (!R.userAuthenticated) {
+        welcomeTextJ = $('#welcome-text');
         modal = Modal.createModal({
           title: 'Welcome to Comme Un Dessein',
           submit: (function() {
@@ -183,10 +184,10 @@
           cancelButtonText: 'Just visit',
           cancelButtonIcon: 'glyphicon-sunglasses'
         });
-        modal.addText('Comme un dessein is a participative piece created by the french collective IDLV (Indiens dans la Ville). \nWith the help of a simple web interface and a monumental plotter, everyone can submit a drawing which takes part of a larger pictural composition, thus compose a collective utopian artwork.', 'welcome message 1', false);
-        modal.addText('', 'welcome message 2', false);
-        modal.addText('', 'welcome message 3', false);
-        modal.addText('Participate !');
+        modal.addCustomContent({
+          divJ: welcomeTextJ,
+          name: 'welcome-text'
+        });
         modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning');
         modal.addButton({
           type: 'info',
