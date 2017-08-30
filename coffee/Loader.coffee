@@ -3,6 +3,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 	# --- load --- #
 
 	class Loader
+		
+		@maxNumPoints = 1000
 
 		constructor: ()->
 			@loadedAreas = []
@@ -10,6 +12,10 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			@pathsToCreate = {}
 			@initializeLoadingBar()
 			@showLoadingBar()
+
+			@drawingPaths = []
+			@drawingPk = null
+
 			return
 
 		initializeLoadingBar: ()->
@@ -464,8 +470,10 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			if not @checkError(results) then return
 			itemsToLoad = []
 
-			paths = []
-			bounds = R.view.grid.limitCD.bounds
+			@drawingPaths = []
+			@drawingPk = results.pk
+
+			nPoints = 0
 
 			# parse items and remove them if they are on stage (they must be updated)
 			for i in results.items
@@ -492,13 +500,36 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				path = []
 
 				for segment in controlPath.segments
-					path.push(segment.point)
+					if nPoints < @constructor.maxNumPoints
+						path.push(segment.point)
+					else
+						@drawingPaths.push(path)
+						path.length = 0
+						path.push(segment.point)
+					nPoints++
 
-				paths.push(path)
+				if path.length > 1
+					@drawingPaths.push(path)
 
 				controlPath.remove()
 
-			R.socket.tipibotSocket.send(JSON.stringify( bounds: bounds, paths: paths, type: 'setNextDrawing', drawingPk: results.pk ))
+			@sendNextPathsToTipibot()
+			return
+
+		sendNextPathsToTipibot: ()->
+			bounds = R.view.grid.limitCD.bounds
+			paths = []
+
+			nPoints = 0
+
+			while @drawingPaths.length > 0
+				path = @drawingPaths.shift()
+				paths.push(path)
+				nPoints += path.length
+				if nPoints >= @constructor.maxNumPoints
+					break
+
+			R.socket.tipibotSocket.send(JSON.stringify( bounds: bounds, paths: paths, type: 'setNextDrawing', drawingPk: @drawingPk ))
 			return
 
 		# check for any error in an ajax callback and display the appropriate error message

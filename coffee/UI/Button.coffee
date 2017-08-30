@@ -97,7 +97,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 			# 		show: 500
 			# 		hide: 100
 
-			@btnJ.attr('data-placement', 'right')
+			@btnJ.attr('data-placement', 'bottom')
 			@btnJ.attr('data-container', 'body')
 			@btnJ.attr('data-trigger', 'hover')
 			@btnJ.attr('data-delay', {show: 500, hide: 100})

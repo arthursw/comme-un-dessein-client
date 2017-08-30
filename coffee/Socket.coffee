@@ -1,6 +1,6 @@
 define ['paper', 'R', 'Utils/Utils', 'socket.io', 'i18next' ], (P, R, Utils, ioo, i18next) ->
 
-	class Socket
+	class Socket 
 
 		constructor: ()->
 			@initialize()
@@ -191,25 +191,31 @@ define ['paper', 'R', 'Utils/Utils', 'socket.io', 'i18next' ], (P, R, Utils, ioo
 				message = JSON.parse(event.data)
 				switch message.type
 					when 'getNextValidatedDrawing'
-						if not @requestedNextDrawing
+						if R.loader.drawingPaths.length == 0
+							if not @requestedNextDrawing
+								args = 
+									city: R.city
+								$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getNextValidatedDrawing', args: args } ).done((results)=>
+									@requestedNextDrawing = false
+									if results.message == 'no path' then return
+									R.loader.loadCallbackTipibot(results)
+									return
+								)
+								@requestedNextDrawing = true
+						else
+							R.loader.sendNextPathsToTipibot()
+					when 'setDrawingStatusDrawn'
+						if R.loader.drawingPaths.length == 0
 							args = 
-								city: R.city
-							$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getNextValidatedDrawing', args: args } ).done((results)=>
-								@requestedNextDrawing = false
-								if results.message == 'no path' then return
-								R.loader.loadCallbackTipibot(results)
+								pk: message.pk
+								secret: message.secret
+							$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingStatusDrawn', args: args } ).done((results)=>
+								if not R.loader.checkError(results) then return
+								R.socket.tipibotSocket.send(JSON.stringify( type: 'drawingStatusSetToDrawn', drawingPk: results.pk ))
 								return
 							)
-							@requestedNextDrawing = true
-					when 'setDrawingStatusDrawn'
-						args = 
-							pk: message.pk
-							secret: message.secret
-						$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingStatusDrawn', args: args } ).done((results)=>
-							if not R.loader.checkError(results) then return
-							R.socket.tipibotSocket.send(JSON.stringify( type: 'drawingStatusSetToDrawn', drawingPk: results.pk ))
-							return
-						)
+						else
+							R.socket.tipibotSocket.send(JSON.stringify( type: 'drawingStatusSetToDrawn', drawingPk: message.pk ))
 				return
 			return
 

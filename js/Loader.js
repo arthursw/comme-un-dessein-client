@@ -7,6 +7,8 @@
   define(['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Drawing', 'Items/Divs/Text'], function(P, R, Utils, Command, Item, ModuleLoader, Drawing, Text) {
     var Loader, RasterizerLoader;
     Loader = (function() {
+      Loader.maxNumPoints = 1000;
+
       function Loader() {
         this.checkError = bind(this.checkError, this);
         this.loadCallbackTipibot = bind(this.loadCallbackTipibot, this);
@@ -19,6 +21,8 @@
         this.pathsToCreate = {};
         this.initializeLoadingBar();
         this.showLoadingBar();
+        this.drawingPaths = [];
+        this.drawingPk = null;
         return;
       }
 
@@ -450,13 +454,14 @@
       };
 
       Loader.prototype.loadCallbackTipibot = function(results) {
-        var bounds, controlPath, data, date, i, id, item, itemsToLoad, k, len, len1, len2, m, n, path, paths, pk, planet, point, points, ref, ref1, ref2, segment;
+        var controlPath, data, date, i, id, item, itemsToLoad, k, len, len1, len2, m, n, nPoints, path, pk, planet, point, points, ref, ref1, ref2, segment;
         if (!this.checkError(results)) {
           return;
         }
         itemsToLoad = [];
-        paths = [];
-        bounds = R.view.grid.limitCD.bounds;
+        this.drawingPaths = [];
+        this.drawingPk = results.pk;
+        nPoints = 0;
         ref = results.items;
         for (k = 0, len = ref.length; k < len; k++) {
           i = ref[k];
@@ -480,16 +485,41 @@
           ref2 = controlPath.segments;
           for (n = 0, len2 = ref2.length; n < len2; n++) {
             segment = ref2[n];
-            path.push(segment.point);
+            if (nPoints < this.constructor.maxNumPoints) {
+              path.push(segment.point);
+            } else {
+              this.drawingPaths.push(path);
+              path.length = 0;
+              path.push(segment.point);
+            }
+            nPoints++;
           }
-          paths.push(path);
+          if (path.length > 1) {
+            this.drawingPaths.push(path);
+          }
           controlPath.remove();
+        }
+        this.sendNextPathsToTipibot();
+      };
+
+      Loader.prototype.sendNextPathsToTipibot = function() {
+        var bounds, nPoints, path, paths;
+        bounds = R.view.grid.limitCD.bounds;
+        paths = [];
+        nPoints = 0;
+        while (this.drawingPaths.length > 0) {
+          path = this.drawingPaths.shift();
+          paths.push(path);
+          nPoints += path.length;
+          if (nPoints >= this.constructor.maxNumPoints) {
+            break;
+          }
         }
         R.socket.tipibotSocket.send(JSON.stringify({
           bounds: bounds,
           paths: paths,
           type: 'setNextDrawing',
-          drawingPk: results.pk
+          drawingPk: this.drawingPk
         }));
       };
 

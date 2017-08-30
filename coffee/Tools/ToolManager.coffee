@@ -215,6 +215,17 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 			@createZoombuttons()
 			@createUndoRedoButtons()
 			
+
+			# @liveBtn = new Button(
+			# 	name: 'Video'
+			# 	iconURL: 'glyphicon-facetime-video'
+			# 	favorite: true
+			# 	category: null
+			# 	description: 'Video'
+			# 	popover: true
+			# 	order: null
+			# )
+
 			return
 
 		zoom: (value, snap=true)->

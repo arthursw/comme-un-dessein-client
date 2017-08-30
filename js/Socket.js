@@ -104,52 +104,63 @@
             message = JSON.parse(event.data);
             switch (message.type) {
               case 'getNextValidatedDrawing':
-                if (!_this.requestedNextDrawing) {
+                if (R.loader.drawingPaths.length === 0) {
+                  if (!_this.requestedNextDrawing) {
+                    args = {
+                      city: R.city
+                    };
+                    $.ajax({
+                      method: "POST",
+                      url: "ajaxCall/",
+                      data: {
+                        data: JSON.stringify({
+                          "function": 'getNextValidatedDrawing',
+                          args: args
+                        })
+                      }
+                    }).done(function(results) {
+                      _this.requestedNextDrawing = false;
+                      if (results.message === 'no path') {
+                        return;
+                      }
+                      R.loader.loadCallbackTipibot(results);
+                    });
+                    _this.requestedNextDrawing = true;
+                  }
+                } else {
+                  R.loader.sendNextPathsToTipibot();
+                }
+                break;
+              case 'setDrawingStatusDrawn':
+                if (R.loader.drawingPaths.length === 0) {
                   args = {
-                    city: R.city
+                    pk: message.pk,
+                    secret: message.secret
                   };
                   $.ajax({
                     method: "POST",
                     url: "ajaxCall/",
                     data: {
                       data: JSON.stringify({
-                        "function": 'getNextValidatedDrawing',
+                        "function": 'setDrawingStatusDrawn',
                         args: args
                       })
                     }
                   }).done(function(results) {
-                    _this.requestedNextDrawing = false;
-                    if (results.message === 'no path') {
+                    if (!R.loader.checkError(results)) {
                       return;
                     }
-                    R.loader.loadCallbackTipibot(results);
+                    R.socket.tipibotSocket.send(JSON.stringify({
+                      type: 'drawingStatusSetToDrawn',
+                      drawingPk: results.pk
+                    }));
                   });
-                  _this.requestedNextDrawing = true;
-                }
-                break;
-              case 'setDrawingStatusDrawn':
-                args = {
-                  pk: message.pk,
-                  secret: message.secret
-                };
-                $.ajax({
-                  method: "POST",
-                  url: "ajaxCall/",
-                  data: {
-                    data: JSON.stringify({
-                      "function": 'setDrawingStatusDrawn',
-                      args: args
-                    })
-                  }
-                }).done(function(results) {
-                  if (!R.loader.checkError(results)) {
-                    return;
-                  }
+                } else {
                   R.socket.tipibotSocket.send(JSON.stringify({
                     type: 'drawingStatusSetToDrawn',
-                    drawingPk: results.pk
+                    drawingPk: message.pk
                   }));
-                });
+                }
             }
           };
         })(this);
