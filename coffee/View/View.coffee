@@ -387,8 +387,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if R.repository.commit?
 				hashParameters['repository-owner'] = R.repository.owner
 				hashParameters['repository-commit'] = R.repository.commit
-			if R.city.owner? and R.city.name? and R.city.owner != 'CommeUnDesseinOrg' and R.city.name != 'CommeUnDessein'
-				# hashParameters['city-owner'] = R.city.owner
+			# if R.city.owner? and R.city.name? and R.city.owner != 'CommeUnDesseinOrg' and R.city.name != 'CommeUnDessein'
+			if R.city.name? and R.city.name != 'CommeUnDessein'
 				hashParameters['mode'] = R.city.name
 			hashParameters['location'] = Utils.pointToString(P.view.center)
 			if R.tipibot?
@@ -404,7 +404,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 		# Update hash (the string after '#' in the url bar) according to the location of the (center of the) view
 		# set *@ignoreHashChange* flag to ignore this change in *window.onhashchange* callback
-		onHashChange: (event)=>
+		onHashChange: (event, reloadIfNecessary=true)=>
 			if @ignoreHashChange
 				@ignoreHashChange = false
 				return
@@ -418,7 +418,15 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if parameters['location']?
 				p = Utils.stringToPoint(parameters['location'])
 
+			mustReload = false
+			
+			if parameters['mode']?
+				mustReload = parameters['mode'] != R.city.name
+				R.city.name = parameters['mode']
+
 			R.tipibot = parameters['tipibot']
+
+			mustReload |= parameters['style'] != R.style
 			R.style = parameters['style']
 
 			# if R.city.name != parameters['city-name'] or R.city.owner != parameters['city-owner']
@@ -427,6 +435,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			@moveTo(p, null, !@firstHashChange)
 			@firstHashChange = true
+
+			if reloadIfNecessary and mustReload
+				window.location.reload()
 			return
 
 		## Init position
@@ -450,7 +461,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			#
 			# if not boxString or boxString.length==0
 			if not R.loadedBox?
-				window?.onhashchange()
+				window?.onhashchange(null, false)
 				return
 
 			# initialize the area rectangle *boxRectangle* from 'data-box' attr and move to the center of the box

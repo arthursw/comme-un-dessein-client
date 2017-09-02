@@ -144,7 +144,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			if @constructor.polygonMode then @data.polygonMode = R.polygonMode
 			@rotation = @data.rotation = 0
 			# @data.showSelectionRectangle = true
-
 			return
 
 		setControlPath: (points, planet)->

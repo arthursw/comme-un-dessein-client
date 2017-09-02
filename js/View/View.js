@@ -392,7 +392,7 @@
           hashParameters['repository-owner'] = R.repository.owner;
           hashParameters['repository-commit'] = R.repository.commit;
         }
-        if ((R.city.owner != null) && (R.city.name != null) && R.city.owner !== 'CommeUnDesseinOrg' && R.city.name !== 'CommeUnDessein') {
+        if ((R.city.name != null) && R.city.name !== 'CommeUnDessein') {
           hashParameters['mode'] = R.city.name;
         }
         hashParameters['location'] = Utils.pointToString(P.view.center);
@@ -409,8 +409,11 @@
         this.moveTo(Utils.stringToPoint(positionString));
       };
 
-      View.prototype.onHashChange = function(event) {
-        var p, parameters;
+      View.prototype.onHashChange = function(event, reloadIfNecessary) {
+        var mustReload, p, parameters;
+        if (reloadIfNecessary == null) {
+          reloadIfNecessary = true;
+        }
         if (this.ignoreHashChange) {
           this.ignoreHashChange = false;
           return;
@@ -423,10 +426,19 @@
         if (parameters['location'] != null) {
           p = Utils.stringToPoint(parameters['location']);
         }
+        mustReload = false;
+        if (parameters['mode'] != null) {
+          mustReload = parameters['mode'] !== R.city.name;
+          R.city.name = parameters['mode'];
+        }
         R.tipibot = parameters['tipibot'];
+        mustReload |= parameters['style'] !== R.style;
         R.style = parameters['style'];
         this.moveTo(p, null, !this.firstHashChange);
         this.firstHashChange = true;
+        if (reloadIfNecessary && mustReload) {
+          window.location.reload();
+        }
       };
 
       View.prototype.initializePosition = function() {
@@ -439,7 +451,7 @@
         this.restrictedArea = this.grid.limitCD.bounds.expand(100);
         if (R.loadedBox == null) {
           if (typeof window !== "undefined" && window !== null) {
-            window.onhashchange();
+            window.onhashchange(null, false);
           }
           return;
         }
