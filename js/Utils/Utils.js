@@ -707,6 +707,22 @@
       R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds);
       R.setVoteMinDuration(0, 0, voteMinDurationInSeconds);
     };
+    R.saveSVG = function() {
+      var blob, link, svg, url;
+      svg = P.project.exportSVG({
+        asString: true
+      });
+      blob = new Blob([svg], {
+        type: 'image/svg+xml'
+      });
+      url = URL.createObjectURL(blob);
+      link = document.createElement("a");
+      document.body.appendChild(link);
+      link.download = 'indian.svg';
+      link.href = url;
+      link.click();
+      document.body.removeChild(link);
+    };
     R.deleteAllItems = function(confirm) {
       var args;
       args = {

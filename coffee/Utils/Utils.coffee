@@ -697,6 +697,20 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		R.setVoteMinDuration(0, 0, voteMinDurationInSeconds)
 		return
 
+	R.saveSVG = ()->
+		svg = P.project.exportSVG( { asString: true })
+
+		# create an svg image, create a link to download the image, and click it
+		blob = new Blob([svg], {type: 'image/svg+xml'})
+		url = URL.createObjectURL(blob)
+		link = document.createElement("a")
+		document.body.appendChild(link)
+		link.download = 'indian.svg'
+		link.href = url
+		link.click()
+		document.body.removeChild(link)
+		return
+
 	R.deleteAllItems = (confirm)->
 		args =
 			confirm: confirm
