@@ -205,6 +205,7 @@
         }
       }
       R.view.fitRectangle(R.view.grid.limitCD.bounds);
+      R.loader.loadAll();
       $('#about-link').click(function(event) {
         var divJ;
         modal = Modal.createModal({

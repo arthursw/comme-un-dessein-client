@@ -235,8 +235,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 		showSubmitDrawing: ()->
 			@hideBeginDrawing()
-			@submitDrawingBtnJ.removeClass('hidden')
-			@submitDrawingBtnJ.show()
+			
+			# @submitDrawingBtnJ.removeClass('hidden')
+			# @submitDrawingBtnJ.show()
+			
 			# @cancelDrawingBtnJ.removeClass('hidden')
 			# @cancelDrawingBtnJ.show()
 			@contentJ.find('#drawing-title').focus()
@@ -656,11 +658,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@close()
 			return
 
-		deletePaths: ()=>
-			paths = @currentDrawing.paths.slice()
-			@currentDrawing.removeChildren()
-			@currentDrawing.remove()
-
+		deleteGivenPaths: (paths)->
 			pathsToDelete = []
 			pathsToDeleteResurectors = {}
 
@@ -674,7 +672,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			if pathsToDelete.length > 0
 				deleteCommand = new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors)
 				R.commandManager.add(deleteCommand, true)
+			return
 
+		deletePaths: ()=>
+			paths = @currentDrawing.paths.slice()
+			@currentDrawing.removeChildren()
+			@currentDrawing.remove()
+
+			@deleteGivenPaths(paths)
 			return
 
 		deleteDrawing: ()=>

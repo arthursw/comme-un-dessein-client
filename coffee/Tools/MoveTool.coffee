@@ -15,7 +15,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 			position:
 				x: 32, y: 32
 			name: 'default'
-			icon: if R.style == 'line' then 'icones_hand_mouse' else 'hand'
+			icon: if R.style == 'line' then 'mouse_move' else 'hand'
 		@order = 0
 
 		constructor: () ->

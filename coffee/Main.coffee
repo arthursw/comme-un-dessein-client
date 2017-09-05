@@ -439,6 +439,7 @@ define [
 		window?.setPageFullyLoaded?(true)
 		
 		R.view.fitRectangle(R.view.grid.limitCD.bounds)
+		R.loader.loadAll()
 
 		# Improve about links
 

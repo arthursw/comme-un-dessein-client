@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Command' ], (P, R, Utils, Tool, Button, Command) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Command', 'i18next' ], (P, R, Utils, Tool, Button, Command, i18next) ->
 
 	# EraseTool: the mother class of all drawing tools
 	# doctodo: P.Path are created with three steps:
@@ -51,9 +51,37 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			@btnJ.remove()
 			return
 
+		setButtonEraseAll: ()->
+			newName = i18next.t('Erase all')
+			@btnJ.addClass('displayName')
+			@btnJ.find('.tool-name').show().attr('data-i18n', newName).text(newName)
+			@btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_cancel.png')
+			return
+		
+		setButtonErase: ()->
+			@btnJ.removeClass('displayName')
+			return
+
+		deleteAllPaths: ()->
+			paths = []
+			
+			for id, path of R.paths
+				if path.isDraft()
+					paths.push(path)
+
+			R.drawingPanel.deleteGivenPaths(paths)
+			@setButtonErase()
+			return
+
 		# Select: add the mouse move listener on the tool (userful when creating a path in polygon mode)
 		# todo: move this to main, have a global onMouseMove handler like other handlers
 		select: (deselectItems=true, updateParameters=true)->
+
+			# if R.selectedTool != @
+			# 	@setButtonEraseAll()
+			# else
+			# 	@deleteAllPaths()
+			# 	return
 
 			R.rasterizer.drawItems()
 
@@ -68,6 +96,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 		# Deselect: remove the mouse move listener
 		deselect: ()->
+			@setButtonErase()
 			super()
 			@finish()
 			if @circle?

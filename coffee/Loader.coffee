@@ -186,6 +186,10 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'load', args: { rectangle: rectangle, areasToLoad: areasToLoad, qZoom: qZoom, city: R.city } } ).done(@loadCallback)
 			return
 
+		loadAll: ()->
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadAll', args: { city: R.city } } ).done(@loadCallback)
+			return
+
 		# load an area from the server
 		# the project coordinate system is divided into square cells of size *R.scale*
 		# an Area is an object { pos: P.Point, planet: P.Point } corresponding to a cell (pos is the top left corner of the cell, the server consider the cells to be 1 unit wide (1000 pixels))
@@ -200,7 +204,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 		load: (area=null) ->
 
 			if not @loadRequired() then return false
-
+			debugger
 			if area? then console.log area.toString()
 
 			# R.startLoadingBar()

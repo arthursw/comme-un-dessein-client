@@ -230,10 +230,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		# Move the commeUnDessein view to *pos*
 		# @param pos [P.Point] destination
 		# @param delay [Number] time of the animation to go to destination in millisecond
-		moveTo: (pos, delay, addCommand=true) ->
+		moveTo: (pos, delay, addCommand=true, preventLoad=false) ->
 			pos ?= new P.Point()
 			if not delay?
-				somethingToLoad = @moveBy(pos.subtract(P.view.center), addCommand)
+				somethingToLoad = @moveBy(pos.subtract(P.view.center), addCommand, preventLoad)
 			else
 				# console.log pos
 				# console.log delay
@@ -241,7 +241,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				tween = new TWEEN.Tween( initialPosition )
 				.to( pos, delay )
 				.easing( TWEEN.Easing.Exponential.InOut )
-				.onUpdate( ()-> @moveTo(this, addCommand) )
+				.onUpdate( ()-> @moveTo(this, addCommand, preventLoad) )
 				.start()
 			return somethingToLoad
 
@@ -257,7 +257,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		# - update hash in 0.5 seconds
 		# - set location in the general options
 		# @param delta [P.Point]
-		moveBy: (delta, addCommand=true) ->
+		moveBy: (delta, addCommand=true, preventLoad=false) ->
 
 			# if user is in a restricted area (a website or videogame with restrictedArea), the move will be constrained in this area
 			if @restrictedArea?
@@ -316,7 +316,12 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			else if @entireArea? and not newEntireArea?
 				@entireArea = null
 
-			somethingToLoad = if newEntireArea? then R.loader.load(@entireArea) else R.loader.load()
+			somethingToLoad = false
+			
+			# if preventLoad
+			# 	somethingToLoad = false
+			# else	
+			# 	somethingToLoad = if newEntireArea? then R.loader.load(@entireArea) else R.loader.load()
 
 			R.socket.updateRoom() 											# update websocket room
 
@@ -433,7 +438,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# 	R.cityManager.loadCity(parameters['city-name'], parameters['city-owner'], p)
 			# 	return
 
-			@moveTo(p, null, !@firstHashChange)
+			@moveTo(p, null, !@firstHashChange, @firstHashChange)
 			@firstHashChange = true
 
 			if reloadIfNecessary and mustReload

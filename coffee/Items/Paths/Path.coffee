@@ -46,10 +46,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 	class Path extends Content
 		@label = 'Pen' 										# the name used in the gui (to create the button and for the tooltip/popover)
 		@description = "The classic and basic pen tool" 	# the path description
-		@cursor =
-			position:
-				x: 0, y: 0
-			name: 'crosshair'
+		# @cursor =
+		# 	position:
+		# 		x: 0, y: 0
+		# 	name: 'crosshair'
 		@constructor.secureDistance = 2 					# the points of the flattened path must not be 5 pixels away from the recorded points
 
 		@colorMap = {

@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'i18next' ], (P, R, Utils, Tool, i18next) ->
 
 	class Button
 
@@ -8,6 +8,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 			favorite = parameters.favorite
 			category = parameters.category
 			order = parameters.order
+			classes = parameters.classes
 			@file = parameters.file
 
 			parentJ = R.sidebar.allToolsJ
@@ -37,6 +38,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 			@btnJ.attr("data-name", name)
 			# @@btnJ.attr("data-cursor", @cursorDefault)
 			@btnJ.attr("alt", name)
+			
+			if classes? and classes.length > 0
+				@btnJ.addClass(classes)
 
 			if iconURL? and iconURL != '' 															# set icon if url is provided
 				if iconURL.indexOf('glyphicon') == 0
@@ -64,7 +68,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 
 			parentJ.append(@btnJ)
 
-			toolNameJ = $('<span class="tool-name">').text(name)
+			toolNameJ = $('<span class="tool-name">')
+			toolNameJ.attr('data-i18n', name).text(i18next.t(name))
 			@btnJ.append(toolNameJ)
 			@btnJ.addClass("tool-btn")
 			favoriteBtnJ = $("""<button type="button" class="btn btn-default favorite-btn">
@@ -78,7 +83,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 
 
 			if favorite
-				R.sidebar.toggleToolToFavorite(null, @btnJ)
+				R.sidebar.toggleToolToFavorite(null, @btnJ, @)
 
 			if parameters.description? or parameters.popover
 				@addPopover(parameters)

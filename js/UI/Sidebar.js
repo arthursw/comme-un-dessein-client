@@ -62,7 +62,7 @@
         }
       };
 
-      Sidebar.prototype.toggleToolToFavorite = function(event, btnJ) {
+      Sidebar.prototype.toggleToolToFavorite = function(event, btnJ, btn) {
         var attr, attrName, cloneJ, i, j, len, len1, li, names, ref, ref1, targetJ, toolName;
         if (btnJ == null) {
           event.stopPropagation();
@@ -91,6 +91,7 @@
           cloneJ.css({
             'order': btnJ.attr('data-order')
           });
+          btn.cloneJ = cloneJ;
           this.favoriteTools.push(toolName);
         }
         if (typeof localStorage === "undefined" || localStorage === null) {

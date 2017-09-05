@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, Tool, Button) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P, R, Utils, Tool, Button, i18next) ->
 
 	# PathTool: the mother class of all drawing tools
 	# doctodo: P.Path are created with three steps:
@@ -13,10 +13,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 		@label = ''
 		@description = ''
 		@iconURL = ''
+		@buttonClasses = 'displayName btn-success'
+
 		@cursor =
 			position:
-				x: 0, y: 0
+				x: 0, y: 32
 			name: 'crosshair'
+			icon: if R.style == 'line' then 'mouse_draw' else null
+
 		@drawItems = true
 
 		@emitSocket = false
@@ -89,11 +93,30 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 			@btnJ.remove()
 			return
 
+		setButtonValidate: ()->
+			newName = i18next.t('Submit drawing')
+			@btnJ.find('.tool-name').attr('data-i18n', newName).text(newName)
+			@btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_icon_proposer.png')
+			return
+		
+		setButtonDraw: ()->
+			newName = i18next.t('Precise path')
+			@btnJ.find('.tool-name').attr('data-i18n', newName).text(newName)
+			@btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_icon_pen.png')
+			return
+
 		# Select: add the mouse move listener on the tool (userful when creating a path in polygon mode)
 		# todo: move this to main, have a global onMouseMove handler like other handlers
 		select: (deselectItems=true, updateParameters=true, forceSelect=false, fromMiddleMouseButton=false)->
 			if not R.userAuthenticated and not forceSelect
 				R.alertManager.alert 'Log in before drawing', 'info'
+				return
+
+			if R.selectedTool != @
+				@setButtonValidate()
+			else
+				@setButtonDraw()
+				R.drawingPanel.submitDrawingClicked()
 				return
 
 			if P.view.zoom < 1
@@ -121,6 +144,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button' ], (P, R, Utils, 
 
 		# Deselect: remove the mouse move listener
 		deselect: ()->
+
+			@setButtonDraw()
+
 			super()
 			@finish()
 			

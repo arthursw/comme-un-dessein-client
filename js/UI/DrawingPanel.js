@@ -244,8 +244,6 @@
 
       DrawingPanel.prototype.showSubmitDrawing = function() {
         this.hideBeginDrawing();
-        this.submitDrawingBtnJ.removeClass('hidden');
-        this.submitDrawingBtnJ.show();
         this.contentJ.find('#drawing-title').focus();
       };
 
@@ -706,11 +704,8 @@
         this.close();
       };
 
-      DrawingPanel.prototype.deletePaths = function() {
-        var deleteCommand, j, len, path, paths, pathsToDelete, pathsToDeleteResurectors;
-        paths = this.currentDrawing.paths.slice();
-        this.currentDrawing.removeChildren();
-        this.currentDrawing.remove();
+      DrawingPanel.prototype.deleteGivenPaths = function(paths) {
+        var deleteCommand, j, len, path, pathsToDelete, pathsToDeleteResurectors;
         pathsToDelete = [];
         pathsToDeleteResurectors = {};
         for (j = 0, len = paths.length; j < len; j++) {
@@ -729,6 +724,14 @@
           deleteCommand = new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors);
           R.commandManager.add(deleteCommand, true);
         }
+      };
+
+      DrawingPanel.prototype.deletePaths = function() {
+        var paths;
+        paths = this.currentDrawing.paths.slice();
+        this.currentDrawing.removeChildren();
+        this.currentDrawing.remove();
+        this.deleteGivenPaths(paths);
       };
 
       DrawingPanel.prototype.deleteDrawing = function() {

@@ -11,18 +11,21 @@
 
       SelectTool.SelectionRectangle = SelectionRectangle;
 
-      SelectTool.label = 'Select';
+      SelectTool.label = 'Vote';
 
       SelectTool.description = '';
 
-      SelectTool.iconURL = R.style === 'line' ? 'icones_icon_arrow.png' : R.style === 'hand' ? 'a-cursor.png' : 'cursor.png';
+      SelectTool.iconURL = R.style === 'line' ? 'icones_icon_vote.png' : R.style === 'hand' ? 'a-cursor.png' : 'cursor.png';
+
+      SelectTool.buttonClasses = 'displayName btn-info';
 
       SelectTool.cursor = {
         position: {
           x: 0,
           y: 0
         },
-        name: 'default'
+        name: 'default',
+        icon: R.style === 'line' ? 'mouse_vote' : null
       };
 
       SelectTool.drawItems = false;
@@ -97,6 +100,7 @@
         if (forceSelect == null) {
           forceSelect = false;
         }
+        R.alertManager.alert('Click on a drawing to vote for it', 'info');
         SelectTool.__super__.select.call(this, false, updateParameters);
       };
 

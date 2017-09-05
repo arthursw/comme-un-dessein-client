@@ -52,7 +52,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi'
 				Utils.Array.pushIfAbsent(@favoriteTools, defaultFavoriteTools.pop().label)
 			return
 
-		toggleToolToFavorite: (event, btnJ)=>
+		toggleToolToFavorite: (event, btnJ, btn)=>
 			if not btnJ?
 				event.stopPropagation()
 				targetJ = $(event.target)
@@ -74,6 +74,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi'
 					cloneJ.attr(attrName, btnJ.attr(attrName))
 					cloneJ.popover()
 				cloneJ.css('order': btnJ.attr('data-order'))
+				btn.cloneJ = cloneJ
 
 				@favoriteTools.push(toolName)
 

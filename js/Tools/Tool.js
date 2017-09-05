@@ -80,6 +80,7 @@
         this.btn = new Button({
           name: this.constructor.label,
           iconURL: this.constructor.iconURL,
+          classes: this.constructor.buttonClasses,
           favorite: this.constructor.favorite,
           category: this.constructor.category,
           description: this.constructor.description,

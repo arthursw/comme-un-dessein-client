@@ -13,14 +13,6 @@
 
       Path.description = "The classic and basic pen tool";
 
-      Path.cursor = {
-        position: {
-          x: 0,
-          y: 0
-        },
-        name: 'crosshair'
-      };
-
       Path.constructor.secureDistance = 2;
 
       Path.colorMap = {

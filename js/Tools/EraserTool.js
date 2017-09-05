@@ -3,7 +3,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Command'], function(P, R, Utils, Tool, Button, Command) {
+  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Command', 'i18next'], function(P, R, Utils, Tool, Button, Command, i18next) {
     var EraserTool;
     EraserTool = (function(superClass) {
       extend(EraserTool, superClass);
@@ -45,6 +45,32 @@
         this.btnJ.remove();
       };
 
+      EraserTool.prototype.setButtonEraseAll = function() {
+        var newName;
+        newName = i18next.t('Erase all');
+        this.btnJ.addClass('displayName');
+        this.btnJ.find('.tool-name').show().attr('data-i18n', newName).text(newName);
+        this.btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_cancel.png');
+      };
+
+      EraserTool.prototype.setButtonErase = function() {
+        this.btnJ.removeClass('displayName');
+      };
+
+      EraserTool.prototype.deleteAllPaths = function() {
+        var id, path, paths, ref;
+        paths = [];
+        ref = R.paths;
+        for (id in ref) {
+          path = ref[id];
+          if (path.isDraft()) {
+            paths.push(path);
+          }
+        }
+        R.drawingPanel.deleteGivenPaths(paths);
+        this.setButtonErase();
+      };
+
       EraserTool.prototype.select = function(deselectItems, updateParameters) {
         if (deselectItems == null) {
           deselectItems = true;
@@ -60,6 +86,7 @@
       EraserTool.prototype.updateParameters = function() {};
 
       EraserTool.prototype.deselect = function() {
+        this.setButtonErase();
         EraserTool.__super__.deselect.call(this);
         this.finish();
         if (this.circle != null) {

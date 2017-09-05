@@ -262,29 +262,35 @@
         return P.view.bounds;
       };
 
-      View.prototype.moveTo = function(pos, delay, addCommand) {
+      View.prototype.moveTo = function(pos, delay, addCommand, preventLoad) {
         var initialPosition, somethingToLoad, tween;
         if (addCommand == null) {
           addCommand = true;
+        }
+        if (preventLoad == null) {
+          preventLoad = false;
         }
         if (pos == null) {
           pos = new P.Point();
         }
         if (delay == null) {
-          somethingToLoad = this.moveBy(pos.subtract(P.view.center), addCommand);
+          somethingToLoad = this.moveBy(pos.subtract(P.view.center), addCommand, preventLoad);
         } else {
           initialPosition = P.view.center;
           tween = new TWEEN.Tween(initialPosition).to(pos, delay).easing(TWEEN.Easing.Exponential.InOut).onUpdate(function() {
-            return this.moveTo(this, addCommand);
+            return this.moveTo(this, addCommand, preventLoad);
           }).start();
         }
         return somethingToLoad;
       };
 
-      View.prototype.moveBy = function(delta, addCommand) {
+      View.prototype.moveBy = function(delta, addCommand, preventLoad) {
         var area, div, i, j, len, len1, newEntireArea, newView, previousCenter, ref, ref1, restrictedAreaShrinked, somethingToLoad;
         if (addCommand == null) {
           addCommand = true;
+        }
+        if (preventLoad == null) {
+          preventLoad = false;
         }
         if (this.restrictedArea != null) {
           if (!this.restrictedArea.contains(P.view.center)) {
@@ -333,7 +339,7 @@
         } else if ((this.entireArea != null) && (newEntireArea == null)) {
           this.entireArea = null;
         }
-        somethingToLoad = newEntireArea != null ? R.loader.load(this.entireArea) : R.loader.load();
+        somethingToLoad = false;
         R.socket.updateRoom();
         Utils.deferredExecution(this.updateHash, 'updateHash', 500);
         if (addCommand) {
@@ -434,7 +440,7 @@
         R.tipibot = parameters['tipibot'];
         mustReload |= parameters['style'] !== R.style;
         R.style = parameters['style'];
-        this.moveTo(p, null, !this.firstHashChange);
+        this.moveTo(p, null, !this.firstHashChange, this.firstHashChange);
         this.firstHashChange = true;
         if (reloadIfNecessary && mustReload) {
           window.location.reload();

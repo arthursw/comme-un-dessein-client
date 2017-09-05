@@ -84,6 +84,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 			@btn = new Button(
 				name: @constructor.label
 				iconURL: @constructor.iconURL
+				classes: @constructor.buttonClasses
 				favorite: @constructor.favorite
 				category: @constructor.category
 				description: @constructor.description

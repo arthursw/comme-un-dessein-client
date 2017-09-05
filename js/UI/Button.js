@@ -2,19 +2,20 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool'], function(P, R, Utils, Tool) {
+  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'i18next'], function(P, R, Utils, Tool, i18next) {
     var Button;
     Button = (function() {
       function Button(parameters) {
         this.onClickWhenLoaded = bind(this.onClickWhenLoaded, this);
         this.onClickWhenNotLoaded = bind(this.onClickWhenNotLoaded, this);
         this.fileLoaded = bind(this.fileLoaded, this);
-        var categories, category, favorite, favoriteBtnJ, hJ, i, iconRootURL, iconURL, j, len, len1, liJ, name, order, parentJ, shortName, shortNameJ, toolNameJ, ulJ, word, words;
+        var categories, category, classes, favorite, favoriteBtnJ, hJ, i, iconRootURL, iconURL, j, len, len1, liJ, name, order, parentJ, shortName, shortNameJ, toolNameJ, ulJ, word, words;
         name = parameters.name;
         iconURL = parameters.iconURL;
         favorite = parameters.favorite;
         category = parameters.category;
         order = parameters.order;
+        classes = parameters.classes;
         this.file = parameters.file;
         parentJ = R.sidebar.allToolsJ;
         if ((category != null) && category !== "") {
@@ -40,6 +41,9 @@
         this.btnJ = $("<li>");
         this.btnJ.attr("data-name", name);
         this.btnJ.attr("alt", name);
+        if ((classes != null) && classes.length > 0) {
+          this.btnJ.addClass(classes);
+        }
         if ((iconURL != null) && iconURL !== '') {
           if (iconURL.indexOf('glyphicon') === 0) {
             this.btnJ.append('<span class="glyphicon ' + iconURL + '" alt="' + name + '-icon">');
@@ -74,7 +78,8 @@
           this.btnJ.append(shortNameJ);
         }
         parentJ.append(this.btnJ);
-        toolNameJ = $('<span class="tool-name">').text(name);
+        toolNameJ = $('<span class="tool-name">');
+        toolNameJ.attr('data-i18n', name).text(i18next.t(name));
         this.btnJ.append(toolNameJ);
         this.btnJ.addClass("tool-btn");
         favoriteBtnJ = $("<button type=\"button\" class=\"btn btn-default favorite-btn\">\n	  			<span class=\"glyphicon glyphicon-star\" aria-hidden=\"true\"></span>\n</button>");
@@ -85,7 +90,7 @@
         });
         this.btnJ.click(this.file != null ? this.onClickWhenNotLoaded : this.onClickWhenLoaded);
         if (favorite) {
-          R.sidebar.toggleToolToFavorite(null, this.btnJ);
+          R.sidebar.toggleToolToFavorite(null, this.btnJ, this);
         }
         if ((parameters.description != null) || parameters.popover) {
           this.addPopover(parameters);

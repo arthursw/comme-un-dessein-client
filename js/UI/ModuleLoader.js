@@ -8,6 +8,7 @@
         name: 'Precise path',
         description: "This path offers precise controls, one can modify points along with their handles and their type.",
         iconURL: 'icones_icon_pen.png',
+        classes: 'displayName btn-success',
         file: "Items/Paths/PrecisePaths/PrecisePath",
         category: void 0,
         favorite: true,

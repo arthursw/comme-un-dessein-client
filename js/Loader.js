@@ -211,6 +211,21 @@
         }).done(this.loadCallback);
       };
 
+      Loader.prototype.loadAll = function() {
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'loadAll',
+              args: {
+                city: R.city
+              }
+            })
+          }
+        }).done(this.loadCallback);
+      };
+
       Loader.prototype.load = function(area) {
         var areasToLoad, b, bounds, l, limit, qZoom, r, rectangle, scale, t, unloadDist;
         if (area == null) {
@@ -219,6 +234,7 @@
         if (!this.loadRequired()) {
           return false;
         }
+        debugger;
         if (area != null) {
           console.log(area.toString());
         }

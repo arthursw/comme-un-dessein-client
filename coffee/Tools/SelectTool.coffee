@@ -5,16 +5,19 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 
 		@SelectionRectangle = SelectionRectangle
 
-		@label = 'Select'
+		@label = 'Vote'
 		@description = ''
 		# @iconURL = 'glyphicon-envelope'
 		# @iconURL = 'cursor.png'
-		@iconURL = if R.style == 'line' then 'icones_icon_arrow.png' else if R.style == 'hand' then 'a-cursor.png' else 'cursor.png'
+		@iconURL = if R.style == 'line' then 'icones_icon_vote.png' else if R.style == 'hand' then 'a-cursor.png' else 'cursor.png'
+		@buttonClasses = 'displayName btn-info'
 
 		@cursor =
 			position:
 				x: 0, y: 0
 			name: 'default'
+			icon: if R.style == 'line' then 'mouse_vote' else null
+
 		@drawItems = false
 		@order = 1
 
@@ -61,6 +64,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 		select: (deselectItems=false, updateParameters=true, forceSelect=false)->
 			# R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").hide()
 			# R.rasterizer.drawItems() 		# must not draw all items here since user can just wish to use an Media
+			
+			R.alertManager.alert 'Click on a drawing to vote for it', 'info'
+
 			super(false, updateParameters)
 			return
 

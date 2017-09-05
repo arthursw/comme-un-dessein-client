@@ -24,7 +24,7 @@
           y: 32
         },
         name: 'default',
-        icon: R.style === 'line' ? 'icones_hand_mouse' : 'hand'
+        icon: R.style === 'line' ? 'mouse_move' : 'hand'
       };
 
       MoveTool.order = 0;
