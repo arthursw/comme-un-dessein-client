@@ -187,7 +187,10 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			return
 
 		loadAll: ()->
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadAll', args: { city: R.city } } ).done(@loadCallback)
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadAll', args: { city: R.city } } ).done((results)=> 
+				@loadCallback(results, null, false)
+				setTimeout((()=>R.rasterizer.refresh()), 1000)
+				return)
 			return
 
 		# load an area from the server
@@ -431,7 +434,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			return
 
 		# load callback: add loaded RItems
-		loadCallback: (results, rasterizeItems=false)=>
+		loadCallback: (results, rasterizeItems=false, rasterizeAreasToUpdate=true)=>
 			console.log "load callback"
 			console.log P.project.activeLayer.name
 
@@ -462,8 +465,9 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				R.rasterizer.rasterize(newItems)
 				R.rasterizer.rasterizeRectangle()
 
-			if not results.rasters? or results.rasters.length==0
-				R.rasterizer.checkRasterizeAreasToUpdate()
+			if rasterizeAreasToUpdate
+				if not results.rasters? or results.rasters.length==0
+					R.rasterizer.checkRasterizeAreasToUpdate()
 
 			Item.Div.updateZindex(R.sortedDivs)
 

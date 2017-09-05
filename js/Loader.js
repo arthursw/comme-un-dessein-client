@@ -223,7 +223,14 @@
               }
             })
           }
-        }).done(this.loadCallback);
+        }).done((function(_this) {
+          return function(results) {
+            _this.loadCallback(results, null, false);
+            setTimeout((function() {
+              return R.rasterizer.refresh();
+            }), 1000);
+          };
+        })(this));
       };
 
       Loader.prototype.load = function(area) {
@@ -433,10 +440,13 @@
         this.dispatchLoadFinished();
       };
 
-      Loader.prototype.loadCallback = function(results, rasterizeItems) {
+      Loader.prototype.loadCallback = function(results, rasterizeItems, rasterizeAreasToUpdate) {
         var itemsToLoad, newItems;
         if (rasterizeItems == null) {
           rasterizeItems = false;
+        }
+        if (rasterizeAreasToUpdate == null) {
+          rasterizeAreasToUpdate = true;
         }
         console.log("load callback");
         console.log(P.project.activeLayer.name);
@@ -462,8 +472,10 @@
           R.rasterizer.rasterize(newItems);
           R.rasterizer.rasterizeRectangle();
         }
-        if ((results.rasters == null) || results.rasters.length === 0) {
-          R.rasterizer.checkRasterizeAreasToUpdate();
+        if (rasterizeAreasToUpdate) {
+          if ((results.rasters == null) || results.rasters.length === 0) {
+            R.rasterizer.checkRasterizeAreasToUpdate();
+          }
         }
         Item.Div.updateZindex(R.sortedDivs);
         this.endLoading();
