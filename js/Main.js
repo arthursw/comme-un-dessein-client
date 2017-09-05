@@ -204,7 +204,7 @@
           window.setPageFullyLoaded(true);
         }
       }
-      R.view.fitRectangle(R.view.grid.limitCD.bounds);
+      R.view.fitRectangle(R.view.grid.limitCD.bounds, true);
       R.loader.loadAll();
       $('#about-link').click(function(event) {
         var divJ;

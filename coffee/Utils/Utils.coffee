@@ -697,6 +697,14 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		R.setVoteMinDuration(0, 0, voteMinDurationInSeconds)
 		return
 
+	R.setSelectedDrawingsToCity = (city)->
+		args = {
+			pk: R.s.pk
+			city: name: city
+		}
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingToCity', args: args } ).done(R.loader.checkError)
+		return
+
 	R.saveSVG = ()->
 		svg = P.project.exportSVG( { asString: true })
 

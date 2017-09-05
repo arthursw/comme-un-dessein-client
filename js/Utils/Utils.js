@@ -707,6 +707,25 @@
       R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds);
       R.setVoteMinDuration(0, 0, voteMinDurationInSeconds);
     };
+    R.setSelectedDrawingsToCity = function(city) {
+      var args;
+      args = {
+        pk: R.s.pk,
+        city: {
+          name: city
+        }
+      };
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'setDrawingToCity',
+            args: args
+          })
+        }
+      }).done(R.loader.checkError);
+    };
     R.saveSVG = function() {
       var blob, link, svg, url;
       svg = P.project.exportSVG({
