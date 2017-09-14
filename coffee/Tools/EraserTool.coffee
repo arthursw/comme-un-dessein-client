@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Command', 'i18next' ], (P, R, Utils, Tool, Button, Command, i18next) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Command', 'Items/Drawing', 'i18next' ], (P, R, Utils, Tool, Button, Command, Drawing, i18next) ->
 
 	# EraseTool: the mother class of all drawing tools
 	# doctodo: P.Path are created with three steps:
@@ -63,11 +63,11 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			return
 
 		deleteAllPaths: ()->
-			paths = []
+			paths = R.Drawing.getDraft()?.paths or []
 			
-			for id, path of R.paths
-				if path.isDraft()
-					paths.push(path)
+			# for id, path of R.paths
+			# 	if path.isDraft()
+			# 		paths.push(path)
 
 			R.drawingPanel.deleteGivenPaths(paths)
 			@setButtonErase()
@@ -84,6 +84,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			# 	return
 
 			R.rasterizer.drawItems()
+
+			# draft = Drawing.getDraft()
+			
+			# for path in draft.paths
 
 			super
 

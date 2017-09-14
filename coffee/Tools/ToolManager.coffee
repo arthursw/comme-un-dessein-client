@@ -263,6 +263,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 			# 	R.alertManager.alert 'Please zoom before drawing', 'info'
 			
 			R.view.moveBy(new P.Point())
+			
 			return
 
 		createZoombuttons: ()->

@@ -148,8 +148,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			if not @drawingId?
 				@addToListItem()
 			else
-				if @drawingId == "9440088493130252-1501788953971"
-					console.log("path includes in loaded drawing:", R.items[@drawingId])
 				if R.items[@drawingId]?
 					drawing = R.items[@drawingId]
 					drawing.addChild(@)
@@ -558,19 +556,49 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 		save: (addCreateCommand=true)->
 			if not @controlPath? then return
 
-			R.paths[@id] = @
+			draft = Item.Drawing.getDraft()
 
-			args =
-				clientId: @id
-				city: R.city
-				box: Utils.CS.boxFromRectangle( @getDrawingBounds() )
-				points: @pathOnPlanet()
-				data: @getStringifiedData()
-				date: @date
-				object_type: @constructor.label
+			# if draft?
+			# 	g = new P.Group()
+			# 	for path in draft.paths
+			# 		localSVG = path.path.exportSVG()
+			# 		g.addChild(path.path)
+			# 		console.log(localSVG)
 
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'savePath', args: args } ).done(@saveCallback)
-			# Dajaxice.draw.savePath( @saveCallback, args )
+			# 	globalSVG = g.exportSVG()
+			# 	console.log(globalSVG)
+
+			# svg = Utils.xmlSerializer.serializeToString(@svg)
+
+			if draft?
+				draft.addChild(@)
+				if not draft.pk?
+					draft.addPathToSave(@)
+				else
+					args = 
+						clientId: draft.id
+						pk: draft.pk
+						points: @getPoints()
+					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'addPathToDrawing', args: args } ).done(@saveCallback)
+			else
+				drawing = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
+				drawing.points = @getPoints()
+				drawing.addChild(@)
+				drawing.save()
+
+			# R.paths[@id] = @
+
+			# args =
+			# 	clientId: @id
+			# 	city: R.city
+			# 	box: Utils.CS.boxFromRectangle( @getDrawingBounds() )
+			# 	points: @pathOnPlanet()
+			# 	data: @getStringifiedData()
+			# 	date: @date
+			# 	object_type: @constructor.label
+
+			# $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'savePath', args: args } ).done(@saveCallback)
+			# # Dajaxice.draw.savePath( @saveCallback, args )
 			super
 			return
 
@@ -666,7 +694,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			return
 		
 		isDraft: ()->
-			return not @drawingId?
+			return not @drawingId? or R.items[@drawingId]?.status == 'draft'
 
 		# common to all RItems
 		# called by @delete() and to update users view through websockets

@@ -41,32 +41,85 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
 			return copy
 
-		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @title, @description, @status='pending') ->
+
+		@getDraft: ()->
+			for own id, item of R.items
+				if item instanceof Item.Drawing
+					if item.owner == R.me and item.status == 'draft'
+						return item
+			return null
+
+		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @title, @description, @status='pending', pathList=[], svg=null) ->
 			super(@data, @id, @pk)
 
 			if @pk?
 				@constructor.pkToId[@pk] = @id
 
-			@paths = []
-			@drawing = new P.Group()
+			R.drawings ?= []
+			R.drawings.push(@)
 
-			@group.addChild(@drawing)
+			@paths = []
+			# @drawing = new P.Group()
+
+			# @group.addChild(@drawing)
+			@group.remove()
 
 			@votes = [] # { positive: boolean, author: string, authorPk: pk }
-
-			if @id == "9440088493130252-1501788953971"
-				for id, path of R.paths
-					if path.drawingId? and (path.drawingId == @id or path.drawingId == @pk)
-						console.log("drawing adds loaded path: ", path)
-
-			for id, path of R.paths
-				if path.drawingId? and (path.drawingId == @id or path.drawingId == @pk)
-					@addChild(path)
-
+			
 			# create special list to contains children paths
 			@sortedPaths = []
 
 			@addToListItem(@getListItem())
+
+			if svg?
+				layerName = @getLayerName()
+				layer = document.getElementById(layerName)
+				# layer.insertAdjacentHTML('afterbegin', svg)
+				parser = new DOMParser()
+				doc = parser.parseFromString(svg, "image/svg+xml")
+				doc.documentElement.removeAttribute('visibility')
+				doc.documentElement.removeAttribute('xmlns')
+				layer.appendChild(doc.documentElement)
+				
+				# R.svgJ.find('#'+layerName).append(svg)
+				
+				# svgJ = $(svg)
+
+				# # attributes = []
+				# # for attribute in svgJ[0].attributes
+				# # 	attributes.push(attribute)
+				# # for attribute in attributes
+				# # 	svgJ.removeAttr(attribute.name)
+				# # svgJ.attr('stroke', 'green')
+				# # svgJ.attr('fill', 'white')
+				# # svgJ.attr('stroke-width', '5')
+				# childrenJ = svgJ.children()
+				# for child, i in childrenJ
+				# 	if i == 0 then continue
+				# 	R.svgJ.find('#'+layerName).append(child)
+
+				return
+			
+			for p in pathList
+				points = JSON.parse(p)
+				data = 
+					points: points
+					planet: new P.Point(0, 0)
+					strokeWidth: Item.Path.strokeWidth
+				path = new Item.Path.PrecisePath(Date.now(), data, null, null, null, null, R.me, @id)
+				path.pk = path.id
+				path.loadPath()
+				@addChild(path)
+				
+				# path.draw()
+				# path.rasterize()
+				# R.rasterizer.rasterize(path)
+
+
+			# for id, path of R.paths
+			# 	if path.drawingId? and (path.drawingId == @id or path.drawingId == @pk)
+			# 		@addChild(path)
+
 			
 			# @itemListsJ = R.templatesJ.find(".layer").clone()
 			# pkString = '' + (@pk or @id)
@@ -114,17 +167,20 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			itemListJ = null
 			switch @status
 				when 'pending'
-					R.view.pendingLayer.addChild(@group)
+					# R.view.pendingLayer.addChild(@group)
 					itemListJ = R.view.pendingListJ
 				when 'drawing'
-					R.view.drawingLayer.addChild(@group)
+					# R.view.drawingLayer.addChild(@group)
 					itemListJ = R.view.drawingListJ
 				when 'drawn'
-					R.view.drawnLayer.addChild(@group)
+					# R.view.drawnLayer.addChild(@group)
 					itemListJ = R.view.drawnListJ
 				when 'rejected'
-					R.view.rejectedLayer.addChild(@group)
+					# R.view.rejectedLayer.addChild(@group)
 					itemListJ = R.view.rejectedListJ
+				when 'draft'
+					# R.view.mainLayer.addChild(@group)
+					itemListJ = R.view.draftListJ
 				else
 					R.alertManager.alert "Error: drawing status is invalid", "error"
 
@@ -179,16 +235,27 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		addPathToProperLayer: (path)->
+			@group.addChild(path.path)
+			# switch @status
+			# 	when 'pending'
+			# 		R.view.pendingLayer.addChild(path.group)
+			# 	when 'drawing'
+			# 		R.view.drawingLayer.addChild(path.group)
+			# 	when 'drawn'
+			# 		R.view.drawnLayer.addChild(path.group)
+			# 	when 'rejected'
+			# 		R.view.rejectedLayer.addChild(path.group)
+			return
 
-			switch @status
-				when 'pending'
-					R.view.pendingLayer.addChild(path.group)
-				when 'drawing'
-					R.view.drawingLayer.addChild(path.group)
-				when 'drawn'
-					R.view.drawnLayer.addChild(path.group)
-				when 'rejected'
-					R.view.rejectedLayer.addChild(path.group)
+		addPaths: ()->
+			for path in @paths
+				@group.addChild(path.path)
+				console.log(path.path)
+			return
+
+		@addPaths: ()->
+			for drawing in R.drawings
+				drawing.addPaths()
 			return
 
 		addChild: (path)->
@@ -196,12 +263,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			path.drawingId = @id
 			# path.group.visible = true # can be hidden by rasterizer, must be shown here to update @drawing.bounds
 			@pathPks ?= []
-			if not path.pk?
-				R.alertManager.alert 'Error: a path has not been saved yet, please wait until the path is saved before creating the drawing', 'error'
-				return
+			# if not path.pk?
+			# 	R.alertManager.alert 'Error: a path has not been saved yet, please wait until the path is saved before creating the drawing', 'error'
+			# 	return
 			@pathPks.push(path.pk)
 
-			@addPathToProperLayer(path)
+			# @addPathToProperLayer(path)
+			@group.addChild(path.path)
 
 			# @drawing.addChild(path.group)
 
@@ -212,10 +280,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			path.updateStrokeColor()
 			path.removeFromListItem()
 
-			if path.drawn
-				path.drawn = false
-				path.draw()
-				path.rasterize()
+			# if path.drawn
+			# 	path.drawn = false
+			# 	path.draw()
+			# 	path.rasterize()
 			# @drawn = false
 			# if @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
 				# @replaceDrawing()
@@ -248,10 +316,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			path.updateStrokeColor()
 			path.addToListItem()
 			@drawn = false
-			if path.drawn
-				path.drawn = false
-				path.draw()
-				path.rasterize()
+			# if path.drawn
+			# 	path.drawn = false
+			# 	path.draw()
+			# 	path.rasterize()
 			# if updateRaster and @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
 				# @replaceDrawing()
 			# R.rasterizer.rasterize(path, false)
@@ -268,21 +336,23 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 		save: (addCreateCommand=true) ->
 
-			if R.view.grid.rectangleOverlapsTwoPlanets(@rectangle)
-  				# R.alertManager.alert 'Your item overlaps with two planets', 'error'
-				return
+			# if R.view.grid.rectangleOverlapsTwoPlanets(@rectangle)
+  	# 			# R.alertManager.alert 'Your item overlaps with two planets', 'error'
+			# 	return
 
-			if @rectangle.with == 0 and @rectangle.height == 0 or @paths.length == 0
-				@remove()
-				R.alertManager.alert "Error: The drawing is empty", "error"
-				return
+			# if @rectangle.with == 0 and @rectangle.height == 0 or @paths.length == 0
+			# 	@remove()
+			# 	R.alertManager.alert "Error: The drawing is empty", "error"
+			# 	return
 
 			args = {
+				city: R.city
 				clientId: @id
 				date: @date
-				pathPks: @pathPks
-				title: @title
-				description: @description
+				# pathPks: @pathPks
+				title: @title or '' + Math.random()
+				description: @description or ''
+				points: @points 				# added in Path.save()
 			}
 
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'saveDrawing', args: args } ).done(@saveCallback)
@@ -301,8 +371,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@owner = result.owner
 			@setPK(result.pk)
 
-			R.alertManager.alert "Drawing successfully submitted", "success", null, {positiveVoteThreshold: result.positiveVoteThreshold}
-
 			R.socket.emit "drawing change", type: 'new', pk: result.pk, pathPks: result.pathPks, city: R.city
 
 			if @selectAfterSave?
@@ -310,8 +378,63 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			if @updateAfterSave?
 				@update(@updateAfterSave)
+
+			if @pathsToSave?
+				pointLists = []
+				for path in @pathsToSave
+					pointLists.push(path.pathOnPlanet())
+				args = 
+					clientId: @clientId
+					pk: @pk
+					pointLists: pointLists
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'addPathsToDrawing', args: args } ).done(@saveCallback)
 			super
 			return
+
+		addPathToSave: (path)->
+			@pathsToSave ?= []
+			@pathsToSave.push(path)
+			return
+
+		getLayerName: () ->
+			return @status + 'Layer'
+
+		getSVG: (asString=true) ->
+			if asString
+				console.log('paper.js serializer: ')
+				console.log(@group.exportSVG( asString: asString ))
+				console.log('xml serializer: ')
+				console.log(Utils.xmlSerializer.serializeToString(@group.exportSVG()))
+			return @group.exportSVG( asString: asString )
+
+		submit: () ->
+
+			args = {
+				clientId: @id
+				date: @date
+				title: @title
+				description: @description
+				svg: @getSVG()
+			}
+
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'submitDrawing', args: args } ).done(@submitCallback)
+
+			super(addCreateCommand)
+			return
+
+		# check if the save was successful and set @pk if it is
+		submitCallback: (result)=>
+
+			R.loader.checkError(result)
+			
+			R.alertManager.alert "Drawing successfully submitted", "success", null, {positiveVoteThreshold: result.positiveVoteThreshold}
+
+			@status = 'pending'
+			R.socket.emit "drawing change", type: 'status', pk: result.pk, status: @status, city: R.city
+
+			super
+			return
+			
 
 		addUpdateFunctionAndArguments: (args, type)->
 			for item in @children()
@@ -421,7 +544,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@addToListItem(@getListItem())
 			
 			for path in @paths
-				@addPathToProperLayer(path)
+				# @addPathToProperLayer(path)
 				path.updateStrokeColor()
 				path.drawn = false
 				path.draw()
@@ -507,4 +630,5 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 	Item.Drawing = Drawing
+	R.Drawing = Drawing
 	return Drawing

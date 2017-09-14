@@ -42,16 +42,12 @@
         paper.setup(R.canvas);
         R.project = P.project;
         this.mainLayer = P.project.activeLayer;
-        this.mainLayer.name = 'main layer';
+        this.mainLayer.name = 'mainLayer';
         this.createLayers();
         this.debugLayer = new P.Layer();
-        this.debugLayer.name = 'debug layer';
-        this.carLayer = new P.Layer();
-        this.carLayer.name = 'car layer';
-        this.lockLayer = new P.Layer();
-        this.lockLayer.name = 'lock layer';
+        this.debugLayer.name = 'debugLayer';
         this.selectionLayer = new P.Layer();
-        this.selectionLayer.name = 'selection layer';
+        this.selectionLayer.name = 'selectionLayer';
         this.areasToUpdateLayer = new P.Layer();
         this.areasToUpdateLayer.name = 'areasToUpdateLayer';
         this.backgroundRectangle = null;
@@ -176,7 +172,7 @@
         showBtnJ = itemListJ.find(".show-btn");
         item.data.setVisibility = (function(_this) {
           return function(visible) {
-            var base, base1, child, eyeIconJ, i, len, ref;
+            var SVGLayerJ, base, base1, child, eyeIconJ, i, len, ref;
             R.tools.select.deselectAll();
             item.visible = visible;
             ref = item.children;
@@ -192,6 +188,8 @@
               }
             }
             R.rasterizer.refresh();
+            SVGLayerJ = document.getElementById(item.name);
+            SVGLayerJ.setAttribute('visibility', visible ? 'visible' : 'hidden');
             eyeIconJ = itemListJ.find("span.eye");
             if (item.visible) {
               eyeIconJ.removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open');
@@ -240,7 +238,9 @@
         this.drawingLayer.name = 'drawingLayer';
         this.drawnLayer = new P.Layer();
         this.drawnLayer.name = 'drawnLayer';
-        this.draftListJ = this.createLayerListItem('Draft', this.mainLayer, true);
+        this.draftLayer = new P.Layer();
+        this.draftLayer.name = 'draftLayer';
+        this.draftListJ = this.createLayerListItem('Draft', this.draftLayer, true);
         this.pendingListJ = this.createLayerListItem('Pending', this.pendingLayer);
         this.drawingListJ = this.createLayerListItem('Drawing', this.drawingLayer);
         this.drawnListJ = this.createLayerListItem('Drawn', this.drawnLayer);
@@ -318,6 +318,7 @@
           this.previousPosition = P.view.center;
         }
         P.view.scrollBy(new P.Point(delta.x, delta.y));
+        this.updateSVG();
         ref = R.divs;
         for (i = 0, len = ref.length; i < len; i++) {
           div = ref[i];
@@ -382,6 +383,15 @@
           this.moveTo(rectangle.center.subtract(offset));
         } else {
           this.moveTo(rectangle.center);
+        }
+        this.updateSVG();
+      };
+
+      View.prototype.updateSVG = function() {
+        var transform;
+        if (R.svgJ != null) {
+          transform = Utils.getSVGTransform(P.view.matrix);
+          R.svgJ.find('g:first').attr('transform', transform.transform);
         }
       };
 
@@ -455,6 +465,10 @@
           site: R.canvasJ.attr("data-site") !== '' ? R.canvasJ.attr("data-site") : void 0
         };
         this.restrictedArea = this.grid.limitCD.bounds.expand(100);
+        P.view.zoom = 0.5;
+        P.view.scrollBy(1, 1);
+        R.svgJ = $(P.project.exportSVG());
+        R.svgJ.insertAfter(R.canvasJ);
         if (R.loadedBox == null) {
           if (typeof window !== "undefined" && window !== null) {
             window.onhashchange(null, false);

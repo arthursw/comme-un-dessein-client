@@ -272,13 +272,28 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 		getDrawingImage: (drawing)->
 
-			image = new Image()
-			raster = drawing.getRaster()
-			if raster?
-				image.src = raster.toDataURL()
-				return image
-			else
-				return $('<span>').addClass('badge label-default').attr('data-i18n', 'No path loaded').text(i18next.t('No path loaded'))
+			# image = new Image()
+			# raster = drawing.getRaster()
+			# if raster?
+			# 	image.src = raster.toDataURL()
+			# 	return image
+			# else
+			# 	return $('<span>').addClass('badge label-default').attr('data-i18n', 'No path loaded').text(i18next.t('No path loaded'))
+			
+			canvasTemp = document.createElement('canvas')
+			canvasTemp.width = drawing.group.bounds.width
+			canvasTemp.height = drawing.group.bounds.height
+
+			tempProject = new P.Project(canvasTemp)
+
+			tempProject.activeLayer.addChild(drawing.group)
+			tempProject.view.setCenter(drawing.group.position)
+			svg = tempProject.exportSVG()
+			drawing.group.remove()
+			tempProject.remove()
+			paper.projects[0].activate()
+
+			return svg
 
 		setDrawingThumbnail: ()->
 			# @currentDrawing.rasterize()
@@ -288,63 +303,63 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			thumbnailJ.empty().append(@getDrawingImage(@currentDrawing))
 			return
 
-		createDrawingFromItems: (items)->
+		# createDrawingFromItems: (items)->
 
-			drawingId = Utils.createId()
+		# 	drawingId = Utils.createId()
 
-			for item in items
-				if item instanceof Item.Path
-					item.drawingId = drawingId
+		# 	for item in items
+		# 		if item instanceof Item.Path
+		# 			item.drawingId = drawingId
 
 
-			title = @contentJ.find('#drawing-title').val()
-			description = @contentJ.find('#drawing-description').val()
-			@currentDrawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending')
+		# 	title = @contentJ.find('#drawing-title').val()
+		# 	description = @contentJ.find('#drawing-description').val()
+		# 	@currentDrawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending')
 
-			R.rasterizer.rasterizeRectangle(@currentDrawing.rectangle)
+		# 	R.rasterizer.rasterizeRectangle(@currentDrawing.rectangle)
 
-			R.view.fitRectangle(@currentDrawing.rectangle, true)
+		# 	R.view.fitRectangle(@currentDrawing.rectangle, true)
 
-			@setDrawingThumbnail()
+		# 	@setDrawingThumbnail()
 
-			@currentDrawing.select(true, false) # Important to deselect (for example when selecting a tool) and close the drawing panel
-			return
+		# 	@currentDrawing.select(true, false) # Important to deselect (for example when selecting a tool) and close the drawing panel
+		# 	return
 
-		submitDrawingClickedCallback: (results)=>
-			@submitBtnJ.find('span.glyphicon').removeClass('glyphicon-refresh glyphicon-refresh-animate').addClass('glyphicon-ok')
+		# submitDrawingClickedCallback: (results)=>
+		# 	@submitBtnJ.find('span.glyphicon').removeClass('glyphicon-refresh glyphicon-refresh-animate').addClass('glyphicon-ok')
 
-			if not R.loader.checkError(results) then return
+		# 	if not R.loader.checkError(results) then return
 
-			itemsToLoad = []
-			itemIds = []
-			# parse items and remove them if they are on stage (they must be updated)
-			for i in results.items
-				item = JSON.parse(i)
-				itemIds.push(item.clientId)
-				if not R.items[item.clientId]?
-					itemsToLoad.push(item)
+		# 	itemsToLoad = []
+		# 	itemIds = []
+		# 	# parse items and remove them if they are on stage (they must be updated)
+		# 	for i in results.items
+		# 		item = JSON.parse(i)
+		# 		itemIds.push(item.clientId)
+		# 		if not R.items[item.clientId]?
+		# 			itemsToLoad.push(item)
 
-			R.loader.createNewItems(itemsToLoad)
+		# 	R.loader.createNewItems(itemsToLoad)
 
-			items = []
-			for id in itemIds
-				items.push(R.items[id])
+		# 	items = []
+		# 	for id in itemIds
+		# 		items.push(R.items[id])
 
-			if itemIds.length == 0
-				R.alertManager.alert 'You must draw something before submitting', 'error'
-				@close()
-				return
+		# 	if itemIds.length == 0
+		# 		R.alertManager.alert 'You must draw something before submitting', 'error'
+		# 		@close()
+		# 		return
 
-			if R.Tools.Path.draftIsTooBig(items)
-				R.Tools.Path.displayDraftIsTooBigError()
-				@close()
-				return
+		# 	if R.Tools.Path.draftIsTooBig(items)
+		# 		R.Tools.Path.displayDraftIsTooBigError()
+		# 		@close()
+		# 		return
 
-			@createDrawingFromItems(items)
+		# 	@createDrawingFromItems(items)
 
-			R.commandManager.clearHistory()
+		# 	R.commandManager.clearHistory()
 
-			return
+		# 	return
 
 		checkPathToSubmit: ()->
 			for id, item of R.items
@@ -380,9 +395,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			@votesJ.hide()
 
-			@currentDrawing = null
 			@submitBtnJ.find('span.glyphicon').removeClass('glyphicon-ok').addClass('glyphicon-refresh glyphicon-refresh-animate')
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getDrafts', args: { city: R.city } } ).done(@submitDrawingClickedCallback)
+			# $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getDrafts', args: { city: R.city } } ).done(@submitDrawingClickedCallback)
+
+			@currentDrawing = Item.Drawing.getDraft()
+		
+			R.view.fitRectangle(@currentDrawing.rectangle, true)
+
+			@setDrawingThumbnail()
+
+			@currentDrawing.select(true, false) # Important to deselect (for example when selecting a tool) and close the drawing panel
+
+			if not @currentDrawing?
+				console.error('no draft found!')
 
 			return
 

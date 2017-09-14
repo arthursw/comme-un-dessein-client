@@ -8,6 +8,7 @@ define [
 	'UI/Sidebar'
 	'UI/DrawingPanel'
 	'UI/Modal'
+	'UI/Button'
 	'UI/AlertManager'
 	'UI/Controllers/ControllerManager'
 	'Commands/CommandManager'
@@ -19,7 +20,7 @@ define [
 	'i18nextBrowserLanguageDetector'
 	'jqueryI18next'
 	'moment'
-], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, DrawingPanel, Modal, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
+], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, DrawingPanel, Modal, Button, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
 
 	console.log 'Main CommeUnDessein Repository'
 
@@ -402,6 +403,18 @@ define [
 		R.view.initializePosition()
 		R.sidebar.initialize()
 
+
+		# submitButton = new Button({
+		# 	name: 'Submit drawing'
+		# 	favorite: true
+		# 	iconURL: 'icones_icon_ok.png'
+		# 	order: 0
+		# 	classes: 'btn-success displayName'
+		# 	onClick: ()=>
+		# 		R.drawingPanel.submitDrawingClicked()
+		# 		return
+		# 	})
+		
 		if not R.userAuthenticated
 			
 			# voteMinDuration = $('#canvas').attr("data-voteMinDuration")
@@ -438,8 +451,13 @@ define [
 
 		window?.setPageFullyLoaded?(true)
 		
+		# R.raph = Raphael($('#stage')[0], 4000, 3000)
+		# rect = R.raph.rect(-2000, -1500, 4000, 3000)
+		# rect.attr("fill", "#f00")
+
 		R.view.fitRectangle(R.view.grid.limitCD.bounds, true)
-		R.loader.loadAll()
+
+		require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> R.loader.loadAll() )
 
 		# Improve about links
 
@@ -500,6 +518,10 @@ define [
 		# 	event.preventDefault()
 		# 	event.stopPropagation()
 		# 	return -1
+
+		# svg = P.project.exportSVG()
+		# $('#stage').append(svg)
+
 
 		return
 

@@ -55,6 +55,7 @@
       'tinycolor2': [libs + 'tinycolor'],
       'bootstrap': [libs + 'bootstrap.min'],
       'paper': [libs + 'paper-full'],
+      'raphael': [libs + 'raphael.min'],
       'three': [libs + 'three'],
       'gui': [libs + 'dat.gui'],
       'typeahead': [libs + 'typeahead.bundle.min'],

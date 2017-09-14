@@ -9,7 +9,7 @@
         this.onClickWhenLoaded = bind(this.onClickWhenLoaded, this);
         this.onClickWhenNotLoaded = bind(this.onClickWhenNotLoaded, this);
         this.fileLoaded = bind(this.fileLoaded, this);
-        var categories, category, classes, favorite, favoriteBtnJ, hJ, i, iconRootURL, iconURL, j, len, len1, liJ, name, order, parentJ, shortName, shortNameJ, toolNameJ, ulJ, word, words;
+        var categories, category, classes, favorite, favoriteBtnJ, hJ, i, iconRootURL, iconURL, j, len, len1, liJ, name, onClick, order, parentJ, shortName, shortNameJ, toolNameJ, ulJ, word, words;
         name = parameters.name;
         iconURL = parameters.iconURL;
         favorite = parameters.favorite;
@@ -17,6 +17,7 @@
         order = parameters.order;
         classes = parameters.classes;
         this.file = parameters.file;
+        onClick = parameters.onClick;
         parentJ = R.sidebar.allToolsJ;
         if ((category != null) && category !== "") {
           categories = category.split("/");
@@ -88,7 +89,11 @@
         this.btnJ.attr({
           'data-order': order != null ? order : 999
         });
-        this.btnJ.click(this.file != null ? this.onClickWhenNotLoaded : this.onClickWhenLoaded);
+        if (onClick != null) {
+          this.btnJ.click(onClick);
+        } else {
+          this.btnJ.click(this.file != null ? this.onClickWhenNotLoaded : this.onClickWhenLoaded);
+        }
         if (favorite) {
           R.sidebar.toggleToolToFavorite(null, this.btnJ, this);
         }

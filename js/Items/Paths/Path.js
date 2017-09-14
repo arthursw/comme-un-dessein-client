@@ -100,9 +100,6 @@
         if (this.drawingId == null) {
           this.addToListItem();
         } else {
-          if (this.drawingId === "9440088493130252-1501788953971") {
-            console.log("path includes in loaded drawing:", R.items[this.drawingId]);
-          }
           if (R.items[this.drawingId] != null) {
             drawing = R.items[this.drawingId];
             drawing.addChild(this);
@@ -483,33 +480,41 @@
       };
 
       Path.prototype.save = function(addCreateCommand) {
-        var args;
+        var args, draft, drawing;
         if (addCreateCommand == null) {
           addCreateCommand = true;
         }
         if (this.controlPath == null) {
           return;
         }
-        R.paths[this.id] = this;
-        args = {
-          clientId: this.id,
-          city: R.city,
-          box: Utils.CS.boxFromRectangle(this.getDrawingBounds()),
-          points: this.pathOnPlanet(),
-          data: this.getStringifiedData(),
-          date: this.date,
-          object_type: this.constructor.label
-        };
-        $.ajax({
-          method: "POST",
-          url: "ajaxCall/",
-          data: {
-            data: JSON.stringify({
-              "function": 'savePath',
-              args: args
-            })
+        draft = Item.Drawing.getDraft();
+        if (draft != null) {
+          draft.addChild(this);
+          if (draft.pk == null) {
+            draft.addPathToSave(this);
+          } else {
+            args = {
+              clientId: draft.id,
+              pk: draft.pk,
+              points: this.getPoints()
+            };
+            $.ajax({
+              method: "POST",
+              url: "ajaxCall/",
+              data: {
+                data: JSON.stringify({
+                  "function": 'addPathToDrawing',
+                  args: args
+                })
+              }
+            }).done(this.saveCallback);
           }
-        }).done(this.saveCallback);
+        } else {
+          drawing = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft');
+          drawing.points = this.getPoints();
+          drawing.addChild(this);
+          drawing.save();
+        }
         Path.__super__.save.apply(this, arguments);
       };
 
@@ -577,7 +582,8 @@
       };
 
       Path.prototype.isDraft = function() {
-        return this.drawingId == null;
+        var ref;
+        return (this.drawingId == null) || ((ref = R.items[this.drawingId]) != null ? ref.status : void 0) === 'draft';
       };
 
       Path.prototype.remove = function() {

@@ -109,7 +109,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 					type: 'checkbox'
 					label: 'Selection box'
 					default: false
-					onChange: R.tools.select.setSelectionRectangleVisibility
+					onChange: (event) => R.tools.select.setSelectionRectangleVisibility(event)
 
 			return parameters
 
@@ -631,6 +631,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 			@drawingOffset = 0
 
+			layerName = if @drawingId? then R.items[@drawingId].getLayerName() else 'mainLayer'
+			
+			# @group.parent.addChild(@path)
+			@group.remove()
+
 			try 	# catch errors to log them in the code editor console (if user is making a script)
 				@processDrawing(redrawing)
 			catch error
@@ -643,6 +648,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 			@drawn = true
 
+			@svg = @path.exportSVG()
+			# console.log(R.svgJ.find('#'+layerName)[0])
+			R.svgJ.find('#'+layerName).append(@svg)
+			
 			return
 
 		# @return [Array of Paper point] a list of point from the control path converted in the planet coordinate system
@@ -1132,4 +1141,5 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			return
 
 	Item.PrecisePath = PrecisePath
+	Item.Path.PrecisePath = PrecisePath
 	return PrecisePath

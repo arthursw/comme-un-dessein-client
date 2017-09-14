@@ -370,6 +370,7 @@
       };
 
       Item.prototype.deselect = function(updateOptions) {
+        var ref;
         if (updateOptions == null) {
           updateOptions = true;
         }
@@ -384,7 +385,9 @@
         }
         if (this.group != null) {
           R.rasterizer.deselectItem(this);
-          this.parentBeforeSelection.insertChild(this.zindex, this.group);
+          if ((ref = this.parentBeforeSelection) != null) {
+            ref.insertChild(this.zindex, this.group);
+          }
         }
         return true;
       };
@@ -512,6 +515,7 @@
 
     })();
     ItemTool.Item = Item;
+    R.Item = Item;
     return Item;
   });
 

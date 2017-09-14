@@ -24,19 +24,19 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			R.project = P.project
 
 			@mainLayer = P.project.activeLayer
-			@mainLayer.name = 'main layer'
+			@mainLayer.name = 'mainLayer'
 
 			@createLayers()
 
 			@debugLayer = new P.Layer()				# Paper layer to append debug items
-			@debugLayer.name = 'debug layer'
-			@carLayer = new P.Layer() 				# Paper layer to append all cars
-			@carLayer.name = 'car layer'
-			@lockLayer = new P.Layer()	 			# Paper layer to keep all locked items
-			@lockLayer.name = 'lock layer'
+			@debugLayer.name = 'debugLayer'
+			# @carLayer = new P.Layer() 				# Paper layer to append all cars
+			# @carLayer.name = 'carLayer'
+			# @lockLayer = new P.Layer()	 			# Paper layer to keep all locked items
+			# @lockLayer.name = 'lockLayer'
 			@selectionLayer = new P.Layer() 			# Paper layer to keep all selected items
 			# R.view.selectionLayer = R.selectionProject.activeLayer
-			@selectionLayer.name = 'selection layer'
+			@selectionLayer.name = 'selectionLayer'
 			@areasToUpdateLayer = new P.Layer() 		# Paper layer to show areas to update
 			@areasToUpdateLayer.name = 'areasToUpdateLayer'
 
@@ -158,6 +158,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 				R.rasterizer.refresh()
 
+				SVGLayerJ = document.getElementById(item.name)
+				SVGLayerJ.setAttribute('visibility', if visible then 'visible' else 'hidden')
+
 				eyeIconJ = itemListJ.find("span.eye")
 				if item.visible
 					eyeIconJ.removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open')
@@ -203,8 +206,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@drawingLayer.name  = 'drawingLayer'
 			@drawnLayer = new P.Layer()
 			@drawnLayer.name  = 'drawnLayer'
+			@draftLayer = new P.Layer()
+			@draftLayer.name  = 'draftLayer'
 
-			@draftListJ = @createLayerListItem('Draft', @mainLayer, true)
+			@draftListJ = @createLayerListItem('Draft', @draftLayer, true)
 			@pendingListJ = @createLayerListItem('Pending', @pendingLayer)
 			@drawingListJ = @createLayerListItem('Drawing', @drawingLayer)
 			@drawnListJ = @createLayerListItem('Drawn', @drawnLayer)
@@ -292,6 +297,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# scroll the paper views
 			P.view.scrollBy(new P.Point(delta.x, delta.y))
 			# R.selectionProject.P.view.scrollBy(new P.Point(delta.x, delta.y))
+			
+			@updateSVG()
 
 			for div in R.divs 										# update RDivs' positions
 				div.updateTransform()
@@ -375,6 +382,16 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				@moveTo(rectangle.center.subtract(offset))
 			else
 				@moveTo(rectangle.center)
+
+			# R.raph.setViewBox(P.view.bounds.left, P.view.bounds.top, P.view.bounds.width, P.view.bounds.height, false)
+
+			@updateSVG()
+			return
+
+		updateSVG: ()->
+			if R.svgJ?
+				transform = Utils.getSVGTransform(P.view.matrix)
+				R.svgJ.find('g:first').attr('transform', transform.transform)
 			return
 
 		addMoveCommand: ()=>
@@ -460,6 +477,12 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 
 			@restrictedArea = @grid.limitCD.bounds.expand(100)
+
+			# add arbitrary transform to generate the transform svg element
+			P.view.zoom = 0.5
+			P.view.scrollBy(1, 1)
+			R.svgJ = $(P.project.exportSVG())
+			R.svgJ.insertAfter(R.canvasJ)
 
 			# check if canvas has an attribute 'data-box'
 			# boxString = R.canvasJ.attr("data-box")

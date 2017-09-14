@@ -85,6 +85,7 @@ requirejs.config
 		# 'modalManager': ['//cdnjs.cloudflare.com/ajax/libs/bootstrap-modal/2.2.5/js/bootstrap-modalmanager.min', libs + 'bootstrap-modalmanager.min']
 		# 'paper': ['//cdnjs.cloudflare.com/ajax/libs/paper.js/0.9.22/paper-full.min', libs + 'paper-full.min']
 		'paper': [libs + 'paper-full']
+		'raphael': [libs + 'raphael.min']
 		'three': [libs + 'three']
 		'gui': [libs + 'dat.gui']
 		'typeahead': [libs + 'typeahead.bundle.min']

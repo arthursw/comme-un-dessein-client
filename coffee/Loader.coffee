@@ -415,10 +415,11 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 						# R.view.mainLayer.activate()
 
 					when 'Drawing'
-						if item.box.coordinates[0].length<5
-							console.log "Error: drawing has less than 5 points"
+						# if item.box.coordinates[0].length<5
+						# 	console.log "Error: drawing has less than 5 points"
 
-						drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, id, item._id.$oid, item.owner, date, item.title, item.description, item.status)
+						# drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, id, item._id.$oid, item.owner, date, item.title, item.description, item.status, item.pathList)
+						drawing = new Item.Drawing(null, data, id, item._id.$oid, item.owner, date, item.title, item.description, item.status, item.pathList, item.svg)
 
 						if drawing?
 							newItems.push(drawing)
@@ -554,8 +555,9 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 					R.alertManager.alert("Your URL is invalid or does not point to an existing page", "error")
 				else
 					options = []
-					for option in result.messageOptions
-						options[option] = result[option]
+					if result.messageOptions?
+						for option in result.messageOptions
+							options[option] = result[option]
 					R.alertManager.alert(result.message, "error", null, options)
 				@hideLoadingBar()
 				return false

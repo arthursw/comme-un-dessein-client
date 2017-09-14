@@ -119,7 +119,11 @@
             type: 'checkbox',
             label: 'Selection box',
             "default": false,
-            onChange: R.tools.select.setSelectionRectangleVisibility
+            onChange: (function(_this) {
+              return function(event) {
+                return R.tools.select.setSelectionRectangleVisibility(event);
+              };
+            })(this)
           }
         };
         return parameters;
@@ -569,7 +573,7 @@
       };
 
       PrecisePath.prototype.draw = function(simplified, redrawing) {
-        var controlPathLength, error, error1, nIteration, nf, offset, reminder, step;
+        var controlPathLength, error, error1, layerName, nIteration, nf, offset, reminder, step;
         if (simplified == null) {
           simplified = false;
         }
@@ -595,6 +599,8 @@
         reminder = nf - nIteration;
         offset = reminder * step / 2;
         this.drawingOffset = 0;
+        layerName = this.drawingId != null ? R.items[this.drawingId].getLayerName() : 'mainLayer';
+        this.group.remove();
         try {
           this.processDrawing(redrawing);
         } catch (error1) {
@@ -607,6 +613,8 @@
           this.simplifiedModeOff();
         }
         this.drawn = true;
+        this.svg = this.path.exportSVG();
+        R.svgJ.find('#' + layerName).append(this.svg);
       };
 
       PrecisePath.prototype.pathOnPlanet = function() {
@@ -1126,6 +1134,7 @@
 
     })(Path);
     Item.PrecisePath = PrecisePath;
+    Item.Path.PrecisePath = PrecisePath;
     return PrecisePath;
   });
 

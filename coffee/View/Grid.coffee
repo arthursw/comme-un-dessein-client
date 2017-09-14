@@ -10,15 +10,34 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			@layer.addChild(@grid)
 			
 			size = new P.Size(Utils.CS.mmToPixel(4000), Utils.CS.mmToPixel(3000))
-			@backgroundColor = new P.Path.Rectangle(size.multiply(-0.5).multiply(100), size.multiply(100))
-			@backgroundColor.fillColor = '#252525'
-			@layer.addChild(@backgroundColor)
 
-			@limitCD = new P.Path.Rectangle(size.multiply(-0.5), size)
-			# @limitCD.strokeColor = '#33383e'
-			# @limitCD.strokeWidth = 10
+			frameSize = size.multiply(1000)
+			frameRectangle = new P.Rectangle(frameSize.multiply(-0.5), frameSize)
+			limitCDRectangle = new P.Rectangle(size.multiply(-0.5), size)
+
+			@frame = new P.Group()
+			@frame.fillColor = '#252525'
+
+			l1 = new P.Path.Rectangle(frameRectangle.topLeft, new P.Point(frameRectangle.right, limitCDRectangle.top))
+			l2 = new P.Path.Rectangle(new P.Point(frameRectangle.left, limitCDRectangle.top), new P.Point(limitCDRectangle.left, limitCDRectangle.bottom))
+			l3 = new P.Path.Rectangle(new P.Point(limitCDRectangle.right, limitCDRectangle.top), new P.Point(frameRectangle.right, limitCDRectangle.bottom))
+			l4 = new P.Path.Rectangle(new P.Point(frameRectangle.left, limitCDRectangle.bottom), frameRectangle.bottomRight)
+
+			@frame.addChild(l1)
+			@frame.addChild(l2)
+			@frame.addChild(l3)
+			@frame.addChild(l4)
+
+			for child in @frame.children
+				child.fillColor = '#252525'
+
+			@layer.addChild(@frame)
+
+			@limitCD = new P.Path.Rectangle(limitCDRectangle)
+			@limitCD.strokeColor = '#33383e'
+			@limitCD.strokeWidth = 1
 			# @limitCD.strokeCap = 'square'
-			@limitCD.fillColor = 'white'
+			# @limitCD.fillColor = 'white'
 			# @limitCD.dashArray = [10, 14]
 			
 			@layer.addChild(@limitCD)

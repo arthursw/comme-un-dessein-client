@@ -10,6 +10,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'i18next' ], (P, R, Utils, To
 			order = parameters.order
 			classes = parameters.classes
 			@file = parameters.file
+			onClick = parameters.onClick
 
 			parentJ = R.sidebar.allToolsJ
 			if category? and category != ""
@@ -79,7 +80,11 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'i18next' ], (P, R, Utils, To
 
 			@btnJ.append(favoriteBtnJ)
 			@btnJ.attr('data-order': if order? then order else 999)
-			@btnJ.click(if @file? then @onClickWhenNotLoaded else @onClickWhenLoaded)
+
+			if onClick?
+				@btnJ.click(onClick)
+			else
+				@btnJ.click(if @file? then @onClickWhenNotLoaded else @onClickWhenLoaded)
 
 
 			if favorite

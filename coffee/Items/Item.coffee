@@ -214,6 +214,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 		constructor: (@data, @id, @pk)->
 
 			@id ?= Utils.createId()
+			
 			R.items[@id] = @
 
 			# if the RPath is being loaded: directly set pk and load path
@@ -675,7 +676,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 
 				R.rasterizer.deselectItem(@)
 
-				@parentBeforeSelection.insertChild(@zindex, @group)
+				@parentBeforeSelection?.insertChild(@zindex, @group)
 
 			return true
 
@@ -776,4 +777,5 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 			return
 
 	ItemTool.Item = Item
+	R.Item = Item
 	return Item

@@ -3,7 +3,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Command', 'i18next'], function(P, R, Utils, Tool, Button, Command, i18next) {
+  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Command', 'Items/Drawing', 'i18next'], function(P, R, Utils, Tool, Button, Command, Drawing, i18next) {
     var EraserTool;
     EraserTool = (function(superClass) {
       extend(EraserTool, superClass);
@@ -58,15 +58,8 @@
       };
 
       EraserTool.prototype.deleteAllPaths = function() {
-        var id, path, paths, ref;
-        paths = [];
-        ref = R.paths;
-        for (id in ref) {
-          path = ref[id];
-          if (path.isDraft()) {
-            paths.push(path);
-          }
-        }
+        var paths, ref;
+        paths = ((ref = R.Drawing.getDraft()) != null ? ref.paths : void 0) || [];
         R.drawingPanel.deleteGivenPaths(paths);
         this.setButtonErase();
       };

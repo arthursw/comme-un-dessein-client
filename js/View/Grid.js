@@ -4,17 +4,34 @@
     var Grid;
     Grid = (function() {
       function Grid() {
-        var size;
+        var child, frameRectangle, frameSize, i, l1, l2, l3, l4, len, limitCDRectangle, ref, size;
         this.layer = new P.Layer();
         this.grid = new P.Group();
         this.grid.name = 'grid group';
         this.layer.addChild(this.grid);
         size = new P.Size(Utils.CS.mmToPixel(4000), Utils.CS.mmToPixel(3000));
-        this.backgroundColor = new P.Path.Rectangle(size.multiply(-0.5).multiply(100), size.multiply(100));
-        this.backgroundColor.fillColor = '#252525';
-        this.layer.addChild(this.backgroundColor);
-        this.limitCD = new P.Path.Rectangle(size.multiply(-0.5), size);
-        this.limitCD.fillColor = 'white';
+        frameSize = size.multiply(1000);
+        frameRectangle = new P.Rectangle(frameSize.multiply(-0.5), frameSize);
+        limitCDRectangle = new P.Rectangle(size.multiply(-0.5), size);
+        this.frame = new P.Group();
+        this.frame.fillColor = '#252525';
+        l1 = new P.Path.Rectangle(frameRectangle.topLeft, new P.Point(frameRectangle.right, limitCDRectangle.top));
+        l2 = new P.Path.Rectangle(new P.Point(frameRectangle.left, limitCDRectangle.top), new P.Point(limitCDRectangle.left, limitCDRectangle.bottom));
+        l3 = new P.Path.Rectangle(new P.Point(limitCDRectangle.right, limitCDRectangle.top), new P.Point(frameRectangle.right, limitCDRectangle.bottom));
+        l4 = new P.Path.Rectangle(new P.Point(frameRectangle.left, limitCDRectangle.bottom), frameRectangle.bottomRight);
+        this.frame.addChild(l1);
+        this.frame.addChild(l2);
+        this.frame.addChild(l3);
+        this.frame.addChild(l4);
+        ref = this.frame.children;
+        for (i = 0, len = ref.length; i < len; i++) {
+          child = ref[i];
+          child.fillColor = '#252525';
+        }
+        this.layer.addChild(this.frame);
+        this.limitCD = new P.Path.Rectangle(limitCDRectangle);
+        this.limitCD.strokeColor = '#33383e';
+        this.limitCD.strokeWidth = 1;
         this.layer.addChild(this.limitCD);
         this.layer.sendToBack();
         this.update();

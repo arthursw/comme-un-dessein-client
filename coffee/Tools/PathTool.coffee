@@ -29,14 +29,17 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		@computeDraftBounds: (paths=null)->
 			bounds = null
 			
-			if not paths
-				paths = []
-				for id, path of R.paths
-					if path.owner == R.me and path.isDraft()
-						paths.push(path)
+			# if not paths
+			# 	paths = []
+			# 	for id, path of R.paths
+			# 		if path.owner == R.me and path.isDraft()
+			# 			paths.push(path)
 
-			for path in paths
-				bounds = if bounds? then bounds.unite(path.getDrawingBounds()) else path.getDrawingBounds()
+			draft = R.Drawing.getDraft()
+			
+			if draft?
+				for path in draft.paths
+					bounds = if bounds? then bounds.unite(path.getDrawingBounds()) else path.getDrawingBounds()
 
 			return bounds
 
@@ -96,7 +99,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		setButtonValidate: ()->
 			newName = i18next.t('Submit drawing')
 			@btnJ.find('.tool-name').attr('data-i18n', newName).text(newName)
-			@btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_icon_proposer.png')
+			@btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_icon_ok.png')
 			return
 		
 		setButtonDraw: ()->

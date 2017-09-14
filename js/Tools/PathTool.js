@@ -32,24 +32,18 @@
       PathTool.maxDraftSize = 1000;
 
       PathTool.computeDraftBounds = function(paths) {
-        var bounds, i, id, len, path, ref;
+        var bounds, draft, i, len, path, ref;
         if (paths == null) {
           paths = null;
         }
         bounds = null;
-        if (!paths) {
-          paths = [];
-          ref = R.paths;
-          for (id in ref) {
-            path = ref[id];
-            if (path.owner === R.me && path.isDraft()) {
-              paths.push(path);
-            }
+        draft = R.Drawing.getDraft();
+        if (draft != null) {
+          ref = draft.paths;
+          for (i = 0, len = ref.length; i < len; i++) {
+            path = ref[i];
+            bounds = bounds != null ? bounds.unite(path.getDrawingBounds()) : path.getDrawingBounds();
           }
-        }
-        for (i = 0, len = paths.length; i < len; i++) {
-          path = paths[i];
-          bounds = bounds != null ? bounds.unite(path.getDrawingBounds()) : path.getDrawingBounds();
         }
         return bounds;
       };
@@ -122,7 +116,7 @@
         var newName;
         newName = i18next.t('Submit drawing');
         this.btnJ.find('.tool-name').attr('data-i18n', newName).text(newName);
-        this.btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_icon_proposer.png');
+        this.btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_icon_ok.png');
       };
 
       PathTool.prototype.setButtonDraw = function() {

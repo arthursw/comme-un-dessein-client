@@ -652,6 +652,79 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		require [moduleName], (result)->
 			window[resultName] = result
 		return
+
+	Formatter = P.Base.extend(
+		initialize: (precision) ->
+			@precision = P.Base.pick(precision, 5)
+			@multiplier = 10 ** @precision
+			return
+	
+		number: (val) ->
+			# It would be nice to use Number#toFixed() instead, but it pads with 0,
+			# unnecessarily consuming space.
+			# If precision is >= 16, don't do anything at all, since that appears
+			# to be the limit of the precision (it actually varies).
+			return if @precision < 16 then Math.round(val * @multiplier) / @multiplier else val
+		pair: (val1, val2, separator) ->
+			return @number(val1) + (separator or ',') + @number(val2)
+		point: (val, separator) ->
+			return @number(val.x) + (separator or ',') + @number(val.y)
+		size: (val, separator) ->
+			return @number(val.width) + (separator or ',') + @number(val.height)
+		rectangle: (val, separator) ->
+			return @point(val, separator) + (separator or ',') + @size(val, separator)
+	)
+
+	Utils.formatter = new Formatter()
+	
+	EPSILON = 1e-12
+
+	Utils.isZero = (val)->
+		return val >= -EPSILON && val <= EPSILON
+
+	# Taken from paper.js SvgExport.js
+	Utils.getSVGTransform = (matrix, coordinates=false, center=null) ->
+		# Use new Base() so we can use Base#set() on it.
+		attrs = new P.Base()
+		trans = matrix.getTranslation()
+		if coordinates
+			# If the item suppports x- and y- coordinates, we're taking out the
+			# translation part of the matrix and move it to x, y attributes, to
+			# produce more readable markup, and not have to use center points
+			# in rotate(). To do so, SVG requries us to inverse transform the
+			# translation point by the matrix itself, since they are provided
+			# in local coordinates.
+			matrix = matrix._shiftless()
+			point = matrix._inverseTransform(trans)
+			attrs[if center then 'cx' else 'x'] = point.x
+			attrs[if center then 'cy' else 'y'] = point.y
+			trans = null
+		if !matrix.isIdentity()
+			# See if we can decompose the matrix and can formulate it as a
+			# simple translate/scale/rotate command sequence.
+			decomposed = matrix.decompose()
+			if decomposed
+				parts = []
+				angle = decomposed.rotation
+				scale = decomposed.scaling
+				skew = decomposed.skewing
+				if trans and !trans.isZero()
+					parts.push 'translate(' + Utils.formatter.point(trans) + ')'
+				if angle
+					parts.push 'rotate(' + Utils.formatter.number(angle) + ')'
+				if !Utils.isZero(scale.x - 1) or !Utils.isZero(scale.y - 1)
+					parts.push 'scale(' + Utils.formatter.point(scale) + ')'
+				if skew.x
+					parts.push 'skewX(' + Utils.formatter.number(skew.x) + ')'
+				if skew.y
+					parts.push 'skewY(' + Utils.formatter.number(skew.y) + ')'
+				attrs.transform = parts.join(' ')
+			else
+				attrs.transform = 'matrix(' + matrix.getValues().join(',') + ')'
+		return attrs
+
+	Utils.xmlSerializer = new XMLSerializer()
+
 	# window.Utils = Utils
 
 	R.startTime = Date.now()
@@ -705,6 +778,22 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingToCity', args: args } ).done(R.loader.checkError)
 		return
 
+	R.updateDrawings = ()->
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawings', args: {} } ).done(R.loader.checkError)
+		return
+
+	R.updateDrawingSVGs = ()->
+		R.Drawing.addPaths()
+		for drawing in R.drawings
+			R.view.mainLayer.addChild(drawing.group)
+		for own id, item of R.items
+			if item instanceof R.Drawing
+				args = 
+					pk: item.pk
+					svg: item.getSVG()
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawingSVG', args: args } ).done(R.loader.checkError)
+		return
+
 	R.saveSVG = ()->
 		svg = P.project.exportSVG( { asString: true })
 
@@ -746,4 +835,5 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteItems', args: args } ).done(R.loader.checkError)
 		return
 
+	R.Utils = Utils
 	return Utils

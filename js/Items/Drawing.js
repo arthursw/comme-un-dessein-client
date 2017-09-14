@@ -49,8 +49,23 @@
         return copy;
       };
 
-      function Drawing(rectangle1, data1, id1, pk, owner, date, title1, description, status) {
-        var id, path, ref, ref1;
+      Drawing.getDraft = function() {
+        var id, item, ref;
+        ref = R.items;
+        for (id in ref) {
+          if (!hasProp.call(ref, id)) continue;
+          item = ref[id];
+          if (item instanceof Item.Drawing) {
+            if (item.owner === R.me && item.status === 'draft') {
+              return item;
+            }
+          }
+        }
+        return null;
+      };
+
+      function Drawing(rectangle1, data1, id1, pk, owner, date, title1, description, status, pathList, svg) {
+        var data, doc, i, layer, layerName, len, p, parser, path, points;
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
         this.id = id1 != null ? id1 : null;
@@ -60,38 +75,55 @@
         this.title = title1;
         this.description = description;
         this.status = status != null ? status : 'pending';
+        if (pathList == null) {
+          pathList = [];
+        }
+        if (svg == null) {
+          svg = null;
+        }
         this.select = bind(this.select, this);
         this.deleteFromDatabaseCallback = bind(this.deleteFromDatabaseCallback, this);
         this.update = bind(this.update, this);
         this.updateCallback = bind(this.updateCallback, this);
+        this.submitCallback = bind(this.submitCallback, this);
         this.saveCallback = bind(this.saveCallback, this);
         this.onLiClick = bind(this.onLiClick, this);
         Drawing.__super__.constructor.call(this, this.data, this.id, this.pk);
         if (this.pk != null) {
           this.constructor.pkToId[this.pk] = this.id;
         }
+        if (R.drawings == null) {
+          R.drawings = [];
+        }
+        R.drawings.push(this);
         this.paths = [];
-        this.drawing = new P.Group();
-        this.group.addChild(this.drawing);
+        this.group.remove();
         this.votes = [];
-        if (this.id === "9440088493130252-1501788953971") {
-          ref = R.paths;
-          for (id in ref) {
-            path = ref[id];
-            if ((path.drawingId != null) && (path.drawingId === this.id || path.drawingId === this.pk)) {
-              console.log("drawing adds loaded path: ", path);
-            }
-          }
-        }
-        ref1 = R.paths;
-        for (id in ref1) {
-          path = ref1[id];
-          if ((path.drawingId != null) && (path.drawingId === this.id || path.drawingId === this.pk)) {
-            this.addChild(path);
-          }
-        }
         this.sortedPaths = [];
         this.addToListItem(this.getListItem());
+        if (svg != null) {
+          layerName = this.getLayerName();
+          layer = document.getElementById(layerName);
+          parser = new DOMParser();
+          doc = parser.parseFromString(svg, "image/svg+xml");
+          doc.documentElement.removeAttribute('visibility');
+          doc.documentElement.removeAttribute('xmlns');
+          layer.appendChild(doc.documentElement);
+          return;
+        }
+        for (i = 0, len = pathList.length; i < len; i++) {
+          p = pathList[i];
+          points = JSON.parse(p);
+          data = {
+            points: points,
+            planet: new P.Point(0, 0),
+            strokeWidth: Item.Path.strokeWidth
+          };
+          path = new Item.Path.PrecisePath(Date.now(), data, null, null, null, null, R.me, this.id);
+          path.pk = path.id;
+          path.loadPath();
+          this.addChild(path);
+        }
         return;
       }
 
@@ -120,20 +152,19 @@
         itemListJ = null;
         switch (this.status) {
           case 'pending':
-            R.view.pendingLayer.addChild(this.group);
             itemListJ = R.view.pendingListJ;
             break;
           case 'drawing':
-            R.view.drawingLayer.addChild(this.group);
             itemListJ = R.view.drawingListJ;
             break;
           case 'drawn':
-            R.view.drawnLayer.addChild(this.group);
             itemListJ = R.view.drawnListJ;
             break;
           case 'rejected':
-            R.view.rejectedLayer.addChild(this.group);
             itemListJ = R.view.rejectedListJ;
+            break;
+          case 'draft':
+            itemListJ = R.view.draftListJ;
             break;
           default:
             R.alertManager.alert("Error: drawing status is invalid", "error");
@@ -204,18 +235,25 @@
       };
 
       Drawing.prototype.addPathToProperLayer = function(path) {
-        switch (this.status) {
-          case 'pending':
-            R.view.pendingLayer.addChild(path.group);
-            break;
-          case 'drawing':
-            R.view.drawingLayer.addChild(path.group);
-            break;
-          case 'drawn':
-            R.view.drawnLayer.addChild(path.group);
-            break;
-          case 'rejected':
-            R.view.rejectedLayer.addChild(path.group);
+        this.group.addChild(path.path);
+      };
+
+      Drawing.prototype.addPaths = function() {
+        var i, len, path, ref;
+        ref = this.paths;
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
+          this.group.addChild(path.path);
+          console.log(path.path);
+        }
+      };
+
+      Drawing.addPaths = function() {
+        var drawing, i, len, ref;
+        ref = R.drawings;
+        for (i = 0, len = ref.length; i < len; i++) {
+          drawing = ref[i];
+          drawing.addPaths();
         }
       };
 
@@ -226,12 +264,8 @@
         if (this.pathPks == null) {
           this.pathPks = [];
         }
-        if (path.pk == null) {
-          R.alertManager.alert('Error: a path has not been saved yet, please wait until the path is saved before creating the drawing', 'error');
-          return;
-        }
         this.pathPks.push(path.pk);
-        this.addPathToProperLayer(path);
+        this.group.addChild(path.path);
         bounds = path.getDrawingBounds();
         if (bounds != null) {
           if (this.rectangle == null) {
@@ -241,11 +275,6 @@
         }
         path.updateStrokeColor();
         path.removeFromListItem();
-        if (path.drawn) {
-          path.drawn = false;
-          path.draw();
-          path.rasterize();
-        }
       };
 
       Drawing.prototype.replaceDrawing = function() {
@@ -294,11 +323,6 @@
         path.updateStrokeColor();
         path.addToListItem();
         this.drawn = false;
-        if (path.drawn) {
-          path.drawn = false;
-          path.draw();
-          path.rasterize();
-        }
       };
 
       Drawing.prototype.setParameter = function(name, value, updateGUI, update) {
@@ -310,20 +334,13 @@
         if (addCreateCommand == null) {
           addCreateCommand = true;
         }
-        if (R.view.grid.rectangleOverlapsTwoPlanets(this.rectangle)) {
-          return;
-        }
-        if (this.rectangle["with"] === 0 && this.rectangle.height === 0 || this.paths.length === 0) {
-          this.remove();
-          R.alertManager.alert("Error: The drawing is empty", "error");
-          return;
-        }
         args = {
+          city: R.city,
           clientId: this.id,
           date: this.date,
-          pathPks: this.pathPks,
-          title: this.title,
-          description: this.description
+          title: this.title || '' + Math.random(),
+          description: this.description || '',
+          points: this.points
         };
         $.ajax({
           method: "POST",
@@ -339,6 +356,7 @@
       };
 
       Drawing.prototype.saveCallback = function(result) {
+        var args, i, len, path, pointLists, ref;
         R.loader.checkError(result);
         if (result.pk == null) {
           this.remove();
@@ -346,9 +364,6 @@
         }
         this.owner = result.owner;
         this.setPK(result.pk);
-        R.alertManager.alert("Drawing successfully submitted", "success", null, {
-          positiveVoteThreshold: result.positiveVoteThreshold
-        });
         R.socket.emit("drawing change", {
           type: 'new',
           pk: result.pk,
@@ -361,7 +376,95 @@
         if (this.updateAfterSave != null) {
           this.update(this.updateAfterSave);
         }
+        if (this.pathsToSave != null) {
+          pointLists = [];
+          ref = this.pathsToSave;
+          for (i = 0, len = ref.length; i < len; i++) {
+            path = ref[i];
+            pointLists.push(path.pathOnPlanet());
+          }
+          args = {
+            clientId: this.clientId,
+            pk: this.pk,
+            pointLists: pointLists
+          };
+          $.ajax({
+            method: "POST",
+            url: "ajaxCall/",
+            data: {
+              data: JSON.stringify({
+                "function": 'addPathsToDrawing',
+                args: args
+              })
+            }
+          }).done(this.saveCallback);
+        }
         Drawing.__super__.saveCallback.apply(this, arguments);
+      };
+
+      Drawing.prototype.addPathToSave = function(path) {
+        if (this.pathsToSave == null) {
+          this.pathsToSave = [];
+        }
+        this.pathsToSave.push(path);
+      };
+
+      Drawing.prototype.getLayerName = function() {
+        return this.status + 'Layer';
+      };
+
+      Drawing.prototype.getSVG = function(asString) {
+        if (asString == null) {
+          asString = true;
+        }
+        if (asString) {
+          console.log('paper.js serializer: ');
+          console.log(this.group.exportSVG({
+            asString: asString
+          }));
+          console.log('xml serializer: ');
+          console.log(Utils.xmlSerializer.serializeToString(this.group.exportSVG()));
+        }
+        return this.group.exportSVG({
+          asString: asString
+        });
+      };
+
+      Drawing.prototype.submit = function() {
+        var args;
+        args = {
+          clientId: this.id,
+          date: this.date,
+          title: this.title,
+          description: this.description,
+          svg: this.getSVG()
+        };
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'submitDrawing',
+              args: args
+            })
+          }
+        }).done(this.submitCallback);
+        Drawing.__super__.submit.call(this, addCreateCommand);
+      };
+
+      Drawing.prototype.submitCallback = function(result) {
+        R.loader.checkError(result);
+        R.alertManager.alert("Drawing successfully submitted", "success", null, {
+          positiveVoteThreshold: result.positiveVoteThreshold
+        });
+        this.status = 'pending';
+        R.socket.emit("drawing change", {
+          type: 'status',
+          pk: result.pk,
+          status: this.status,
+          city: R.city
+        });
+        Drawing.__super__.submitCallback.apply(this, arguments);
       };
 
       Drawing.prototype.addUpdateFunctionAndArguments = function(args, type) {
@@ -540,7 +643,6 @@
         ref = this.paths;
         for (i = 0, len = ref.length; i < len; i++) {
           path = ref[i];
-          this.addPathToProperLayer(path);
           path.updateStrokeColor();
           path.drawn = false;
           path.draw();
@@ -646,6 +748,7 @@
 
     })(Item);
     Item.Drawing = Drawing;
+    R.Drawing = Drawing;
     return Drawing;
   });
 

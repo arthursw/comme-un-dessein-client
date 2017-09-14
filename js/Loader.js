@@ -417,10 +417,7 @@
               R.rasterizer.addAreaToUpdate(Utils.CS.rectangleFromBox(item).expand(5));
               break;
             case 'Drawing':
-              if (item.box.coordinates[0].length < 5) {
-                console.log("Error: drawing has less than 5 points");
-              }
-              drawing = new Item.Drawing(Utils.CS.rectangleFromBox(item), data, id, item._id.$oid, item.owner, date, item.title, item.description, item.status);
+              drawing = new Item.Drawing(null, data, id, item._id.$oid, item.owner, date, item.title, item.description, item.status, item.pathList, item.svg);
               if (drawing != null) {
                 newItems.push(drawing);
               }
@@ -566,10 +563,12 @@
             R.alertManager.alert("Your URL is invalid or does not point to an existing page", "error");
           } else {
             options = [];
-            ref = result.messageOptions;
-            for (k = 0, len = ref.length; k < len; k++) {
-              option = ref[k];
-              options[option] = result[option];
+            if (result.messageOptions != null) {
+              ref = result.messageOptions;
+              for (k = 0, len = ref.length; k < len; k++) {
+                option = ref[k];
+                options[option] = result[option];
+              }
             }
             R.alertManager.alert(result.message, "error", null, options);
           }

@@ -16,7 +16,6 @@
         this.vote = bind(this.vote, this);
         this.voteCallback = bind(this.voteCallback, this);
         this.submitDrawingClicked = bind(this.submitDrawingClicked, this);
-        this.submitDrawingClickedCallback = bind(this.submitDrawingClickedCallback, this);
         this.beginDrawingClicked = bind(this.beginDrawingClicked, this);
         this.showContent = bind(this.showContent, this);
         this.showLoadAnimation = bind(this.showLoadAnimation, this);
@@ -214,7 +213,7 @@
       };
 
       DrawingPanel.prototype.showSelectedDrawings = function() {
-        var item, j, len, listJ, ref, selectedDrawingsJ;
+        var i, item, len, listJ, ref, selectedDrawingsJ;
         this.drawingPanelTitleJ.attr('data-i18n', 'Select a single drawing').text(i18next.t('Select a single drawing'));
         this.drawingPanelJ.find('.content-container').children().hide();
         selectedDrawingsJ = this.drawingPanelJ.find('.selected-drawings');
@@ -222,8 +221,8 @@
         listJ = selectedDrawingsJ.find('ul.drawing-list');
         listJ.empty();
         ref = R.selectedItems;
-        for (j = 0, len = ref.length; j < len; j++) {
-          item = ref[j];
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
           if (item instanceof Item.Drawing) {
             this.createSelectionLi(selectedDrawingsJ, listJ, item);
           }
@@ -276,76 +275,24 @@
       };
 
       DrawingPanel.prototype.getDrawingImage = function(drawing) {
-        var image, raster;
-        image = new Image();
-        raster = drawing.getRaster();
-        if (raster != null) {
-          image.src = raster.toDataURL();
-          return image;
-        } else {
-          return $('<span>').addClass('badge label-default').attr('data-i18n', 'No path loaded').text(i18next.t('No path loaded'));
-        }
+        var canvasTemp, svg, tempProject;
+        canvasTemp = document.createElement('canvas');
+        canvasTemp.width = drawing.group.bounds.width;
+        canvasTemp.height = drawing.group.bounds.height;
+        tempProject = new P.Project(canvasTemp);
+        tempProject.activeLayer.addChild(drawing.group);
+        tempProject.view.setCenter(drawing.group.position);
+        svg = tempProject.exportSVG();
+        drawing.group.remove();
+        tempProject.remove();
+        paper.projects[0].activate();
+        return svg;
       };
 
       DrawingPanel.prototype.setDrawingThumbnail = function() {
         var thumbnailJ;
         thumbnailJ = this.contentJ.find('.drawing-thumbnail');
         thumbnailJ.empty().append(this.getDrawingImage(this.currentDrawing));
-      };
-
-      DrawingPanel.prototype.createDrawingFromItems = function(items) {
-        var description, drawingId, item, j, len, title;
-        drawingId = Utils.createId();
-        for (j = 0, len = items.length; j < len; j++) {
-          item = items[j];
-          if (item instanceof Item.Path) {
-            item.drawingId = drawingId;
-          }
-        }
-        title = this.contentJ.find('#drawing-title').val();
-        description = this.contentJ.find('#drawing-description').val();
-        this.currentDrawing = new Item.Drawing(null, null, drawingId, null, R.me, Date.now(), title, description, 'pending');
-        R.rasterizer.rasterizeRectangle(this.currentDrawing.rectangle);
-        R.view.fitRectangle(this.currentDrawing.rectangle, true);
-        this.setDrawingThumbnail();
-        this.currentDrawing.select(true, false);
-      };
-
-      DrawingPanel.prototype.submitDrawingClickedCallback = function(results) {
-        var i, id, item, itemIds, items, itemsToLoad, j, k, len, len1, ref;
-        this.submitBtnJ.find('span.glyphicon').removeClass('glyphicon-refresh glyphicon-refresh-animate').addClass('glyphicon-ok');
-        if (!R.loader.checkError(results)) {
-          return;
-        }
-        itemsToLoad = [];
-        itemIds = [];
-        ref = results.items;
-        for (j = 0, len = ref.length; j < len; j++) {
-          i = ref[j];
-          item = JSON.parse(i);
-          itemIds.push(item.clientId);
-          if (R.items[item.clientId] == null) {
-            itemsToLoad.push(item);
-          }
-        }
-        R.loader.createNewItems(itemsToLoad);
-        items = [];
-        for (k = 0, len1 = itemIds.length; k < len1; k++) {
-          id = itemIds[k];
-          items.push(R.items[id]);
-        }
-        if (itemIds.length === 0) {
-          R.alertManager.alert('You must draw something before submitting', 'error');
-          this.close();
-          return;
-        }
-        if (R.Tools.Path.draftIsTooBig(items)) {
-          R.Tools.Path.displayDraftIsTooBigError();
-          this.close();
-          return;
-        }
-        this.createDrawingFromItems(items);
-        R.commandManager.clearHistory();
       };
 
       DrawingPanel.prototype.checkPathToSubmit = function() {
@@ -378,24 +325,18 @@
         this.contentJ.find('#drawing-title').removeAttr('readonly');
         this.contentJ.find('#drawing-description').removeAttr('readonly');
         this.votesJ.hide();
-        this.currentDrawing = null;
         this.submitBtnJ.find('span.glyphicon').removeClass('glyphicon-ok').addClass('glyphicon-refresh glyphicon-refresh-animate');
-        $.ajax({
-          method: "POST",
-          url: "ajaxCall/",
-          data: {
-            data: JSON.stringify({
-              "function": 'getDrafts',
-              args: {
-                city: R.city
-              }
-            })
-          }
-        }).done(this.submitDrawingClickedCallback);
+        this.currentDrawing = Item.Drawing.getDraft();
+        R.view.fitRectangle(this.currentDrawing.rectangle, true);
+        this.setDrawingThumbnail();
+        this.currentDrawing.select(true, false);
+        if (this.currentDrawing == null) {
+          console.error('no draft found!');
+        }
       };
 
       DrawingPanel.prototype.setVotes = function() {
-        var j, len, liJ, nNegativeVotes, nPositiveVotes, nVotes, negativeVoteListJ, positiveVoteListJ, ref, v, vote;
+        var i, len, liJ, nNegativeVotes, nPositiveVotes, nVotes, negativeVoteListJ, positiveVoteListJ, ref, v, vote;
         this.votesJ.show();
         this.voteUpBtnJ.removeClass('voted');
         this.voteDownBtnJ.removeClass('voted');
@@ -406,8 +347,8 @@
         nPositiveVotes = 0;
         nNegativeVotes = 0;
         ref = this.currentDrawing.votes;
-        for (j = 0, len = ref.length; j < len; j++) {
-          vote = ref[j];
+        for (i = 0, len = ref.length; i < len; i++) {
+          vote = ref[i];
           v = JSON.parse(vote.vote);
           liJ = $('<li data-author-pk="' + vote.authorPk + '">' + vote.author + '</li>');
           if (v.positive) {
@@ -451,7 +392,7 @@
       };
 
       DrawingPanel.prototype.setDrawing = function(currentDrawing, drawingData) {
-        var j, latestDrawing, len, p, path, pathsToLoad, ref;
+        var i, latestDrawing, len, p, path, pathsToLoad, ref;
         this.currentDrawing = currentDrawing;
         this.drawingPanelTitleJ.attr('data-i18n', 'Drawing info').text(i18next.t('Drawing info'));
         this.open();
@@ -481,8 +422,8 @@
         this.setVotes();
         pathsToLoad = [];
         ref = drawingData.paths;
-        for (j = 0, len = ref.length; j < len; j++) {
-          p = ref[j];
+        for (i = 0, len = ref.length; i < len; i++) {
+          p = ref[i];
           path = JSON.parse(p);
           if (!R.items[path.clientId]) {
             pathsToLoad.push(path);
@@ -561,10 +502,10 @@
       /* votes */
 
       DrawingPanel.prototype.hasAlreadyVoted = function() {
-        var j, len, ref, vote;
+        var i, len, ref, vote;
         ref = this.currentDrawing.votes;
-        for (j = 0, len = ref.length; j < len; j++) {
-          vote = ref[j];
+        for (i = 0, len = ref.length; i < len; i++) {
+          vote = ref[i];
           if (vote.vote.author === R.me) {
             return true;
           }
@@ -705,11 +646,11 @@
       };
 
       DrawingPanel.prototype.deleteGivenPaths = function(paths) {
-        var deleteCommand, j, len, path, pathsToDelete, pathsToDeleteResurectors;
+        var deleteCommand, i, len, path, pathsToDelete, pathsToDeleteResurectors;
         pathsToDelete = [];
         pathsToDeleteResurectors = {};
-        for (j = 0, len = paths.length; j < len; j++) {
-          path = paths[j];
+        for (i = 0, len = paths.length; i < len; i++) {
+          path = paths[i];
           if (path.pk != null) {
             pathsToDelete.push(path);
             pathsToDeleteResurectors[path.id] = {
