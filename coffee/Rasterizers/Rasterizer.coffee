@@ -60,9 +60,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Drawing' ], (P, R, Utils, Drawing) -
 			return
 
 		loadItem: (item)->
-			item.draw?()
-			if @rasterizeItems
-				item.rasterize?()
+			# item.draw?()
+			# if @rasterizeItems
+			# 	item.rasterize?()
 			return
 
 		requestDraw: ()->
@@ -101,8 +101,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Drawing' ], (P, R, Utils, Drawing) -
 
 		rasterizeAllItems: ()->
 
-			for id, item of R.items
-				item.rasterize?()
+			# for id, item of R.items
+			# 	item.rasterize?()
 
 			return
 

@@ -19,7 +19,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			icon: if R.style == 'line' then 'mouse_vote' else null
 
 		@drawItems = false
-		@order = 1
+		# @order = 1
 
 		# Paper hitOptions for hitTest function to check which items (corresponding to those criterias) are under a point
 		@hitOptions =
@@ -37,7 +37,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 		# Deselect all RItems (and paper items)
 		deselectAll: (updateOptions=true)->
 			if R.selectedItems.length>0
-				R.commandManager.add(new Command.Deselect(undefined, updateOptions), true)
+				# R.commandManager.add(new Command.Deselect(undefined, updateOptions), true)
+				for item in R.selectedItems.slice()
+					item.deselect(updateOptions)
 				@selectionRectangle?.remove()
 				@selectionRectangle = null
 			P.project.activeLayer.selected = false
@@ -61,11 +63,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 				@selectionRectangle = null
 			return
 
-		select: (deselectItems=false, updateParameters=true, forceSelect=false)->
+		select: (deselectItems=false, updateParameters=true, forceSelect=false, buttonClicked=false)->
 			# R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").hide()
 			# R.rasterizer.drawItems() 		# must not draw all items here since user can just wish to use an Media
 			
-			R.alertManager.alert 'Click on a drawing to vote for it', 'info'
+			if buttonClicked
+				R.alertManager.alert 'Click on a drawing to vote for it', 'info'
 
 			super(false, updateParameters)
 			return
@@ -83,15 +86,15 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			itemsToHighlight = []
 
 			# Add all items which have bounds intersecting with the selection rectangle (1st version)
-			for name, item of R.items
-				if item instanceof Item.Drawing
-					item.unhighlight()
-					bounds = item.getBounds()
-					if bounds.intersects(rectangle)
-						item.highlight()
-					# if the user just clicked (not dragged a selection rectangle): just select the first item
-					if rectangle.area == 0
-						break
+			# for name, item of R.items
+			# 	if item instanceof Item.Drawing
+			# 		item.unhighlight()
+			# 		bounds = item.getBounds()
+			# 		if bounds.intersects(rectangle)
+			# 			item.highlight()
+			# 		# if the user just clicked (not dragged a selection rectangle): just select the first item
+			# 		if rectangle.area == 0
+			# 			break
 			return
 
 		unhighlightItems: ()->
@@ -132,26 +135,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			allDrawingsInRectangleBox = []
 
 			# Add all items which have bounds intersecting with the selection rectangle (1st version)
-			for name, item of R.items
+			for item in R.drawings
 				if item.getBounds().intersects(rectangle) and item.isVisible()
-					if item instanceof Item.Drawing
-						allDrawingsInRectangleBox.push(item)
-					else
-						# if Item.Drawing.prototype.isPrototypeOf(item)
-						# 	itemsToSelect.length = 0
-						# 	itemsToSelect.push(item)
-						# 	return true
-						# else
-						# 	itemsToSelect.push(item)
-
-						# if the user just clicked (not dragged a selection rectangle): select all items which match perfectly (perfectly under the mouse)
-						if justClicked
-							if item instanceof Item.Path
-								hitResult = item.performHitTest(rectangle.center, { segments: true, stroke: true, handles: false, tolerance: 5})
-								if hitResult?	
-									itemsToSelect.push(item)
-						else
-							itemsToSelect.push(item)
+					allDrawingsInRectangleBox.push(item)
+					itemsToSelect.push(item)
 
 			if allDrawingsInRectangleBox.length == 1
 				itemsToSelect.length = 0
@@ -208,7 +195,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 				# 	# add locks to itemsToSelect
 				# 	itemsToSelect = itemsToSelect.concat(locksToSelect)
 
-				R.commandManager.add(new Command.Select(itemsToSelect), true)
+				# R.commandManager.add(new Command.Select(itemsToSelect), true)
+				for item in itemsToSelect
+					item.select()
 			return
 
 		# Begin selection:

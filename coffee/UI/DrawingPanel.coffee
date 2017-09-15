@@ -54,14 +54,17 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@submitBtnJ = @drawingPanelJ.find('.action-buttons button.submit')
 			@modifyBtnJ = @drawingPanelJ.find('.action-buttons button.modify')
 			@cancelBtnJ = @drawingPanelJ.find('.action-buttons button.cancel')
-			@deleteBtnJ = @drawingPanelJ.find('.action-buttons button.delete')
+			# @deleteBtnJ = @drawingPanelJ.find('.action-buttons button.delete')
 
 			@submitBtnJ.click(@submitDrawing)
 			@modifyBtnJ.click(@modifyDrawing)
 			@cancelBtnJ.click(@cancelDrawing)
-			@deleteBtnJ.click(@deleteDrawing)
+			# @deleteBtnJ.click(@deleteDrawing)
 
 			@contentJ = @drawingPanelJ.find('.content-container')
+			
+			@visible = false
+
 			descriptionJ = @contentJ.find('#drawing-description')
 			descriptionJ.keydown (event)=>
 				switch Utils.specialKeys[event.keyCode]
@@ -106,6 +109,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 		updateSelection: ()=>
 			if R.selectedItems.length == 1
 
+				if R.selectedItems[0].status == 'draft'
+					@submitDrawingClicked()
+					return
+
 				@showLoadAnimation()
 				@open()
 
@@ -143,22 +150,28 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 		open: ()->
 			@drawingPanelJ.show()
 			@drawingPanelJ.addClass('visible')
+			@visible = true
+
+			R.Button.updateSubmitButtonVisibility()
 			return
 
 		close: (removeDrawingIfNotSaved=true)=>
-			if @currentDrawing? and not @currentDrawing.pk?
-				if removeDrawingIfNotSaved
-					@showSubmitDrawing()
-					@currentDrawing.removeChildren()
-					@currentDrawing.remove()
+			# if @currentDrawing? and not @currentDrawing.pk?
+			# 	if removeDrawingIfNotSaved
+			# 		@showSubmitDrawing()
+			# 		@currentDrawing.removeChildren()
+			# 		@currentDrawing.remove()
 					
 
 				# @showBeginDrawing()
 			@drawingPanelJ.hide()
 			@drawingPanelJ.removeClass('visible')
+			@visible = false
 			if R.selectedItems.length > 0
 				@currentDrawing = null
 				R.tools.select.deselectAll()
+
+			R.Button.updateSubmitButtonVisibility()
 			return
 
 		### set drawing ###
@@ -177,7 +190,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			thumbnailJ = $('<div>')
 			thumbnailJ.addClass('thumbnail drawing-thumbnail')
-			thumbnailJ.append(@getDrawingImage(item))
+			thumbnailJ.append(R.view.getThumbnail(item))
 			
 			deselectBtnJ = $('<button>')
 			deselectBtnJ.addClass('btn btn-default icon-only transparent')
@@ -270,37 +283,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 						return
 			return
 
-		getDrawingImage: (drawing)->
-
-			# image = new Image()
-			# raster = drawing.getRaster()
-			# if raster?
-			# 	image.src = raster.toDataURL()
-			# 	return image
-			# else
-			# 	return $('<span>').addClass('badge label-default').attr('data-i18n', 'No path loaded').text(i18next.t('No path loaded'))
-			
-			canvasTemp = document.createElement('canvas')
-			canvasTemp.width = drawing.group.bounds.width
-			canvasTemp.height = drawing.group.bounds.height
-
-			tempProject = new P.Project(canvasTemp)
-
-			tempProject.activeLayer.addChild(drawing.group)
-			tempProject.view.setCenter(drawing.group.position)
-			svg = tempProject.exportSVG()
-			drawing.group.remove()
-			tempProject.remove()
-			paper.projects[0].activate()
-
-			return svg
-
 		setDrawingThumbnail: ()->
-			# @currentDrawing.rasterize()
-			# R.rasterizer.rasterize(@currentDrawing, false)
-
 			thumbnailJ = @contentJ.find('.drawing-thumbnail')
-			thumbnailJ.empty().append(@getDrawingImage(@currentDrawing))
+			thumbnailJ.empty().append(R.view.getThumbnail(@currentDrawing))
 			return
 
 		# createDrawingFromItems: (items)->
@@ -368,18 +353,21 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return false
 
 		submitDrawingClicked: ()=>
-			# if not @checkPathToSubmit()
-			# 	R.alertManager.alert 'You must draw something before submitting', 'error'
-			# 	return
-			R.tools.select.deselectAll()
+			draft = Item.Drawing.getDraft()
+			if not draft? then return
 
+			# Warning:  R.tools.select.deselectAll() and R.toolManager.leaveDrawingMode() can lead to @currentDrawing = null so set currentDrawing afterward
+			R.tools.select.deselectAll()
 			R.toolManager.leaveDrawingMode(true)
+
+			# set currentDrawing after the two prevous functions
+			@currentDrawing = draft
+
 			# @submitDrawingBtnJ.hide()
 			@drawingPanelTitleJ.attr('data-i18n', 'Create drawing').text(i18next.t('Create drawing'))
 			# @showBeginDrawing()
 			@open()
 			@showContent()
-			@currentDrawing = null
 
 			@contentJ.find('#drawing-author').val(R.me)
 			@contentJ.find('#drawing-title').val('')
@@ -388,18 +376,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@modifyBtnJ.hide()
 			@cancelBtnJ.show()
 			@cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel').text(i18next.t('Cancel'))
-			@deleteBtnJ.show()
+			# @deleteBtnJ.show()
 
 			@contentJ.find('#drawing-title').removeAttr('readonly')
 			@contentJ.find('#drawing-description').removeAttr('readonly')
 
 			@votesJ.hide()
 
-			@submitBtnJ.find('span.glyphicon').removeClass('glyphicon-ok').addClass('glyphicon-refresh glyphicon-refresh-animate')
+			# @submitBtnJ.find('span.glyphicon').removeClass('glyphicon-ok').addClass('glyphicon-refresh glyphicon-refresh-animate')
 			# $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getDrafts', args: { city: R.city } } ).done(@submitDrawingClickedCallback)
 
-			@currentDrawing = Item.Drawing.getDraft()
-		
+			@currentDrawing.computeRectangle()
+
 			R.view.fitRectangle(@currentDrawing.rectangle, true)
 
 			@setDrawingThumbnail()
@@ -476,7 +464,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@submitBtnJ.hide()
 			@modifyBtnJ.hide()
 			@cancelBtnJ.hide()
-			@deleteBtnJ.hide()
+			# @deleteBtnJ.hide()
 
 			@contentJ.find('#drawing-author').val(@currentDrawing.owner)
 			@contentJ.find('#drawing-title').val(@currentDrawing.title)
@@ -631,14 +619,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				R.alertManager.alert "You must enter a title", "error"
 				return
 
-			if description.length == 0
-				R.alertManager.alert "You must enter a description", "error"
-				return
+			# if description.length == 0
+			# 	R.alertManager.alert "You must enter a description", "error"
+			# 	return
 
 			@currentDrawing.title = title
 			@currentDrawing.description = description
 
-			@currentDrawing.save()
+			@currentDrawing.submit()
+			
 			@close(false)
 
 			return
@@ -667,11 +656,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				@close()
 				return
 
-			if not @currentDrawing.pk?
+			if not @currentDrawing.pk? or @currentDrawing.status == 'draft'
 				@close()
 				return
 
-			if @currentDrawing.status != 'pending'
+			if @currentDrawing.status != 'pending' && @currentDrawing.status != 'draft'
 				R.alertManager.alert "The drawing is already validated, it cannot be cancelled anymore", "error"
 				return	
 
@@ -699,33 +688,33 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				R.commandManager.add(deleteCommand, true)
 			return
 
-		deletePaths: ()=>
-			paths = @currentDrawing.paths.slice()
-			@currentDrawing.removeChildren()
-			@currentDrawing.remove()
+		# deletePaths: ()=>
+		# 	paths = @currentDrawing.paths.slice()
+		# 	@currentDrawing.removeChildren()
+		# 	@currentDrawing.remove()
 
-			@deleteGivenPaths(paths)
-			return
+		# 	@deleteGivenPaths(paths)
+		# 	return
 
-		deleteDrawing: ()=>
+		# deleteDrawing: ()=>
 
-			if not R.me? or not _.isString(R.me)
-				R.alertManager.alert "You must be logged in to delete a drawing", "error"
-				return
+		# 	if not R.me? or not _.isString(R.me)
+		# 		R.alertManager.alert "You must be logged in to delete a drawing", "error"
+		# 		return
 
-			if not @currentDrawing?
-				@close()
-				return
+		# 	if not @currentDrawing?
+		# 		@close()
+		# 		return
 
-			if @currentDrawing.pk?
-				R.alertManager.alert "Please cancel the drawing before deleting its paths", "error"
-				@close()
-				return
+		# 	if @currentDrawing.pk?
+		# 		R.alertManager.alert "Please cancel the drawing before deleting its paths", "error"
+		# 		@close()
+		# 		return
 
-			modal = Modal.createModal( title: 'Delete all paths', submit: @deletePaths, postSubmit: 'hide' )
-			modal.addText('Do you really want to delete the selected paths?')
-			modal.show()
+		# 	modal = Modal.createModal( title: 'Delete all paths', submit: @deletePaths, postSubmit: 'hide' )
+		# 	modal.addText('Do you really want to delete the selected paths?')
+		# 	modal.show()
 
-			return
+		# 	return
 
 	return DrawingPanel

@@ -30,8 +30,6 @@
 
       SelectTool.drawItems = false;
 
-      SelectTool.order = 1;
-
       SelectTool.hitOptions = {
         stroke: true,
         fill: true,
@@ -49,14 +47,18 @@
       }
 
       SelectTool.prototype.deselectAll = function(updateOptions) {
-        var ref;
+        var i, item, len, ref, ref1;
         if (updateOptions == null) {
           updateOptions = true;
         }
         if (R.selectedItems.length > 0) {
-          R.commandManager.add(new Command.Deselect(void 0, updateOptions), true);
-          if ((ref = this.selectionRectangle) != null) {
-            ref.remove();
+          ref = R.selectedItems.slice();
+          for (i = 0, len = ref.length; i < len; i++) {
+            item = ref[i];
+            item.deselect(updateOptions);
+          }
+          if ((ref1 = this.selectionRectangle) != null) {
+            ref1.remove();
           }
           this.selectionRectangle = null;
         }
@@ -90,7 +92,7 @@
         }
       };
 
-      SelectTool.prototype.select = function(deselectItems, updateParameters, forceSelect) {
+      SelectTool.prototype.select = function(deselectItems, updateParameters, forceSelect, buttonClicked) {
         if (deselectItems == null) {
           deselectItems = false;
         }
@@ -100,7 +102,12 @@
         if (forceSelect == null) {
           forceSelect = false;
         }
-        R.alertManager.alert('Click on a drawing to vote for it', 'info');
+        if (buttonClicked == null) {
+          buttonClicked = false;
+        }
+        if (buttonClicked) {
+          R.alertManager.alert('Click on a drawing to vote for it', 'info');
+        }
         SelectTool.__super__.select.call(this, false, updateParameters);
       };
 
@@ -116,22 +123,8 @@
       };
 
       SelectTool.prototype.highlightItemsUnderRectangle = function(rectangle) {
-        var bounds, item, itemsToHighlight, name, ref;
+        var itemsToHighlight;
         itemsToHighlight = [];
-        ref = R.items;
-        for (name in ref) {
-          item = ref[name];
-          if (item instanceof Item.Drawing) {
-            item.unhighlight();
-            bounds = item.getBounds();
-            if (bounds.intersects(rectangle)) {
-              item.highlight();
-            }
-            if (rectangle.area === 0) {
-              break;
-            }
-          }
-        }
       };
 
       SelectTool.prototype.unhighlightItems = function() {
@@ -166,35 +159,18 @@
       };
 
       SelectTool.prototype.populateItemsToSelect = function(itemsToSelect, locksToSelect, rectangle) {
-        var allDrawingsInRectangleBox, drawing, hitResult, i, item, justClicked, len, name, ref;
+        var allDrawingsInRectangleBox, drawing, i, item, j, justClicked, len, len1, ref;
         justClicked = rectangle.area === 0;
         if (justClicked) {
           rectangle = rectangle.expand(5);
         }
         allDrawingsInRectangleBox = [];
-        ref = R.items;
-        for (name in ref) {
-          item = ref[name];
+        ref = R.drawings;
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
           if (item.getBounds().intersects(rectangle) && item.isVisible()) {
-            if (item instanceof Item.Drawing) {
-              allDrawingsInRectangleBox.push(item);
-            } else {
-              if (justClicked) {
-                if (item instanceof Item.Path) {
-                  hitResult = item.performHitTest(rectangle.center, {
-                    segments: true,
-                    stroke: true,
-                    handles: false,
-                    tolerance: 5
-                  });
-                  if (hitResult != null) {
-                    itemsToSelect.push(item);
-                  }
-                }
-              } else {
-                itemsToSelect.push(item);
-              }
-            }
+            allDrawingsInRectangleBox.push(item);
+            itemsToSelect.push(item);
           }
         }
         if (allDrawingsInRectangleBox.length === 1) {
@@ -202,8 +178,8 @@
           itemsToSelect.push(allDrawingsInRectangleBox[0]);
         }
         if (justClicked && allDrawingsInRectangleBox.length > 0 && itemsToSelect.length === 0) {
-          for (i = 0, len = allDrawingsInRectangleBox.length; i < len; i++) {
-            drawing = allDrawingsInRectangleBox[i];
+          for (j = 0, len1 = allDrawingsInRectangleBox.length; j < len1; j++) {
+            drawing = allDrawingsInRectangleBox[j];
             itemsToSelect.push(drawing);
           }
         }
@@ -249,7 +225,7 @@
       };
 
       SelectTool.prototype.selectItems = function(event) {
-        var itemsToSelect, locksToSelect, rectangle, selectDrawing;
+        var i, item, itemsToSelect, len, locksToSelect, rectangle, selectDrawing;
         rectangle = new P.Rectangle(event.downPoint, event.point);
         itemsToSelect = [];
         locksToSelect = [];
@@ -261,7 +237,10 @@
           itemsToSelect = locksToSelect;
         }
         if (itemsToSelect.length > 0) {
-          R.commandManager.add(new Command.Select(itemsToSelect), true);
+          for (i = 0, len = itemsToSelect.length; i < len; i++) {
+            item = itemsToSelect[i];
+            item.select();
+          }
         }
       };
 

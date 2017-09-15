@@ -46,6 +46,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command' ], (P, R, Utils, Command
 
 				return
 			
+			R.drawingPanel.close()
+			
 			deferred = @history[@currentCommand+@offset].toggle()
 
 			@waitingCommand = @history[@currentCommand+@offset]

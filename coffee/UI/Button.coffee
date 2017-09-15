@@ -1,8 +1,57 @@
-define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'i18next' ], (P, R, Utils, Tool, i18next) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, R, Utils, Tool, Modal, i18next) ->
 
 	class Button
 
+		@createSubmitButton: ()->
+			@submitButton = new Button({
+				name: 'Submit drawing'
+				favorite: true
+				iconURL: 'icones_icon_ok.png'
+				# order: 0
+				classes: 'btn-success displayName'
+				onClick: ()=>
+					R.drawingPanel.submitDrawingClicked()
+					return
+			})
+			@submitButton.hide()
+			return
+
+		# @clearDrawing: ()->
+		# 	draft = R.Drawing.getDraft()
+		# 	if draft?
+		# 		draft.removePaths()
+		# 	return
+
+		@createDeleteButton: ()->
+			@deleteButton = new Button({
+				name: 'Delete draft'
+				favorite: true
+				iconURL: 'icones_cancel.png'
+				# order: 0
+				classes: 'btn-danger'
+				onClick: ()=>
+					draft = R.Drawing.getDraft()
+					if draft?
+						draft.removePaths(true)
+					return
+			})
+			@deleteButton.hide()
+			return
+
+		@updateSubmitButtonVisibility: (draft=null)->
+			draft ?= R.Drawing.getDraft()
+			if not draft? or not draft.paths? or draft.paths.length == 0 or R.drawingPanel.visible
+				@submitButton.hide()
+				@deleteButton.hide()
+				R.tools.eraser.btn.hide()
+			else
+				@submitButton.show()
+				@deleteButton.show()
+				R.tools.eraser.btn.show()
+			return
+
 		constructor: (parameters)->
+			@visible = true
 			name = parameters.name
 			iconURL = parameters.iconURL
 			favorite = parameters.favorite
@@ -145,4 +194,19 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'i18next' ], (P, R, Utils, To
 			R.tools[toolName]?.select()
 			return
 
+		hide: ()->
+			@visible = false
+			@btnJ.hide()
+			if @cloneJ?
+				@cloneJ.hide()
+			return
+
+		show: ()->
+			@visible = true
+			@btnJ.show()
+			if @cloneJ?
+				@cloneJ.show()
+			return
+
+	R.Button = Button
 	return Button

@@ -720,12 +720,13 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 
 		delete: ()->
 			@remove()
-			if not @pk? then return
+			if not @pk? then return false
+			@pk = null
 			if not @socketAction
 				@deleteFromDatabase()
 				R.socket.emit "bounce", itemId: @id, function: "delete", arguments: []
-			@pk = null
-			return
+				return true
+			return false
 
 		deleteCommand: ()->
 			R.commandManager.add(new Command.DeleteItem(@), true)
@@ -739,41 +740,41 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 			return
 
 		removeDrawing: ()->
-			if not @drawing?.parent? then return
-			@drawingRelativePosition = @drawing.position.subtract(@rectangle.center)
-			# @drawing.data.rectangle.remove()
-			@drawing.remove()
+			# if not @drawing?.parent? then return
+			# @drawingRelativePosition = @drawing.position.subtract(@rectangle.center)
+			# # @drawing.data.rectangle.remove()
+			# @drawing.remove()
 			return
 
 		replaceDrawing: ()->
-			if not @drawing? or not @drawingRelativePosition? then return
-			@raster?.remove()
-			@raster = null
-			@group.addChild(@drawing)
-			@drawing.position = @rectangle.center.add(@drawingRelativePosition)
-			@drawingRelativePosition = null
+			# if not @drawing? or not @drawingRelativePosition? then return
+			# @raster?.remove()
+			# @raster = null
+			# @group.addChild(@drawing)
+			# @drawing.position = @rectangle.center.add(@drawingRelativePosition)
+			# @drawingRelativePosition = null
 			return
 
 		rasterize: ()->
 			# if @drawingId? then return
-			if @raster? or not @drawing? then return
-			if not R.rasterizer.rasterizeItems then return
-			if @drawing.bounds.width == 0 and @drawing.bounds.height == 0 then return
+			# if @raster? or not @drawing? then return
+			# if not R.rasterizer.rasterizeItems then return
+			# if @drawing.bounds.width == 0 and @drawing.bounds.height == 0 then return
 
-			if @drawing.data.rectangle?
-				@drawing.data.rectangle.remove()
+			# if @drawing.data.rectangle?
+			# 	@drawing.data.rectangle.remove()
 			
-			if not @drawing.data.rectangle
-				@drawing.data.rectangle = new P.Path.Rectangle(@drawing.bounds.expand(2*Item.Path.strokeWidth))	
-				# @drawing.data.rectangle.fillColor = new P.Color(Math.random(), Math.random(), Math.random())
-				@drawing.addChild(@drawing.data.rectangle)
-				@drawing.data.rectangle.sendToBack()
+			# if not @drawing.data.rectangle
+			# 	@drawing.data.rectangle = new P.Path.Rectangle(@drawing.bounds.expand(2*Item.Path.strokeWidth))	
+			# 	# @drawing.data.rectangle.fillColor = new P.Color(Math.random(), Math.random(), Math.random())
+			# 	@drawing.addChild(@drawing.data.rectangle)
+			# 	@drawing.data.rectangle.sendToBack()
 
-			@raster = @drawing.rasterize()
+			# @raster = @drawing.rasterize()
 
-			@group.addChild(@raster)
-			@raster.sendToBack() 	# the raster (of a lock) must be send behind other items
-			@removeDrawing()
+			# @group.addChild(@raster)
+			# @raster.sendToBack() 	# the raster (of a lock) must be send behind other items
+			# @removeDrawing()
 			return
 
 	ItemTool.Item = Item

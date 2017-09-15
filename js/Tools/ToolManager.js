@@ -25,6 +25,7 @@
         R.tools.move = new R.Tools.Move();
         R.tools.select = new R.Tools.Select();
         R.tools.eraser = new R.Tools.Eraser();
+        R.tools.eraser.btn.hide();
         defaultFavoriteTools = [];
         while (R.favoriteTools.length < 8 && defaultFavoriteTools.length > 0) {
           Utils.Array.pushIfAbsent(R.favoriteTools, defaultFavoriteTools.pop().label);
@@ -99,7 +100,7 @@
           category: null,
           description: 'Zoom +',
           popover: true,
-          order: null
+          order: 1
         });
         this.zoomInBtn.btnJ.click((function(_this) {
           return function() {
@@ -113,7 +114,7 @@
           category: null,
           description: 'Zoom -',
           popover: true,
-          order: null
+          order: 2
         });
         this.zoomOutBtn.btnJ.click((function(_this) {
           return function() {

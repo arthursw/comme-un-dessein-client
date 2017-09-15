@@ -87,7 +87,11 @@
           popover: true,
           order: this.constructor.order
         });
-        this.btn.btnJ.click(this.select);
+        this.btn.btnJ.click((function(_this) {
+          return function() {
+            return _this.select(null, null, null, true);
+          };
+        })(this));
       };
 
       Tool.prototype.select = function(deselectItems, updateParameters) {

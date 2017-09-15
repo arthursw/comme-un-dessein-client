@@ -6,8 +6,6 @@
     var DrawingPanel;
     DrawingPanel = (function() {
       function DrawingPanel() {
-        this.deleteDrawing = bind(this.deleteDrawing, this);
-        this.deletePaths = bind(this.deletePaths, this);
         this.cancelDrawing = bind(this.cancelDrawing, this);
         this.modifyDrawing = bind(this.modifyDrawing, this);
         this.submitDrawing = bind(this.submitDrawing, this);
@@ -53,12 +51,11 @@
         this.submitBtnJ = this.drawingPanelJ.find('.action-buttons button.submit');
         this.modifyBtnJ = this.drawingPanelJ.find('.action-buttons button.modify');
         this.cancelBtnJ = this.drawingPanelJ.find('.action-buttons button.cancel');
-        this.deleteBtnJ = this.drawingPanelJ.find('.action-buttons button.delete');
         this.submitBtnJ.click(this.submitDrawing);
         this.modifyBtnJ.click(this.modifyDrawing);
         this.cancelBtnJ.click(this.cancelDrawing);
-        this.deleteBtnJ.click(this.deleteDrawing);
         this.contentJ = this.drawingPanelJ.find('.content-container');
+        this.visible = false;
         descriptionJ = this.contentJ.find('#drawing-description');
         descriptionJ.keydown((function(_this) {
           return function(event) {
@@ -113,6 +110,10 @@
       DrawingPanel.prototype.updateSelection = function() {
         var drawing;
         if (R.selectedItems.length === 1) {
+          if (R.selectedItems[0].status === 'draft') {
+            this.submitDrawingClicked();
+            return;
+          }
           this.showLoadAnimation();
           this.open();
           drawing = R.selectedItems[0];
@@ -151,25 +152,22 @@
       DrawingPanel.prototype.open = function() {
         this.drawingPanelJ.show();
         this.drawingPanelJ.addClass('visible');
+        this.visible = true;
+        R.Button.updateSubmitButtonVisibility();
       };
 
       DrawingPanel.prototype.close = function(removeDrawingIfNotSaved) {
         if (removeDrawingIfNotSaved == null) {
           removeDrawingIfNotSaved = true;
         }
-        if ((this.currentDrawing != null) && (this.currentDrawing.pk == null)) {
-          if (removeDrawingIfNotSaved) {
-            this.showSubmitDrawing();
-            this.currentDrawing.removeChildren();
-            this.currentDrawing.remove();
-          }
-        }
         this.drawingPanelJ.hide();
         this.drawingPanelJ.removeClass('visible');
+        this.visible = false;
         if (R.selectedItems.length > 0) {
           this.currentDrawing = null;
           R.tools.select.deselectAll();
         }
+        R.Button.updateSubmitButtonVisibility();
       };
 
 
@@ -187,7 +185,7 @@
         titleJ.html(item.title);
         thumbnailJ = $('<div>');
         thumbnailJ.addClass('thumbnail drawing-thumbnail');
-        thumbnailJ.append(this.getDrawingImage(item));
+        thumbnailJ.append(R.view.getThumbnail(item));
         deselectBtnJ = $('<button>');
         deselectBtnJ.addClass('btn btn-default icon-only transparent');
         deselectIconJ = $('<span>').addClass('glyphicon glyphicon-remove');
@@ -274,25 +272,10 @@
         }
       };
 
-      DrawingPanel.prototype.getDrawingImage = function(drawing) {
-        var canvasTemp, svg, tempProject;
-        canvasTemp = document.createElement('canvas');
-        canvasTemp.width = drawing.group.bounds.width;
-        canvasTemp.height = drawing.group.bounds.height;
-        tempProject = new P.Project(canvasTemp);
-        tempProject.activeLayer.addChild(drawing.group);
-        tempProject.view.setCenter(drawing.group.position);
-        svg = tempProject.exportSVG();
-        drawing.group.remove();
-        tempProject.remove();
-        paper.projects[0].activate();
-        return svg;
-      };
-
       DrawingPanel.prototype.setDrawingThumbnail = function() {
         var thumbnailJ;
         thumbnailJ = this.contentJ.find('.drawing-thumbnail');
-        thumbnailJ.empty().append(this.getDrawingImage(this.currentDrawing));
+        thumbnailJ.empty().append(R.view.getThumbnail(this.currentDrawing));
       };
 
       DrawingPanel.prototype.checkPathToSubmit = function() {
@@ -308,12 +291,17 @@
       };
 
       DrawingPanel.prototype.submitDrawingClicked = function() {
+        var draft;
+        draft = Item.Drawing.getDraft();
+        if (draft == null) {
+          return;
+        }
         R.tools.select.deselectAll();
         R.toolManager.leaveDrawingMode(true);
+        this.currentDrawing = draft;
         this.drawingPanelTitleJ.attr('data-i18n', 'Create drawing').text(i18next.t('Create drawing'));
         this.open();
         this.showContent();
-        this.currentDrawing = null;
         this.contentJ.find('#drawing-author').val(R.me);
         this.contentJ.find('#drawing-title').val('');
         this.contentJ.find('#drawing-description').val('');
@@ -321,12 +309,10 @@
         this.modifyBtnJ.hide();
         this.cancelBtnJ.show();
         this.cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel').text(i18next.t('Cancel'));
-        this.deleteBtnJ.show();
         this.contentJ.find('#drawing-title').removeAttr('readonly');
         this.contentJ.find('#drawing-description').removeAttr('readonly');
         this.votesJ.hide();
-        this.submitBtnJ.find('span.glyphicon').removeClass('glyphicon-ok').addClass('glyphicon-refresh glyphicon-refresh-animate');
-        this.currentDrawing = Item.Drawing.getDraft();
+        this.currentDrawing.computeRectangle();
         R.view.fitRectangle(this.currentDrawing.rectangle, true);
         this.setDrawingThumbnail();
         this.currentDrawing.select(true, false);
@@ -403,7 +389,6 @@
         this.submitBtnJ.hide();
         this.modifyBtnJ.hide();
         this.cancelBtnJ.hide();
-        this.deleteBtnJ.hide();
         this.contentJ.find('#drawing-author').val(this.currentDrawing.owner);
         this.contentJ.find('#drawing-title').val(this.currentDrawing.title);
         this.contentJ.find('#drawing-description').val(this.currentDrawing.description);
@@ -595,13 +580,9 @@
           R.alertManager.alert("You must enter a title", "error");
           return;
         }
-        if (description.length === 0) {
-          R.alertManager.alert("You must enter a description", "error");
-          return;
-        }
         this.currentDrawing.title = title;
         this.currentDrawing.description = description;
-        this.currentDrawing.save();
+        this.currentDrawing.submit();
         this.close(false);
       };
 
@@ -629,11 +610,11 @@
           this.close();
           return;
         }
-        if (this.currentDrawing.pk == null) {
+        if ((this.currentDrawing.pk == null) || this.currentDrawing.status === 'draft') {
           this.close();
           return;
         }
-        if (this.currentDrawing.status !== 'pending') {
+        if (this.currentDrawing.status !== 'pending' && this.currentDrawing.status !== 'draft') {
           R.alertManager.alert("The drawing is already validated, it cannot be cancelled anymore", "error");
           return;
         }
@@ -665,38 +646,6 @@
           deleteCommand = new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors);
           R.commandManager.add(deleteCommand, true);
         }
-      };
-
-      DrawingPanel.prototype.deletePaths = function() {
-        var paths;
-        paths = this.currentDrawing.paths.slice();
-        this.currentDrawing.removeChildren();
-        this.currentDrawing.remove();
-        this.deleteGivenPaths(paths);
-      };
-
-      DrawingPanel.prototype.deleteDrawing = function() {
-        var modal;
-        if ((R.me == null) || !_.isString(R.me)) {
-          R.alertManager.alert("You must be logged in to delete a drawing", "error");
-          return;
-        }
-        if (this.currentDrawing == null) {
-          this.close();
-          return;
-        }
-        if (this.currentDrawing.pk != null) {
-          R.alertManager.alert("Please cancel the drawing before deleting its paths", "error");
-          this.close();
-          return;
-        }
-        modal = Modal.createModal({
-          title: 'Delete all paths',
-          submit: this.deletePaths,
-          postSubmit: 'hide'
-        });
-        modal.addText('Do you really want to delete the selected paths?');
-        modal.show();
       };
 
       return DrawingPanel;

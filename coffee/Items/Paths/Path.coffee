@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathTool' ], (P, R, Utils, Item, Content, PathTool) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathTool', 'Commands/Command' ], (P, R, Utils, Item, Content, PathTool, Command) ->
 
 	# todo: Actions, undo & redo...
 	# todo: strokeWidth min = 0?
@@ -558,19 +558,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 
 			draft = Item.Drawing.getDraft()
 
-			# if draft?
-			# 	g = new P.Group()
-			# 	for path in draft.paths
-			# 		localSVG = path.path.exportSVG()
-			# 		g.addChild(path.path)
-			# 		console.log(localSVG)
-
-			# 	globalSVG = g.exportSVG()
-			# 	console.log(globalSVG)
-
-			# svg = Utils.xmlSerializer.serializeToString(@svg)
-
 			if draft?
+				R.commandManager.add(new Command.ModifyDrawing(draft))
 				draft.addChild(@)
 				if not draft.pk?
 					draft.addPathToSave(@)
@@ -581,10 +570,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 						points: @getPoints()
 					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'addPathToDrawing', args: args } ).done(@saveCallback)
 			else
-				drawing = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
-				drawing.points = @getPoints()
-				drawing.addChild(@)
-				drawing.save()
+				draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
+				R.commandManager.add(new Command.ModifyDrawing(draft))
+				draft.points = @getPoints()
+				draft.addChild(@)
+				draft.save()
 
 			# R.paths[@id] = @
 
@@ -599,7 +589,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 
 			# $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'savePath', args: args } ).done(@saveCallback)
 			# # Dajaxice.draw.savePath( @saveCallback, args )
-			super
+
+			super(false)
 			return
 
 		# check if the save was successful and set @pk if it is
@@ -713,9 +704,20 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			super()
 			return
 
+		delete: ()->
+			deffered = super()
+			draft = R.Drawing.getDraft()
+			if draft?
+				draft.updatePaths()
+				R.Button.updateSubmitButtonVisibility(draft)
+			return deffered
+
 		deleteFromDatabase: ()->
 			console.log('delete ' + @id + ' from database')
 #			Dajaxice.draw.deletePath(R.loader.checkError, { pk: @pk })
+			
+			if not @pk? or @pk == @id then return 			# the path is not in database
+			
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deletePath', args: { pk: @pk } } ).done(@deleteFromDatabaseCallback)
 			return
 
@@ -794,4 +796,5 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			return
 
 	Item.Path = Path
+	R.Path = Path
 	return Path

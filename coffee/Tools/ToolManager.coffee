@@ -45,6 +45,8 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 			# R.tools.screenshot = new R.Tools.Screenshot()
 			R.tools.select = new R.Tools.Select()
 			R.tools.eraser = new R.Tools.Eraser()
+			R.tools.eraser.btn.hide()
+
 			# R.tools.text = new R.Tools.Text()
 
 			defaultFavoriteTools = [] # [R.PrecisePath, R.ThicknessPath, R.Meander, R.GeometricLines, R.RectangleShape, R.EllipseShape, R.StarShape, R.SpiralShape]
@@ -278,7 +280,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				category: null
 				description: 'Zoom +'
 				popover: true
-				order: null
+				order: 1
 			)
 
 			@zoomInBtn.btnJ.click ()=> @zoom(2)
@@ -292,7 +294,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				category: null
 				description: 'Zoom -'
 				popover: true
-				order: null
+				order: 2
 			)
 
 			@zoomOutBtn.btnJ.click ()=> @zoom(0.5)

@@ -171,6 +171,8 @@
       R.drawingPanel = new DrawingPanel();
       R.view.initializePosition();
       R.sidebar.initialize();
+      Button.createSubmitButton();
+      Button.createDeleteButton();
       if (!R.userAuthenticated) {
         welcomeTextJ = $('#welcome-text');
         modal = Modal.createModal({
@@ -206,7 +208,7 @@
       }
       R.view.fitRectangle(R.view.grid.limitCD.bounds, true);
       require(['Items/Paths/PrecisePaths/PrecisePath'], function() {
-        return R.loader.loadAll();
+        return R.loader.loadSVG();
       });
       $('#about-link').click(function(event) {
         var divJ;

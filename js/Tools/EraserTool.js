@@ -65,13 +65,22 @@
       };
 
       EraserTool.prototype.select = function(deselectItems, updateParameters) {
+        var draft, i, len, path, ref;
         if (deselectItems == null) {
           deselectItems = true;
         }
         if (updateParameters == null) {
           updateParameters = true;
         }
-        R.rasterizer.drawItems();
+        draft = Drawing.getDraft();
+        if (draft != null) {
+          ref = draft.paths;
+          for (i = 0, len = ref.length; i < len; i++) {
+            path = ref[i];
+            path.drawOnPaper();
+          }
+        }
+        $('#draftDrawing').remove();
         EraserTool.__super__.select.apply(this, arguments);
         R.view.tool.onMouseMove = this.move;
       };
@@ -79,7 +88,15 @@
       EraserTool.prototype.updateParameters = function() {};
 
       EraserTool.prototype.deselect = function() {
-        this.setButtonErase();
+        var draft, i, len, path, ref;
+        draft = Drawing.getDraft();
+        if (draft != null) {
+          ref = draft.paths;
+          for (i = 0, len = ref.length; i < len; i++) {
+            path = ref[i];
+            path.drawOnSVG();
+          }
+        }
         EraserTool.__super__.deselect.call(this);
         this.finish();
         if (this.circle != null) {
@@ -104,68 +121,57 @@
       };
 
       EraserTool.prototype.erase = function() {
-        var data, i, intersection, intersections, item, itemId, j, k, len, len1, len2, location, newP, p, path, paths, points, refreshRasterizer;
-        refreshRasterizer = false;
-        for (itemId in R.paths) {
-          item = R.paths[itemId];
-          if ((item.controlPath != null) && item instanceof R.Tools.Item.Item.PrecisePath && item.owner === R.me && (item.drawingId == null)) {
-            if (item.getBounds().intersects(this.circle.bounds)) {
-              intersections = this.circle.getCrossings(item.controlPath);
-              if (intersections.length > 0) {
-                paths = [item.controlPath];
-                console.log(intersections);
-                this.pathsToDeleteResurectors[item.id] = {
-                  data: item.getDuplicateData(),
-                  constructor: item.constructor
-                };
-                for (i = 0, len = intersections.length; i < len; i++) {
-                  intersection = intersections[i];
-                  for (j = 0, len1 = paths.length; j < len1; j++) {
-                    p = paths[j];
-                    location = p.getLocationOf(intersection.point);
-                    if (location != null) {
-                      console.log('split: ' + location.point);
-                      newP = p.split(location);
-                      p.lastSegment.handleOut = null;
-                      p.lastSegment.data = {
+        var data, draft, i, intersection, intersections, item, j, k, l, len, len1, len2, len3, location, newP, p, path, paths, points, ref;
+        draft = R.Drawing.getDraft();
+        if (draft == null) {
+          return;
+        }
+        ref = draft.paths.slice();
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          if (item.getBounds().intersects(this.circle.bounds)) {
+            intersections = this.circle.getCrossings(item.controlPath);
+            if (intersections.length > 0) {
+              paths = [item.controlPath];
+              console.log(intersections);
+              for (j = 0, len1 = intersections.length; j < len1; j++) {
+                intersection = intersections[j];
+                for (k = 0, len2 = paths.length; k < len2; k++) {
+                  p = paths[k];
+                  location = p.getLocationOf(intersection.point);
+                  if (location != null) {
+                    console.log('split: ' + location.point);
+                    newP = p.split(location);
+                    p.lastSegment.handleOut = null;
+                    p.lastSegment.data = {
+                      split: true
+                    };
+                    if (newP != null) {
+                      paths.push(newP);
+                      newP.firstSegment.handleIn = null;
+                      newP.firstSegment.data = {
                         split: true
                       };
-                      if (newP != null) {
-                        paths.push(newP);
-                        newP.firstSegment.handleIn = null;
-                        newP.firstSegment.data = {
-                          split: true
-                        };
-                      }
                     }
                   }
                 }
-                refreshRasterizer = true;
+              }
+              item.remove();
+              for (l = 0, len3 = paths.length; l < len3; l++) {
+                p = paths[l];
+                if (this.isPathInCircle(p)) {
+                  console.log('remove a path');
+                  p.remove();
+                } else {
+                  data = R.Tools.Item.Item.PrecisePath.getDataFromPath(p);
+                  points = R.Tools.Item.Item.Path.pathOnPlanetFromPath(p);
+                  path = new R.Tools.Item.Item.PrecisePath(Date.now(), data, null, null, points, null, R.me, draft.id);
+                  path.draw(false, true, false);
+                }
+              }
+            } else {
+              if (this.isPathInCircle(item.controlPath)) {
                 item.remove();
-                this.pathsToDelete.push(item);
-                for (k = 0, len2 = paths.length; k < len2; k++) {
-                  p = paths[k];
-                  if (this.isPathInCircle(p)) {
-                    console.log('remove a path');
-                    p.remove();
-                  } else {
-                    data = R.Tools.Item.Item.PrecisePath.getDataFromPath(p);
-                    points = R.Tools.Item.Item.Path.pathOnPlanetFromPath(p);
-                    path = new R.Tools.Item.Item.PrecisePath(Date.now(), data, null, null, points, null, R.me);
-                    path.draw();
-                    this.pathsToCreate.push(path);
-                  }
-                }
-              } else {
-                if (this.isPathInCircle(item.controlPath)) {
-                  this.pathsToDeleteResurectors[item.id] = {
-                    data: item.getDuplicateData(),
-                    constructor: item.constructor
-                  };
-                  item.remove();
-                  this.pathsToDelete.push(item);
-                  refreshRasterizer = true;
-                }
               }
             }
           }
@@ -173,6 +179,7 @@
       };
 
       EraserTool.prototype.begin = function(event, from, data) {
+        var draft;
         if (from == null) {
           from = R.me;
         }
@@ -183,10 +190,8 @@
           return;
         }
         this.updateCircle(event.point);
-        this.pathsToDelete = [];
-        this.pathsToCreate = [];
-        this.pathsToDeleteResurectors = {};
-        R.rasterizer.disableRasterization();
+        draft = R.Drawing.getDraft();
+        this.duplicateData = draft != null ? draft.getDuplicateData() : void 0;
         if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
           R.socket.emit("bounce", {
             tool: this.name,
@@ -234,62 +239,21 @@
       };
 
       EraserTool.prototype.end = function(event, from) {
-        var createCommand, deleteCommand, i, j, k, l, len, len1, len2, len3, path, pathsToCreate, pathsToDelete, pathsToDeleteResurectors, ref, ref1;
+        var draft, modifyDrawingCommand;
         if (from == null) {
           from = R.me;
         }
         this.circle.position = event.point;
         this.erase();
-        pathsToCreate = [];
-        ref = this.pathsToCreate;
-        for (i = 0, len = ref.length; i < len; i++) {
-          path = ref[i];
-          if (this.pathsToDelete.indexOf(path) < 0) {
-            pathsToCreate.push(path);
+        draft = R.Drawing.getDraft();
+        if (draft != null) {
+          if (this.duplicateData != null) {
+            modifyDrawingCommand = new Command.ModifyDrawing(draft, this.duplicateData);
+            R.commandManager.add(modifyDrawingCommand, false);
           }
+          draft.updatePaths();
+          R.Button.updateSubmitButtonVisibility(draft);
         }
-        pathsToDelete = [];
-        pathsToDeleteResurectors = {};
-        ref1 = this.pathsToDelete;
-        for (j = 0, len1 = ref1.length; j < len1; j++) {
-          path = ref1[j];
-          if (path.pk != null) {
-            pathsToDelete.push(path);
-            pathsToDeleteResurectors[path.id] = this.pathsToDeleteResurectors[path.id];
-          }
-        }
-        deleteCommand = null;
-        if (pathsToDelete.length > 0) {
-          deleteCommand = new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors);
-          R.commandManager.add(deleteCommand, false);
-        }
-        if (pathsToCreate.length > 0) {
-          createCommand = new Command.CreateItems(pathsToCreate);
-          R.commandManager.add(createCommand, false);
-          if (deleteCommand != null) {
-            deleteCommand.twin = createCommand;
-            createCommand.twin = deleteCommand;
-          }
-        }
-        for (k = 0, len2 = pathsToDelete.length; k < len2; k++) {
-          path = pathsToDelete[k];
-          path["delete"]();
-        }
-        for (l = 0, len3 = pathsToCreate.length; l < len3; l++) {
-          path = pathsToCreate[l];
-          path.save();
-          if (path.drawing == null) {
-            if (typeof path.draw === "function") {
-              path.draw();
-            }
-          }
-          if (R.rasterizer.rasterizeItems) {
-            if (typeof path.rasterize === "function") {
-              path.rasterize();
-            }
-          }
-        }
-        R.rasterizer.enableRasterization(false);
       };
 
       EraserTool.prototype.finish = function(from) {

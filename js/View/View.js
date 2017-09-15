@@ -15,6 +15,8 @@
   define('View/View', dependencies, function(P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, tw, mousewheel) {
     var View;
     View = (function() {
+      View.thumbnailSize = 300;
+
       function View() {
         this.mousewheel = bind(this.mousewheel, this);
         this.mouseup = bind(this.mouseup, this);
@@ -115,8 +117,48 @@
         this.previousMousePosition = null;
         this.initialMousePosition = null;
         this.firstHashChange = true;
+        this.createThumbnailProject();
         return;
       }
+
+      View.prototype.createThumbnailProject = function() {
+        var thumbnailCanvas;
+        thumbnailCanvas = document.createElement('canvas');
+        thumbnailCanvas.width = this.constructor.thumbnailSize;
+        thumbnailCanvas.height = this.constructor.thumbnailSize;
+        this.thumbnailProject = new P.Project(thumbnailCanvas);
+        paper.projects[0].activate();
+      };
+
+      View.prototype.getThumbnail = function(drawing) {
+        var i, len, path, rectangle, rectangleRatio, ref, svg, viewRatio;
+        this.thumbnailProject.activate();
+        rectangle = drawing.getBounds();
+        viewRatio = 1;
+        rectangleRatio = rectangle.width / rectangle.height;
+        if (drawing.svg != null) {
+          this.thumbnailProject.importSVG(drawing.svg);
+        } else if ((drawing.paths != null) && drawing.paths.length > 0) {
+          ref = drawing.paths;
+          for (i = 0, len = ref.length; i < len; i++) {
+            path = ref[i];
+            this.thumbnailProject.activeLayer.addChild(path.path);
+          }
+        } else {
+          console.error('drawing is empty');
+        }
+        if (viewRatio < rectangleRatio) {
+          this.thumbnailProject.view.zoom = Math.min(this.constructor.thumbnailSize / rectangle.width, 1);
+        } else {
+          this.thumbnailProject.view.zoom = Math.min(this.constructor.thumbnailSize / rectangle.height, 1);
+        }
+        this.thumbnailProject.view.setCenter(rectangle.center);
+        this.thumbnailProject.activeLayer.strokeColor = R.Path.colorMap[drawing.status];
+        svg = this.thumbnailProject.exportSVG();
+        this.thumbnailProject.clear();
+        paper.projects[0].activate();
+        return svg;
+      };
 
       View.prototype.createBackground = function() {
         if (R.drawingMode === 'image' && (this.backgroundImage == null)) {
@@ -232,14 +274,19 @@
         this.rejectedLayer = new P.Layer();
         this.rejectedLayer.name = 'rejectedLayer';
         this.rejectedLayer.visible = false;
+        this.rejectedLayer.strokeColor = '#EB5A46';
         this.pendingLayer = new P.Layer();
         this.pendingLayer.name = 'pendingLayer';
+        this.pendingLayer.strokeColor = '#0079BF';
         this.drawingLayer = new P.Layer();
         this.drawingLayer.name = 'drawingLayer';
+        this.drawingLayer.strokeColor = '#61BD4F';
         this.drawnLayer = new P.Layer();
         this.drawnLayer.name = 'drawnLayer';
+        this.drawnLayer.strokeColor = '#4d4d4d';
         this.draftLayer = new P.Layer();
         this.draftLayer.name = 'draftLayer';
+        this.draftLayer.strokeColor = '#00C2E0';
         this.draftListJ = this.createLayerListItem('Draft', this.draftLayer, true);
         this.pendingListJ = this.createLayerListItem('Pending', this.pendingLayer);
         this.drawingListJ = this.createLayerListItem('Drawing', this.drawingLayer);
@@ -343,9 +390,6 @@
         somethingToLoad = false;
         R.socket.updateRoom();
         Utils.deferredExecution(this.updateHash, 'updateHash', 500);
-        if (addCommand) {
-          Utils.deferredExecution(this.addMoveCommand, 'add move command');
-        }
         R.controllerManager.folders['General'].controllers['location'].setValue('' + P.view.center.x.toFixed(2) + ',' + P.view.center.y.toFixed(2));
         return somethingToLoad;
       };

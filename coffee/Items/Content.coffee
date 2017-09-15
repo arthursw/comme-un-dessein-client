@@ -310,9 +310,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item' ], (P, R, Utils, Item) ->
 			return
 
 		delete: ()->
-			if @lock? and @lock.owner != R.me then return
-			super()
-			return
+			if @lock? and @lock.owner != R.me then return false
+			deffered = super()
+			return deffered
 
 		update: ()->
 			return

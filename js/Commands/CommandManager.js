@@ -61,6 +61,7 @@
           this.updateButtons();
           return;
         }
+        R.drawingPanel.close();
         deferred = this.history[this.currentCommand + this.offset].toggle();
         this.waitingCommand = this.history[this.currentCommand + this.offset];
         this.currentCommand += this.direction;

@@ -4,7 +4,7 @@
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathTool'], function(P, R, Utils, Item, Content, PathTool) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathTool', 'Commands/Command'], function(P, R, Utils, Item, Content, PathTool, Command) {
     var Path;
     Path = (function(superClass) {
       extend(Path, superClass);
@@ -480,7 +480,7 @@
       };
 
       Path.prototype.save = function(addCreateCommand) {
-        var args, draft, drawing;
+        var args, draft;
         if (addCreateCommand == null) {
           addCreateCommand = true;
         }
@@ -489,6 +489,7 @@
         }
         draft = Item.Drawing.getDraft();
         if (draft != null) {
+          R.commandManager.add(new Command.ModifyDrawing(draft));
           draft.addChild(this);
           if (draft.pk == null) {
             draft.addPathToSave(this);
@@ -510,12 +511,13 @@
             }).done(this.saveCallback);
           }
         } else {
-          drawing = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft');
-          drawing.points = this.getPoints();
-          drawing.addChild(this);
-          drawing.save();
+          draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft');
+          R.commandManager.add(new Command.ModifyDrawing(draft));
+          draft.points = this.getPoints();
+          draft.addChild(this);
+          draft.save();
         }
-        Path.__super__.save.apply(this, arguments);
+        Path.__super__.save.call(this, false);
       };
 
       Path.prototype.saveCallback = function(result) {
@@ -603,8 +605,22 @@
         Path.__super__.remove.call(this);
       };
 
+      Path.prototype["delete"] = function() {
+        var deffered, draft;
+        deffered = Path.__super__["delete"].call(this);
+        draft = R.Drawing.getDraft();
+        if (draft != null) {
+          draft.updatePaths();
+          R.Button.updateSubmitButtonVisibility(draft);
+        }
+        return deffered;
+      };
+
       Path.prototype.deleteFromDatabase = function() {
         console.log('delete ' + this.id + ' from database');
+        if ((this.pk == null) || this.pk === this.id) {
+          return;
+        }
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -722,6 +738,7 @@
 
     })(Content);
     Item.Path = Path;
+    R.Path = Path;
     return Path;
   });
 

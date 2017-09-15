@@ -608,9 +608,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# - end drawing (@endDraw())
 		# because the path are rendered on rasters, path are not drawn on load unless they are animated
 		# @param simplified [Boolean] whether to draw in simplified mode or not (much faster)
-		draw: (simplified=false, redrawing=true)->
+		draw: (simplified=false, redrawing=true, onSvg=true)->
 
-			if @drawn then return
+			if @drawn
+				if not onSvg
+					R.view.draftLayer.addChild(@path)
+				else
+					@setSVG()
+				return
 
 			if not R.rasterizer.requestDraw(@, simplified, redrawing) then return
 			# if R.rasterizer.disableDrawing then return
@@ -631,10 +636,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 			@drawingOffset = 0
 
-			layerName = if @drawingId? then R.items[@drawingId].getLayerName() else 'mainLayer'
-			
 			# @group.parent.addChild(@path)
-			@group.remove()
+			if onSvg
+				@group.remove()
 
 			try 	# catch errors to log them in the code editor console (if user is making a script)
 				@processDrawing(redrawing)
@@ -647,11 +651,30 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				@simplifiedModeOff()
 
 			@drawn = true
-
-			@svg = @path.exportSVG()
-			# console.log(R.svgJ.find('#'+layerName)[0])
-			R.svgJ.find('#'+layerName).append(@svg)
 			
+			if onSvg
+				@setSVG()
+			else
+				R.view.draftLayer.addChild(@path)
+			return
+		
+		setSVG: ()->
+			layerName = if @drawingId? then R.items[@drawingId].getLayerName() else 'mainLayer'
+			@svg = @path.exportSVG()
+			R.svgJ.find('#'+layerName).append(@svg)
+			return
+
+		drawOnPaper: ()->
+			if @svg?
+				@svg.remove()
+				@svg = null
+			@draw(false, true, false)
+			return
+
+		drawOnSVG: ()->
+			@path.remove()
+			if not @svg?
+				@draw()
 			return
 
 		# @return [Array of Paper point] a list of point from the control path converted in the planet coordinate system
@@ -1130,9 +1153,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			# 		@selectionRectangle?.visible = @data.showSelectionRectangle
 			return
 
+		getDrawing: ()->
+			return R.Drawing.getDraft()
+
 		# overload {RPath#remove}, but in addition: remove the selected point highlight and the canvas raster
 		remove: ()->
 			console.log("Remove precise path")
+			
+			@svg?.remove()
+
+			@getDrawing()?.removeChild(@)
+			@path.remove()
+
 			@canvasRaster?.remove()
 			@canvasRaster = null
 			if @liJ?

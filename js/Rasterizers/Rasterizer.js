@@ -74,16 +74,7 @@
 
       Rasterizer.prototype.move = function() {};
 
-      Rasterizer.prototype.loadItem = function(item) {
-        if (typeof item.draw === "function") {
-          item.draw();
-        }
-        if (this.rasterizeItems) {
-          if (typeof item.rasterize === "function") {
-            item.rasterize();
-          }
-        }
-      };
+      Rasterizer.prototype.loadItem = function(item) {};
 
       Rasterizer.prototype.requestDraw = function() {
         return true;
@@ -115,16 +106,7 @@
 
       Rasterizer.prototype.drawItems = function() {};
 
-      Rasterizer.prototype.rasterizeAllItems = function() {
-        var id, item, ref;
-        ref = R.items;
-        for (id in ref) {
-          item = ref[id];
-          if (typeof item.rasterize === "function") {
-            item.rasterize();
-          }
-        }
-      };
+      Rasterizer.prototype.rasterizeAllItems = function() {};
 
       Rasterizer.prototype.hideOthers = function(itemsToExclude) {};
 

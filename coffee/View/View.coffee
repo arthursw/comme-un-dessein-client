@@ -8,6 +8,8 @@ if document?
 define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, tw, mousewheel) ->
 
 	class View
+		
+		@thumbnailSize = 300
 
 		constructor: ()->
 
@@ -103,8 +105,45 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			@firstHashChange = true
 
+			@createThumbnailProject()
 			return
 		
+		createThumbnailProject: ()->
+
+			thumbnailCanvas = document.createElement('canvas')
+			thumbnailCanvas.width = @constructor.thumbnailSize
+			thumbnailCanvas.height = @constructor.thumbnailSize
+			@thumbnailProject = new P.Project(thumbnailCanvas)
+			paper.projects[0].activate()
+			return
+
+		getThumbnail: (drawing)->
+			@thumbnailProject.activate()
+			rectangle = drawing.getBounds()
+			viewRatio = 1
+			rectangleRatio = rectangle.width / rectangle.height
+			
+			if drawing.svg?
+				@thumbnailProject.importSVG(drawing.svg)
+			else if drawing.paths? and drawing.paths.length > 0
+				for path in drawing.paths
+					@thumbnailProject.activeLayer.addChild(path.path)
+			else
+				console.error('drawing is empty')
+
+			if viewRatio < rectangleRatio
+				@thumbnailProject.view.zoom = Math.min(@constructor.thumbnailSize / rectangle.width, 1)
+			else
+				@thumbnailProject.view.zoom = Math.min(@constructor.thumbnailSize / rectangle.height, 1)
+
+			@thumbnailProject.view.setCenter(rectangle.center)
+			@thumbnailProject.activeLayer.strokeColor = R.Path.colorMap[drawing.status]
+			svg = @thumbnailProject.exportSVG()
+			# drawing.group.remove()
+			@thumbnailProject.clear()
+			paper.projects[0].activate()
+			return svg
+
 		createBackground: ()->
 			if R.drawingMode == 'image' and not @backgroundImage?
 				@backgroundImage = new P.Raster('static/images/rennes.jpg')
@@ -200,14 +239,19 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@rejectedLayer = new P.Layer()
 			@rejectedLayer.name  = 'rejectedLayer'
 			@rejectedLayer.visible = false
+			@rejectedLayer.strokeColor = '#EB5A46'
 			@pendingLayer = new P.Layer()
 			@pendingLayer.name  = 'pendingLayer'
+			@pendingLayer.strokeColor = '#0079BF'
 			@drawingLayer = new P.Layer()
 			@drawingLayer.name  = 'drawingLayer'
+			@drawingLayer.strokeColor = '#61BD4F'
 			@drawnLayer = new P.Layer()
 			@drawnLayer.name  = 'drawnLayer'
+			@drawnLayer.strokeColor = '#4d4d4d'
 			@draftLayer = new P.Layer()
 			@draftLayer.name  = 'draftLayer'
+			@draftLayer.strokeColor = '#00C2E0'
 
 			@draftListJ = @createLayerListItem('Draft', @draftLayer, true)
 			@pendingListJ = @createLayerListItem('Pending', @pendingLayer)
@@ -334,8 +378,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			Utils.deferredExecution(@updateHash, 'updateHash', 500) 					# update hash in 500 milliseconds
 
-			if addCommand
-				Utils.deferredExecution(@addMoveCommand, 'add move command')
+			# if addCommand
+			# 	Utils.deferredExecution(@addMoveCommand, 'add move command')
 
 			# R.willUpdateAreasToUpdate = true
 			# Utils.deferredExecution(R.updateAreasToUpdate, 'updateAreasToUpdate', 500) 					# update areas to update in 500 milliseconds

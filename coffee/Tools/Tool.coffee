@@ -92,7 +92,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 				order: @constructor.order
 			)
 
-			@btn.btnJ.click( @select )
+			@btn.btnJ.click( ()=> @select(null, null, null, true) )
 
 			return
 

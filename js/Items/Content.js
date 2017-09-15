@@ -268,10 +268,12 @@
       };
 
       Content.prototype["delete"] = function() {
+        var deffered;
         if ((this.lock != null) && this.lock.owner !== R.me) {
-          return;
+          return false;
         }
-        Content.__super__["delete"].call(this);
+        deffered = Content.__super__["delete"].call(this);
+        return deffered;
       };
 
       Content.prototype.update = function() {};

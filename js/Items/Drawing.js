@@ -65,7 +65,6 @@
       };
 
       function Drawing(rectangle1, data1, id1, pk, owner, date, title1, description, status, pathList, svg) {
-        var data, doc, i, layer, layerName, len, p, parser, path, points;
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
         this.id = id1 != null ? id1 : null;
@@ -102,18 +101,37 @@
         this.sortedPaths = [];
         this.addToListItem(this.getListItem());
         if (svg != null) {
-          layerName = this.getLayerName();
-          layer = document.getElementById(layerName);
-          parser = new DOMParser();
-          doc = parser.parseFromString(svg, "image/svg+xml");
-          doc.documentElement.removeAttribute('visibility');
-          doc.documentElement.removeAttribute('xmlns');
-          layer.appendChild(doc.documentElement);
-          return;
+          this.setSVG(svg);
+          if (this.status !== 'draft') {
+            return;
+          }
+        }
+        this.addPathsFromPathList(pathList);
+        return;
+      }
+
+      Drawing.prototype.getPointLists = function() {
+        var i, len, path, pointLists, ref;
+        pointLists = [];
+        ref = this.paths;
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
+          pointLists.push(path.getPoints());
+        }
+        return pointLists;
+      };
+
+      Drawing.prototype.addPathsFromPathList = function(pathList, parseJSON) {
+        var data, i, len, p, path, points;
+        if (parseJSON == null) {
+          parseJSON = true;
         }
         for (i = 0, len = pathList.length; i < len; i++) {
           p = pathList[i];
-          points = JSON.parse(p);
+          points = parseJSON ? JSON.parse(p) : p;
+          if (points == null) {
+            continue;
+          }
           data = {
             points: points,
             planet: new P.Point(0, 0),
@@ -122,10 +140,24 @@
           path = new Item.Path.PrecisePath(Date.now(), data, null, null, null, null, R.me, this.id);
           path.pk = path.id;
           path.loadPath();
-          this.addChild(path);
+          path.draw();
         }
-        return;
-      }
+      };
+
+      Drawing.prototype.setSVG = function(svg) {
+        var doc, layer, layerName, parser;
+        layerName = this.getLayerName();
+        layer = document.getElementById(layerName);
+        parser = new DOMParser();
+        doc = parser.parseFromString(svg, "image/svg+xml");
+        doc.documentElement.removeAttribute('visibility');
+        doc.documentElement.removeAttribute('xmlns');
+        doc.documentElement.removeAttribute('stroke');
+        if (this.status === 'draft') {
+          doc.documentElement.setAttribute('id', 'draftDrawing');
+        }
+        this.svg = layer.appendChild(doc.documentElement);
+      };
 
       Drawing.prototype.getPathIds = function() {
         var child, i, len, pathIds, ref;
@@ -140,11 +172,19 @@
 
       Drawing.prototype.getDuplicateData = function() {
         var data;
-        data = Drawing.__super__.getDuplicateData.apply(this, arguments);
-        data.title = this.title;
-        data.description = this.description;
-        data.pathIds = this.getPathIds();
+        data = {
+          pointLists: this.getPointLists()
+        };
         return data;
+      };
+
+      Drawing.prototype.setData = function(data) {
+        this.removePaths();
+        this.addPathsFromPathList(data.pointLists, false);
+        if (this.status === 'draft') {
+          R.Button.updateSubmitButtonVisibility(this);
+        }
+        this.updatePaths();
       };
 
       Drawing.prototype.getListItem = function() {
@@ -221,6 +261,10 @@
 
       Drawing.prototype.computeRectangle = function() {
         var bounds, i, len, path, ref;
+        if (this.svg != null) {
+          this.rectangle = new P.Rectangle(this.svg.getBBox());
+          return;
+        }
         ref = this.paths;
         for (i = 0, len = ref.length; i < len; i++) {
           path = ref[i];
@@ -232,6 +276,15 @@
             this.rectangle = this.rectangle.unite(bounds);
           }
         }
+      };
+
+      Drawing.prototype.getLayer = function() {
+        return R.view[this.getLayerName()];
+      };
+
+      Drawing.prototype.isVisible = function() {
+        var ref;
+        return (ref = this.getLayer()) != null ? ref.visible : void 0;
       };
 
       Drawing.prototype.addPathToProperLayer = function(path) {
@@ -259,6 +312,10 @@
 
       Drawing.prototype.addChild = function(path) {
         var bounds;
+        if (this.paths.indexOf(path) >= 0) {
+          console.log('path already in drawing');
+          return;
+        }
         this.paths.push(path);
         path.drawingId = this.id;
         if (this.pathPks == null) {
@@ -297,7 +354,7 @@
       };
 
       Drawing.prototype.removeChild = function(path, updateRectangle, removeID) {
-        var pathIndex, pkIndex;
+        var pathIndex, pkIndex, ref;
         if (updateRectangle == null) {
           updateRectangle = false;
         }
@@ -311,12 +368,14 @@
         if (pathIndex >= 0) {
           this.paths.splice(pathIndex, 1);
         }
+        if ((ref = path.path) != null) {
+          ref.remove();
+        }
         path.drawingId = null;
         pkIndex = this.pathPks.indexOf(path.pk);
         if (pkIndex >= 0) {
           this.pathPks.splice(pkIndex, 1);
         }
-        R.view.mainLayer.addChild(path.group);
         if (updateRectangle) {
           this.computeRectangle();
         }
@@ -337,7 +396,7 @@
         args = {
           city: R.city,
           clientId: this.id,
-          date: this.date,
+          date: Date.now(),
           title: this.title || '' + Math.random(),
           description: this.description || '',
           points: this.points
@@ -352,7 +411,7 @@
             })
           }
         }).done(this.saveCallback);
-        Drawing.__super__.save.call(this, addCreateCommand);
+        Drawing.__super__.save.call(this, false);
       };
 
       Drawing.prototype.saveCallback = function(result) {
@@ -381,13 +440,14 @@
           ref = this.pathsToSave;
           for (i = 0, len = ref.length; i < len; i++) {
             path = ref[i];
-            pointLists.push(path.pathOnPlanet());
+            pointLists.push(path.getPoints());
           }
           args = {
             clientId: this.clientId,
             pk: this.pk,
             pointLists: pointLists
           };
+          this.pathsToSave = [];
           $.ajax({
             method: "POST",
             url: "ajaxCall/",
@@ -397,7 +457,7 @@
                 args: args
               })
             }
-          }).done(this.saveCallback);
+          }).done(R.loader.checkError);
         }
         Drawing.__super__.saveCallback.apply(this, arguments);
       };
@@ -413,31 +473,43 @@
         return this.status + 'Layer';
       };
 
+      Drawing.prototype.getBounds = function() {
+        if (this.rectangle == null) {
+          this.computeRectangle();
+        }
+        return this.rectangle;
+      };
+
       Drawing.prototype.getSVG = function(asString) {
+        var i, len, path, ref;
         if (asString == null) {
           asString = true;
         }
-        if (asString) {
-          console.log('paper.js serializer: ');
-          console.log(this.group.exportSVG({
+        if ((this.paths != null) && this.paths.length > 0) {
+          ref = this.paths;
+          for (i = 0, len = ref.length; i < len; i++) {
+            path = ref[i];
+            this.group.addChild(path.path);
+          }
+          return this.group.exportSVG({
             asString: asString
-          }));
-          console.log('xml serializer: ');
-          console.log(Utils.xmlSerializer.serializeToString(this.group.exportSVG()));
+          });
+        } else {
+          return this.svg;
         }
-        return this.group.exportSVG({
-          asString: asString
-        });
       };
 
       Drawing.prototype.submit = function() {
-        var args;
+        var args, svg;
+        svg = this.getSVG();
+        this.svgString = svg;
         args = {
+          pk: this.pk,
           clientId: this.id,
-          date: this.date,
+          date: Date.now(),
           title: this.title,
           description: this.description,
-          svg: this.getSVG()
+          svg: svg
         };
         $.ajax({
           method: "POST",
@@ -449,11 +521,38 @@
             })
           }
         }).done(this.submitCallback);
-        Drawing.__super__.submit.call(this, addCreateCommand);
+      };
+
+      Drawing.prototype.removePaths = function(addCommand) {
+        var i, len, path, ref;
+        if (addCommand == null) {
+          addCommand = false;
+        }
+        if (addCommand) {
+          R.commandManager.add(new R.Command.ModifyDrawing(this));
+        }
+        ref = this.paths.slice();
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
+          path.remove();
+        }
+        if (this.status === 'draft') {
+          R.Button.updateSubmitButtonVisibility(this);
+        }
+        if (addCommand) {
+          this.updatePaths();
+        }
       };
 
       Drawing.prototype.submitCallback = function(result) {
-        R.loader.checkError(result);
+        if (!R.loader.checkError(result)) {
+          return;
+        }
+        R.commandManager.clearHistory();
+        this.status = 'pending';
+        this.removePaths();
+        this.setSVG(this.svgString);
+        this.svgString = null;
         R.alertManager.alert("Drawing successfully submitted", "success", null, {
           positiveVoteThreshold: result.positiveVoteThreshold
         });
@@ -464,7 +563,26 @@
           status: this.status,
           city: R.city
         });
-        Drawing.__super__.submitCallback.apply(this, arguments);
+      };
+
+      Drawing.prototype.updatePaths = function() {
+        var args;
+        this.computeRectangle();
+        args = {
+          clientId: this.id,
+          pk: this.pk,
+          pointLists: this.getPointLists()
+        };
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'setPathsToDrawing',
+              args: args
+            })
+          }
+        }).done(R.loader.checkError);
       };
 
       Drawing.prototype.addUpdateFunctionAndArguments = function(args, type) {
@@ -549,9 +667,10 @@
       };
 
       Drawing.prototype["delete"] = function() {
+        var deffered;
         this.pathIdsBeforeRemove = this.getPathIds();
-        this.removeChildren();
-        Drawing.__super__["delete"].apply(this, arguments);
+        deffered = Drawing.__super__["delete"].apply(this, arguments);
+        return deffered;
       };
 
       Drawing.prototype.deleteFromDatabase = function() {
@@ -686,15 +805,6 @@
         }
         R.drawingPanel.deselectDrawing(this);
         return true;
-      };
-
-      Drawing.prototype.removeChildren = function() {
-        var i, len, path, ref;
-        ref = this.children().slice();
-        for (i = 0, len = ref.length; i < len; i++) {
-          path = ref[i];
-          this.removeChild(path, false);
-        }
       };
 
       Drawing.prototype.remove = function() {

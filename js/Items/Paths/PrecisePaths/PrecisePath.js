@@ -572,15 +572,23 @@
         this.endDraw(redrawing);
       };
 
-      PrecisePath.prototype.draw = function(simplified, redrawing) {
-        var controlPathLength, error, error1, layerName, nIteration, nf, offset, reminder, step;
+      PrecisePath.prototype.draw = function(simplified, redrawing, onSvg) {
+        var controlPathLength, error, error1, nIteration, nf, offset, reminder, step;
         if (simplified == null) {
           simplified = false;
         }
         if (redrawing == null) {
           redrawing = true;
         }
+        if (onSvg == null) {
+          onSvg = true;
+        }
         if (this.drawn) {
+          if (!onSvg) {
+            R.view.draftLayer.addChild(this.path);
+          } else {
+            this.setSVG();
+          }
           return;
         }
         if (!R.rasterizer.requestDraw(this, simplified, redrawing)) {
@@ -599,8 +607,9 @@
         reminder = nf - nIteration;
         offset = reminder * step / 2;
         this.drawingOffset = 0;
-        layerName = this.drawingId != null ? R.items[this.drawingId].getLayerName() : 'mainLayer';
-        this.group.remove();
+        if (onSvg) {
+          this.group.remove();
+        }
         try {
           this.processDrawing(redrawing);
         } catch (error1) {
@@ -613,8 +622,33 @@
           this.simplifiedModeOff();
         }
         this.drawn = true;
+        if (onSvg) {
+          this.setSVG();
+        } else {
+          R.view.draftLayer.addChild(this.path);
+        }
+      };
+
+      PrecisePath.prototype.setSVG = function() {
+        var layerName;
+        layerName = this.drawingId != null ? R.items[this.drawingId].getLayerName() : 'mainLayer';
         this.svg = this.path.exportSVG();
         R.svgJ.find('#' + layerName).append(this.svg);
+      };
+
+      PrecisePath.prototype.drawOnPaper = function() {
+        if (this.svg != null) {
+          this.svg.remove();
+          this.svg = null;
+        }
+        this.draw(false, true, false);
+      };
+
+      PrecisePath.prototype.drawOnSVG = function() {
+        this.path.remove();
+        if (this.svg == null) {
+          this.draw();
+        }
       };
 
       PrecisePath.prototype.pathOnPlanet = function() {
@@ -1117,11 +1151,22 @@
         PrecisePath.__super__.setParameter.call(this, name, value, updateGUI, update);
       };
 
+      PrecisePath.prototype.getDrawing = function() {
+        return R.Drawing.getDraft();
+      };
+
       PrecisePath.prototype.remove = function() {
-        var ref;
+        var ref, ref1, ref2;
         console.log("Remove precise path");
-        if ((ref = this.canvasRaster) != null) {
+        if ((ref = this.svg) != null) {
           ref.remove();
+        }
+        if ((ref1 = this.getDrawing()) != null) {
+          ref1.removeChild(this);
+        }
+        this.path.remove();
+        if ((ref2 = this.canvasRaster) != null) {
+          ref2.remove();
         }
         this.canvasRaster = null;
         if (this.liJ != null) {

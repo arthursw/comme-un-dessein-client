@@ -112,20 +112,6 @@
         this.btnJ.remove();
       };
 
-      PathTool.prototype.setButtonValidate = function() {
-        var newName;
-        newName = i18next.t('Submit drawing');
-        this.btnJ.find('.tool-name').attr('data-i18n', newName).text(newName);
-        this.btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_icon_ok.png');
-      };
-
-      PathTool.prototype.setButtonDraw = function() {
-        var newName;
-        newName = i18next.t('Precise path');
-        this.btnJ.find('.tool-name').attr('data-i18n', newName).text(newName);
-        this.btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_icon_pen.png');
-      };
-
       PathTool.prototype.select = function(deselectItems, updateParameters, forceSelect, fromMiddleMouseButton) {
         var draftBounds;
         if (deselectItems == null) {
@@ -142,13 +128,6 @@
         }
         if (!R.userAuthenticated && !forceSelect) {
           R.alertManager.alert('Log in before drawing', 'info');
-          return;
-        }
-        if (R.selectedTool !== this) {
-          this.setButtonValidate();
-        } else {
-          this.setButtonDraw();
-          R.drawingPanel.submitDrawingClicked();
           return;
         }
         if (P.view.zoom < 1) {
@@ -172,7 +151,6 @@
       };
 
       PathTool.prototype.deselect = function() {
-        this.setButtonDraw();
         PathTool.__super__.deselect.call(this);
         this.finish();
         this.hideDraftLimits();
@@ -320,6 +298,7 @@
           path.save(true);
           path.rasterize();
           R.rasterizer.rasterize(path);
+          R.Button.updateSubmitButtonVisibility();
         } else {
           path.endCreate(event.point, event);
         }

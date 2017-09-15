@@ -403,17 +403,8 @@ define [
 		R.view.initializePosition()
 		R.sidebar.initialize()
 
-
-		# submitButton = new Button({
-		# 	name: 'Submit drawing'
-		# 	favorite: true
-		# 	iconURL: 'icones_icon_ok.png'
-		# 	order: 0
-		# 	classes: 'btn-success displayName'
-		# 	onClick: ()=>
-		# 		R.drawingPanel.submitDrawingClicked()
-		# 		return
-		# 	})
+		Button.createSubmitButton()
+		Button.createDeleteButton()
 		
 		if not R.userAuthenticated
 			
@@ -457,7 +448,7 @@ define [
 
 		R.view.fitRectangle(R.view.grid.limitCD.bounds, true)
 
-		require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> R.loader.loadAll() )
+		require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> R.loader.loadSVG() )
 
 		# Improve about links
 

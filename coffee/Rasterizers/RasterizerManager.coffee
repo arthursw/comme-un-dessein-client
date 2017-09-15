@@ -7,11 +7,11 @@ define ['paper', 'R', 'Utils/Utils', 'Rasterizers/Rasterizer', 'UI/Controllers/F
 
 		initializeRasterizers: ()->
 			@rasterizers = {}
-			# R.rasterizer = new Rasterizer()
+			R.rasterizer = new Rasterizer()
 			# new Rasterizer.CanvasTile()
 			# new Rasterizer.InstantPaperTile()
 			# new Rasterizer.PaperTile()
-			R.rasterizer = new Rasterizer.PaperTile()
+			# R.rasterizer = new Rasterizer.PaperTile()
 			# R.rasterizer.rasterizationDisabled = true
 
 			@addRasterizerParameters()

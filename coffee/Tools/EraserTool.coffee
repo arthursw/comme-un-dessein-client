@@ -83,11 +83,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			# 	@deleteAllPaths()
 			# 	return
 
-			R.rasterizer.drawItems()
+			# R.rasterizer.drawItems()
 
-			# draft = Drawing.getDraft()
-			
-			# for path in draft.paths
+			draft = Drawing.getDraft()
+			if draft?
+				for path in draft.paths
+					path.drawOnPaper()
+
+			$('#draftDrawing').remove()
 
 			super
 
@@ -100,7 +103,13 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 		# Deselect: remove the mouse move listener
 		deselect: ()->
-			@setButtonErase()
+
+			draft = Drawing.getDraft()
+			if draft?
+				for path in draft.paths
+					path.drawOnSVG()
+
+			# @setButtonErase()
 			super()
 			@finish()
 			if @circle?
@@ -119,11 +128,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 		erase: ()->
 
-			refreshRasterizer = false
+			# refreshRasterizer = false
 
-			for itemId of R.paths
-				item = R.paths[itemId]
-				if item.controlPath? and item instanceof R.Tools.Item.Item.PrecisePath and item.owner == R.me and not item.drawingId?
+			draft = R.Drawing.getDraft()
+			if not draft?
+				return
+			
+			for item in draft.paths.slice()
+
 					if item.getBounds().intersects(@circle.bounds)
 
 						intersections = @circle.getCrossings(item.controlPath)
@@ -133,7 +145,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 							paths = [item.controlPath]
 							console.log(intersections)
 							
-							@pathsToDeleteResurectors[item.id] = data: item.getDuplicateData(), constructor: item.constructor
+							# @pathsToDeleteResurectors[item.id] = data: item.getDuplicateData(), constructor: item.constructor
 
 							for intersection in intersections
 								for p in paths
@@ -148,10 +160,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 											newP.firstSegment.handleIn = null
 											newP.firstSegment.data = split: true
 
-							refreshRasterizer = true
+							# refreshRasterizer = true
 							
 							item.remove()
-							@pathsToDelete.push(item)
+							# @pathsToDelete.push(item)
 
 							for p in paths
 								if @isPathInCircle(p)
@@ -160,15 +172,15 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 								else
 									data = R.Tools.Item.Item.PrecisePath.getDataFromPath(p)
 									points = R.Tools.Item.Item.Path.pathOnPlanetFromPath(p)
-									path = new R.Tools.Item.Item.PrecisePath(Date.now(), data, null, null, points, null, R.me)
-									path.draw()
-									@pathsToCreate.push(path)
+									path = new R.Tools.Item.Item.PrecisePath(Date.now(), data, null, null, points, null, R.me, draft.id)
+									path.draw(false, true, false)
+									# @pathsToCreate.push(path)
 						else
 							if @isPathInCircle(item.controlPath)
-								@pathsToDeleteResurectors[item.id] = data: item.getDuplicateData(), constructor: item.constructor
+								# @pathsToDeleteResurectors[item.id] = data: item.getDuplicateData(), constructor: item.constructor
 								item.remove()
-								@pathsToDelete.push(item)
-								refreshRasterizer = true
+								# @pathsToDelete.push(item)
+								# refreshRasterizer = true
 
 			return
 
@@ -184,11 +196,15 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 			@updateCircle(event.point)
 
-			@pathsToDelete = []
-			@pathsToCreate = []
-			@pathsToDeleteResurectors = {}
+			draft = R.Drawing.getDraft()
+			@duplicateData = draft?.getDuplicateData()
 
-			R.rasterizer.disableRasterization()
+			# @pathsToDelete = []
+			# @pathsToCreate = []
+			# @pathsToDeleteResurectors = {}
+
+
+			# R.rasterizer.disableRasterization()
 
 			if @constructor.emitSocket and R.me? and from==R.me
 				# data = R.currentPaths[from].data
@@ -245,41 +261,53 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			@circle.position = event.point
 			@erase()
 
-			# remove paths to delete from paths to create
-			pathsToCreate = []
-			for path in @pathsToCreate
-				if @pathsToDelete.indexOf(path) < 0
-					pathsToCreate.push(path)
-
-			# remove paths which were not saved
-			pathsToDelete = []
-			pathsToDeleteResurectors = {}
-			for path in @pathsToDelete
-				if path.pk?
-					pathsToDelete.push(path)
-					pathsToDeleteResurectors[path.id] = @pathsToDeleteResurectors[path.id]
-
-			deleteCommand = null
-			if pathsToDelete.length > 0
-				deleteCommand = new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors)
-				R.commandManager.add(deleteCommand, false)
+			draft = R.Drawing.getDraft()
 			
-			if pathsToCreate.length > 0
-				createCommand = new Command.CreateItems(pathsToCreate)
-				R.commandManager.add(createCommand, false)
-				if deleteCommand?
-					deleteCommand.twin = createCommand
-					createCommand.twin = deleteCommand
+			if draft?
+				
+				if @duplicateData?
+					modifyDrawingCommand = new Command.ModifyDrawing(draft, @duplicateData)
+					R.commandManager.add(modifyDrawingCommand, false)
 
-			for path in pathsToDelete
-				path.delete()
+				draft.updatePaths()
+				R.Button.updateSubmitButtonVisibility(draft)
+			
 
-			for path in pathsToCreate
-				path.save()
-				if not path.drawing? then path.draw?()
-				if R.rasterizer.rasterizeItems then path.rasterize?()
+			# # remove paths to delete from paths to create
+			# pathsToCreate = []
+			# for path in @pathsToCreate
+			# 	if @pathsToDelete.indexOf(path) < 0
+			# 		pathsToCreate.push(path)
 
-			R.rasterizer.enableRasterization(false)
+			# # remove paths which were not saved
+			# pathsToDelete = []
+			# pathsToDeleteResurectors = {}
+			# for path in @pathsToDelete
+			# 	if path.pk?
+			# 		pathsToDelete.push(path)
+			# 		pathsToDeleteResurectors[path.id] = @pathsToDeleteResurectors[path.id]
+
+			# deleteCommand = null
+			# if pathsToDelete.length > 0
+			# 	deleteCommand = new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors)
+			# 	R.commandManager.add(deleteCommand, false)
+			
+			# if pathsToCreate.length > 0
+			# 	createCommand = new Command.CreateItems(pathsToCreate)
+			# 	R.commandManager.add(createCommand, false)
+			# 	if deleteCommand?
+			# 		deleteCommand.twin = createCommand
+			# 		createCommand.twin = deleteCommand
+
+			# for path in pathsToDelete
+			# 	path.delete()
+
+			# for path in pathsToCreate
+			# 	path.save()
+			# 	# if not path.drawing? then path.draw?()
+			# 	# if R.rasterizer.rasterizeItems then path.rasterize?()
+
+			# R.rasterizer.enableRasterization(false)
 
 			return
 

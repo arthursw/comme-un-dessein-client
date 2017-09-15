@@ -226,9 +226,34 @@
         }).done((function(_this) {
           return function(results) {
             _this.loadCallback(results, null, false);
-            setTimeout((function() {
-              return R.rasterizer.refresh();
-            }), 1000);
+          };
+        })(this));
+      };
+
+      Loader.prototype.loadSVG = function() {
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'loadSVG',
+              args: {
+                city: R.city
+              }
+            })
+          }
+        }).done((function(_this) {
+          return function(results) {
+            var drawing, item, itemString, k, len, ref;
+            _this.setMe(results.user);
+            ref = results.items;
+            for (k = 0, len = ref.length; k < len; k++) {
+              itemString = ref[k];
+              item = JSON.parse(itemString);
+              drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg);
+            }
+            _this.endLoading();
+            R.Button.updateSubmitButtonVisibility();
           };
         })(this));
       };

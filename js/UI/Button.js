@@ -2,14 +2,67 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'i18next'], function(P, R, Utils, Tool, i18next) {
+  define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next'], function(P, R, Utils, Tool, Modal, i18next) {
     var Button;
     Button = (function() {
+      Button.createSubmitButton = function() {
+        this.submitButton = new Button({
+          name: 'Submit drawing',
+          favorite: true,
+          iconURL: 'icones_icon_ok.png',
+          classes: 'btn-success displayName',
+          onClick: (function(_this) {
+            return function() {
+              R.drawingPanel.submitDrawingClicked();
+            };
+          })(this)
+        });
+        this.submitButton.hide();
+      };
+
+      Button.createDeleteButton = function() {
+        this.deleteButton = new Button({
+          name: 'Delete draft',
+          favorite: true,
+          iconURL: 'icones_cancel.png',
+          classes: 'btn-danger',
+          onClick: (function(_this) {
+            return function() {
+              var draft;
+              draft = R.Drawing.getDraft();
+              if (draft != null) {
+                draft.removePaths(true);
+              }
+            };
+          })(this)
+        });
+        this.deleteButton.hide();
+      };
+
+      Button.updateSubmitButtonVisibility = function(draft) {
+        if (draft == null) {
+          draft = null;
+        }
+        if (draft == null) {
+          draft = R.Drawing.getDraft();
+        }
+        if ((draft == null) || (draft.paths == null) || draft.paths.length === 0 || R.drawingPanel.visible) {
+          this.submitButton.hide();
+          this.deleteButton.hide();
+          R.tools.eraser.btn.hide();
+        } else {
+          this.submitButton.show();
+          this.deleteButton.show();
+          R.tools.eraser.btn.show();
+        }
+      };
+
       function Button(parameters) {
         this.onClickWhenLoaded = bind(this.onClickWhenLoaded, this);
         this.onClickWhenNotLoaded = bind(this.onClickWhenNotLoaded, this);
         this.fileLoaded = bind(this.fileLoaded, this);
         var categories, category, classes, favorite, favoriteBtnJ, hJ, i, iconRootURL, iconURL, j, len, len1, liJ, name, onClick, order, parentJ, shortName, shortNameJ, toolNameJ, ulJ, word, words;
+        this.visible = true;
         name = parameters.name;
         iconURL = parameters.iconURL;
         favorite = parameters.favorite;
@@ -148,9 +201,26 @@
         }
       };
 
+      Button.prototype.hide = function() {
+        this.visible = false;
+        this.btnJ.hide();
+        if (this.cloneJ != null) {
+          this.cloneJ.hide();
+        }
+      };
+
+      Button.prototype.show = function() {
+        this.visible = true;
+        this.btnJ.show();
+        if (this.cloneJ != null) {
+          this.cloneJ.show();
+        }
+      };
+
       return Button;
 
     })();
+    R.Button = Button;
     return Button;
   });
 

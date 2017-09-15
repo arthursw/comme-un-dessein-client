@@ -716,16 +716,16 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Controllers/ControllerManager' ], (P, 
 			R.commandManager.resurrectItem(@duplicateData.id, @item)
 			# @setDuplicatedItemToCommands()
 			# @item.select()
-			return true
+			return false
 
 		deleteItem: ()->
 			# @removeDeleteItemFromCommands()
 
 			@duplicateData = @item.getDuplicateData()
 			@waitingDeleteCallback = @item.id
-			@item.delete()
+			deffered = @item.delete()
 			@item = null
-			return true
+			return deffered
 
 		do: ()->
 			deffered = @duplicateItem()
@@ -784,7 +784,7 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Controllers/ControllerManager' ], (P, 
 				@items[itemResurector.data.id] = item
 				R.commandManager.resurrectItem(itemResurector.data.id, item)
 				# item.select()
-				@waitingSaveCallbacks.push(item.id)
+				# @waitingSaveCallbacks.push(item.id)
 			return @waitingSaveCallbacks.length > 0
 
 		deleteItems: ()->
@@ -793,8 +793,8 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Controllers/ControllerManager' ], (P, 
 			@waitingDeleteCallbacks = []
 			for id, item of @items
 				@itemResurectors[id] = data: item.getDuplicateData(), constructor: item.constructor
-				@waitingDeleteCallbacks.push(item.id)
 				item.delete()
+				# @waitingDeleteCallbacks.push(item.id)
 				idsToRemove.push(id)
 
 			for id in idsToRemove
@@ -840,19 +840,42 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Controllers/ControllerManager' ], (P, 
 		constructor: (items, @itemResurectors)-> super(items, @itemResurectors, 'Delete items')
 
 		do: ()->
-			@deleteItems()
+			deferred = @deleteItems()
 			@superDo()
-			return true
+			return deferred
 
 		undo: ()->
-			@duplicateItems()
+			deferred = @duplicateItems()
 			@superUndo()
-			return true
+			return deferred
 
 	class DuplicateItemCommand extends CreateItemCommand
 		constructor: (item)->
 			@duplicateData = item.getDuplicateData()
 			super(item, 'Duplicate item')
+
+	class ModifyDrawing extends Command
+		constructor: (@drawing, @duplicateData=null)->
+			@duplicateData ?= @drawing.getDuplicateData()
+			super('Modify drawing')
+			@superDo()
+			return
+
+		modifiy: ()->
+			duplicateData = @drawing.getDuplicateData()
+			@drawing.setData(@duplicateData)
+			@duplicateData = duplicateData
+			return
+
+		do: ()->
+			@modifiy()
+			super()
+			return false
+
+		undo: ()->
+			@modifiy()
+			super()
+			return false
 
 	class ModifyTextCommand extends DeferredCommand
 
@@ -1047,5 +1070,6 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Controllers/ControllerManager' ], (P, 
 	Command.Deselect = DeselectCommand
 
 	Command.MoveView = MoveViewCommand
-
+	Command.ModifyDrawing = ModifyDrawing
+	R.Command = Command
 	return Command

@@ -6,7 +6,7 @@
     slice = [].slice;
 
   define(['paper', 'R', 'Utils/Utils', 'UI/Controllers/ControllerManager'], function(P, R, Utils, ControllerManager) {
-    var AddPointCommand, Command, CreateItemCommand, CreateItemsCommand, DeferredCommand, DeleteItemCommand, DeleteItemsCommand, DeletePointCommand, DeselectCommand, DuplicateItemCommand, ItemCommand, ItemsCommand, ModifyControlPathCommand, ModifyPointCommand, ModifyPointTypeCommand, ModifySpeedCommand, ModifyTextCommand, MoveViewCommand, RotateCommand, ScaleCommand, SelectCommand, SelectionRectangleCommand, SetParameterCommand, TranslateCommand;
+    var AddPointCommand, Command, CreateItemCommand, CreateItemsCommand, DeferredCommand, DeleteItemCommand, DeleteItemsCommand, DeletePointCommand, DeselectCommand, DuplicateItemCommand, ItemCommand, ItemsCommand, ModifyControlPathCommand, ModifyDrawing, ModifyPointCommand, ModifyPointTypeCommand, ModifySpeedCommand, ModifyTextCommand, MoveViewCommand, RotateCommand, ScaleCommand, SelectCommand, SelectionRectangleCommand, SetParameterCommand, TranslateCommand;
     Command = (function() {
       function Command(name) {
         this.click = bind(this.click, this);
@@ -795,15 +795,16 @@
         this.item = this.itemConstructor.create(this.duplicateData);
         this.waitingSaveCallback = this.item.id;
         R.commandManager.resurrectItem(this.duplicateData.id, this.item);
-        return true;
+        return false;
       };
 
       CreateItemCommand.prototype.deleteItem = function() {
+        var deffered;
         this.duplicateData = this.item.getDuplicateData();
         this.waitingDeleteCallback = this.item.id;
-        this.item["delete"]();
+        deffered = this.item["delete"]();
         this.item = null;
-        return true;
+        return deffered;
       };
 
       CreateItemCommand.prototype["do"] = function() {
@@ -895,7 +896,6 @@
           item = itemResurector.constructor.create(itemResurector.data);
           this.items[itemResurector.data.id] = item;
           R.commandManager.resurrectItem(itemResurector.data.id, item);
-          this.waitingSaveCallbacks.push(item.id);
         }
         return this.waitingSaveCallbacks.length > 0;
       };
@@ -912,7 +912,6 @@
             data: item.getDuplicateData(),
             constructor: item.constructor
           };
-          this.waitingDeleteCallbacks.push(item.id);
           item["delete"]();
           idsToRemove.push(id);
         }
@@ -987,15 +986,17 @@
       }
 
       DeleteItemsCommand.prototype["do"] = function() {
-        this.deleteItems();
+        var deferred;
+        deferred = this.deleteItems();
         this.superDo();
-        return true;
+        return deferred;
       };
 
       DeleteItemsCommand.prototype.undo = function() {
-        this.duplicateItems();
+        var deferred;
+        deferred = this.duplicateItems();
         this.superUndo();
-        return true;
+        return deferred;
       };
 
       return DeleteItemsCommand;
@@ -1012,6 +1013,42 @@
       return DuplicateItemCommand;
 
     })(CreateItemCommand);
+    ModifyDrawing = (function(superClass) {
+      extend(ModifyDrawing, superClass);
+
+      function ModifyDrawing(drawing, duplicateData1) {
+        this.drawing = drawing;
+        this.duplicateData = duplicateData1 != null ? duplicateData1 : null;
+        if (this.duplicateData == null) {
+          this.duplicateData = this.drawing.getDuplicateData();
+        }
+        ModifyDrawing.__super__.constructor.call(this, 'Modify drawing');
+        this.superDo();
+        return;
+      }
+
+      ModifyDrawing.prototype.modifiy = function() {
+        var duplicateData;
+        duplicateData = this.drawing.getDuplicateData();
+        this.drawing.setData(this.duplicateData);
+        this.duplicateData = duplicateData;
+      };
+
+      ModifyDrawing.prototype["do"] = function() {
+        this.modifiy();
+        ModifyDrawing.__super__["do"].call(this);
+        return false;
+      };
+
+      ModifyDrawing.prototype.undo = function() {
+        this.modifiy();
+        ModifyDrawing.__super__.undo.call(this);
+        return false;
+      };
+
+      return ModifyDrawing;
+
+    })(Command);
     ModifyTextCommand = (function(superClass) {
       extend(ModifyTextCommand, superClass);
 
@@ -1066,6 +1103,8 @@
     Command.Select = SelectCommand;
     Command.Deselect = DeselectCommand;
     Command.MoveView = MoveViewCommand;
+    Command.ModifyDrawing = ModifyDrawing;
+    R.Command = Command;
     return Command;
   });
 

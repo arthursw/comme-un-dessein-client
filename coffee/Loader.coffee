@@ -189,7 +189,19 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 		loadAll: ()->
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadAll', args: { city: R.city } } ).done((results)=> 
 				@loadCallback(results, null, false)
-				setTimeout((()=>R.rasterizer.refresh()), 1000)
+				# setTimeout((()=>R.rasterizer.refresh()), 1000)
+				return)
+			return
+
+		loadSVG: ()->
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadSVG', args: { city: R.city } } ).done((results)=> 
+				@setMe(results.user)
+				for itemString in results.items
+					item = JSON.parse(itemString)
+					drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg)
+				# setTimeout((()=>R.rasterizer.refresh()), 1000)
+				@endLoading()
+				R.Button.updateSubmitButtonVisibility()
 				return)
 			return
 

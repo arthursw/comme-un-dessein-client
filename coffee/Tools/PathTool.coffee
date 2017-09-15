@@ -96,17 +96,17 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			@btnJ.remove()
 			return
 
-		setButtonValidate: ()->
-			newName = i18next.t('Submit drawing')
-			@btnJ.find('.tool-name').attr('data-i18n', newName).text(newName)
-			@btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_icon_ok.png')
-			return
+		# setButtonValidate: ()->
+		# 	newName = i18next.t('Submit drawing')
+		# 	@btnJ.find('.tool-name').attr('data-i18n', newName).text(newName)
+		# 	@btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_icon_ok.png')
+		# 	return
 		
-		setButtonDraw: ()->
-			newName = i18next.t('Precise path')
-			@btnJ.find('.tool-name').attr('data-i18n', newName).text(newName)
-			@btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_icon_pen.png')
-			return
+		# setButtonDraw: ()->
+		# 	newName = i18next.t('Precise path')
+		# 	@btnJ.find('.tool-name').attr('data-i18n', newName).text(newName)
+		# 	@btnJ.find('img').attr('src', '/static/images/icons/inverted/icones_icon_pen.png')
+		# 	return
 
 		# Select: add the mouse move listener on the tool (userful when creating a path in polygon mode)
 		# todo: move this to main, have a global onMouseMove handler like other handlers
@@ -115,12 +115,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 				R.alertManager.alert 'Log in before drawing', 'info'
 				return
 
-			if R.selectedTool != @
-				@setButtonValidate()
-			else
-				@setButtonDraw()
-				R.drawingPanel.submitDrawingClicked()
-				return
+			# if R.selectedTool != @
+			# 	@setButtonValidate()
+			# else
+			# 	@setButtonDraw()
+			# 	R.drawingPanel.submitDrawingClicked()
+			# 	return
 
 			if P.view.zoom < 1
 				R.alertManager.alert 'You can zoom in to draw more easily', 'info'
@@ -148,7 +148,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		# Deselect: remove the mouse move listener
 		deselect: ()->
 
-			@setButtonDraw()
+			# @setButtonDraw()
 
 			super()
 			@finish()
@@ -322,9 +322,13 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 					R.alertManager.alert("You must log in before drawing, your drawing won't be saved", "Info")
 					return
 
+
 				path.save(true)
 				path.rasterize()
 				R.rasterizer.rasterize(path)
+
+				R.Button.updateSubmitButtonVisibility()
+
 				# path.select(false)
 			else
 				path.endCreate(event.point, event)

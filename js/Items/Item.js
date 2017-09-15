@@ -434,8 +434,9 @@
       Item.prototype["delete"] = function() {
         this.remove();
         if (this.pk == null) {
-          return;
+          return false;
         }
+        this.pk = null;
         if (!this.socketAction) {
           this.deleteFromDatabase();
           R.socket.emit("bounce", {
@@ -443,8 +444,9 @@
             "function": "delete",
             "arguments": []
           });
+          return true;
         }
-        this.pk = null;
+        return false;
       };
 
       Item.prototype.deleteCommand = function() {
@@ -464,52 +466,11 @@
         R.commandManager.add(new Command.DuplicateItem(this), true);
       };
 
-      Item.prototype.removeDrawing = function() {
-        var ref;
-        if (((ref = this.drawing) != null ? ref.parent : void 0) == null) {
-          return;
-        }
-        this.drawingRelativePosition = this.drawing.position.subtract(this.rectangle.center);
-        this.drawing.remove();
-      };
+      Item.prototype.removeDrawing = function() {};
 
-      Item.prototype.replaceDrawing = function() {
-        var ref;
-        if ((this.drawing == null) || (this.drawingRelativePosition == null)) {
-          return;
-        }
-        if ((ref = this.raster) != null) {
-          ref.remove();
-        }
-        this.raster = null;
-        this.group.addChild(this.drawing);
-        this.drawing.position = this.rectangle.center.add(this.drawingRelativePosition);
-        this.drawingRelativePosition = null;
-      };
+      Item.prototype.replaceDrawing = function() {};
 
-      Item.prototype.rasterize = function() {
-        if ((this.raster != null) || (this.drawing == null)) {
-          return;
-        }
-        if (!R.rasterizer.rasterizeItems) {
-          return;
-        }
-        if (this.drawing.bounds.width === 0 && this.drawing.bounds.height === 0) {
-          return;
-        }
-        if (this.drawing.data.rectangle != null) {
-          this.drawing.data.rectangle.remove();
-        }
-        if (!this.drawing.data.rectangle) {
-          this.drawing.data.rectangle = new P.Path.Rectangle(this.drawing.bounds.expand(2 * Item.Path.strokeWidth));
-          this.drawing.addChild(this.drawing.data.rectangle);
-          this.drawing.data.rectangle.sendToBack();
-        }
-        this.raster = this.drawing.rasterize();
-        this.group.addChild(this.raster);
-        this.raster.sendToBack();
-        this.removeDrawing();
-      };
+      Item.prototype.rasterize = function() {};
 
       return Item;
 
