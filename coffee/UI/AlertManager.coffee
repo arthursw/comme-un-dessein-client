@@ -76,7 +76,9 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 				@alertTimeOut = null
 			R.alertManager.alertsContainer.addClass('show')
 			R.sidebar.sidebarJ.addClass('r-alert')
-			R.drawingPanel.drawingPanelJ.addClass('r-alert')
+			suffix = if R.alertManager.alertsContainer.hasClass('top') then '-top' else ''
+			R.drawingPanel.drawingPanelJ.addClass('r-alert' + suffix)
+			$('#submit-drawing-button').addClass('r-alert' + suffix)
 			@openning = true
 			setTimeout((()=> @openning = null), 500)
 			return
@@ -100,7 +102,9 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 				@alertTimeOut = null
 			@alertsContainer.removeClass("show")
 			R.sidebar.sidebarJ.removeClass('r-alert')
-			R.drawingPanel.drawingPanelJ.removeClass('r-alert')
+			suffix = if R.alertManager.alertsContainer.hasClass('top') then '-top' else ''
+			R.drawingPanel.drawingPanelJ.removeClass('r-alert' + suffix)
+			$('#submit-drawing-button').removeClass('r-alert' + suffix)
 			return
 
 	return AlertManager

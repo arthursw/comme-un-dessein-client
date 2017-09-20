@@ -32,20 +32,11 @@
       PathTool.maxDraftSize = 1000;
 
       PathTool.computeDraftBounds = function(paths) {
-        var bounds, draft, i, len, path, ref;
+        var ref;
         if (paths == null) {
           paths = null;
         }
-        bounds = null;
-        draft = R.Drawing.getDraft();
-        if (draft != null) {
-          ref = draft.paths;
-          for (i = 0, len = ref.length; i < len; i++) {
-            path = ref[i];
-            bounds = bounds != null ? bounds.unite(path.getDrawingBounds()) : path.getDrawingBounds();
-          }
-        }
-        return bounds;
+        return (ref = R.Drawing.getDraft()) != null ? ref.getBounds() : void 0;
       };
 
       PathTool.draftIsTooBig = function(paths, tolerance) {
@@ -113,7 +104,7 @@
       };
 
       PathTool.prototype.select = function(deselectItems, updateParameters, forceSelect, fromMiddleMouseButton) {
-        var draftBounds;
+        var bounds, draft;
         if (deselectItems == null) {
           deselectItems = true;
         }
@@ -130,19 +121,21 @@
           R.alertManager.alert('Log in before drawing', 'info');
           return;
         }
-        if (P.view.zoom < 1) {
-          R.alertManager.alert('You can zoom in to draw more easily', 'info');
-        }
-        R.rasterizer.drawItems();
         this.showDraftLimits();
-        PathTool.__super__.select.apply(this, arguments);
+        PathTool.__super__.select.call(this, deselectItems, updateParameters, fromMiddleMouseButton);
         R.view.tool.onMouseMove = this.move;
         R.toolManager.enterDrawingMode();
         if (!fromMiddleMouseButton) {
-          draftBounds = this.constructor.computeDraftBounds();
-          if ((draftBounds != null) && !P.view.bounds.intersects(draftBounds)) {
-            R.view.fitRectangle(draftBounds, true, 1);
+          draft = R.Drawing.getDraft();
+          if (draft != null) {
+            bounds = draft.getBounds();
+            if (bounds != null) {
+              R.view.fitRectangle(bounds, false, P.view.zoom < 1 ? 1 : P.view.zoom);
+            }
           }
+        }
+        if (P.view.zoom < 1) {
+          R.alertManager.alert('You can zoom in to draw more easily', 'info');
         }
       };
 
@@ -193,10 +186,18 @@
       };
 
       PathTool.prototype.showDraftLimits = function() {
-        var child, draftBounds, i, l1, l2, l3, l4, len, ref, viewBounds;
+        var child, draftBounds, i, l1, l2, l3, l4, len, path, ref, viewBounds;
         this.hideDraftLimits();
         draftBounds = this.constructor.computeDraftBounds();
-        if (draftBounds == null) {
+        path = R.currentPaths[R.me];
+        if (path != null) {
+          if (draftBounds != null) {
+            draftBounds = draftBounds.unite(path.getDrawingBounds());
+          } else {
+            draftBounds = path.getDrawingBounds();
+          }
+        }
+        if ((draftBounds == null) || draftBounds.area === 0) {
           return null;
         }
         viewBounds = R.view.grid.limitCD.bounds.clone();
@@ -227,7 +228,7 @@
       };
 
       PathTool.prototype.update = function(event, from) {
-        var draftIsTooBig, draftLimit, path;
+        var draftIsOutsideFrame, draftIsTooBig, draftLimit, p, path;
         if (from == null) {
           from = R.me;
         }
@@ -237,25 +238,30 @@
         }
         draftLimit = this.showDraftLimits();
         draftIsTooBig = (draftLimit != null) && !draftLimit.expand(-20).contains(event.point);
-        if (draftIsTooBig) {
-          if (path.path != null) {
-            if (this.previousPathColor == null) {
-              this.previousPathColor = path.path.strokeColor;
-            }
-            path.path.strokeColor = 'red';
-          }
+        draftIsOutsideFrame = !R.view.contains(event.point);
+        if (draftIsTooBig || draftIsOutsideFrame) {
           if (R.drawingMode !== 'line' && R.drawingMode !== 'lineOrthoDiag') {
-            this.constructor.displayDraftIsTooBigError();
+            if (draftIsTooBig) {
+              this.constructor.displayDraftIsTooBigError();
+            } else if (draftIsOutsideFrame) {
+              R.alertManager.alert('Your path must be in the drawing area', 'error');
+            }
             this.end(event, from);
+            if (path.path != null) {
+              p = path.path.clone();
+              p.strokeColor = 'red';
+              R.view.mainLayer.addChild(p);
+              setTimeout(((function(_this) {
+                return function() {
+                  return p.remove();
+                };
+              })(this)), 1000);
+            }
+            this.showDraftLimits();
           }
           return;
-        } else if ((this.previousPathColor != null) && (path.path != null)) {
-          path.path.strokeColor = this.previousPathColor;
         }
         path.updateCreate(event.point, event, false);
-        if (R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth)) && (path.path != null)) {
-          path.path.strokeColor = 'red';
-        }
         if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
           R.socket.emit("bounce", {
             tool: this.name,
@@ -298,7 +304,7 @@
           path.save(true);
           path.rasterize();
           R.rasterizer.rasterize(path);
-          R.Button.updateSubmitButtonVisibility();
+          R.toolManager.updateButtonsVisibility();
         } else {
           path.endCreate(event.point, event);
         }
@@ -312,12 +318,6 @@
         }
         path = R.currentPaths[from];
         if (path == null) {
-          return false;
-        }
-        if (R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))) {
-          R.alertManager.alert('Your path must be in the drawing area', 'error');
-          R.currentPaths[from].remove();
-          delete R.currentPaths[from];
           return false;
         }
         if ((this.draftLimit != null) && !this.draftLimit.contains(R.currentPaths[from].controlPath.bounds)) {

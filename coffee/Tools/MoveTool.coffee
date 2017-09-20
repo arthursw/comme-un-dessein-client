@@ -13,7 +13,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 		@category = ''
 		@cursor =
 			position:
-				x: 32, y: 32
+				x: 16, y: 16
 			name: 'default'
 			icon: if R.style == 'line' then 'mouse_move' else 'hand'
 		@order = 0
@@ -25,8 +25,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 			return
 
 		# Select tool and disable Div interactions (to be able to scroll even when user clicks on them, for exmaple disable textarea default behaviour)
-		select: (deselectItems=false, updateParameters=true)->
-			super(deselectItems, updateParameters)
+		select: (deselectItems=false, updateParameters=true, fromMiddleMouseButton=false)->
+			super(deselectItems, updateParameters, fromMiddleMouseButton)
 			R.stageJ.addClass("moveTool")
 			for div in R.divs
 				div.disableInteraction()

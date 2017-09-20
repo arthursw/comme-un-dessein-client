@@ -128,13 +128,13 @@
       };
 
       Loader.prototype.unloadAreas = function(area, limit, qZoom) {
-        var i, id, item, itemsOutsideLimit, j, pos, rectangle, ref;
+        var i, id, item, itemsOutsideLimit, j, pos, rectangle, ref, ref1, ref2;
         itemsOutsideLimit = [];
         ref = R.items;
         for (id in ref) {
           if (!hasProp.call(ref, id)) continue;
           item = ref[id];
-          if ((!item.getBounds().intersects(limit)) && (!item.isDraft())) {
+          if ((!((ref1 = item.getBounds()) != null ? ref1.intersects(limit) : void 0)) && (!item.isDraft())) {
             itemsOutsideLimit.push(item);
           }
         }
@@ -151,7 +151,7 @@
             j = itemsOutsideLimit.length;
             while (j--) {
               item = itemsOutsideLimit[j];
-              if (item.getBounds().intersects(rectangle)) {
+              if ((ref2 = item.getBounds()) != null ? ref2.intersects(rectangle) : void 0) {
                 item.remove();
                 itemsOutsideLimit.splice(j, 1);
               }
@@ -253,7 +253,7 @@
               drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg);
             }
             _this.endLoading();
-            R.Button.updateSubmitButtonVisibility();
+            R.toolManager.updateButtonsVisibility();
           };
         })(this));
       };

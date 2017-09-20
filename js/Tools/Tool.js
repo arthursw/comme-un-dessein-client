@@ -94,20 +94,26 @@
         })(this));
       };
 
-      Tool.prototype.select = function(deselectItems, updateParameters) {
-        var ref;
+      Tool.prototype.select = function(deselectItems, updateParameters, fromMiddleMouseButton) {
+        var ref, ref1, ref2;
         if (deselectItems == null) {
           deselectItems = true;
         }
         if (updateParameters == null) {
           updateParameters = true;
         }
+        if (fromMiddleMouseButton == null) {
+          fromMiddleMouseButton = false;
+        }
         if (R.selectedTool === this) {
           return;
         }
+        if ((ref = this.btn) != null) {
+          ref.addClass('btn-info');
+        }
         R.previousTool = R.selectedTool;
-        if ((ref = R.selectedTool) != null) {
-          ref.deselect();
+        if ((ref1 = R.selectedTool) != null) {
+          ref1.deselect();
         }
         R.selectedTool = this;
         this.updateCursor();
@@ -116,6 +122,11 @@
         }
         if (updateParameters) {
           this.updateParameters();
+        }
+        if (!fromMiddleMouseButton) {
+          if ((ref2 = R.toolManager) != null) {
+            ref2.updateButtonsVisibility();
+          }
         }
       };
 
@@ -131,7 +142,12 @@
         }
       };
 
-      Tool.prototype.deselect = function() {};
+      Tool.prototype.deselect = function() {
+        var ref;
+        if ((ref = this.btn) != null) {
+          ref.removeClass('btn-info');
+        }
+      };
 
       Tool.prototype.begin = function(event) {};
 

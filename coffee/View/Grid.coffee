@@ -52,12 +52,15 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 		#
 		# @param rectangle [P.Rectangle] rectangle to test
 		# @return [Boolean] true if overlaps
-		rectangleOverlapsTwoPlanets: (rectangle)->
-			return not @limitCD.bounds.contains(rectangle)
+		rectangleOverlapsTwoPlanets: (rectangle, tolerance=50)->
+			return not @limitCD.bounds.expand(-tolerance).contains(rectangle)
 			# limit = Utils.CS.getLimit()
 			# if ( rectangle.left < limit.x && rectangle.right > limit.x ) || ( rectangle.top < limit.y && rectangle.bottom > limit.y )
 			# 	return true
 			# return false
+
+		contains: (item, tolerance=50)->
+			return @limitCD.bounds.expand(-tolerance).contains(item)
 
 		# Test if *path* overlaps two planets
 		#

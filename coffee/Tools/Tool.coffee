@@ -104,8 +104,10 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 		# @param [RTool constructor] the constructor used to update gui parameters (@constructor.parameters)
 		# @param [Item] selected item to update gui parameters
 		# @param [Boolean] deselected selected items (false when selecting MoveTool or SelectTool)
-		select: (deselectItems=true, updateParameters=true)=>
+		select: (deselectItems=true, updateParameters=true, fromMiddleMouseButton=false)=>
 			if R.selectedTool == @ then return
+
+			@btn?.addClass('btn-info')
 
 			R.previousTool = R.selectedTool
 			R.selectedTool?.deselect()
@@ -118,6 +120,9 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 
 			if updateParameters
 				@updateParameters()
+
+			if not fromMiddleMouseButton
+				R.toolManager?.updateButtonsVisibility()
 			return
 
 		updateParameters: ()->
@@ -133,6 +138,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 
 		# Deselect current tool
 		deselect: ()->
+			@btn?.removeClass('btn-info')
 			return
 
 		# Begin tool action (usually called on mouse down event)

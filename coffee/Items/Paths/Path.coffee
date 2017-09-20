@@ -709,7 +709,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			draft = R.Drawing.getDraft()
 			if draft?
 				draft.updatePaths()
-				R.Button.updateSubmitButtonVisibility(draft)
+				R.toolManager.updateButtonsVisibility(draft)
 			return deffered
 
 		deleteFromDatabase: ()->

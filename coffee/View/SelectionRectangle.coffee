@@ -114,7 +114,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Items/Content'
 			if items.length == 0 then return
 			bounds = items[0].getBounds()
 			for item in items
-				bounds = bounds.unite(item.getBounds())
+				bounds ?= item.getBounds()
+				if bounds?
+					bounds = bounds.unite(item.getBounds())
 			return bounds.expand(5)
 
 		addHandles: (bounds)->

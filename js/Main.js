@@ -171,8 +171,8 @@
       R.drawingPanel = new DrawingPanel();
       R.view.initializePosition();
       R.sidebar.initialize();
-      Button.createSubmitButton();
-      Button.createDeleteButton();
+      R.toolManager.createDeleteButton();
+      R.toolManager.createSubmitButton();
       if (!R.userAuthenticated) {
         welcomeTextJ = $('#welcome-text');
         modal = Modal.createModal({

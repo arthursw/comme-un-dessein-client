@@ -27,21 +27,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		@maxDraftSize = 1000
 
 		@computeDraftBounds: (paths=null)->
-			bounds = null
-			
-			# if not paths
-			# 	paths = []
-			# 	for id, path of R.paths
-			# 		if path.owner == R.me and path.isDraft()
-			# 			paths.push(path)
-
-			draft = R.Drawing.getDraft()
-			
-			if draft?
-				for path in draft.paths
-					bounds = if bounds? then bounds.unite(path.getDrawingBounds()) else path.getDrawingBounds()
-
-			return bounds
+			return R.Drawing.getDraft()?.getBounds()
 
 		@draftIsTooBig: (paths=null, tolerance=0)->
 			draftBounds = @computeDraftBounds(paths)
@@ -122,23 +108,25 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			# 	R.drawingPanel.submitDrawingClicked()
 			# 	return
 
-			if P.view.zoom < 1
-				R.alertManager.alert 'You can zoom in to draw more easily', 'info'
 
-			R.rasterizer.drawItems()
+			# R.rasterizer.drawItems()
 
 			@showDraftLimits()
 
-			super
+			super(deselectItems, updateParameters, fromMiddleMouseButton)
 
 			R.view.tool.onMouseMove = @move
 			R.toolManager.enterDrawingMode()
 
 			if not fromMiddleMouseButton
-				draftBounds = @constructor.computeDraftBounds()
-				if draftBounds? and not P.view.bounds.intersects(draftBounds)
-					R.view.fitRectangle(draftBounds, true, 1)
+				draft = R.Drawing.getDraft()
+				if draft?
+					bounds = draft.getBounds()
+					if bounds?
+						R.view.fitRectangle(bounds, false, if P.view.zoom < 1 then 1 else P.view.zoom)
 
+			if P.view.zoom < 1
+				R.alertManager.alert 'You can zoom in to draw more easily', 'info'
 			return
 
 		updateParameters: ()->
@@ -198,8 +186,16 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			@hideDraftLimits()
 
 			draftBounds = @constructor.computeDraftBounds()
+
+			path = R.currentPaths[R.me]
+
+			if path?
+				if draftBounds?
+					draftBounds = draftBounds.unite(path.getDrawingBounds())
+				else
+					draftBounds = path.getDrawingBounds()
 			
-			if not draftBounds? then return null
+			if not draftBounds? or draftBounds.area == 0 then return null
 
 			viewBounds = R.view.grid.limitCD.bounds.clone()
 			@draftLimit = draftBounds.expand(2 * (@constructor.maxDraftSize - draftBounds.width), 2 * (@constructor.maxDraftSize - draftBounds.height))
@@ -246,14 +242,28 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 
 			draftIsTooBig = draftLimit? and not draftLimit.expand(-20).contains(event.point)
 			
-			if draftIsTooBig
-				if path.path?
-					@previousPathColor ?= path.path.strokeColor
-					path.path.strokeColor = 'red'
-				
+			draftIsOutsideFrame = not R.view.contains(event.point)
+
+			if draftIsTooBig or draftIsOutsideFrame
+				# if path.path?
+				# 	@previousPathColor ?= path.path.strokeColor
+				# 	path.path.strokeColor = 'red'
+
 				if R.drawingMode != 'line' and R.drawingMode != 'lineOrthoDiag'
-					@constructor.displayDraftIsTooBigError()
+					if draftIsTooBig
+						@constructor.displayDraftIsTooBigError()
+					else if draftIsOutsideFrame
+						R.alertManager.alert 'Your path must be in the drawing area', 'error'
+
 					@end(event, from)
+
+					if path.path?
+						p = path.path.clone()
+						p.strokeColor = 'red'
+						R.view.mainLayer.addChild(p)
+						setTimeout((()=> p.remove()), 1000)
+
+					@showDraftLimits()
 
 				# lastSegmentToPoint = new P.Path()
 				# lastSegmentToPoint.add(path.controlPath.lastSegment)
@@ -268,13 +278,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 				# 	@constructor.displayDraftIsTooBigError()
 				# 	@end(event, from)
 				return
-			else if @previousPathColor? and path.path?
-				path.path.strokeColor = @previousPathColor
+			# else if @previousPathColor? and path.path?
+			# 	path.path.strokeColor = @previousPathColor
 
 			path.updateCreate(event.point, event, false)
-
-			if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth)) and path.path?
-				path.path.strokeColor = 'red'
 
 			# R.currentPaths[from].group.visible = true
 			# if R.me? and from==R.me then R.socket.emit( "update", R.me, R.eventToObject(event), @name)
@@ -327,7 +334,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 				path.rasterize()
 				R.rasterizer.rasterize(path)
 
-				R.Button.updateSubmitButtonVisibility()
+				R.toolManager.updateButtonsVisibility()
 
 				# path.select(false)
 			else
@@ -345,11 +352,11 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			if not path? then return false		# when the path has been deleted because too big
 			
 
-			if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))
-				R.alertManager.alert 'Your path must be in the drawing area', 'error'
-				R.currentPaths[from].remove()
-				delete R.currentPaths[from]
-				return false
+			# if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))
+			# 	R.alertManager.alert 'Your path must be in the drawing area', 'error'
+			# 	R.currentPaths[from].remove()
+			# 	delete R.currentPaths[from]
+			# 	return false
 			
 			if @draftLimit? and not @draftLimit.contains(R.currentPaths[from].controlPath.bounds)
 				@constructor.displayDraftIsTooBigError()

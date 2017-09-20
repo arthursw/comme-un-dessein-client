@@ -403,8 +403,9 @@ define [
 		R.view.initializePosition()
 		R.sidebar.initialize()
 
-		Button.createSubmitButton()
-		Button.createDeleteButton()
+		R.toolManager.createDeleteButton()
+		R.toolManager.createSubmitButton()
+		
 		
 		if not R.userAuthenticated
 			

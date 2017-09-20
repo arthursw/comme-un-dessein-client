@@ -289,8 +289,13 @@
       };
 
       Item.prototype.highlight = function() {
+        var bounds;
+        bounds = this.getBounds();
+        if (bounds == null) {
+          return;
+        }
         if (this.highlightRectangle != null) {
-          Utils.Rectangle.updatePathRectangle(this.highlightRectangle, this.getBounds());
+          Utils.Rectangle.updatePathRectangle(this.highlightRectangle, bounds);
           return;
         }
         this.highlightRectangle = new P.Path.Rectangle(this.getBounds());

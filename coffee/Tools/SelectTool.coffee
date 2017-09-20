@@ -10,7 +10,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 		# @iconURL = 'glyphicon-envelope'
 		# @iconURL = 'cursor.png'
 		@iconURL = if R.style == 'line' then 'icones_icon_vote.png' else if R.style == 'hand' then 'a-cursor.png' else 'cursor.png'
-		@buttonClasses = 'displayName btn-info'
+		@buttonClasses = 'displayName'
 
 		@cursor =
 			position:
@@ -19,6 +19,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			icon: if R.style == 'line' then 'mouse_vote' else null
 
 		@drawItems = false
+
+		@order = 5
 		# @order = 1
 
 		# Paper hitOptions for hitTest function to check which items (corresponding to those criterias) are under a point
@@ -70,11 +72,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			if buttonClicked
 				R.alertManager.alert 'Click on a drawing to vote for it', 'info'
 
+			R.canvasJ.addClass('select')
+
 			super(false, updateParameters)
 			return
 
 		deselect: ()->
-			R.canvasJ.css({cursor: 'auto'})
+			R.canvasJ.removeClass('select')
+			# R.canvasJ.css({cursor: 'auto'})
 			super
 			return
 
@@ -136,9 +141,30 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 
 			# Add all items which have bounds intersecting with the selection rectangle (1st version)
 			for item in R.drawings
-				if item.getBounds().intersects(rectangle) and item.isVisible()
-					allDrawingsInRectangleBox.push(item)
-					itemsToSelect.push(item)
+				if item.getBounds()?.intersects(rectangle) and item.isVisible()
+					if item.svg?
+
+						allDrawingsInRectangleBox.push(item)
+						itemsToSelect.push(item)
+						
+						# rootSVG = item.svg.ownerSVGElement
+						# svgRectangle = rootSVG.createSVGRect()
+						# svgRectangle.x = P.view.projectToView(rectangle.x)
+						# svgRectangle.y = P.view.projectToView(rectangle.y)
+						# svgRectangle.width = P.view.projectToView(rectangle.width)
+						# svgRectangle.height = P.view.projectToView(rectangle.height)
+						# nodeList = rootSVG.getIntersectionList(svgRectangle, item.svg)
+						# if nodeList.length > 0
+						# 	allDrawingsInRectangleBox.push(item)
+						# 	itemsToSelect.push(item)
+						# for node in nodeList
+						# 	if item.svg.contains(node)
+						# 		allDrawingsInRectangleBox.push(item)
+						# 		itemsToSelect.push(item)
+						# 		break
+					else
+						allDrawingsInRectangleBox.push(item)
+						itemsToSelect.push(item)
 
 			if allDrawingsInRectangleBox.length == 1
 				itemsToSelect.length = 0

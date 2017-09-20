@@ -19,6 +19,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@drawingPanelJ = $("#drawingPanel")
 			@drawingPanelJ.bind "transitionend webkitTransitionEnd oTransitionEnd MSTransitionEnd", @resize
 
+			@thumbnailFooterTitle = @drawingPanelJ.find(".thumbnail-footer .title")
+			@thumbnailFooterAuthor = @drawingPanelJ.find(".thumbnail-footer .author")
+
 			# if R.sidebar.sidebarJ.hasClass("r-hidden")
 				# @drawingPanelJ.addClass("r-hidden")
 
@@ -152,7 +155,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@drawingPanelJ.addClass('visible')
 			@visible = true
 
-			R.Button.updateSubmitButtonVisibility()
+			R.toolManager.updateButtonsVisibility()
 			return
 
 		close: (removeDrawingIfNotSaved=true)=>
@@ -171,7 +174,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				@currentDrawing = null
 				R.tools.select.deselectAll()
 
-			R.Button.updateSubmitButtonVisibility()
+			R.toolManager.updateButtonsVisibility()
 			return
 
 		### set drawing ###
@@ -190,7 +193,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			thumbnailJ = $('<div>')
 			thumbnailJ.addClass('thumbnail drawing-thumbnail')
-			thumbnailJ.append(R.view.getThumbnail(item))
+			svg = R.view.getThumbnail(item)
+			svg.setAttribute('viewBox', '0 0 300 300')
+			svg.setAttribute('width', '250')
+			svg.setAttribute('height', '250')
+			thumbnailJ.append(svg)
 			
 			deselectBtnJ = $('<button>')
 			deselectBtnJ.addClass('btn btn-default icon-only transparent')
@@ -369,8 +376,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@open()
 			@showContent()
 
+			@contentJ.find('#drawing-title').focus()
+
 			@contentJ.find('#drawing-author').val(R.me)
+			@contentJ.find('.title-group').show()
 			@contentJ.find('#drawing-title').val('')
+
+			@thumbnailFooterAuthor.text(R.me)
+			@thumbnailFooterTitle.text('')
+			
 			@contentJ.find('#drawing-description').val('')
 			@submitBtnJ.show()
 			@modifyBtnJ.hide()
@@ -386,16 +400,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			# @submitBtnJ.find('span.glyphicon').removeClass('glyphicon-ok').addClass('glyphicon-refresh glyphicon-refresh-animate')
 			# $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getDrafts', args: { city: R.city } } ).done(@submitDrawingClickedCallback)
 
-			@currentDrawing.computeRectangle()
-
-			R.view.fitRectangle(@currentDrawing.rectangle, true)
+			bounds = @currentDrawing.getBounds()
+			if bounds?
+				R.view.fitRectangle(bounds, true)
 
 			@setDrawingThumbnail()
 
 			@currentDrawing.select(true, false) # Important to deselect (for example when selecting a tool) and close the drawing panel
-
-			if not @currentDrawing?
-				console.error('no draft found!')
 
 			return
 
@@ -440,7 +451,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@votesJ.find('.n-votes.total').html(nVotes)
 			@votesJ.find('.percentage-votes').html(if nVotes > 0 then 100*nPositiveVotes/nVotes else 0)
 			
-			@votesJ.find('.status').html(@currentDrawing.status)
+			@votesJ.find('.status').attr('data-i18n', @currentDrawing.status).html(i18next.t(@currentDrawing.status))
 
 			@voteUpBtnJ.removeClass('disabled')
 			@voteDownBtnJ.removeClass('disabled')
@@ -467,11 +478,17 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			# @deleteBtnJ.hide()
 
 			@contentJ.find('#drawing-author').val(@currentDrawing.owner)
+			@contentJ.find('.title-group').hide()
 			@contentJ.find('#drawing-title').val(@currentDrawing.title)
+			
+			@thumbnailFooterAuthor.text(@currentDrawing.owner)
+			@thumbnailFooterTitle.text(@currentDrawing.title)
+
 			@contentJ.find('#drawing-description').val(@currentDrawing.description)
 
 			if @currentDrawing.owner == R.me || R.administrator
 				if latestDrawing.status == 'pending'
+					@contentJ.find('.title-group').show()
 					@modifyBtnJ.show()
 					@cancelBtnJ.show()
 					@cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel vote').text(i18next.t('Cancel vote'))
@@ -530,6 +547,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 						drawing.description = data.description
 						if @currentDrawing == drawing
 							@contentJ.find('#drawing-title').val(data.title)
+							@thumbnailFooterTitle.text(data.title)
 							@contentJ.find('#drawing-description').val(data.description)
 				when 'status'
 					drawing = R.items[data.drawingId]

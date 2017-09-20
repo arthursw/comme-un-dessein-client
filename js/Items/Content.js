@@ -93,7 +93,7 @@
         if (!event.shiftKey) {
           R.tools.select.deselectAll();
           bounds = this.getBounds();
-          if (!P.view.bounds.intersects(bounds)) {
+          if ((bounds != null) && !P.view.bounds.intersects(bounds)) {
             R.view.moveTo(bounds.center, 1000);
           }
         }
@@ -252,7 +252,7 @@
           return false;
         }
         bounds = this.getBounds();
-        if (bounds.area > R.rasterizer.maxArea()) {
+        if ((bounds != null) && bounds.area > R.rasterizer.maxArea()) {
           R.alertManager.alert("The item is too big", "Warning");
           this.remove();
           return false;

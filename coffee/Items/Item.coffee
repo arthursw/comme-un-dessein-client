@@ -583,8 +583,10 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 
 		# highlight this Item by drawing a blue rectangle around it
 		highlight: ()->
+			bounds = @getBounds()
+			if not bounds? then return
 			if @highlightRectangle?
-				Utils.Rectangle.updatePathRectangle(@highlightRectangle, @getBounds())
+				Utils.Rectangle.updatePathRectangle(@highlightRectangle, bounds)
 				return
 			@highlightRectangle = new P.Path.Rectangle(@getBounds())
 			@highlightRectangle.strokeColor = R.selectionBlue

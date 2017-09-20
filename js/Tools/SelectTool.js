@@ -17,7 +17,7 @@
 
       SelectTool.iconURL = R.style === 'line' ? 'icones_icon_vote.png' : R.style === 'hand' ? 'a-cursor.png' : 'cursor.png';
 
-      SelectTool.buttonClasses = 'displayName btn-info';
+      SelectTool.buttonClasses = 'displayName';
 
       SelectTool.cursor = {
         position: {
@@ -29,6 +29,8 @@
       };
 
       SelectTool.drawItems = false;
+
+      SelectTool.order = 5;
 
       SelectTool.hitOptions = {
         stroke: true,
@@ -108,13 +110,12 @@
         if (buttonClicked) {
           R.alertManager.alert('Click on a drawing to vote for it', 'info');
         }
+        R.canvasJ.addClass('select');
         SelectTool.__super__.select.call(this, false, updateParameters);
       };
 
       SelectTool.prototype.deselect = function() {
-        R.canvasJ.css({
-          cursor: 'auto'
-        });
+        R.canvasJ.removeClass('select');
         SelectTool.__super__.deselect.apply(this, arguments);
       };
 
@@ -159,7 +160,7 @@
       };
 
       SelectTool.prototype.populateItemsToSelect = function(itemsToSelect, locksToSelect, rectangle) {
-        var allDrawingsInRectangleBox, drawing, i, item, j, justClicked, len, len1, ref;
+        var allDrawingsInRectangleBox, drawing, i, item, j, justClicked, len, len1, ref, ref1;
         justClicked = rectangle.area === 0;
         if (justClicked) {
           rectangle = rectangle.expand(5);
@@ -168,9 +169,14 @@
         ref = R.drawings;
         for (i = 0, len = ref.length; i < len; i++) {
           item = ref[i];
-          if (item.getBounds().intersects(rectangle) && item.isVisible()) {
-            allDrawingsInRectangleBox.push(item);
-            itemsToSelect.push(item);
+          if (((ref1 = item.getBounds()) != null ? ref1.intersects(rectangle) : void 0) && item.isVisible()) {
+            if (item.svg != null) {
+              allDrawingsInRectangleBox.push(item);
+              itemsToSelect.push(item);
+            } else {
+              allDrawingsInRectangleBox.push(item);
+              itemsToSelect.push(item);
+            }
           }
         }
         if (allDrawingsInRectangleBox.length === 1) {

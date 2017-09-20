@@ -16,6 +16,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		@object_type = 'drawing'
 
 		@pkToId = {}
+		@draft = null
 
 		@initialize: (rectangle)->
 			return
@@ -43,11 +44,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 
 		@getDraft: ()->
-			for own id, item of R.items
-				if item instanceof Item.Drawing
-					if item.owner == R.me and item.status == 'draft'
-						return item
-			return null
+			return @draft
 
 		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @title, @description, @status='pending', pathList=[], svg=null) ->
 			super(@data, @id, @pk)
@@ -70,6 +67,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@sortedPaths = []
 
 			@addToListItem(@getListItem())
+			
+			if @status == 'draft'
+				@constructor.draft = @
 
 			if svg?
 				@setSVG(svg)
@@ -146,6 +146,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			if @status == 'draft'
 				doc.documentElement.setAttribute('id', 'draftDrawing')
 			@svg = layer.appendChild(doc.documentElement)
+			
+			@svg.addEventListener("click",  ((event) => 
+				R.tools.select.deselectAll()
+				@select()
+				event.stopPropagation()
+				return -1
+			))
+
 			return
 
 		getPathIds: ()->
@@ -165,7 +173,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@addPathsFromPathList(data.pointLists, false)
 
 			if @status == 'draft'
-				R.Button.updateSubmitButtonVisibility(@)
+				R.toolManager.updateButtonsVisibility(@)
 
 			@updatePaths()
 			return
@@ -238,6 +246,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			if @svg?
 				@rectangle = new P.Rectangle(@svg.getBBox())
 				return
+			@rectangle = null
 			for path in @paths
 				bounds = path.getDrawingBounds()
 				if bounds?
@@ -430,8 +439,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return @status + 'Layer'
 
 		getBounds: ()->
-			if not @rectangle?
-				@computeRectangle()
+			@computeRectangle()
+			if not @svg? and @paths.length == 0
+				return null
 			return @rectangle
 
 		getSVG: (asString=true) ->
@@ -465,7 +475,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			for path in @paths.slice()
 				path.remove()
 			if @status == 'draft'
-				R.Button.updateSubmitButtonVisibility(@)
+				R.toolManager.updateButtonsVisibility(@)
 			if addCommand
 				@updatePaths()
 			return
@@ -479,6 +489,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			R.commandManager.clearHistory()
 
 			@status = 'pending'
+			
+			if @constructor.draft == @
+				@constructor.draft = null
+
+			R.toolManager.updateButtonsVisibility()
 
 			@removePaths()
 
@@ -588,8 +603,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 		# check if drawing contains its children
 		containsChildren: ()->
+			bounds = item.getBounds()
+			if not bounds?
+				return true
 			for item in @children()
-				if not @rectangle.contains(item.getBounds())
+				if not @rectangle.contains(bounds)
 					return false
 			return true
 

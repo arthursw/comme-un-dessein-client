@@ -140,7 +140,12 @@
         bounds = items[0].getBounds();
         for (i = 0, len = items.length; i < len; i++) {
           item = items[i];
-          bounds = bounds.unite(item.getBounds());
+          if (bounds == null) {
+            bounds = item.getBounds();
+          }
+          if (bounds != null) {
+            bounds = bounds.unite(item.getBounds());
+          }
         }
         return bounds.expand(5);
       };

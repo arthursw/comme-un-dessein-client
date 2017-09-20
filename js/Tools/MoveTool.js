@@ -20,8 +20,8 @@
 
       MoveTool.cursor = {
         position: {
-          x: 32,
-          y: 32
+          x: 16,
+          y: 16
         },
         name: 'default',
         icon: R.style === 'line' ? 'mouse_move' : 'hand'
@@ -39,7 +39,7 @@
         return;
       }
 
-      MoveTool.prototype.select = function(deselectItems, updateParameters) {
+      MoveTool.prototype.select = function(deselectItems, updateParameters, fromMiddleMouseButton) {
         var div, i, len, ref;
         if (deselectItems == null) {
           deselectItems = false;
@@ -47,7 +47,10 @@
         if (updateParameters == null) {
           updateParameters = true;
         }
-        MoveTool.__super__.select.call(this, deselectItems, updateParameters);
+        if (fromMiddleMouseButton == null) {
+          fromMiddleMouseButton = false;
+        }
+        MoveTool.__super__.select.call(this, deselectItems, updateParameters, fromMiddleMouseButton);
         R.stageJ.addClass("moveTool");
         ref = R.divs;
         for (i = 0, len = ref.length; i < len; i++) {

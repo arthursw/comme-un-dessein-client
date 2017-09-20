@@ -121,7 +121,7 @@
       };
 
       EraserTool.prototype.erase = function() {
-        var data, draft, i, intersection, intersections, item, j, k, l, len, len1, len2, len3, location, newP, p, path, paths, points, ref;
+        var data, draft, i, intersection, intersections, item, j, k, l, len, len1, len2, len3, location, newP, p, path, paths, points, ref, ref1;
         draft = R.Drawing.getDraft();
         if (draft == null) {
           return;
@@ -129,7 +129,7 @@
         ref = draft.paths.slice();
         for (i = 0, len = ref.length; i < len; i++) {
           item = ref[i];
-          if (item.getBounds().intersects(this.circle.bounds)) {
+          if ((ref1 = item.getBounds()) != null ? ref1.intersects(this.circle.bounds) : void 0) {
             intersections = this.circle.getCrossings(item.controlPath);
             if (intersections.length > 0) {
               paths = [item.controlPath];
@@ -252,7 +252,7 @@
             R.commandManager.add(modifyDrawingCommand, false);
           }
           draft.updatePaths();
-          R.Button.updateSubmitButtonVisibility(draft);
+          R.toolManager.updateButtonsVisibility(draft);
         }
       };
 

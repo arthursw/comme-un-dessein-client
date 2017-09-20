@@ -38,8 +38,18 @@
         return;
       }
 
-      Grid.prototype.rectangleOverlapsTwoPlanets = function(rectangle) {
-        return !this.limitCD.bounds.contains(rectangle);
+      Grid.prototype.rectangleOverlapsTwoPlanets = function(rectangle, tolerance) {
+        if (tolerance == null) {
+          tolerance = 50;
+        }
+        return !this.limitCD.bounds.expand(-tolerance).contains(rectangle);
+      };
+
+      Grid.prototype.contains = function(item, tolerance) {
+        if (tolerance == null) {
+          tolerance = 50;
+        }
+        return this.limitCD.bounds.expand(-tolerance).contains(item);
       };
 
       Grid.prototype.updateLimitPaths = function() {

@@ -611,7 +611,7 @@
         draft = R.Drawing.getDraft();
         if (draft != null) {
           draft.updatePaths();
-          R.Button.updateSubmitButtonVisibility(draft);
+          R.toolManager.updateButtonsVisibility(draft);
         }
         return deffered;
       };

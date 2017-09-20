@@ -2,9 +2,9 @@
 (function() {
   var dependencies;
 
-  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool'];
+  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool', 'UI/Modal'];
 
-  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool) {
+  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Modal) {
     var ToolManager;
     ToolManager = (function() {
       function ToolManager() {
@@ -44,6 +44,7 @@
         }
         this.createZoombuttons();
         this.createUndoRedoButtons();
+        this.createInfoButton();
         return;
       }
 
@@ -134,6 +135,7 @@
           order: null,
           transform: 'scaleX(-1)'
         });
+        this.undoBtn.hide();
         this.undoBtn.btnJ.click(function() {
           return R.commandManager.undo();
         });
@@ -146,9 +148,117 @@
           popover: true,
           order: null
         });
+        this.redoBtn.hide();
         this.redoBtn.btnJ.click(function() {
           return R.commandManager["do"]();
         });
+      };
+
+      ToolManager.prototype.createInfoButton = function() {
+        this.infoBtn = new Button({
+          name: 'Info',
+          iconURL: 'glyphicon-info-sign',
+          favorite: true,
+          category: null,
+          description: 'Info',
+          popover: true,
+          order: 1000,
+          classes: 'align-end'
+        });
+        this.infoBtn.btnJ.click(function() {
+          var modal, welcomeTextJ;
+          welcomeTextJ = $('#welcome-text');
+          modal = Modal.createModal({
+            title: 'Welcome to Comme Un Dessein',
+            submit: (function() {
+              return location.pathname = '/accounts/signup/';
+            }),
+            postSubmit: 'load',
+            submitButtonText: 'Sign up',
+            submitButtonIcon: 'glyphicon-user',
+            cancelButtonText: 'Just visit',
+            cancelButtonIcon: 'glyphicon-sunglasses'
+          });
+          modal.addCustomContent({
+            divJ: welcomeTextJ.clone(),
+            name: 'welcome-text'
+          });
+          modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning');
+          modal.addButton({
+            type: 'info',
+            name: 'Sign in',
+            icon: 'glyphicon-log-in'
+          });
+          modal.modalJ.find('[name="Sign in"]').attr('data-toggle', 'dropdown').after($('#user-profile').find('.dropdown-menu').clone());
+          modal.modalJ.find('.dropdown-menu').find('li.sign-up').hide();
+          modal.show();
+        });
+      };
+
+      ToolManager.prototype.createSubmitButton = function() {
+        this.submitButton = new Button({
+          name: 'Submit drawing',
+          iconURL: 'icones_icon_ok.png',
+          classes: 'btn-success displayName',
+          parentJ: $('#submit-drawing-button'),
+          ignoreFavorite: true,
+          onClick: (function(_this) {
+            return function() {
+              R.drawingPanel.submitDrawingClicked();
+            };
+          })(this)
+        });
+        this.submitButton.hide();
+      };
+
+      ToolManager.prototype.createDeleteButton = function() {
+        this.deleteButton = new Button({
+          name: 'Delete draft',
+          iconURL: 'icones_cancel.png',
+          classes: 'btn-danger',
+          parentJ: $('#submit-drawing-button'),
+          ignoreFavorite: true,
+          onClick: (function(_this) {
+            return function() {
+              var draft;
+              draft = R.Drawing.getDraft();
+              if (draft != null) {
+                draft.removePaths(true);
+              }
+              R.tools['Precise path'].showDraftLimits();
+            };
+          })(this)
+        });
+        this.deleteButton.hide();
+      };
+
+      ToolManager.prototype.updateButtonsVisibility = function(draft) {
+        if (draft == null) {
+          draft = null;
+        }
+        if (R.selectedTool === R.tools['Precise path'] || R.selectedTool === R.tools.eraser) {
+          this.redoBtn.show();
+          this.undoBtn.show();
+          this.submitButton.show();
+          this.deleteButton.show();
+          R.tools.eraser.btn.show();
+        } else {
+          this.redoBtn.hide();
+          this.undoBtn.hide();
+          this.submitButton.hide();
+          this.deleteButton.hide();
+          R.tools.eraser.btn.hide();
+        }
+        if (draft == null) {
+          draft = R.Drawing.getDraft();
+        }
+        if ((draft == null) || (draft.paths == null) || draft.paths.length === 0 || R.drawingPanel.visible) {
+          this.submitButton.hide();
+          this.deleteButton.hide();
+        } else {
+          this.submitButton.show();
+          this.deleteButton.show();
+        }
       };
 
       ToolManager.prototype.enterDrawingMode = function() {

@@ -136,7 +136,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			
 			for item in draft.paths.slice()
 
-					if item.getBounds().intersects(@circle.bounds)
+					if item.getBounds()?.intersects(@circle.bounds)
 
 						intersections = @circle.getCrossings(item.controlPath)
 						
@@ -270,7 +270,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 					R.commandManager.add(modifyDrawingCommand, false)
 
 				draft.updatePaths()
-				R.Button.updateSubmitButtonVisibility(draft)
+				R.toolManager.updateButtonsVisibility(draft)
 			
 
 			# # remove paths to delete from paths to create

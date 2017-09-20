@@ -8,6 +8,7 @@ dependencies = [
 	'Tools/PathTool'
 	'Tools/EraserTool'
 	'Tools/ItemTool'
+	'UI/Modal'
 	# 'Tools/TextTool'
 	# 'Tools/GradientTool'
 ]
@@ -16,7 +17,7 @@ dependencies = [
 	# dependencies.push('Tools/ScreenshotTool')
 	# dependencies.push('Tools/CarTool')
 
-define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool) -> # , TextTool, GradientTool, CarTool) ->
+define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Modal) -> # , TextTool, GradientTool, CarTool) ->
 
 	class ToolManager
 
@@ -216,6 +217,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 
 			@createZoombuttons()
 			@createUndoRedoButtons()
+			@createInfoButton()
 			
 
 			# @liveBtn = new Button(
@@ -315,7 +317,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				order: null
 				transform: 'scaleX(-1)'
 			)
-
+			@undoBtn.hide()
 			@undoBtn.btnJ.click ()-> R.commandManager.undo()
 
 			@redoBtn = new Button(
@@ -329,9 +331,131 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				popover: true
 				order: null
 			)
-			
+			@redoBtn.hide()
 			@redoBtn.btnJ.click ()-> R.commandManager.do()
 
+			return
+
+		createInfoButton: ()->
+
+			@infoBtn = new Button(
+				name: 'Info'
+				iconURL: 'glyphicon-info-sign'
+				favorite: true
+				category: null
+				description: 'Info'
+				popover: true
+				order: 1000
+				classes: 'align-end'
+			)
+
+			@infoBtn.btnJ.click ()-> 
+				welcomeTextJ = $('#welcome-text')
+				modal = Modal.createModal( 
+					title: 'Welcome to Comme Un Dessein', 
+					submit: ( ()-> return location.pathname = '/accounts/signup/' ), 
+					postSubmit: 'load', 
+					submitButtonText: 'Sign up', 
+					submitButtonIcon: 'glyphicon-user', 
+					cancelButtonText: 'Just visit', 
+					cancelButtonIcon: 'glyphicon-sunglasses' )
+				# modal.addText('''
+				# 	Comme un dessein is a participative piece created by the french collective IDLV (Indiens dans la Ville). 
+				# 	With the help of a simple web interface and a monumental plotter, everyone can submit a drawing which takes part of a larger pictural composition, thus compose a collective utopian artwork.
+				# ''', 'welcome message 1', false)
+				# modal.addText('', 'welcome message 2', false)
+				# modal.addText('', 'welcome message 3', false)
+				modal.addCustomContent(divJ: welcomeTextJ.clone(), name: 'welcome-text')
+				modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning')
+				# modal.addButton( type: 'info', name: 'Sign in', submit: (()-> return location.pathname = '/accounts/login/'), icon: 'glyphicon-log-in' )
+				modal.addButton( type: 'info', name: 'Sign in', icon: 'glyphicon-log-in' )
+
+				modal.modalJ.find('[name="Sign in"]').attr('data-toggle', 'dropdown').after($('#user-profile').find('.dropdown-menu').clone())
+				modal.modalJ.find('.dropdown-menu').find('li.sign-up').hide()
+
+				modal.show()
+				return
+
+			return
+
+		createSubmitButton: ()->
+			@submitButton = new Button({
+				name: 'Submit drawing'
+				# favorite: true
+				iconURL: 'icones_icon_ok.png'
+				# order: 0
+				classes: 'btn-success displayName'
+				parentJ: $('#submit-drawing-button')
+				ignoreFavorite: true
+				onClick: ()=>
+					R.drawingPanel.submitDrawingClicked()
+					return
+			})
+			@submitButton.hide()
+			return
+
+		createDeleteButton: ()->
+			@deleteButton = new Button({
+				name: 'Delete draft'
+				# favorite: true
+				iconURL: 'icones_cancel.png'
+				# order: 0
+				classes: 'btn-danger'
+				parentJ: $('#submit-drawing-button')
+				ignoreFavorite: true
+				onClick: ()=>
+					draft = R.Drawing.getDraft()
+					if draft?
+						draft.removePaths(true)
+					R.tools['Precise path'].showDraftLimits()
+					return
+			})
+			@deleteButton.hide()
+			return
+
+		updateButtonsVisibility: (draft=null)->
+			
+
+			# pathTool = R.tools['Precise path']
+			# voteTool = R.tools.select
+
+			# if pathTool.btn? and voteTool.btn?
+			# 	if R.selectedTool == R.tools['Precise path']
+			# 		pathTool.btn.removeClass('btn-success')
+			# 		voteTool.btn.removeClass('btn-info')
+			# 		voteTool.btn.removeClass('btn-warning')
+			# 		pathTool.btn.addClass('btn-warning')
+			# 	else if R.selectedTool == voteTool
+			# 		pathTool.btn.removeClass('btn-success')
+			# 		pathTool.btn.removeClass('btn-warning')
+			# 		voteTool.btn.removeClass('btn-info')
+			# 		voteTool.btn.addClass('btn-warning')
+			# 	else
+			# 		pathTool.btn.removeClass('btn-success')
+			# 		voteTool.btn.removeClass('btn-info')
+			# 		pathTool.btn.removeClass('btn-warning')
+			# 		voteTool.btn.removeClass('btn-warning')
+
+			if R.selectedTool == R.tools['Precise path'] or R.selectedTool == R.tools.eraser
+				@redoBtn.show()
+				@undoBtn.show()
+				@submitButton.show()
+				@deleteButton.show()
+				R.tools.eraser.btn.show()
+			else
+				@redoBtn.hide()
+				@undoBtn.hide()
+				@submitButton.hide()
+				@deleteButton.hide()
+				R.tools.eraser.btn.hide()
+
+			draft ?= R.Drawing.getDraft()
+			if not draft? or not draft.paths? or draft.paths.length == 0 or R.drawingPanel.visible
+				@submitButton.hide()
+				@deleteButton.hide()
+			else
+				@submitButton.show()
+				@deleteButton.show()
 			return
 
 		enterDrawingMode: ()->

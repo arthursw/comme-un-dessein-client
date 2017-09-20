@@ -89,7 +89,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item' ], (P, R, Utils, Item) ->
 			if not event.shiftKey
 				R.tools.select.deselectAll()
 				bounds = @getBounds()
-				if not P.view.bounds.intersects(bounds)
+				if bounds? and not P.view.bounds.intersects(bounds)
 					R.view.moveTo(bounds.center, 1000)
 			@select()
 			return
@@ -285,7 +285,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item' ], (P, R, Utils, Item) ->
 			if not super() then return false
 
 			bounds = @getBounds()
-			if bounds.area > R.rasterizer.maxArea()
+			if bounds? and bounds.area > R.rasterizer.maxArea()
 				R.alertManager.alert("The item is too big", "Warning")
 				@remove()
 				return false

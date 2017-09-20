@@ -87,13 +87,16 @@
       };
 
       AlertManager.prototype.show = function() {
+        var suffix;
         if (this.alertTimeOut != null) {
           clearTimeout(this.alertTimeOut);
           this.alertTimeOut = null;
         }
         R.alertManager.alertsContainer.addClass('show');
         R.sidebar.sidebarJ.addClass('r-alert');
-        R.drawingPanel.drawingPanelJ.addClass('r-alert');
+        suffix = R.alertManager.alertsContainer.hasClass('top') ? '-top' : '';
+        R.drawingPanel.drawingPanelJ.addClass('r-alert' + suffix);
+        $('#submit-drawing-button').addClass('r-alert' + suffix);
         this.openning = true;
         setTimeout(((function(_this) {
           return function() {
@@ -122,13 +125,16 @@
       };
 
       AlertManager.prototype.hide = function() {
+        var suffix;
         if (this.alertTimeOut != null) {
           clearTimeout(this.alertTimeOut);
           this.alertTimeOut = null;
         }
         this.alertsContainer.removeClass("show");
         R.sidebar.sidebarJ.removeClass('r-alert');
-        R.drawingPanel.drawingPanelJ.removeClass('r-alert');
+        suffix = R.alertManager.alertsContainer.hasClass('top') ? '-top' : '';
+        R.drawingPanel.drawingPanelJ.removeClass('r-alert' + suffix);
+        $('#submit-drawing-button').removeClass('r-alert' + suffix);
       };
 
       return AlertManager;

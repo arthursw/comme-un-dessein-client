@@ -15,6 +15,8 @@
 
       Drawing.pkToId = {};
 
+      Drawing.draft = null;
+
       Drawing.initialize = function(rectangle) {};
 
       Drawing.initializeParameters = function() {
@@ -50,18 +52,7 @@
       };
 
       Drawing.getDraft = function() {
-        var id, item, ref;
-        ref = R.items;
-        for (id in ref) {
-          if (!hasProp.call(ref, id)) continue;
-          item = ref[id];
-          if (item instanceof Item.Drawing) {
-            if (item.owner === R.me && item.status === 'draft') {
-              return item;
-            }
-          }
-        }
-        return null;
+        return this.draft;
       };
 
       function Drawing(rectangle1, data1, id1, pk, owner, date, title1, description, status, pathList, svg) {
@@ -100,6 +91,9 @@
         this.votes = [];
         this.sortedPaths = [];
         this.addToListItem(this.getListItem());
+        if (this.status === 'draft') {
+          this.constructor.draft = this;
+        }
         if (svg != null) {
           this.setSVG(svg);
           if (this.status !== 'draft') {
@@ -157,6 +151,14 @@
           doc.documentElement.setAttribute('id', 'draftDrawing');
         }
         this.svg = layer.appendChild(doc.documentElement);
+        this.svg.addEventListener("click", ((function(_this) {
+          return function(event) {
+            R.tools.select.deselectAll();
+            _this.select();
+            event.stopPropagation();
+            return -1;
+          };
+        })(this)));
       };
 
       Drawing.prototype.getPathIds = function() {
@@ -182,7 +184,7 @@
         this.removePaths();
         this.addPathsFromPathList(data.pointLists, false);
         if (this.status === 'draft') {
-          R.Button.updateSubmitButtonVisibility(this);
+          R.toolManager.updateButtonsVisibility(this);
         }
         this.updatePaths();
       };
@@ -265,6 +267,7 @@
           this.rectangle = new P.Rectangle(this.svg.getBBox());
           return;
         }
+        this.rectangle = null;
         ref = this.paths;
         for (i = 0, len = ref.length; i < len; i++) {
           path = ref[i];
@@ -474,8 +477,9 @@
       };
 
       Drawing.prototype.getBounds = function() {
-        if (this.rectangle == null) {
-          this.computeRectangle();
+        this.computeRectangle();
+        if ((this.svg == null) && this.paths.length === 0) {
+          return null;
         }
         return this.rectangle;
       };
@@ -537,7 +541,7 @@
           path.remove();
         }
         if (this.status === 'draft') {
-          R.Button.updateSubmitButtonVisibility(this);
+          R.toolManager.updateButtonsVisibility(this);
         }
         if (addCommand) {
           this.updatePaths();
@@ -550,6 +554,10 @@
         }
         R.commandManager.clearHistory();
         this.status = 'pending';
+        if (this.constructor.draft === this) {
+          this.constructor.draft = null;
+        }
+        R.toolManager.updateButtonsVisibility();
         this.removePaths();
         this.setSVG(this.svgString);
         this.svgString = null;
@@ -711,11 +719,15 @@
       };
 
       Drawing.prototype.containsChildren = function() {
-        var i, item, len, ref;
+        var bounds, i, item, len, ref;
+        bounds = item.getBounds();
+        if (bounds == null) {
+          return true;
+        }
         ref = this.children();
         for (i = 0, len = ref.length; i < len; i++) {
           item = ref[i];
-          if (!this.rectangle.contains(item.getBounds())) {
+          if (!this.rectangle.contains(bounds)) {
             return false;
           }
         }

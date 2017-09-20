@@ -119,7 +119,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			# remove RItems which are not within limit anymore AND in area which must be unloaded
 			# (do not remove items on an area which is not unloaded, otherwise they wont be reloaded if user comes back on it)
 			for own id, item of R.items
-				if (not item.getBounds().intersects(limit)) and (not item.isDraft())
+				if (not item.getBounds()?.intersects(limit)) and (not item.isDraft())
 					itemsOutsideLimit.push(item)
 
 			i = @loadedAreas.length
@@ -149,7 +149,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 					j = itemsOutsideLimit.length
 					while j--
 						item = itemsOutsideLimit[j]
-						if item.getBounds().intersects(rectangle)
+						if item.getBounds()?.intersects(rectangle)
 							item.remove()
 							itemsOutsideLimit.splice(j,1)
 			return
@@ -201,7 +201,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 					drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg)
 				# setTimeout((()=>R.rasterizer.refresh()), 1000)
 				@endLoading()
-				R.Button.updateSubmitButtonVisibility()
+				R.toolManager.updateButtonsVisibility()
 				return)
 			return
 

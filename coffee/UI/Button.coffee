@@ -2,66 +2,19 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 
 	class Button
 
-		@createSubmitButton: ()->
-			@submitButton = new Button({
-				name: 'Submit drawing'
-				favorite: true
-				iconURL: 'icones_icon_ok.png'
-				# order: 0
-				classes: 'btn-success displayName'
-				onClick: ()=>
-					R.drawingPanel.submitDrawingClicked()
-					return
-			})
-			@submitButton.hide()
-			return
-
-		# @clearDrawing: ()->
-		# 	draft = R.Drawing.getDraft()
-		# 	if draft?
-		# 		draft.removePaths()
-		# 	return
-
-		@createDeleteButton: ()->
-			@deleteButton = new Button({
-				name: 'Delete draft'
-				favorite: true
-				iconURL: 'icones_cancel.png'
-				# order: 0
-				classes: 'btn-danger'
-				onClick: ()=>
-					draft = R.Drawing.getDraft()
-					if draft?
-						draft.removePaths(true)
-					return
-			})
-			@deleteButton.hide()
-			return
-
-		@updateSubmitButtonVisibility: (draft=null)->
-			draft ?= R.Drawing.getDraft()
-			if not draft? or not draft.paths? or draft.paths.length == 0 or R.drawingPanel.visible
-				@submitButton.hide()
-				@deleteButton.hide()
-				R.tools.eraser.btn.hide()
-			else
-				@submitButton.show()
-				@deleteButton.show()
-				R.tools.eraser.btn.show()
-			return
-
 		constructor: (parameters)->
 			@visible = true
 			name = parameters.name
 			iconURL = parameters.iconURL
 			favorite = parameters.favorite
+			ignoreFavorite = parameters.ignoreFavorite
 			category = parameters.category
 			order = parameters.order
 			classes = parameters.classes
 			@file = parameters.file
 			onClick = parameters.onClick
 
-			parentJ = R.sidebar.allToolsJ
+			parentJ = parameters.parentJ or R.sidebar.allToolsJ
 			if category? and category != ""
 				# split into sub categories
 				categories = category.split("/")
@@ -122,12 +75,15 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 			toolNameJ.attr('data-i18n', name).text(i18next.t(name))
 			@btnJ.append(toolNameJ)
 			@btnJ.addClass("tool-btn")
-			favoriteBtnJ = $("""<button type="button" class="btn btn-default favorite-btn">
-	  			<span class="glyphicon glyphicon-star" aria-hidden="true"></span>
-			</button>""")
-			favoriteBtnJ.click(R.sidebar.toggleToolToFavorite)
 
-			@btnJ.append(favoriteBtnJ)
+			if not ignoreFavorite
+				favoriteBtnJ = $("""<button type="button" class="btn btn-default favorite-btn">
+		  			<span class="glyphicon glyphicon-star" aria-hidden="true"></span>
+				</button>""")
+				favoriteBtnJ.click(R.sidebar.toggleToolToFavorite)
+
+				@btnJ.append(favoriteBtnJ)
+			
 			@btnJ.attr('data-order': if order? then order else 999)
 
 			if onClick?
@@ -191,6 +147,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 
 		onClickWhenLoaded: (event)=>
 			toolName = @btnJ.attr("data-name")
+			R.tools[toolName]?.btn = @
 			R.tools[toolName]?.select()
 			return
 
@@ -206,6 +163,18 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 			@btnJ.show()
 			if @cloneJ?
 				@cloneJ.show()
+			return
+
+		removeClass: (className)->
+			@btnJ.removeClass(className)
+			if @cloneJ?
+				@cloneJ.removeClass(className)
+			return
+
+		addClass: (className)->
+			@btnJ.addClass(className)
+			if @cloneJ?
+				@cloneJ.addClass(className)
 			return
 
 	R.Button = Button

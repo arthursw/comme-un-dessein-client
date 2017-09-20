@@ -5,73 +5,22 @@
   define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next'], function(P, R, Utils, Tool, Modal, i18next) {
     var Button;
     Button = (function() {
-      Button.createSubmitButton = function() {
-        this.submitButton = new Button({
-          name: 'Submit drawing',
-          favorite: true,
-          iconURL: 'icones_icon_ok.png',
-          classes: 'btn-success displayName',
-          onClick: (function(_this) {
-            return function() {
-              R.drawingPanel.submitDrawingClicked();
-            };
-          })(this)
-        });
-        this.submitButton.hide();
-      };
-
-      Button.createDeleteButton = function() {
-        this.deleteButton = new Button({
-          name: 'Delete draft',
-          favorite: true,
-          iconURL: 'icones_cancel.png',
-          classes: 'btn-danger',
-          onClick: (function(_this) {
-            return function() {
-              var draft;
-              draft = R.Drawing.getDraft();
-              if (draft != null) {
-                draft.removePaths(true);
-              }
-            };
-          })(this)
-        });
-        this.deleteButton.hide();
-      };
-
-      Button.updateSubmitButtonVisibility = function(draft) {
-        if (draft == null) {
-          draft = null;
-        }
-        if (draft == null) {
-          draft = R.Drawing.getDraft();
-        }
-        if ((draft == null) || (draft.paths == null) || draft.paths.length === 0 || R.drawingPanel.visible) {
-          this.submitButton.hide();
-          this.deleteButton.hide();
-          R.tools.eraser.btn.hide();
-        } else {
-          this.submitButton.show();
-          this.deleteButton.show();
-          R.tools.eraser.btn.show();
-        }
-      };
-
       function Button(parameters) {
         this.onClickWhenLoaded = bind(this.onClickWhenLoaded, this);
         this.onClickWhenNotLoaded = bind(this.onClickWhenNotLoaded, this);
         this.fileLoaded = bind(this.fileLoaded, this);
-        var categories, category, classes, favorite, favoriteBtnJ, hJ, i, iconRootURL, iconURL, j, len, len1, liJ, name, onClick, order, parentJ, shortName, shortNameJ, toolNameJ, ulJ, word, words;
+        var categories, category, classes, favorite, favoriteBtnJ, hJ, i, iconRootURL, iconURL, ignoreFavorite, j, len, len1, liJ, name, onClick, order, parentJ, shortName, shortNameJ, toolNameJ, ulJ, word, words;
         this.visible = true;
         name = parameters.name;
         iconURL = parameters.iconURL;
         favorite = parameters.favorite;
+        ignoreFavorite = parameters.ignoreFavorite;
         category = parameters.category;
         order = parameters.order;
         classes = parameters.classes;
         this.file = parameters.file;
         onClick = parameters.onClick;
-        parentJ = R.sidebar.allToolsJ;
+        parentJ = parameters.parentJ || R.sidebar.allToolsJ;
         if ((category != null) && category !== "") {
           categories = category.split("/");
           for (i = 0, len = categories.length; i < len; i++) {
@@ -136,9 +85,11 @@
         toolNameJ.attr('data-i18n', name).text(i18next.t(name));
         this.btnJ.append(toolNameJ);
         this.btnJ.addClass("tool-btn");
-        favoriteBtnJ = $("<button type=\"button\" class=\"btn btn-default favorite-btn\">\n	  			<span class=\"glyphicon glyphicon-star\" aria-hidden=\"true\"></span>\n</button>");
-        favoriteBtnJ.click(R.sidebar.toggleToolToFavorite);
-        this.btnJ.append(favoriteBtnJ);
+        if (!ignoreFavorite) {
+          favoriteBtnJ = $("<button type=\"button\" class=\"btn btn-default favorite-btn\">\n		  			<span class=\"glyphicon glyphicon-star\" aria-hidden=\"true\"></span>\n</button>");
+          favoriteBtnJ.click(R.sidebar.toggleToolToFavorite);
+          this.btnJ.append(favoriteBtnJ);
+        }
         this.btnJ.attr({
           'data-order': order != null ? order : 999
         });
@@ -194,10 +145,13 @@
       };
 
       Button.prototype.onClickWhenLoaded = function(event) {
-        var ref, toolName;
+        var ref, ref1, toolName;
         toolName = this.btnJ.attr("data-name");
         if ((ref = R.tools[toolName]) != null) {
-          ref.select();
+          ref.btn = this;
+        }
+        if ((ref1 = R.tools[toolName]) != null) {
+          ref1.select();
         }
       };
 
@@ -214,6 +168,20 @@
         this.btnJ.show();
         if (this.cloneJ != null) {
           this.cloneJ.show();
+        }
+      };
+
+      Button.prototype.removeClass = function(className) {
+        this.btnJ.removeClass(className);
+        if (this.cloneJ != null) {
+          this.cloneJ.removeClass(className);
+        }
+      };
+
+      Button.prototype.addClass = function(className) {
+        this.btnJ.addClass(className);
+        if (this.cloneJ != null) {
+          this.cloneJ.addClass(className);
         }
       };
 

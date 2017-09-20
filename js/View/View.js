@@ -134,6 +134,9 @@
         var i, len, path, rectangle, rectangleRatio, ref, svg, viewRatio;
         this.thumbnailProject.activate();
         rectangle = drawing.getBounds();
+        if (rectangle == null) {
+          return null;
+        }
         viewRatio = 1;
         rectangleRatio = rectangle.width / rectangle.height;
         if (drawing.svg != null) {
@@ -332,7 +335,7 @@
       };
 
       View.prototype.moveBy = function(delta, addCommand, preventLoad) {
-        var area, div, i, j, len, len1, newEntireArea, newView, previousCenter, ref, ref1, restrictedAreaShrinked, somethingToLoad;
+        var area, div, i, j, len, len1, newEntireArea, newView, previousCenter, ref, ref1, ref2, restrictedAreaShrinked, somethingToLoad;
         if (addCommand == null) {
           addCommand = true;
         }
@@ -377,7 +380,7 @@
         ref1 = this.entireAreas;
         for (j = 0, len1 = ref1.length; j < len1; j++) {
           area = ref1[j];
-          if (area.getBounds().contains(P.view.center)) {
+          if ((ref2 = area.getBounds()) != null ? ref2.contains(P.view.center) : void 0) {
             newEntireArea = area;
             break;
           }
@@ -502,7 +505,7 @@
       };
 
       View.prototype.initializePosition = function() {
-        var boxRectangle, br, controller, folder, folderName, i, len, planet, pos, ref, ref1, site, siteString, tl;
+        var boxRectangle, br, controller, folder, folderName, i, len, planet, pos, ref, ref1, site, siteString, svg, tl;
         R.city = {
           owner: R.canvasJ.attr("data-owner") !== '' ? R.canvasJ.attr("data-owner") : void 0,
           city: R.canvasJ.attr("data-city") !== '' ? R.canvasJ.attr("data-city") : void 0,
@@ -511,8 +514,32 @@
         this.restrictedArea = this.grid.limitCD.bounds.expand(100);
         P.view.zoom = 0.5;
         P.view.scrollBy(1, 1);
-        R.svgJ = $(P.project.exportSVG());
+        svg = P.project.exportSVG();
+        R.svgJ = $(svg);
         R.svgJ.insertAfter(R.canvasJ);
+        R.svgJ.click((function(_this) {
+          return function(event) {
+            var drawing, drawingsToSelect, i, j, len, len1, point, rectangle, ref, ref1;
+            point = Utils.Event.GetPoint(event);
+            point.y -= 62;
+            point = P.view.viewToProject(point);
+            rectangle = new P.Rectangle(point, point);
+            rectangle = rectangle.expand(5);
+            drawingsToSelect = [];
+            ref = R.drawings;
+            for (i = 0, len = ref.length; i < len; i++) {
+              drawing = ref[i];
+              if (((ref1 = drawing.getBounds()) != null ? ref1.intersects(rectangle) : void 0) && drawing.isVisible()) {
+                drawingsToSelect.push(drawing);
+              }
+            }
+            R.tools.select.deselectAll();
+            for (j = 0, len1 = drawingsToSelect.length; j < len1; j++) {
+              drawing = drawingsToSelect[j];
+              drawing.select();
+            }
+          };
+        })(this));
         if (R.loadedBox == null) {
           if (typeof window !== "undefined" && window !== null) {
             window.onhashchange(null, false);
@@ -556,6 +583,13 @@
           }
           R.sidebar.handleJ.click();
         }
+      };
+
+      View.prototype.contains = function(item, tolerance) {
+        if (tolerance == null) {
+          tolerance = 50;
+        }
+        return this.grid.contains(item, tolerance);
       };
 
       View.prototype.focusIsOnCanvas = function() {
@@ -669,6 +703,8 @@
         $(".mCustomScrollbar").mCustomScrollbar("update");
         this.moveBy(new P.Point());
         P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight());
+        R.svgJ.attr('width', R.stageJ.innerWidth());
+        R.svgJ.attr('height', R.stageJ.innerHeight());
       };
 
       View.prototype.mousedown = function(event) {
@@ -676,7 +712,7 @@
         moveButton = event instanceof MouseEvent ? 2 : (typeof TouchEvent !== "undefined" && TouchEvent !== null) && event instanceof TouchEvent ? 0 : 2;
         switch (event.which) {
           case moveButton:
-            R.tools.move.select();
+            R.tools.move.select(false, true, true);
             break;
           case 3:
             if ((ref = R.selectedTool) != null) {

@@ -120,6 +120,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		getThumbnail: (drawing)->
 			@thumbnailProject.activate()
 			rectangle = drawing.getBounds()
+
+			if not rectangle? then return null
+
 			viewRatio = 1
 			rectangleRatio = rectangle.width / rectangle.height
 			
@@ -357,7 +360,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# get the new entire area
 			newEntireArea = null
 			for area in @entireAreas
-				if area.getBounds().contains(P.view.center)
+				if area.getBounds()?.contains(P.view.center)
 					newEntireArea = area
 					break
 
@@ -525,8 +528,29 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# add arbitrary transform to generate the transform svg element
 			P.view.zoom = 0.5
 			P.view.scrollBy(1, 1)
-			R.svgJ = $(P.project.exportSVG())
+			svg = P.project.exportSVG()
+			R.svgJ = $(svg)
 			R.svgJ.insertAfter(R.canvasJ)
+			
+			R.svgJ.click((event)=>
+				
+				point = Utils.Event.GetPoint(event)
+				point.y -= 62 # the stage is at 62 pixel
+				point = P.view.viewToProject(point)
+				rectangle = new P.Rectangle(point, point)
+				rectangle = rectangle.expand(5)
+				
+				drawingsToSelect = []
+				for drawing in R.drawings
+					if drawing.getBounds()?.intersects(rectangle) and drawing.isVisible()
+						drawingsToSelect.push(drawing)
+
+				R.tools.select.deselectAll()
+				for drawing in drawingsToSelect
+					drawing.select()
+
+				return
+			)
 
 			# check if canvas has an attribute 'data-box'
 			# boxString = R.canvasJ.attr("data-box")
@@ -591,6 +615,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			return
 
+		contains: (item, tolerance=50)->
+			return @grid.contains(item, tolerance)
 
 		## mouse and key listeners
 
@@ -697,7 +723,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# R.canvasJ.width(window.innerWidth)
 			# R.canvasJ.height(window.innerHeight-50)
 			P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight())
-
+			R.svgJ.attr('width', R.stageJ.innerWidth())
+			R.svgJ.attr('height', R.stageJ.innerHeight())
 			# R.selectionCanvasJ.width(window.innerWidth)
 			# R.selectionCanvasJ.height(window.innerHeight)
 			# R.selectionProject.P.view.viewSize = new P.Size(window.innerWidth, window.innerHeight)
@@ -710,7 +737,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			switch event.which						# switch on mouse button number (left, middle or right click)
 				when moveButton
-					R.tools.move.select()		# select move tool if middle mouse button
+					R.tools.move.select(false, true, true)		# select move tool if middle mouse button
 				when 3
 					R.selectedTool?.finish?() 	# finish current path (in polygon mode) if right click
 
