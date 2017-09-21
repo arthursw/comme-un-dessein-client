@@ -9,7 +9,7 @@
         this.onClickWhenLoaded = bind(this.onClickWhenLoaded, this);
         this.onClickWhenNotLoaded = bind(this.onClickWhenNotLoaded, this);
         this.fileLoaded = bind(this.fileLoaded, this);
-        var categories, category, classes, favorite, favoriteBtnJ, hJ, i, iconRootURL, iconURL, ignoreFavorite, j, len, len1, liJ, name, onClick, order, parentJ, shortName, shortNameJ, toolNameJ, ulJ, word, words;
+        var categories, category, classes, divType, favorite, favoriteBtnJ, hJ, i, iconRootURL, iconURL, ignoreFavorite, j, len, len1, liJ, name, onClick, order, parentJ, prepend, shortName, shortNameJ, toolNameJ, ulJ, word, words;
         this.visible = true;
         name = parameters.name;
         iconURL = parameters.iconURL;
@@ -20,6 +20,8 @@
         classes = parameters.classes;
         this.file = parameters.file;
         onClick = parameters.onClick;
+        divType = parameters.divType || 'li';
+        prepend = parameters.prepend;
         parentJ = parameters.parentJ || R.sidebar.allToolsJ;
         if ((category != null) && category !== "") {
           categories = category.split("/");
@@ -41,7 +43,7 @@
             parentJ = ulJ;
           }
         }
-        this.btnJ = $("<li>");
+        this.btnJ = $("<" + divType + ">");
         this.btnJ.attr("data-name", name);
         this.btnJ.attr("alt", name);
         if ((classes != null) && classes.length > 0) {
@@ -80,7 +82,11 @@
           shortNameJ = $('<span class="short-name">').text(shortName + ".");
           this.btnJ.append(shortNameJ);
         }
-        parentJ.append(this.btnJ);
+        if (prepend != null) {
+          parentJ.prepend(this.btnJ);
+        } else {
+          parentJ.append(this.btnJ);
+        }
         toolNameJ = $('<span class="tool-name">');
         toolNameJ.attr('data-i18n', name).text(i18next.t(name));
         this.btnJ.append(toolNameJ);
@@ -98,11 +104,11 @@
         } else {
           this.btnJ.click(this.file != null ? this.onClickWhenNotLoaded : this.onClickWhenLoaded);
         }
-        if (favorite) {
-          R.sidebar.toggleToolToFavorite(null, this.btnJ, this);
-        }
         if ((parameters.description != null) || parameters.popover) {
           this.addPopover(parameters);
+        }
+        if (favorite) {
+          R.sidebar.toggleToolToFavorite(null, this.btnJ, this);
         }
         if (parameters.preload) {
           this.onClickWhenNotLoaded();
@@ -111,6 +117,7 @@
       }
 
       Button.prototype.addPopover = function(parameters) {
+        var attrs, prefix;
         this.btnJ.attr('data-placement', 'bottom');
         this.btnJ.attr('data-container', 'body');
         this.btnJ.attr('data-trigger', 'hover');
@@ -119,10 +126,16 @@
           hide: 100
         });
         if ((parameters.description == null) || parameters.description === '') {
-          this.btnJ.attr('data-content', parameters.name);
+          this.btnJ.attr('data-content', i18next.t(parameters.name));
+          attrs = this.btnJ.attr('data-i18n');
+          prefix = attrs != null ? attrs + ';' : '';
+          this.btnJ.attr('data-i18n', prefix + '[data-content]' + parameters.name);
         } else {
-          this.btnJ.attr('data-title', parameters.name);
-          this.btnJ.attr('data-content', parameters.description);
+          this.btnJ.attr('data-title', i18next.t(parameters.name));
+          this.btnJ.attr('data-content', i18next.t(parameters.description));
+          attrs = this.btnJ.attr('data-i18n');
+          prefix = attrs != null ? attrs + ';' : '';
+          this.btnJ.attr('data-i18n', prefix + '[data-title]' + parameters.name + ';[data-content]' + parameters.description);
         }
         this.btnJ.popover();
       };

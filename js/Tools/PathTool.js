@@ -177,11 +177,6 @@
         if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
           data = R.currentPaths[from].data;
           data.id = R.currentPaths[from].id;
-          R.socket.emit("bounce", {
-            tool: this.name,
-            "function": "begin",
-            "arguments": [event, R.me, data]
-          });
         }
       };
 
@@ -262,13 +257,6 @@
           return;
         }
         path.updateCreate(event.point, event, false);
-        if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
-          R.socket.emit("bounce", {
-            tool: this.name,
-            "function": "update",
-            "arguments": [event, R.me]
-          });
-        }
       };
 
       PathTool.prototype.move = function(event) {
@@ -290,13 +278,6 @@
           return;
         }
         if ((R.me != null) && from === R.me) {
-          if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
-            R.socket.emit("bounce", {
-              tool: this.name,
-              "function": "createPath",
-              "arguments": [event, R.me]
-            });
-          }
           if ((R.me == null) || !_.isString(R.me)) {
             R.alertManager.alert("You must log in before drawing, your drawing won't be saved", "Info");
             return;

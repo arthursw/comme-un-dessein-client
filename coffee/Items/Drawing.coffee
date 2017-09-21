@@ -39,7 +39,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# copy.drawChildren()
 			if not @socketAction
 				copy.save(false)
-				R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
+				# R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
 			return copy
 
 
@@ -409,7 +409,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@owner = result.owner
 			@setPK(result.pk)
 
-			R.socket.emit "drawing change", type: 'new', pk: result.pk, pathPks: result.pathPks, city: R.city
+			# R.socket.emit "drawing change", type: 'new', pk: result.pk, pathPks: result.pathPks, city: R.city
 
 			if @selectAfterSave?
 				@select(true, true, true)
@@ -503,7 +503,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			R.alertManager.alert "Drawing successfully submitted", "success", null, {positiveVoteThreshold: result.positiveVoteThreshold}
 
 			@status = 'pending'
-			R.socket.emit "drawing change", type: 'status', pk: result.pk, status: @status, city: R.city
+			# R.socket.emit "drawing change", type: 'status', pk: result.pk, status: @status, city: R.city
 
 			return
 		
@@ -534,7 +534,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				contentJ.find('#drawing-description').val(@description)
 				return
 			R.alertManager.alert "Drawing successfully modified", "success"
-			R.socket.emit "drawing change", type: 'description', title: @title, description: @description, drawingId: @id
+			# R.socket.emit "drawing change", type: 'description', title: @title, description: @description, drawingId: @id
 			return
 
 		update: (data) =>
@@ -571,7 +571,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				return
 			super()
 			R.alertManager.alert "Drawing successfully cancelled", "success"
-			R.socket.emit "drawing change", type: 'delete', drawingId: id
+			# R.socket.emit "drawing change", type: 'delete', drawingId: id
 			return
 
 		delete: ()->
@@ -630,14 +630,21 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@removeFromListItem()
 			@addToListItem(@getListItem())
 			
+			if @svg?
+				@svg.remove()
+				layerName = @getLayerName()
+				layer = document.getElementById(layerName)
+				@svg = layer.appendChild(@svg)
+
 			for path in @paths
 				# @addPathToProperLayer(path)
 				path.updateStrokeColor()
-				path.drawn = false
-				path.draw()
-				path.rasterize()
-				path.group.visible = true
-			R.rasterizer.rasterizeRectangle(@rectangle)
+				# path.drawn = false
+				# path.draw()
+				# path.rasterize()
+				# path.group.visible = true
+			# R.rasterizer.rasterizeRectangle(@rectangle)
+
 			return
 
 		# can not select a drawing which the user does not own

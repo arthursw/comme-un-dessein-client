@@ -179,7 +179,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			if @constructor.emitSocket and R.me? and from==R.me
 				data = R.currentPaths[from].data
 				data.id = R.currentPaths[from].id
-				R.socket.emit "bounce", tool: @name, function: "begin", arguments: [event, R.me, data]
+				# R.socket.emit "bounce", tool: @name, function: "begin", arguments: [event, R.me, data]
 			return
 
 		showDraftLimits: ()->
@@ -285,7 +285,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 
 			# R.currentPaths[from].group.visible = true
 			# if R.me? and from==R.me then R.socket.emit( "update", R.me, R.eventToObject(event), @name)
-			if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "update", arguments: [event, R.me]
+			# if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "update", arguments: [event, R.me]
 			return
 
 		# Update path action (usually from a mouse move event, necessary for the polygon mode):
@@ -323,7 +323,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 				# 	delete R.currentPaths[from]
 				# 	return
 
-				if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "createPath", arguments: [event, R.me]
+				# if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "createPath", arguments: [event, R.me]
 
 				if (not R.me?) or not _.isString(R.me)
 					R.alertManager.alert("You must log in before drawing, your drawing won't be saved", "Info")

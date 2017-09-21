@@ -192,13 +192,6 @@
         this.updateCircle(event.point);
         draft = R.Drawing.getDraft();
         this.duplicateData = draft != null ? draft.getDuplicateData() : void 0;
-        if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
-          R.socket.emit("bounce", {
-            tool: this.name,
-            "function": "begin",
-            "arguments": [event, R.me, null]
-          });
-        }
       };
 
       EraserTool.prototype.update = function(event, from) {
@@ -208,13 +201,6 @@
         console.log("update");
         this.circle.position = event.point;
         this.erase();
-        if (this.constructor.emitSocket && (R.me != null) && from === R.me) {
-          R.socket.emit("bounce", {
-            tool: this.name,
-            "function": "update",
-            "arguments": [event, R.me]
-          });
-        }
       };
 
       EraserTool.prototype.createCircle = function(point) {

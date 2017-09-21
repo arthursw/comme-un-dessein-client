@@ -280,7 +280,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				iconURL: if R.style == 'line' then 'icones_icon_zoomin.png' else if R.style == 'hand' then 'a-zoomIn.png' else 'glyphicon-zoom-in'
 				favorite: true
 				category: null
-				description: 'Zoom +'
+				# description: 'Zoom +'
 				popover: true
 				order: 1
 			)
@@ -294,7 +294,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				iconURL: if R.style == 'line' then 'icones_icon_zoomout.png' else if R.style == 'hand' then 'a-zoomOut.png' else 'glyphicon-zoom-out'
 				favorite: true
 				category: null
-				description: 'Zoom -'
+				# description: 'Zoom -'
 				popover: true
 				order: 2
 			)
@@ -312,7 +312,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				iconURL: if R.style == 'line' then 'icones_icon_back.png' else if R.style == 'hand' then 'a-undo.png' else 'glyphicon-share-alt'
 				favorite: true
 				category: null
-				description: 'Undo'
+				# description: 'Undo'
 				popover: true
 				order: null
 				transform: 'scaleX(-1)'
@@ -327,7 +327,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				iconURL: if R.style == 'line' then 'icones_icon_forward.png' else if R.style == 'hand' then 'a-redo.png' else 'glyphicon-share-alt'
 				favorite: true
 				category: null
-				description: 'Redo'
+				# description: 'Redo'
 				popover: true
 				order: null
 			)
@@ -339,14 +339,17 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 		createInfoButton: ()->
 
 			@infoBtn = new Button(
-				name: 'Info'
+				name: 'Help'
 				iconURL: 'glyphicon-info-sign'
-				favorite: true
+				favorite: false
 				category: null
-				description: 'Info'
+				# description: 'Info'
 				popover: true
 				order: 1000
 				classes: 'align-end'
+				parentJ: $("#user-profile")
+				prepend: true
+				divType: 'div'
 			)
 
 			@infoBtn.btnJ.click ()-> 

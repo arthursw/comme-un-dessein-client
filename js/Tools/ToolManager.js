@@ -99,7 +99,6 @@
           iconURL: R.style === 'line' ? 'icones_icon_zoomin.png' : R.style === 'hand' ? 'a-zoomIn.png' : 'glyphicon-zoom-in',
           favorite: true,
           category: null,
-          description: 'Zoom +',
           popover: true,
           order: 1
         });
@@ -113,7 +112,6 @@
           iconURL: R.style === 'line' ? 'icones_icon_zoomout.png' : R.style === 'hand' ? 'a-zoomOut.png' : 'glyphicon-zoom-out',
           favorite: true,
           category: null,
-          description: 'Zoom -',
           popover: true,
           order: 2
         });
@@ -130,7 +128,6 @@
           iconURL: R.style === 'line' ? 'icones_icon_back.png' : R.style === 'hand' ? 'a-undo.png' : 'glyphicon-share-alt',
           favorite: true,
           category: null,
-          description: 'Undo',
           popover: true,
           order: null,
           transform: 'scaleX(-1)'
@@ -144,7 +141,6 @@
           iconURL: R.style === 'line' ? 'icones_icon_forward.png' : R.style === 'hand' ? 'a-redo.png' : 'glyphicon-share-alt',
           favorite: true,
           category: null,
-          description: 'Redo',
           popover: true,
           order: null
         });
@@ -156,14 +152,16 @@
 
       ToolManager.prototype.createInfoButton = function() {
         this.infoBtn = new Button({
-          name: 'Info',
+          name: 'Help',
           iconURL: 'glyphicon-info-sign',
-          favorite: true,
+          favorite: false,
           category: null,
-          description: 'Info',
           popover: true,
           order: 1000,
-          classes: 'align-end'
+          classes: 'align-end',
+          parentJ: $("#user-profile"),
+          prepend: true,
+          divType: 'div'
         });
         this.infoBtn.btnJ.click(function() {
           var modal, welcomeTextJ;

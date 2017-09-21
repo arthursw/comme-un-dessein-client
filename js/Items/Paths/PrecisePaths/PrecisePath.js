@@ -11,8 +11,6 @@
 
       PrecisePath.label = 'Precise path';
 
-      PrecisePath.description = "This path offers precise controls, one can modify points along with their handles and their type.";
-
       PrecisePath.iconURL = R.style === 'line' ? 'icones_icon_pen.png' : R.style === 'romanesco' ? 'editCurve.png' : R.style === 'hand' ? 'a-pen3.png' : 'glyphicon-pencil';
 
       PrecisePath.hitOptions = {

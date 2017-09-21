@@ -24,7 +24,7 @@
         this.setFullSize = bind(this.setFullSize, this);
         this.setHalfSize = bind(this.setHalfSize, this);
         this.onHandleDown = bind(this.onHandleDown, this);
-        var closeBtnJ, descriptionJ, handleJ, runBtnJ;
+        var closeBtnJ, handleJ, runBtnJ, titleJ;
         this.beginDrawingBtnJ = $('button.begin-drawing');
         this.beginDrawingBtnJ.click(this.beginDrawingClicked);
         this.submitDrawingBtnJ = $('button.submit-drawing');
@@ -58,14 +58,12 @@
         this.cancelBtnJ.click(this.cancelDrawing);
         this.contentJ = this.drawingPanelJ.find('.content-container');
         this.visible = false;
-        descriptionJ = this.contentJ.find('#drawing-description');
-        descriptionJ.keydown((function(_this) {
+        titleJ = this.contentJ.find('#drawing-title');
+        titleJ.keydown((function(_this) {
           return function(event) {
             switch (Utils.specialKeys[event.keyCode]) {
               case 'enter':
-                if (event.metaKey || event.ctrlKey) {
-                  _this.submitDrawing();
-                }
+                _this.submitDrawing();
             }
           };
         })(this));
@@ -335,8 +333,8 @@
         this.votesJ.show();
         this.voteUpBtnJ.removeClass('voted');
         this.voteDownBtnJ.removeClass('voted');
-        positiveVoteListJ = this.drawingPanelJ.find('.vote-list.positive');
-        negativeVoteListJ = this.drawingPanelJ.find('.vote-list.negative');
+        positiveVoteListJ = this.drawingPanelJ.find('.vote-list ul.positive');
+        negativeVoteListJ = this.drawingPanelJ.find('.vote-list ul.negative');
         positiveVoteListJ.empty();
         negativeVoteListJ.empty();
         nPositiveVotes = 0;
@@ -361,14 +359,14 @@
           }
         }
         if (nPositiveVotes > 0) {
-          positiveVoteListJ.removeClass('hidden');
+          this.drawingPanelJ.find('.vote-list.positive').removeClass('hidden');
         } else {
-          positiveVoteListJ.addClass('hidden');
+          this.drawingPanelJ.find('.vote-list.positive').addClass('hidden');
         }
         if (nNegativeVotes > 0) {
-          negativeVoteListJ.removeClass('hidden');
+          this.drawingPanelJ.find('.vote-list.negative').removeClass('hidden');
         } else {
-          negativeVoteListJ.addClass('hidden');
+          this.drawingPanelJ.find('.vote-list.negative').addClass('hidden');
         }
         this.votesJ.find('.n-votes.positive').html(nPositiveVotes);
         this.votesJ.find('.n-votes.negative').html(nNegativeVotes);
@@ -387,7 +385,7 @@
       };
 
       DrawingPanel.prototype.setDrawing = function(currentDrawing, drawingData) {
-        var i, latestDrawing, len, p, path, pathsToLoad, ref;
+        var latestDrawing;
         this.currentDrawing = currentDrawing;
         this.drawingPanelTitleJ.attr('data-i18n', 'Drawing info').text(i18next.t('Drawing info'));
         this.open();
@@ -418,21 +416,11 @@
           this.contentJ.find('#drawing-description').attr('readonly', true);
         }
         this.setVotes();
-        pathsToLoad = [];
-        ref = drawingData.paths;
-        for (i = 0, len = ref.length; i < len; i++) {
-          p = ref[i];
-          path = JSON.parse(p);
-          if (!R.items[path.clientId]) {
-            pathsToLoad.push(path);
-          }
-        }
-        R.loader.createNewItems(pathsToLoad);
         this.setDrawingThumbnail();
       };
 
       DrawingPanel.prototype.onDrawingChange = function(data) {
-        var args, drawing;
+        var drawing, sameCity;
         switch (data.type) {
           case 'votes':
             drawing = R.items[data.drawingId];
@@ -444,34 +432,32 @@
             }
             break;
           case 'new':
-            if (data.city.name !== R.city.name) {
+            sameCity = data.city === R.city.name || data.city === 'CommeUnDessein' && (R.city.name == null);
+            if (!sameCity) {
               return;
             }
-            args = {
-              itemsToLoad: [
-                {
-                  itemType: 'Drawing',
-                  pks: [data.pk]
-                }, {
-                  itemType: 'Path',
-                  pks: data.pathPks
-                }
-              ]
-            };
+            if (R.items[data.pk] != null) {
+              return;
+            }
             $.ajax({
               method: "POST",
               url: "ajaxCall/",
               data: {
                 data: JSON.stringify({
-                  "function": 'loadItems',
-                  args: args
+                  "function": 'loadDrawing',
+                  args: {
+                    pk: data.pk,
+                    loadSVG: true
+                  }
                 })
               }
             }).done(function(results) {
-              R.loader.loadCallback(results, true);
+              results.items = [results.drawing];
+              R.loader.loadSVGCallback(results);
             });
             break;
           case 'description':
+          case 'title':
             drawing = R.items[data.drawingId];
             if (drawing != null) {
               drawing.title = data.title;
@@ -532,11 +518,6 @@
         }
         R.alertManager.alert('You successfully voted' + suffix, 'success', null, {
           duration: delay
-        });
-        R.socket.emit("drawing change", {
-          type: 'votes',
-          votes: this.currentDrawing.votes,
-          drawingId: this.currentDrawing.id
         });
       };
 

@@ -13,8 +13,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 			classes = parameters.classes
 			@file = parameters.file
 			onClick = parameters.onClick
-
+			divType = parameters.divType or 'li'
+			prepend = parameters.prepend
 			parentJ = parameters.parentJ or R.sidebar.allToolsJ
+
 			if category? and category != ""
 				# split into sub categories
 				categories = category.split("/")
@@ -37,7 +39,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 					parentJ = ulJ
 
 			# initialize button
-			@btnJ = $("<li>")
+			@btnJ = $("<"+divType+">")
 			@btnJ.attr("data-name", name)
 			# @@btnJ.attr("data-cursor", @cursorDefault)
 			@btnJ.attr("alt", name)
@@ -69,7 +71,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 				shortNameJ = $('<span class="short-name">').text(shortName + ".")
 				@btnJ.append(shortNameJ)
 
-			parentJ.append(@btnJ)
+			if prepend?
+				parentJ.prepend(@btnJ)
+			else
+				parentJ.append(@btnJ)
 
 			toolNameJ = $('<span class="tool-name">')
 			toolNameJ.attr('data-i18n', name).text(i18next.t(name))
@@ -91,12 +96,11 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 			else
 				@btnJ.click(if @file? then @onClickWhenNotLoaded else @onClickWhenLoaded)
 
+			if parameters.description? or parameters.popover
+				@addPopover(parameters)
 
 			if favorite
 				R.sidebar.toggleToolToFavorite(null, @btnJ, @)
-
-			if parameters.description? or parameters.popover
-				@addPopover(parameters)
 
 			if parameters.preload
 				@onClickWhenNotLoaded()
@@ -119,12 +123,19 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 
 			if not parameters.description? or parameters.description == ''
 				# popoverOptions.content = parameters.name
-				@btnJ.attr('data-content', parameters.name)
+				@btnJ.attr('data-content', i18next.t(parameters.name))
+				attrs = @btnJ.attr('data-i18n')
+				prefix = if attrs? then attrs + ';' else ''
+				@btnJ.attr('data-i18n', prefix + '[data-content]' + parameters.name)
 			else
 				# popoverOptions.title = parameters.name
 				# popoverOptions.content = parameters.description
-				@btnJ.attr('data-title', parameters.name)
-				@btnJ.attr('data-content', parameters.description)
+				@btnJ.attr('data-title', i18next.t(parameters.name))
+				@btnJ.attr('data-content', i18next.t(parameters.description))
+
+				attrs = @btnJ.attr('data-i18n')
+				prefix = if attrs? then attrs + ';' else ''
+				@btnJ.attr('data-i18n', prefix + '[data-title]' + parameters.name + ';[data-content]' + parameters.description)
 
 			@btnJ.popover()
 			return

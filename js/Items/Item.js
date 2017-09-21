@@ -111,11 +111,6 @@
         copy = new this(duplicateData, duplicateData.id);
         if (!this.socketAction) {
           copy.save(false);
-          R.socket.emit("bounce", {
-            itemClass: this.name,
-            "function": "create",
-            "arguments": [duplicateData]
-          });
         }
         return copy;
       };
@@ -444,11 +439,6 @@
         this.pk = null;
         if (!this.socketAction) {
           this.deleteFromDatabase();
-          R.socket.emit("bounce", {
-            itemId: this.id,
-            "function": "delete",
-            "arguments": []
-          });
           return true;
         }
         return false;

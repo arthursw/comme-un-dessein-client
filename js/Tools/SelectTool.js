@@ -13,7 +13,7 @@
 
       SelectTool.label = 'Vote';
 
-      SelectTool.description = '';
+      SelectTool.popover = false;
 
       SelectTool.iconURL = R.style === 'line' ? 'icones_icon_vote.png' : R.style === 'hand' ? 'a-cursor.png' : 'cursor.png';
 

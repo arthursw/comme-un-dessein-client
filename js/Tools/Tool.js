@@ -84,7 +84,7 @@
           favorite: this.constructor.favorite,
           category: this.constructor.category,
           description: this.constructor.description,
-          popover: true,
+          popover: this.constructor.popover != null ? this.constructor.popover : true,
           order: this.constructor.order
         });
         this.btn.btnJ.click((function(_this) {

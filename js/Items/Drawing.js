@@ -42,11 +42,6 @@
         R.rasterizer.rasterize(copy, false);
         if (!this.socketAction) {
           copy.save(false);
-          R.socket.emit("bounce", {
-            itemClass: this.name,
-            "function": "create",
-            "arguments": [duplicateData]
-          });
         }
         return copy;
       };
@@ -426,12 +421,6 @@
         }
         this.owner = result.owner;
         this.setPK(result.pk);
-        R.socket.emit("drawing change", {
-          type: 'new',
-          pk: result.pk,
-          pathPks: result.pathPks,
-          city: R.city
-        });
         if (this.selectAfterSave != null) {
           this.select(true, true, true);
         }
@@ -565,12 +554,6 @@
           positiveVoteThreshold: result.positiveVoteThreshold
         });
         this.status = 'pending';
-        R.socket.emit("drawing change", {
-          type: 'status',
-          pk: result.pk,
-          status: this.status,
-          city: R.city
-        });
       };
 
       Drawing.prototype.updatePaths = function() {
@@ -613,12 +596,6 @@
           return;
         }
         R.alertManager.alert("Drawing successfully modified", "success");
-        R.socket.emit("drawing change", {
-          type: 'description',
-          title: this.title,
-          description: this.description,
-          drawingId: this.id
-        });
       };
 
       Drawing.prototype.update = function(data) {
@@ -668,10 +645,6 @@
         }
         Drawing.__super__.deleteFromDatabaseCallback.call(this);
         R.alertManager.alert("Drawing successfully cancelled", "success");
-        R.socket.emit("drawing change", {
-          type: 'delete',
-          drawingId: id
-        });
       };
 
       Drawing.prototype["delete"] = function() {
@@ -767,20 +740,21 @@
       };
 
       Drawing.prototype.updateStatus = function(status) {
-        var i, len, path, ref;
+        var i, layer, layerName, len, path, ref;
         this.status = status;
         this.removeFromListItem();
         this.addToListItem(this.getListItem());
+        if (this.svg != null) {
+          this.svg.remove();
+          layerName = this.getLayerName();
+          layer = document.getElementById(layerName);
+          this.svg = layer.appendChild(this.svg);
+        }
         ref = this.paths;
         for (i = 0, len = ref.length; i < len; i++) {
           path = ref[i];
           path.updateStrokeColor();
-          path.drawn = false;
-          path.draw();
-          path.rasterize();
-          path.group.visible = true;
         }
-        R.rasterizer.rasterizeRectangle(this.rectangle);
       };
 
       Drawing.prototype.select = function(updateOptions, showPanelAndLoad, force) {

@@ -68,11 +68,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			
 			@visible = false
 
-			descriptionJ = @contentJ.find('#drawing-description')
-			descriptionJ.keydown (event)=>
+			titleJ = @contentJ.find('#drawing-title')
+			titleJ.keydown (event)=>
 				switch Utils.specialKeys[event.keyCode]
 					when 'enter'
-						if event.metaKey or event.ctrlKey then @submitDrawing()
+						@submitDrawing()
 				return
 
 			return
@@ -422,8 +422,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@votesJ.show()
 			@voteUpBtnJ.removeClass('voted')
 			@voteDownBtnJ.removeClass('voted')
-			positiveVoteListJ = @drawingPanelJ.find('.vote-list.positive')
-			negativeVoteListJ = @drawingPanelJ.find('.vote-list.negative')
+			positiveVoteListJ = @drawingPanelJ.find('.vote-list ul.positive')
+			negativeVoteListJ = @drawingPanelJ.find('.vote-list ul.negative')
 			positiveVoteListJ.empty()
 			negativeVoteListJ.empty()
 			nPositiveVotes = 0
@@ -442,8 +442,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					if vote.author == R.me
 						@voteDownBtnJ.addClass('voted')
 
-			if nPositiveVotes > 0 then positiveVoteListJ.removeClass('hidden') else positiveVoteListJ.addClass('hidden')
-			if nNegativeVotes > 0 then negativeVoteListJ.removeClass('hidden') else negativeVoteListJ.addClass('hidden')
+			if nPositiveVotes > 0 then @drawingPanelJ.find('.vote-list.positive').removeClass('hidden') else @drawingPanelJ.find('.vote-list.positive').addClass('hidden')
+			if nNegativeVotes > 0 then @drawingPanelJ.find('.vote-list.negative').removeClass('hidden') else @drawingPanelJ.find('.vote-list.negative').addClass('hidden')
 
 			@votesJ.find('.n-votes.positive').html(nPositiveVotes)
 			@votesJ.find('.n-votes.negative').html(nNegativeVotes)
@@ -502,13 +502,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@setVotes()
 
 			# load missing paths
-			pathsToLoad = []
-			for p in drawingData.paths
-				path = JSON.parse(p)
-				if not R.items[path.clientId]
-					pathsToLoad.push(path)
+			# pathsToLoad = []
+			# for p in drawingData.paths
+			# 	path = JSON.parse(p)
+			# 	if not R.items[path.clientId]
+			# 		pathsToLoad.push(path)
 
-			R.loader.createNewItems(pathsToLoad)
+			# R.loader.createNewItems(pathsToLoad)
 
 			@setDrawingThumbnail()
 			return
@@ -524,23 +524,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 							@setVotes()
 				when 'new'
 					# ok if both are undefined: corresponds to CommeUnDessein
-					if data.city.name != R.city.name then return
-					args = {
-						itemsToLoad: [
-							{
-								itemType: 'Drawing'
-								pks: [data.pk]
-							},
-							{
-								itemType: 'Path'
-								pks: data.pathPks
-							}
-						]
-					}
-					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadItems', args: args } ).done((results)->
-						R.loader.loadCallback(results, true)
+					sameCity = data.city == R.city.name or data.city == 'CommeUnDessein' and not R.city.name?
+					
+					if not sameCity then return
+					
+					# if the drawing is already loaded, no need to load it
+					if R.items[data.pk]? then return
+
+					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: { pk: data.pk, loadSVG: true } } ).done((results)->
+						results.items = [results.drawing]
+						R.loader.loadSVGCallback(results)
 						return)
-				when 'description'
+				when 'description', 'title'
 					drawing = R.items[data.drawingId]
 					if drawing?
 						drawing.title = data.title
@@ -587,9 +582,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			else if result.rejects
 				suffix = ', the drawing will be rejected'
 
-			R.alertManager.alert 'You successfully voted' + suffix, 'success', null, {duration: delay}
+			R.alertManager.alert 'You successfully voted' + suffix, 'success', null, { duration: delay }
 
-			R.socket.emit "drawing change", type: 'votes', votes: @currentDrawing.votes, drawingId: @currentDrawing.id
+			# R.socket.emit "drawing change", type: 'votes', votes: @currentDrawing.votes, drawingId: @currentDrawing.id
 			return
 
 		vote: (positive)=>

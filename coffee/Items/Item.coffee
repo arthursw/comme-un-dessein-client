@@ -208,7 +208,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 			copy = new @(duplicateData, duplicateData.id)
 			if not @socketAction
 				copy.save(false)
-				R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
+				# R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
 			return copy
 
 		constructor: (@data, @id, @pk)->
@@ -726,7 +726,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 			@pk = null
 			if not @socketAction
 				@deleteFromDatabase()
-				R.socket.emit "bounce", itemId: @id, function: "delete", arguments: []
+				# R.socket.emit "bounce", itemId: @id, function: "delete", arguments: []
 				return true
 			return false
 

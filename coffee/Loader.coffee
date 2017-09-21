@@ -194,15 +194,18 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			return
 
 		loadSVG: ()->
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadSVG', args: { city: R.city } } ).done((results)=> 
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadSVG', args: { city: R.city } } ).done(@loadSVGCallback)
+			return
+
+		loadSVGCallback: (results)=>
+			if results.user?
 				@setMe(results.user)
-				for itemString in results.items
-					item = JSON.parse(itemString)
-					drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg)
-				# setTimeout((()=>R.rasterizer.refresh()), 1000)
-				@endLoading()
-				R.toolManager.updateButtonsVisibility()
-				return)
+			for itemString in results.items
+				item = JSON.parse(itemString)
+				drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg)
+			# setTimeout((()=>R.rasterizer.refresh()), 1000)
+			@endLoading()
+			R.toolManager.updateButtonsVisibility()
 			return
 
 		# load an area from the server

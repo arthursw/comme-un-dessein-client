@@ -13,6 +13,7 @@
         this.checkError = bind(this.checkError, this);
         this.loadCallbackTipibot = bind(this.loadCallbackTipibot, this);
         this.loadCallback = bind(this.loadCallback, this);
+        this.loadSVGCallback = bind(this.loadSVGCallback, this);
         this.hideLoadingBar = bind(this.hideLoadingBar, this);
         this.showLoadingBar = bind(this.showLoadingBar, this);
         this.showLoadingBarCallback = bind(this.showLoadingBarCallback, this);
@@ -242,20 +243,22 @@
               }
             })
           }
-        }).done((function(_this) {
-          return function(results) {
-            var drawing, item, itemString, k, len, ref;
-            _this.setMe(results.user);
-            ref = results.items;
-            for (k = 0, len = ref.length; k < len; k++) {
-              itemString = ref[k];
-              item = JSON.parse(itemString);
-              drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg);
-            }
-            _this.endLoading();
-            R.toolManager.updateButtonsVisibility();
-          };
-        })(this));
+        }).done(this.loadSVGCallback);
+      };
+
+      Loader.prototype.loadSVGCallback = function(results) {
+        var drawing, item, itemString, k, len, ref;
+        if (results.user != null) {
+          this.setMe(results.user);
+        }
+        ref = results.items;
+        for (k = 0, len = ref.length; k < len; k++) {
+          itemString = ref[k];
+          item = JSON.parse(itemString);
+          drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg);
+        }
+        this.endLoading();
+        R.toolManager.updateButtonsVisibility();
       };
 
       Loader.prototype.load = function(area) {

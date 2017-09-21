@@ -206,10 +206,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 			# R.rasterizer.disableRasterization()
 
-			if @constructor.emitSocket and R.me? and from==R.me
-				# data = R.currentPaths[from].data
-				# data.id = R.currentPaths[from].id
-				R.socket.emit "bounce", tool: @name, function: "begin", arguments: [event, R.me, null]
+			# if @constructor.emitSocket and R.me? and from==R.me
+			# 	# data = R.currentPaths[from].data
+			# 	# data.id = R.currentPaths[from].id
+			# 	R.socket.emit "bounce", tool: @name, function: "begin", arguments: [event, R.me, null]
 
 			return
 
@@ -226,7 +226,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 			# R.currentPaths[from].group.visible = true
 			# if R.me? and from==R.me then R.socket.emit( "update", R.me, R.eventToObject(event), @name)
-			if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "update", arguments: [event, R.me]
+			# if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "update", arguments: [event, R.me]
 			return
 
 		createCircle: (point)->

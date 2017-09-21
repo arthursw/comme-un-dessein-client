@@ -88,7 +88,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 				favorite: @constructor.favorite
 				category: @constructor.category
 				description: @constructor.description
-				popover: true
+				popover: if @constructor.popover? then @constructor.popover else true
 				order: @constructor.order
 			)
 
