@@ -6,6 +6,7 @@ define [
 	'City'
 	'Rasterizers/RasterizerManager'
 	'UI/Sidebar'
+	'UI/Toolbar'
 	'UI/DrawingPanel'
 	'UI/Modal'
 	'UI/Button'
@@ -20,7 +21,7 @@ define [
 	'i18nextBrowserLanguageDetector'
 	'jqueryI18next'
 	'moment'
-], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, DrawingPanel, Modal, Button, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
+], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
 
 	console.log 'Main CommeUnDessein Repository'
 
@@ -385,7 +386,8 @@ define [
 		R.cityManager = new CityManager()
 		R.view = new View()
 		R.alertManager = new AlertManager()
-		
+		R.toolbar = new Toolbar()
+
 		if document?		
 			R.controllerManager = new ControllerManager()
 			R.controllerManager.createGlobalControllers()

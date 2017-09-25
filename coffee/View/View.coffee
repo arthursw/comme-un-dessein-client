@@ -728,6 +728,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# R.selectionCanvasJ.width(window.innerWidth)
 			# R.selectionCanvasJ.height(window.innerHeight)
 			# R.selectionProject.P.view.viewSize = new P.Size(window.innerWidth, window.innerHeight)
+
+			R.toolbar.updateArrowsVisibility()
+			R.drawingPanel.onWindowResize()
 			return
 
 		# mousedown event listener

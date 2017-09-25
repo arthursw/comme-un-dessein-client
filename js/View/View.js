@@ -705,6 +705,8 @@
         P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight());
         R.svgJ.attr('width', R.stageJ.innerWidth());
         R.svgJ.attr('height', R.stageJ.innerHeight());
+        R.toolbar.updateArrowsVisibility();
+        R.drawingPanel.onWindowResize();
       };
 
       View.prototype.mousedown = function(event) {

@@ -94,8 +94,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@resize()
 			return
 
-		resize: ()=>
-			# @editor.resize()
+		onWindowResize: ()->
+			width = @drawingPanelJ.outerWidth()
+			height = @drawingPanelJ.outerHeight()
+			if width > height
+				@drawingPanelJ.find('.cd-column-row').addClass('cd-row').removeClass('cd-column')
+			else
+				@drawingPanelJ.find('.cd-column-row').addClass('cd-column').removeClass('cd-row')
 			return
 
 		onMouseMove: (event)->
@@ -151,6 +156,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return @drawingPanelJ.hasClass('visible')
 
 		open: ()->
+			@onWindowResize()
 			@drawingPanelJ.show()
 			@drawingPanelJ.addClass('visible')
 			@visible = true
@@ -292,7 +298,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 		setDrawingThumbnail: ()->
 			thumbnailJ = @contentJ.find('.drawing-thumbnail')
-			thumbnailJ.empty().append(R.view.getThumbnail(@currentDrawing))
+			svg = R.view.getThumbnail(@currentDrawing)
+			svg.setAttribute('viewBox', '0 0 300 300')
+			svg.setAttribute('width', '250')
+			svg.setAttribute('height', '250')
+			thumbnailJ.empty().append(svg)
 			return
 
 		# createDrawingFromItems: (items)->

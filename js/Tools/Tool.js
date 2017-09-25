@@ -95,7 +95,7 @@
       };
 
       Tool.prototype.select = function(deselectItems, updateParameters, fromMiddleMouseButton) {
-        var ref, ref1, ref2;
+        var ref, ref1, ref2, ref3;
         if (deselectItems == null) {
           deselectItems = true;
         }
@@ -127,6 +127,9 @@
           if ((ref2 = R.toolManager) != null) {
             ref2.updateButtonsVisibility();
           }
+        }
+        if ((ref3 = R.toolbar) != null) {
+          ref3.updateArrowsVisibility();
         }
       };
 

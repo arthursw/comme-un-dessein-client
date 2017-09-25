@@ -20,7 +20,6 @@
         this.close = bind(this.close, this);
         this.updateSelection = bind(this.updateSelection, this);
         this.onMouseUp = bind(this.onMouseUp, this);
-        this.resize = bind(this.resize, this);
         this.setFullSize = bind(this.setFullSize, this);
         this.setHalfSize = bind(this.setHalfSize, this);
         this.onHandleDown = bind(this.onHandleDown, this);
@@ -91,7 +90,16 @@
         this.resize();
       };
 
-      DrawingPanel.prototype.resize = function() {};
+      DrawingPanel.prototype.onWindowResize = function() {
+        var height, width;
+        width = this.drawingPanelJ.outerWidth();
+        height = this.drawingPanelJ.outerHeight();
+        if (width > height) {
+          this.drawingPanelJ.find('.cd-column-row').addClass('cd-row').removeClass('cd-column');
+        } else {
+          this.drawingPanelJ.find('.cd-column-row').addClass('cd-column').removeClass('cd-row');
+        }
+      };
 
       DrawingPanel.prototype.onMouseMove = function(event) {
         var point;
@@ -150,6 +158,7 @@
       };
 
       DrawingPanel.prototype.open = function() {
+        this.onWindowResize();
         this.drawingPanelJ.show();
         this.drawingPanelJ.addClass('visible');
         this.visible = true;
@@ -277,9 +286,13 @@
       };
 
       DrawingPanel.prototype.setDrawingThumbnail = function() {
-        var thumbnailJ;
+        var svg, thumbnailJ;
         thumbnailJ = this.contentJ.find('.drawing-thumbnail');
-        thumbnailJ.empty().append(R.view.getThumbnail(this.currentDrawing));
+        svg = R.view.getThumbnail(this.currentDrawing);
+        svg.setAttribute('viewBox', '0 0 300 300');
+        svg.setAttribute('width', '250');
+        svg.setAttribute('height', '250');
+        thumbnailJ.empty().append(svg);
       };
 
       DrawingPanel.prototype.checkPathToSubmit = function() {

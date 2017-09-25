@@ -60,7 +60,9 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			# append alert to alert array
 			@alerts.push( { type: type, message: message, messageOptions: messageOptions } )
 
-			if @alerts.length>0 then @alertsContainer.addClass("activated") 		# activate alert box (required for the first time)
+			if @alerts.length>0 		# activate alert box (required for the first time)
+				@alertsContainer.addClass("activated")
+				$('body').addClass("alert-activated")
 
 			@showAlert(@alerts.length-1)
 
@@ -74,6 +76,10 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			if @alertTimeOut?
 				clearTimeout(@alertTimeOut)
 				@alertTimeOut = null
+			
+			alertJ = @alertsContainer.find(".alert")
+			alertJ.css('background-color': null)
+
 			R.alertManager.alertsContainer.addClass('show')
 			R.sidebar.sidebarJ.addClass('r-alert')
 			suffix = if R.alertManager.alertsContainer.hasClass('top') then '-top' else ''
@@ -81,6 +87,28 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			$('#submit-drawing-button').addClass('r-alert' + suffix)
 			@openning = true
 			setTimeout((()=> @openning = null), 500)
+
+			@nBlinks = 0
+
+			if @blinkIntervalID?
+				clearInterval(@blinkIntervalID)
+				@blinkIntervalID = null
+
+			blink = ()=>
+				@nBlinks++
+				if @nBlinks > 2
+					clearInterval(@blinkIntervalID)
+					@blinkIntervalID = null
+
+				backgroundColor = alertJ.css('background-color')
+				alertJ.css('background-color': 'white')
+				alertJ.animate('background-color': backgroundColor, 250)
+				return
+			
+			blink()
+
+			@blinkIntervalID = setInterval(blink, 300)
+
 			return
 
 		hideDeferred: (delay=@constructor.hideDelay)=>

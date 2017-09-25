@@ -92,6 +92,11 @@
             'order': btnJ.attr('data-order')
           });
           btn.cloneJ = cloneJ;
+          cloneJ.mouseup(function() {
+            return setTimeout((function() {
+              cloneJ.popover('hide');
+            }), 0);
+          });
           this.favoriteTools.push(toolName);
         }
         if (typeof localStorage === "undefined" || localStorage === null) {

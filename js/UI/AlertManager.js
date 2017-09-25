@@ -80,6 +80,7 @@
         });
         if (this.alerts.length > 0) {
           this.alertsContainer.addClass("activated");
+          $('body').addClass("alert-activated");
         }
         this.showAlert(this.alerts.length - 1);
         this.show();
@@ -87,11 +88,15 @@
       };
 
       AlertManager.prototype.show = function() {
-        var suffix;
+        var alertJ, blink, suffix;
         if (this.alertTimeOut != null) {
           clearTimeout(this.alertTimeOut);
           this.alertTimeOut = null;
         }
+        alertJ = this.alertsContainer.find(".alert");
+        alertJ.css({
+          'background-color': null
+        });
         R.alertManager.alertsContainer.addClass('show');
         R.sidebar.sidebarJ.addClass('r-alert');
         suffix = R.alertManager.alertsContainer.hasClass('top') ? '-top' : '';
@@ -103,6 +108,30 @@
             return _this.openning = null;
           };
         })(this)), 500);
+        this.nBlinks = 0;
+        if (this.blinkIntervalID != null) {
+          clearInterval(this.blinkIntervalID);
+          this.blinkIntervalID = null;
+        }
+        blink = (function(_this) {
+          return function() {
+            var backgroundColor;
+            _this.nBlinks++;
+            if (_this.nBlinks > 2) {
+              clearInterval(_this.blinkIntervalID);
+              _this.blinkIntervalID = null;
+            }
+            backgroundColor = alertJ.css('background-color');
+            alertJ.css({
+              'background-color': 'white'
+            });
+            alertJ.animate({
+              'background-color': backgroundColor
+            }, 250);
+          };
+        })(this);
+        blink();
+        this.blinkIntervalID = setInterval(blink, 300);
       };
 
       AlertManager.prototype.hideDeferred = function(delay) {

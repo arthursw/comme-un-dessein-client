@@ -115,6 +115,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 			# 	delay:
 			# 		show: 500
 			# 		hide: 100
+			is_touch_device = ("ontouchstart" in window) || window.DocumentTouch && document instanceof DocumentTouch || window.innerWidth <= 1024
+			if is_touch_device then return
 
 			@btnJ.attr('data-placement', 'bottom')
 			@btnJ.attr('data-container', 'body')
@@ -138,6 +140,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 				@btnJ.attr('data-i18n', prefix + '[data-title]' + parameters.name + ';[data-content]' + parameters.description)
 
 			@btnJ.popover()
+			@btnJ.mouseup( ()-> setTimeout(( ()-> 
+				console.log('heiheiheeih')
+				@btnJ.popover('hide')
+				return), 500 ) )
 			return
 
 		toggleCategory: (event)->

@@ -76,6 +76,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi'
 				cloneJ.css('order': btnJ.attr('data-order'))
 				btn.cloneJ = cloneJ
 
+				cloneJ.mouseup( ()-> setTimeout(( ()-> 
+					cloneJ.popover('hide')
+					return), 0 ) )
+
 				@favoriteTools.push(toolName)
 
 			if not localStorage? then return

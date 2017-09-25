@@ -123,6 +123,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 
 			if not fromMiddleMouseButton
 				R.toolManager?.updateButtonsVisibility()
+
+			R.toolbar?.updateArrowsVisibility()
 			return
 
 		updateParameters: ()->
