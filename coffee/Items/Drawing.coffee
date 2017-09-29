@@ -182,7 +182,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			itemListJ = null
 			switch @status
-				when 'pending'
+				when 'pending', 'emailNotConfirmed'
 					# R.view.pendingLayer.addChild(@group)
 					itemListJ = R.view.pendingListJ
 				when 'drawing'
@@ -436,7 +436,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		getLayerName: () ->
-			return @status + 'Layer'
+			statusName = if @status == 'emailNotConfirmed' then 'pending' else @status
+			return statusName + 'Layer'
 
 		getBounds: ()->
 			@computeRectangle()
@@ -488,7 +489,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			R.commandManager.clearHistory()
 
-			@status = 'pending'
+			@status = result.status
 			
 			if @constructor.draft == @
 				@constructor.draft = null
@@ -502,7 +503,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			R.alertManager.alert "Drawing successfully submitted", "success", null, {positiveVoteThreshold: result.positiveVoteThreshold}
 
-			@status = 'pending'
+			@status = result.status
 			# R.socket.emit "drawing change", type: 'status', pk: result.pk, status: @status, city: R.city
 
 			return

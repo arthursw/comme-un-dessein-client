@@ -143,12 +143,13 @@
           this.btnJ.attr('data-i18n', prefix + '[data-title]' + parameters.name + ';[data-content]' + parameters.description);
         }
         this.btnJ.popover();
-        this.btnJ.mouseup(function() {
-          return setTimeout((function() {
-            console.log('heiheiheeih');
-            this.btnJ.popover('hide');
-          }), 500);
-        });
+        this.btnJ.mouseup((function(_this) {
+          return function() {
+            return setTimeout((function() {
+              _this.btnJ.popover('hide');
+            }), 500);
+          };
+        })(this));
       };
 
       Button.prototype.toggleCategory = function(event) {

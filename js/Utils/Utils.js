@@ -879,6 +879,26 @@
         }
       }).done(R.loader.checkError);
     };
+    R.deleteDrawing = function(drawingToDelete, confirm) {
+      return R.deleteDrawings([drawingToDelete], confirm);
+    };
+    R.deleteDrawings = function(drawingsToDelete, confirm) {
+      var args;
+      args = {
+        drawingsToDelete: drawingsToDelete,
+        confirm: confirm
+      };
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'deleteDrawings',
+            args: args
+          })
+        }
+      }).done(R.loader.checkError);
+    };
     R.deleteItems = function(itemsToDelete, confirm) {
       var args;
       console.log("itemsToDelete: [\n	{\n		itemType: 'Drawing'\n		pks: [data.pk]\n	},\n	{\n		itemType: 'Path'\n		pks: [data.pathPks]\n	}\n]");

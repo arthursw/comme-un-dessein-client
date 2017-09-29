@@ -189,6 +189,7 @@
         itemListJ = null;
         switch (this.status) {
           case 'pending':
+          case 'emailNotConfirmed':
             itemListJ = R.view.pendingListJ;
             break;
           case 'drawing':
@@ -462,7 +463,9 @@
       };
 
       Drawing.prototype.getLayerName = function() {
-        return this.status + 'Layer';
+        var statusName;
+        statusName = this.status === 'emailNotConfirmed' ? 'pending' : this.status;
+        return statusName + 'Layer';
       };
 
       Drawing.prototype.getBounds = function() {
@@ -542,7 +545,7 @@
           return;
         }
         R.commandManager.clearHistory();
-        this.status = 'pending';
+        this.status = result.status;
         if (this.constructor.draft === this) {
           this.constructor.draft = null;
         }
@@ -553,7 +556,7 @@
         R.alertManager.alert("Drawing successfully submitted", "success", null, {
           positiveVoteThreshold: result.positiveVoteThreshold
         });
-        this.status = 'pending';
+        this.status = result.status;
       };
 
       Drawing.prototype.updatePaths = function() {

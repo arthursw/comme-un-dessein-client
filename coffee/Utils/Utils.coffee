@@ -814,6 +814,16 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteAllItems', args: args } ).done(R.loader.checkError)
 		return
 
+	R.deleteDrawing = (drawingToDelete, confirm)->
+		return R.deleteDrawings([drawingToDelete], confirm)
+
+	R.deleteDrawings = (drawingsToDelete, confirm)->
+		args =
+			drawingsToDelete: drawingsToDelete
+			confirm: confirm
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteDrawings', args: args } ).done(R.loader.checkError)
+		return
+
 	R.deleteItems = (itemsToDelete, confirm)->
 
 		console.log """

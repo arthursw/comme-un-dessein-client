@@ -69,11 +69,23 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@visible = false
 
 			titleJ = @contentJ.find('#drawing-title')
-			titleJ.keydown (event)=>
-				switch Utils.specialKeys[event.keyCode]
-					when 'enter'
-						@submitDrawing()
+			
+			onSubmitUp = (event)=>
+				if Utils.specialKeys[event.keyCode] == 'enter'
+					@submitDrawing()
+					event.preventDefault()
+					event.stopPropagation()
+					return -1
 				return
+
+			onSubmitDown = (event)=>
+				if Utils.specialKeys[event.keyCode] == 'enter'
+					event.preventDefault()
+					event.stopPropagation()
+					return -1
+				return
+			
+			titleJ.keydown(onSubmitDown).keyup(onSubmitUp)
 
 			return
 
@@ -466,7 +478,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@voteUpBtnJ.removeClass('disabled')
 			@voteDownBtnJ.removeClass('disabled')
 			if @currentDrawing.owner == R.me || R.administrator
-				if @currentDrawing.status == 'pending'
+				if @currentDrawing.status == 'pending' or @currentDrawing.status == 'emailNotConfirmed'
 					@voteUpBtnJ.removeClass('disabled')
 					@voteDownBtnJ.removeClass('disabled')
 
@@ -497,7 +509,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@contentJ.find('#drawing-description').val(@currentDrawing.description)
 
 			if @currentDrawing.owner == R.me || R.administrator
-				if latestDrawing.status == 'pending'
+				if latestDrawing.status == 'pending' || latestDrawing.status == 'emailNotConfirmed'
 					@contentJ.find('.title-group').show()
 					@modifyBtnJ.show()
 					@cancelBtnJ.show()
@@ -602,7 +614,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				R.alertManager.alert 'You cannot vote for your own drawing', 'error'
 				return
 			
-			if @currentDrawing.status != 'pending'
+			if @currentDrawing.status != 'pending' and @currentDrawing.status != 'emailNotConfirmed'
 				R.alertManager.alert 'The drawing is already validated', 'error'
 				return
 			
@@ -665,7 +677,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				R.alertManager.alert "You must select a drawing first", "error"
 				return
 
-			if @currentDrawing.status != 'pending'
+			if @currentDrawing.status != 'pending' and @currentDrawing.status != 'emailNotConfirmed'
 				R.alertManager.alert "The drawing is already validated, it cannot be modified anymore", "error"
 				return				
 
@@ -683,7 +695,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				@close()
 				return
 
-			if @currentDrawing.status != 'pending' && @currentDrawing.status != 'draft'
+			if @currentDrawing.status != 'pending' && @currentDrawing.status != 'draft' && @currentDrawing.status != 'emailNotConfirmed'
 				R.alertManager.alert "The drawing is already validated, it cannot be cancelled anymore", "error"
 				return	
 

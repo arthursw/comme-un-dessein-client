@@ -140,8 +140,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 				@btnJ.attr('data-i18n', prefix + '[data-title]' + parameters.name + ';[data-content]' + parameters.description)
 
 			@btnJ.popover()
-			@btnJ.mouseup( ()-> setTimeout(( ()-> 
-				console.log('heiheiheeih')
+			@btnJ.mouseup( ()=> setTimeout(( ()=> 
 				@btnJ.popover('hide')
 				return), 500 ) )
 			return

@@ -23,7 +23,7 @@
         this.setFullSize = bind(this.setFullSize, this);
         this.setHalfSize = bind(this.setHalfSize, this);
         this.onHandleDown = bind(this.onHandleDown, this);
-        var closeBtnJ, handleJ, runBtnJ, titleJ;
+        var closeBtnJ, handleJ, onSubmitDown, onSubmitUp, runBtnJ, titleJ;
         this.beginDrawingBtnJ = $('button.begin-drawing');
         this.beginDrawingBtnJ.click(this.beginDrawingClicked);
         this.submitDrawingBtnJ = $('button.submit-drawing');
@@ -58,14 +58,26 @@
         this.contentJ = this.drawingPanelJ.find('.content-container');
         this.visible = false;
         titleJ = this.contentJ.find('#drawing-title');
-        titleJ.keydown((function(_this) {
+        onSubmitUp = (function(_this) {
           return function(event) {
-            switch (Utils.specialKeys[event.keyCode]) {
-              case 'enter':
-                _this.submitDrawing();
+            if (Utils.specialKeys[event.keyCode] === 'enter') {
+              _this.submitDrawing();
+              event.preventDefault();
+              event.stopPropagation();
+              return -1;
             }
           };
-        })(this));
+        })(this);
+        onSubmitDown = (function(_this) {
+          return function(event) {
+            if (Utils.specialKeys[event.keyCode] === 'enter') {
+              event.preventDefault();
+              event.stopPropagation();
+              return -1;
+            }
+          };
+        })(this);
+        titleJ.keydown(onSubmitDown).keyup(onSubmitUp);
         return;
       }
 
@@ -390,7 +402,7 @@
         this.voteUpBtnJ.removeClass('disabled');
         this.voteDownBtnJ.removeClass('disabled');
         if (this.currentDrawing.owner === R.me || R.administrator) {
-          if (this.currentDrawing.status === 'pending') {
+          if (this.currentDrawing.status === 'pending' || this.currentDrawing.status === 'emailNotConfirmed') {
             this.voteUpBtnJ.removeClass('disabled');
             this.voteDownBtnJ.removeClass('disabled');
           }
@@ -416,7 +428,7 @@
         this.thumbnailFooterTitle.text(this.currentDrawing.title);
         this.contentJ.find('#drawing-description').val(this.currentDrawing.description);
         if (this.currentDrawing.owner === R.me || R.administrator) {
-          if (latestDrawing.status === 'pending') {
+          if (latestDrawing.status === 'pending' || latestDrawing.status === 'emailNotConfirmed') {
             this.contentJ.find('.title-group').show();
             this.modifyBtnJ.show();
             this.cancelBtnJ.show();
@@ -540,7 +552,7 @@
           R.alertManager.alert('You cannot vote for your own drawing', 'error');
           return;
         }
-        if (this.currentDrawing.status !== 'pending') {
+        if (this.currentDrawing.status !== 'pending' && this.currentDrawing.status !== 'emailNotConfirmed') {
           R.alertManager.alert('The drawing is already validated', 'error');
           return;
         }
@@ -603,7 +615,7 @@
           R.alertManager.alert("You must select a drawing first", "error");
           return;
         }
-        if (this.currentDrawing.status !== 'pending') {
+        if (this.currentDrawing.status !== 'pending' && this.currentDrawing.status !== 'emailNotConfirmed') {
           R.alertManager.alert("The drawing is already validated, it cannot be modified anymore", "error");
           return;
         }
@@ -622,7 +634,7 @@
           this.close();
           return;
         }
-        if (this.currentDrawing.status !== 'pending' && this.currentDrawing.status !== 'draft') {
+        if (this.currentDrawing.status !== 'pending' && this.currentDrawing.status !== 'draft' && this.currentDrawing.status !== 'emailNotConfirmed') {
           R.alertManager.alert("The drawing is already validated, it cannot be cancelled anymore", "error");
           return;
         }
