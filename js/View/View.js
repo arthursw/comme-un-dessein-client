@@ -122,18 +122,20 @@
       }
 
       View.prototype.createThumbnailProject = function() {
-        var thumbnailCanvas;
-        thumbnailCanvas = document.createElement('canvas');
-        thumbnailCanvas.width = this.constructor.thumbnailSize;
-        thumbnailCanvas.height = this.constructor.thumbnailSize;
-        this.thumbnailProject = new P.Project(thumbnailCanvas);
+        this.thumbnailCanvas = document.createElement('canvas');
+        this.thumbnailCanvas.width = this.constructor.thumbnailSize;
+        this.thumbnailCanvas.height = this.constructor.thumbnailSize;
+        this.thumbnailProject = new P.Project(this.thumbnailCanvas);
         paper.projects[0].activate();
       };
 
-      View.prototype.getThumbnail = function(drawing, size) {
-        var i, len, path, rectangle, rectangleRatio, ref, svg, viewRatio;
+      View.prototype.getThumbnail = function(drawing, size, toDataURL) {
+        var i, len, path, rectangle, rectangleRatio, ref, result, viewRatio;
         if (size == null) {
           size = this.constructor.thumbnailSize;
+        }
+        if (toDataURL == null) {
+          toDataURL = false;
         }
         this.thumbnailProject.activate();
         rectangle = drawing.getBounds();
@@ -160,10 +162,10 @@
         }
         this.thumbnailProject.view.setCenter(rectangle.center);
         this.thumbnailProject.activeLayer.strokeColor = R.Path.colorMap[drawing.status];
-        svg = this.thumbnailProject.exportSVG();
+        result = toDataURL ? this.thumbnailCanvas.toDataURL() : this.thumbnailProject.exportSVG();
         this.thumbnailProject.clear();
         paper.projects[0].activate();
-        return svg;
+        return result;
       };
 
       View.prototype.createBackground = function() {

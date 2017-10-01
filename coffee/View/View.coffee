@@ -110,14 +110,14 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		
 		createThumbnailProject: ()->
 
-			thumbnailCanvas = document.createElement('canvas')
-			thumbnailCanvas.width = @constructor.thumbnailSize
-			thumbnailCanvas.height = @constructor.thumbnailSize
-			@thumbnailProject = new P.Project(thumbnailCanvas)
+			@thumbnailCanvas = document.createElement('canvas')
+			@thumbnailCanvas.width = @constructor.thumbnailSize
+			@thumbnailCanvas.height = @constructor.thumbnailSize
+			@thumbnailProject = new P.Project(@thumbnailCanvas)
 			paper.projects[0].activate()
 			return
 
-		getThumbnail: (drawing, size=@constructor.thumbnailSize)->
+		getThumbnail: (drawing, size=@constructor.thumbnailSize, toDataURL=false)->
 			@thumbnailProject.activate()
 			rectangle = drawing.getBounds()
 
@@ -141,11 +141,11 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			@thumbnailProject.view.setCenter(rectangle.center)
 			@thumbnailProject.activeLayer.strokeColor = R.Path.colorMap[drawing.status]
-			svg = @thumbnailProject.exportSVG()
+			result = if toDataURL then @thumbnailCanvas.toDataURL() else @thumbnailProject.exportSVG()
 			# drawing.group.remove()
 			@thumbnailProject.clear()
 			paper.projects[0].activate()
-			return svg
+			return result
 
 		createBackground: ()->
 			if R.drawingMode == 'image' and not @backgroundImage?

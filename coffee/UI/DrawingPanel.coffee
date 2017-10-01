@@ -20,18 +20,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				if bounds?
 					R.view.fitRectangle(bounds, true)
 					R.view.updateHash()
-				
-				@thumbnailToDataURL (imageURL)=>
-					FB.ui({
-						method: 'feed',
-						caption: i18next.t('Vote for this drawing on Comme un Dessein', { drawing: @currentDrawing.title, author: @currentDrawing.owner }),
-						source: imageURL,
-						link: window.location.href,
-					}, ((response)-> 
-						console.log(response)
-						return
-					))
+
+				imageURL = R.view.getThumbnail(@currentDrawing, 1024, true)
+				FB.ui({
+					method: 'feed',
+					caption: i18next.t('Vote for this drawing on Comme un Dessein', { drawing: @currentDrawing.title, author: @currentDrawing.owner }),
+					source: imageURL,
+					link: window.location.href,
+				}, ((response)-> 
+					console.log(response)
 					return
+				))
+
 				return
 
 			# the button to start drawing
@@ -335,31 +335,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 						@showSubmitDrawing()
 						return
 			return
-
-		thumbnailToDataURL: (callback)->
-			size = 1024
-
-			svg = R.view.getThumbnail(@currentDrawing)
-			# svg.setAttribute('viewBox', '0 0 300 300')
-			svg.setAttribute('width', size)
-			svg.setAttribute('height', size)
-
-			canvas = document.createElement("canvas")
-			canvas.width = size
-			canvas.height = size
-			svg_xml = (new XMLSerializer()).serializeToString(svg)
-			context = canvas.getContext('2d')
-
-			image = new Image()
-			image.src = "data:image/svg+xml;base64," + btoa(svg_xml)
-
-			image.onload = ()=>
-				context.drawImage(image, 0, 0)
-				callback(canvas.toDataURL())
-				return
-			
-			return
-
+		
 		setDrawingThumbnail: ()->
 			thumbnailJ = @contentJ.find('.drawing-thumbnail')
 			svg = R.view.getThumbnail(@currentDrawing)

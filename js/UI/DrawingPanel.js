@@ -37,25 +37,24 @@
         })(this));
         this.contentJ.find('.share-facebook').click((function(_this) {
           return function() {
-            var bounds;
+            var bounds, imageURL;
             bounds = _this.currentDrawing.getBounds();
             if (bounds != null) {
               R.view.fitRectangle(bounds, true);
               R.view.updateHash();
             }
-            _this.thumbnailToDataURL(function(imageURL) {
-              FB.ui({
-                method: 'feed',
-                caption: i18next.t('Vote for this drawing on Comme un Dessein', {
-                  drawing: _this.currentDrawing.title,
-                  author: _this.currentDrawing.owner
-                }),
-                source: imageURL,
-                link: window.location.href
-              }, (function(response) {
-                console.log(response);
-              }));
-            });
+            imageURL = R.view.getThumbnail(_this.currentDrawing, 1024, true);
+            FB.ui({
+              method: 'feed',
+              caption: i18next.t('Vote for this drawing on Comme un Dessein', {
+                drawing: _this.currentDrawing.title,
+                author: _this.currentDrawing.owner
+              }),
+              source: imageURL,
+              link: window.location.href
+            }, (function(response) {
+              console.log(response);
+            }));
           };
         })(this));
         this.beginDrawingBtnJ = $('button.begin-drawing');
@@ -327,27 +326,6 @@
             }
           }
         }
-      };
-
-      DrawingPanel.prototype.thumbnailToDataURL = function(callback) {
-        var canvas, context, image, size, svg, svg_xml;
-        size = 1024;
-        svg = R.view.getThumbnail(this.currentDrawing);
-        svg.setAttribute('width', size);
-        svg.setAttribute('height', size);
-        canvas = document.createElement("canvas");
-        canvas.width = size;
-        canvas.height = size;
-        svg_xml = (new XMLSerializer()).serializeToString(svg);
-        context = canvas.getContext('2d');
-        image = new Image();
-        image.src = "data:image/svg+xml;base64," + btoa(svg_xml);
-        image.onload = (function(_this) {
-          return function() {
-            context.drawImage(image, 0, 0);
-            callback(canvas.toDataURL());
-          };
-        })(this);
       };
 
       DrawingPanel.prototype.setDrawingThumbnail = function() {
