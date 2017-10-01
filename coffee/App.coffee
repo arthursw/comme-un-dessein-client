@@ -60,7 +60,7 @@ requirejs.config
 		# 'pinit': ['//assets.pinterest.com/js/pinit', libs + 'pinit']
 		# 'table': ['//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.8.1/bootstrap-table.min', libs + 'table/bootstrap-table.min']
 		# 'zeroClipboard': ['//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.2.0/ZeroClipboard.min', libs + 'ZeroClipboard.min']
-
+		'facebook': ['//connect.facebook.net/en_US/sdk']
 
 		'domReady': [libs + 'domReady']
 		'i18next': [libs + 'i18next.min']
@@ -132,12 +132,15 @@ requirejs.config
 			exports: '_'
 		'jquery':
 			exports: '$'
+		'facebook' :
+			exports: 'FB'
 
 # Load the main app module to start the app
 requirejs [ 'R' ], (R) ->
 	R.repository = repository
 	R.tipibot = parameters['tipibot']
 	R.style = parameters['style'] or 'line'
+	R.initialZoom = parameters['zoom']
 	R.getParameters = getParameters
 	requirejs [ 'Main' ]
 	return

@@ -672,6 +672,58 @@
         }).done(this.deleteFromDatabaseCallback());
       };
 
+      Drawing.prototype.cancel = function() {
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'cancelDrawing',
+              args: {
+                'pk': this.pk
+              }
+            })
+          }
+        }).done((function(_this) {
+          return function(result) {
+            return _this.cancelCallback(result);
+          };
+        })(this));
+      };
+
+      Drawing.prototype.cancelCallback = function(result) {
+        var draft, i, j, k, len, len1, len2, path, ref, ref1, ref2, ref3;
+        if (!R.loader.checkError(result)) {
+          return;
+        }
+        ref = this.paths.slice();
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
+          this.removeChild(path);
+        }
+        draft = Drawing.getDraft();
+        if (draft != null) {
+          ref1 = draft.paths;
+          for (j = 0, len1 = ref1.length; j < len1; j++) {
+            path = ref1[j];
+            this.addChild(path);
+          }
+          draft.remove();
+        }
+        if ((ref2 = this.svg) != null) {
+          ref2.remove();
+        }
+        this.svg = null;
+        this.addPathsFromPathList(result.pathList);
+        this.updateStatus(result.status);
+        this.constructor.draft = this;
+        ref3 = this.paths;
+        for (k = 0, len2 = ref3.length; k < len2; k++) {
+          path = ref3[k];
+          console.log(path.getPoints());
+        }
+      };
+
       Drawing.prototype.setRectangle = function(rectangle, update) {
         if (update == null) {
           update = true;
@@ -797,6 +849,15 @@
       };
 
       Drawing.prototype.remove = function() {
+        var i, len, path, ref, ref1;
+        ref = this.paths.slice();
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
+          this.removeChild(path);
+        }
+        if ((ref1 = this.svg) != null) {
+          ref1.remove();
+        }
         this.removeFromListItem();
         R.rasterizer.rasterizeRectangle(this.rectangle);
         Drawing.__super__.remove.apply(this, arguments);

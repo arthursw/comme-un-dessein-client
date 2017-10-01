@@ -39,6 +39,7 @@
   requirejs.config({
     baseUrl: baseUrl,
     paths: {
+      'facebook': ['//connect.facebook.net/en_US/sdk'],
       'domReady': [libs + 'domReady'],
       'i18next': [libs + 'i18next.min'],
       'i18nextXHRBackend': [libs + 'i18nextXHRBackend'],
@@ -99,6 +100,9 @@
       },
       'jquery': {
         exports: '$'
+      },
+      'facebook': {
+        exports: 'FB'
       }
     }
   });
@@ -107,6 +111,7 @@
     R.repository = repository;
     R.tipibot = parameters['tipibot'];
     R.style = parameters['style'] || 'line';
+    R.initialZoom = parameters['zoom'];
     R.getParameters = getParameters;
     requirejs(['Main']);
   });

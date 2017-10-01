@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command', 'i18next', 'moment'], function(P, R, Utils, Item, Modal, Command, i18next, moment) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command', 'i18next', 'moment', 'facebook'], function(P, R, Utils, Item, Modal, Command, i18next, moment, fb) {
     var DrawingPanel;
     DrawingPanel = (function() {
       function DrawingPanel() {
@@ -24,11 +24,44 @@
         this.setHalfSize = bind(this.setHalfSize, this);
         this.onHandleDown = bind(this.onHandleDown, this);
         var closeBtnJ, handleJ, onSubmitDown, onSubmitUp, runBtnJ, titleJ;
+        this.drawingPanelJ = $("#drawingPanel");
+        this.contentJ = this.drawingPanelJ.find('.content-container');
+        FB.init({
+          appId: '263330707483013',
+          version: 'v2.10'
+        });
+        FB.getLoginStatus((function(_this) {
+          return function(response) {
+            return console.log(response);
+          };
+        })(this));
+        this.contentJ.find('.share-facebook').click((function(_this) {
+          return function() {
+            var bounds;
+            bounds = _this.currentDrawing.getBounds();
+            if (bounds != null) {
+              R.view.fitRectangle(bounds, true);
+              R.view.updateHash();
+            }
+            _this.thumbnailToDataURL(function(imageURL) {
+              FB.ui({
+                method: 'feed',
+                caption: i18next.t('Vote for this drawing on Comme un Dessein', {
+                  drawing: _this.currentDrawing.title,
+                  author: _this.currentDrawing.owner
+                }),
+                source: imageURL,
+                link: window.location.href
+              }, (function(response) {
+                console.log(response);
+              }));
+            });
+          };
+        })(this));
         this.beginDrawingBtnJ = $('button.begin-drawing');
         this.beginDrawingBtnJ.click(this.beginDrawingClicked);
         this.submitDrawingBtnJ = $('button.submit-drawing');
         this.submitDrawingBtnJ.click(this.submitDrawingClicked);
-        this.drawingPanelJ = $("#drawingPanel");
         this.drawingPanelJ.bind("transitionend webkitTransitionEnd oTransitionEnd MSTransitionEnd", this.resize);
         this.thumbnailFooterTitle = this.drawingPanelJ.find(".thumbnail-footer .title");
         this.thumbnailFooterAuthor = this.drawingPanelJ.find(".thumbnail-footer .author");
@@ -55,7 +88,6 @@
         this.submitBtnJ.click(this.submitDrawing);
         this.modifyBtnJ.click(this.modifyDrawing);
         this.cancelBtnJ.click(this.cancelDrawing);
-        this.contentJ = this.drawingPanelJ.find('.content-container');
         this.visible = false;
         titleJ = this.contentJ.find('#drawing-title');
         onSubmitUp = (function(_this) {
@@ -297,6 +329,27 @@
         }
       };
 
+      DrawingPanel.prototype.thumbnailToDataURL = function(callback) {
+        var canvas, context, image, size, svg, svg_xml;
+        size = 1024;
+        svg = R.view.getThumbnail(this.currentDrawing);
+        svg.setAttribute('width', size);
+        svg.setAttribute('height', size);
+        canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        svg_xml = (new XMLSerializer()).serializeToString(svg);
+        context = canvas.getContext('2d');
+        image = new Image();
+        image.src = "data:image/svg+xml;base64," + btoa(svg_xml);
+        image.onload = (function(_this) {
+          return function() {
+            context.drawImage(image, 0, 0);
+            callback(canvas.toDataURL());
+          };
+        })(this);
+      };
+
       DrawingPanel.prototype.setDrawingThumbnail = function() {
         var svg, thumbnailJ;
         thumbnailJ = this.contentJ.find('.drawing-thumbnail');
@@ -345,6 +398,7 @@
         this.contentJ.find('#drawing-title').removeAttr('readonly');
         this.contentJ.find('#drawing-description').removeAttr('readonly');
         this.votesJ.hide();
+        this.contentJ.find('.share-buttons').hide();
         bounds = this.currentDrawing.getBounds();
         if (bounds != null) {
           R.view.fitRectangle(bounds, true);
@@ -415,6 +469,7 @@
         this.drawingPanelTitleJ.attr('data-i18n', 'Drawing info').text(i18next.t('Drawing info'));
         this.open();
         this.showContent();
+        this.contentJ.find('.share-buttons').show();
         latestDrawing = JSON.parse(drawingData.drawing);
         this.currentDrawing.votes = drawingData.votes;
         this.currentDrawing.status = latestDrawing.status;
@@ -461,7 +516,7 @@
             if (!sameCity) {
               return;
             }
-            if (R.items[data.pk] != null) {
+            if ((R.items[data.pk] != null) || (R.items[data.drawingId] != null)) {
               return;
             }
             $.ajax({
@@ -498,6 +553,12 @@
             drawing = R.items[data.drawingId];
             if (drawing != null) {
               drawing.updateStatus(data.status);
+            }
+            break;
+          case 'cancel':
+            drawing = R.items[data.drawingId];
+            if ((drawing != null) && drawing.owner !== R.me) {
+              drawing.remove();
             }
             break;
           case 'delete':
@@ -642,7 +703,7 @@
           R.alertManager.alert("You must be logged in to cancel a drawing", "error");
           return;
         }
-        this.currentDrawing.deleteCommand();
+        this.currentDrawing.cancel();
         this.close();
       };
 

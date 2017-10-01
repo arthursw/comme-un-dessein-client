@@ -579,7 +579,7 @@
       if (precision == null) {
         precision = 2;
       }
-      return point.x.toFixed(precision) + ',' + point.y.toFixed(precision);
+      return point.x.toFixed(precision).replace(/\.?0+$/, '') + ',' + point.y.toFixed(precision).replace(/\.?0+$/, '');
     };
     Utils.logElapsedTime = function() {
       var time;

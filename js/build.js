@@ -1,6 +1,7 @@
 ({
     baseUrl: ".",	    
     paths: {
+      'facebook': '//connect.facebook.net/en_US/sdk',
       'requirejs': '../../comme-un-dessein-server/CommeUnDessein/static/libs/require.min',
       'domReady': '../../comme-un-dessein-server/CommeUnDessein/static/libs/domReady',
       'i18next': '../../comme-un-dessein-server/CommeUnDessein/static/libs/i18next.min',
@@ -61,6 +62,9 @@
       },
       'jquery': {
         exports: '$'
+      },
+      'facebook': {
+        exports: 'FB'
       }
     },
     include: ["requirejs", 

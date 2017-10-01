@@ -161,7 +161,9 @@
           window.setPageFullyLoaded(true);
         }
       }
-      R.view.fitRectangle(R.view.grid.limitCD.bounds, true);
+      if (R.initialZoom == null) {
+        R.view.fitRectangle(R.view.grid.limitCD.bounds, true);
+      }
       require(['Items/Paths/PrecisePaths/PrecisePath'], function() {
         return R.loader.loadSVG();
       });

@@ -1,8 +1,39 @@
-define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command', 'i18next', 'moment' ], (P, R, Utils, Item, Modal, Command, i18next, moment) -> 			# 'ace/ext-language_tools', required?
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command', 'i18next', 'moment', 'facebook' ], (P, R, Utils, Item, Modal, Command, i18next, moment, fb) -> 			# 'ace/ext-language_tools', required?
 
 	class DrawingPanel
 
 		constructor: ()->
+			@drawingPanelJ = $("#drawingPanel")
+			@contentJ = @drawingPanelJ.find('.content-container')
+
+			FB.init({
+				appId      : '263330707483013',
+				version    : 'v2.10'
+			})
+			
+			FB.getLoginStatus((response) =>
+				console.log(response)
+			)
+
+			@contentJ.find('.share-facebook').click ()=>
+				bounds = @currentDrawing.getBounds()
+				if bounds?
+					R.view.fitRectangle(bounds, true)
+					R.view.updateHash()
+				
+				@thumbnailToDataURL (imageURL)=>
+					FB.ui({
+						method: 'feed',
+						caption: i18next.t('Vote for this drawing on Comme un Dessein', { drawing: @currentDrawing.title, author: @currentDrawing.owner }),
+						source: imageURL,
+						link: window.location.href,
+					}, ((response)-> 
+						console.log(response)
+						return
+					))
+					return
+				return
+
 			# the button to start drawing
 			@beginDrawingBtnJ = $('button.begin-drawing')
 			@beginDrawingBtnJ.click(@beginDrawingClicked)
@@ -16,7 +47,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			# @cancelDrawingBtnJ.click(@cancelDrawingClicked)
 
 			# editor
-			@drawingPanelJ = $("#drawingPanel")
 			@drawingPanelJ.bind "transitionend webkitTransitionEnd oTransitionEnd MSTransitionEnd", @resize
 
 			@thumbnailFooterTitle = @drawingPanelJ.find(".thumbnail-footer .title")
@@ -63,8 +93,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@modifyBtnJ.click(@modifyDrawing)
 			@cancelBtnJ.click(@cancelDrawing)
 			# @deleteBtnJ.click(@deleteDrawing)
-
-			@contentJ = @drawingPanelJ.find('.content-container')
 			
 			@visible = false
 
@@ -84,7 +112,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					event.stopPropagation()
 					return -1
 				return
-			
+
 			titleJ.keydown(onSubmitDown).keyup(onSubmitUp)
 
 			return
@@ -308,6 +336,30 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 						return
 			return
 
+		thumbnailToDataURL: (callback)->
+			size = 1024
+
+			svg = R.view.getThumbnail(@currentDrawing)
+			# svg.setAttribute('viewBox', '0 0 300 300')
+			svg.setAttribute('width', size)
+			svg.setAttribute('height', size)
+
+			canvas = document.createElement("canvas")
+			canvas.width = size
+			canvas.height = size
+			svg_xml = (new XMLSerializer()).serializeToString(svg)
+			context = canvas.getContext('2d')
+
+			image = new Image()
+			image.src = "data:image/svg+xml;base64," + btoa(svg_xml)
+
+			image.onload = ()=>
+				context.drawImage(image, 0, 0)
+				callback(canvas.toDataURL())
+				return
+			
+			return
+
 		setDrawingThumbnail: ()->
 			thumbnailJ = @contentJ.find('.drawing-thumbnail')
 			svg = R.view.getThumbnail(@currentDrawing)
@@ -418,6 +470,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@contentJ.find('#drawing-description').removeAttr('readonly')
 
 			@votesJ.hide()
+			@contentJ.find('.share-buttons').hide()
 
 			# @submitBtnJ.find('span.glyphicon').removeClass('glyphicon-ok').addClass('glyphicon-refresh glyphicon-refresh-animate')
 			# $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getDrafts', args: { city: R.city } } ).done(@submitDrawingClickedCallback)
@@ -488,7 +541,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@drawingPanelTitleJ.attr('data-i18n', 'Drawing info').text(i18next.t('Drawing info'))
 			@open()
 			@showContent()
-			
+			@contentJ.find('.share-buttons').show()
+
 			latestDrawing = JSON.parse(drawingData.drawing)
 
 			@currentDrawing.votes = drawingData.votes
@@ -551,7 +605,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					if not sameCity then return
 					
 					# if the drawing is already loaded, no need to load it
-					if R.items[data.pk]? then return
+					if R.items[data.pk]? or R.items[data.drawingId]? then return
 
 					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: { pk: data.pk, loadSVG: true } } ).done((results)->
 						results.items = [results.drawing]
@@ -570,6 +624,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					drawing = R.items[data.drawingId]
 					if drawing?
 						drawing.updateStatus(data.status)
+				when 'cancel'
+					drawing = R.items[data.drawingId]
+					if drawing? and drawing.owner != R.me
+						drawing.remove()
 				when 'delete'
 					drawing = R.items[data.drawingId]
 					if drawing?
@@ -703,7 +761,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				R.alertManager.alert "You must be logged in to cancel a drawing", "error"
 				return
 
-			@currentDrawing.deleteCommand()
+			@currentDrawing.cancel()
 			@close()
 			return
 

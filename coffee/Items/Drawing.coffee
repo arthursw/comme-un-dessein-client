@@ -588,6 +588,31 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteDrawing', args: { 'pk': @pk } } ).done(@deleteFromDatabaseCallback())
 			return
 
+		cancel: ()->
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'cancelDrawing', args: { 'pk': @pk } } ).done( (result)=> @cancelCallback(result) )
+			return
+
+		cancelCallback: (result)->
+			if not R.loader.checkError(result) then return
+
+			# we will add them with result.pathList
+			for path in @paths.slice()
+				@removeChild(path)
+
+			draft = Drawing.getDraft()
+			if draft?
+				for path in draft.paths
+					@addChild(path)
+				draft.remove()
+			@svg?.remove()
+			@svg = null
+			@addPathsFromPathList(result.pathList)
+			@updateStatus(result.status)
+			@constructor.draft = @
+			for path in @paths
+				console.log(path.getPoints())
+			return
+
 		setRectangle: (rectangle, update=true)->
 			super(rectangle, update)
 			return
@@ -671,6 +696,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		# 	return
 
 		remove: () ->
+			for path in @paths.slice()
+				@removeChild(path)
+			@svg?.remove()
 			@removeFromListItem()
 			R.rasterizer.rasterizeRectangle(@rectangle)
 			super

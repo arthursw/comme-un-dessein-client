@@ -117,7 +117,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			paper.projects[0].activate()
 			return
 
-		getThumbnail: (drawing)->
+		getThumbnail: (drawing, size=@constructor.thumbnailSize)->
 			@thumbnailProject.activate()
 			rectangle = drawing.getBounds()
 
@@ -135,9 +135,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				console.error('drawing is empty')
 
 			if viewRatio < rectangleRatio
-				@thumbnailProject.view.zoom = Math.min(@constructor.thumbnailSize / rectangle.width, 1)
+				@thumbnailProject.view.zoom = Math.min(size / rectangle.width, 1)
 			else
-				@thumbnailProject.view.zoom = Math.min(@constructor.thumbnailSize / rectangle.height, 1)
+				@thumbnailProject.view.zoom = Math.min(size / rectangle.height, 1)
 
 			@thumbnailProject.view.setCenter(rectangle.center)
 			@thumbnailProject.activeLayer.strokeColor = R.Path.colorMap[drawing.status]
@@ -451,7 +451,6 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		# Update hash (the string after '#' in the url bar) according to the location of the (center of the) view
 		# set *@ignoreHashChange* flag to ignore this change in *window.onhashchange* callback
 		updateHash: ()=>
-			@ignoreHashChange = true
 			hashParameters = {}
 			if R.repository.commit?
 				hashParameters['repository-owner'] = R.repository.owner
@@ -460,11 +459,15 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if R.city.name? and R.city.name != 'CommeUnDessein'
 				hashParameters['mode'] = R.city.name
 			hashParameters['location'] = Utils.pointToString(P.view.center)
+			hashParameters['zoom'] = P.view.zoom.toFixed(3).replace(/\.?0+$/, '')
 			if R.tipibot?
 				hashParameters['tipibot'] = true
 			if R.style?
 				hashParameters['style'] = R.style
+
+			window.onhashchange = null
 			location.hash = Utils.URL.setParameters(hashParameters)
+			window.onhashchange = @onHashChange
 			return
 
 		setPositionFromString: (positionString)->
@@ -474,9 +477,6 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		# Update hash (the string after '#' in the url bar) according to the location of the (center of the) view
 		# set *@ignoreHashChange* flag to ignore this change in *window.onhashchange* callback
 		onHashChange: (event, reloadIfNecessary=true)=>
-			if @ignoreHashChange
-				@ignoreHashChange = false
-				return
 
 			parameters = Utils.URL.getParameters(document.location.hash)
 
@@ -486,6 +486,11 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			if parameters['location']?
 				p = Utils.stringToPoint(parameters['location'])
+
+			if parameters['zoom']?
+				zoom = parseFloat(parameters['zoom'])
+				if zoom? and Number.isFinite(zoom)
+					P.view.zoom = Math.max(0.125, Math.min(4, zoom))
 
 			mustReload = false
 			

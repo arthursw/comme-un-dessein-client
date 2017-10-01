@@ -130,8 +130,11 @@
         paper.projects[0].activate();
       };
 
-      View.prototype.getThumbnail = function(drawing) {
+      View.prototype.getThumbnail = function(drawing, size) {
         var i, len, path, rectangle, rectangleRatio, ref, svg, viewRatio;
+        if (size == null) {
+          size = this.constructor.thumbnailSize;
+        }
         this.thumbnailProject.activate();
         rectangle = drawing.getBounds();
         if (rectangle == null) {
@@ -151,9 +154,9 @@
           console.error('drawing is empty');
         }
         if (viewRatio < rectangleRatio) {
-          this.thumbnailProject.view.zoom = Math.min(this.constructor.thumbnailSize / rectangle.width, 1);
+          this.thumbnailProject.view.zoom = Math.min(size / rectangle.width, 1);
         } else {
-          this.thumbnailProject.view.zoom = Math.min(this.constructor.thumbnailSize / rectangle.height, 1);
+          this.thumbnailProject.view.zoom = Math.min(size / rectangle.height, 1);
         }
         this.thumbnailProject.view.setCenter(rectangle.center);
         this.thumbnailProject.activeLayer.strokeColor = R.Path.colorMap[drawing.status];
@@ -449,7 +452,6 @@
 
       View.prototype.updateHash = function() {
         var hashParameters;
-        this.ignoreHashChange = true;
         hashParameters = {};
         if (R.repository.commit != null) {
           hashParameters['repository-owner'] = R.repository.owner;
@@ -459,13 +461,16 @@
           hashParameters['mode'] = R.city.name;
         }
         hashParameters['location'] = Utils.pointToString(P.view.center);
+        hashParameters['zoom'] = P.view.zoom.toFixed(3).replace(/\.?0+$/, '');
         if (R.tipibot != null) {
           hashParameters['tipibot'] = true;
         }
         if (R.style != null) {
           hashParameters['style'] = R.style;
         }
+        window.onhashchange = null;
         location.hash = Utils.URL.setParameters(hashParameters);
+        window.onhashchange = this.onHashChange;
       };
 
       View.prototype.setPositionFromString = function(positionString) {
@@ -473,13 +478,9 @@
       };
 
       View.prototype.onHashChange = function(event, reloadIfNecessary) {
-        var mustReload, p, parameters;
+        var mustReload, p, parameters, zoom;
         if (reloadIfNecessary == null) {
           reloadIfNecessary = true;
-        }
-        if (this.ignoreHashChange) {
-          this.ignoreHashChange = false;
-          return;
         }
         parameters = Utils.URL.getParameters(document.location.hash);
         if ((R.repository.commit != null) && (R.repository.owner !== parameters['repository-owner'] || R.repository.commit !== parameters['repository-commit'])) {
@@ -488,6 +489,12 @@
         }
         if (parameters['location'] != null) {
           p = Utils.stringToPoint(parameters['location']);
+        }
+        if (parameters['zoom'] != null) {
+          zoom = parseFloat(parameters['zoom']);
+          if ((zoom != null) && Number.isFinite(zoom)) {
+            P.view.zoom = Math.max(0.125, Math.min(4, zoom));
+          }
         }
         mustReload = false;
         if (parameters['mode'] != null) {

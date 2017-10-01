@@ -637,7 +637,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		return p
 
 	Utils.pointToString = (point, precision=2)->
-		return point.x.toFixed(precision) + ',' + point.y.toFixed(precision)
+		return point.x.toFixed(precision).replace(/\.?0+$/, '') + ',' + point.y.toFixed(precision).replace(/\.?0+$/, '')
 
 	Utils.logElapsedTime = ()->
 		time = (Date.now() - R.startTime) / 1000
