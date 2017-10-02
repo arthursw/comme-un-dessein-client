@@ -49,7 +49,7 @@
                 drawing: _this.currentDrawing.title,
                 author: _this.currentDrawing.owner
               }),
-              picture: location.origin + '/draw/static/drawings/' + encodeURIComponent(_this.currentDrawing.title) + '.png',
+              picture: location.origin + '/static/drawings/' + encodeURIComponent(_this.currentDrawing.title) + '.png',
               link: window.location.href
             }, (function(response) {
               console.log(response);
