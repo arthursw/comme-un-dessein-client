@@ -21,11 +21,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					R.view.fitRectangle(bounds, true)
 					R.view.updateHash()
 
-				imageURL = R.view.getThumbnail(@currentDrawing, 1024, true)
+				# imageURL = R.view.getThumbnail(@currentDrawing, 1024, true)
 				FB.ui({
 					method: 'feed',
 					caption: i18next.t('Vote for this drawing on Comme un Dessein', { drawing: @currentDrawing.title, author: @currentDrawing.owner }),
-					source: imageURL,
+					picture: location.origin + '/draw/static/drawings/' + encodeURIComponent(@currentDrawing.title) + '.png',
 					link: window.location.href,
 				}, ((response)-> 
 					console.log(response)

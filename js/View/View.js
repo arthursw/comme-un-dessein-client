@@ -125,6 +125,7 @@
         this.thumbnailCanvas = document.createElement('canvas');
         this.thumbnailCanvas.width = this.constructor.thumbnailSize;
         this.thumbnailCanvas.height = this.constructor.thumbnailSize;
+        $('body').append(this.thumbnailCanvas);
         this.thumbnailProject = new P.Project(this.thumbnailCanvas);
         paper.projects[0].activate();
       };
@@ -138,6 +139,9 @@
           toDataURL = false;
         }
         this.thumbnailProject.activate();
+        this.thumbnailProject.view.viewSize = new P.Size(size, size);
+        this.thumbnailCanvas.width = size;
+        this.thumbnailCanvas.height = size;
         rectangle = drawing.getBounds();
         if (rectangle == null) {
           return null;
@@ -162,6 +166,8 @@
         }
         this.thumbnailProject.view.setCenter(rectangle.center);
         this.thumbnailProject.activeLayer.strokeColor = R.Path.colorMap[drawing.status];
+        this.thumbnailProject.view.update();
+        this.thumbnailProject.view.draw();
         result = toDataURL ? this.thumbnailCanvas.toDataURL() : this.thumbnailProject.exportSVG();
         this.thumbnailProject.clear();
         paper.projects[0].activate();

@@ -37,20 +37,19 @@
         })(this));
         this.contentJ.find('.share-facebook').click((function(_this) {
           return function() {
-            var bounds, imageURL;
+            var bounds;
             bounds = _this.currentDrawing.getBounds();
             if (bounds != null) {
               R.view.fitRectangle(bounds, true);
               R.view.updateHash();
             }
-            imageURL = R.view.getThumbnail(_this.currentDrawing, 1024, true);
             FB.ui({
               method: 'feed',
               caption: i18next.t('Vote for this drawing on Comme un Dessein', {
                 drawing: _this.currentDrawing.title,
                 author: _this.currentDrawing.owner
               }),
-              source: imageURL,
+              picture: location.origin + '/draw/static/drawings/' + encodeURIComponent(_this.currentDrawing.title) + '.png',
               link: window.location.href
             }, (function(response) {
               console.log(response);

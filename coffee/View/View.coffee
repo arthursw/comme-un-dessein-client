@@ -113,12 +113,16 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@thumbnailCanvas = document.createElement('canvas')
 			@thumbnailCanvas.width = @constructor.thumbnailSize
 			@thumbnailCanvas.height = @constructor.thumbnailSize
+			$('body').append(@thumbnailCanvas)
 			@thumbnailProject = new P.Project(@thumbnailCanvas)
 			paper.projects[0].activate()
 			return
 
 		getThumbnail: (drawing, size=@constructor.thumbnailSize, toDataURL=false)->
 			@thumbnailProject.activate()
+			@thumbnailProject.view.viewSize = new P.Size(size, size)
+			@thumbnailCanvas.width = size
+			@thumbnailCanvas.height = size
 			rectangle = drawing.getBounds()
 
 			if not rectangle? then return null
@@ -141,6 +145,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			@thumbnailProject.view.setCenter(rectangle.center)
 			@thumbnailProject.activeLayer.strokeColor = R.Path.colorMap[drawing.status]
+			@thumbnailProject.view.update()
+			@thumbnailProject.view.draw()
 			result = if toDataURL then @thumbnailCanvas.toDataURL() else @thumbnailProject.exportSVG()
 			# drawing.group.remove()
 			@thumbnailProject.clear()

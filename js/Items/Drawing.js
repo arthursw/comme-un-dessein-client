@@ -496,16 +496,19 @@
       };
 
       Drawing.prototype.submit = function() {
-        var args, svg;
+        var args, imageURL, svg;
         svg = this.getSVG();
         this.svgString = svg;
+        imageURL = R.view.getThumbnail(this, 1024, true);
         args = {
           pk: this.pk,
           clientId: this.id,
           date: Date.now(),
           title: this.title,
           description: this.description,
-          svg: svg
+          svg: svg,
+          png: imageURL,
+          encodedTitle: encodeURIComponent(this.title)
         };
         $.ajax({
           method: "POST",
