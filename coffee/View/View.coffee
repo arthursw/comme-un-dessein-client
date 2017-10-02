@@ -90,7 +90,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 				$(window).resize(@onWindowResize)
 
-				window.onhashchange = @onHashChange
+				# window.onhashchange = @onHashChange
+				window.addEventListener("hashchange", @onHashChange, false)
 
 				hammertime = new Hammer(R.canvas)
 				hammertime.get('pinch').set({ enable: true })
@@ -471,9 +472,12 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if R.style?
 				hashParameters['style'] = R.style
 
-			window.onhashchange = null
+			window.removeEventListener("hashchange", @onHashChange, false)
+			thisOnHashChange = @onHashChange
+			@onHashChange = ()-> return
 			location.hash = Utils.URL.setParameters(hashParameters)
-			window.onhashchange = @onHashChange
+			@onHashChange = thisOnHashChange
+			window.addEventListener("hashchange", @onHashChange, false)
 			return
 
 		setPositionFromString: (positionString)->
@@ -568,7 +572,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			#
 			# if not boxString or boxString.length==0
 			if not R.loadedBox?
-				window?.onhashchange(null, false)
+				# window?.onhashchange(null, false)
 				return
 
 			# initialize the area rectangle *boxRectangle* from 'data-box' attr and move to the center of the box

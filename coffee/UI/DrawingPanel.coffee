@@ -25,7 +25,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				FB.ui({
 					method: 'feed',
 					caption: i18next.t('Vote for this drawing on Comme un Dessein', { drawing: @currentDrawing.title, author: @currentDrawing.owner }),
-					link: location.origin + '/static/drawings/' + encodeURIComponent(@currentDrawing.title) + '.png',
+					link: location.origin + '/drawing-' + @currentDrawing.pk,
 					# link: window.location.href,
 				}, ((response)-> 
 					console.log(response)

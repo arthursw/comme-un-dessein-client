@@ -507,8 +507,7 @@
           title: this.title,
           description: this.description,
           svg: svg,
-          png: imageURL,
-          encodedTitle: encodeURIComponent(this.title)
+          png: imageURL
         };
         $.ajax({
           method: "POST",

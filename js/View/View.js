@@ -101,7 +101,7 @@
             touchcancel: this.mouseup
           });
           $(window).resize(this.onWindowResize);
-          window.onhashchange = this.onHashChange;
+          window.addEventListener("hashchange", this.onHashChange, false);
           hammertime = new Hammer(R.canvas);
           hammertime.get('pinch').set({
             enable: true
@@ -459,7 +459,7 @@
       };
 
       View.prototype.updateHash = function() {
-        var hashParameters;
+        var hashParameters, thisOnHashChange;
         hashParameters = {};
         if (R.repository.commit != null) {
           hashParameters['repository-owner'] = R.repository.owner;
@@ -476,9 +476,12 @@
         if (R.style != null) {
           hashParameters['style'] = R.style;
         }
-        window.onhashchange = null;
+        window.removeEventListener("hashchange", this.onHashChange, false);
+        thisOnHashChange = this.onHashChange;
+        this.onHashChange = function() {};
         location.hash = Utils.URL.setParameters(hashParameters);
-        window.onhashchange = this.onHashChange;
+        this.onHashChange = thisOnHashChange;
+        window.addEventListener("hashchange", this.onHashChange, false);
       };
 
       View.prototype.setPositionFromString = function(positionString) {
@@ -556,9 +559,6 @@
           };
         })(this));
         if (R.loadedBox == null) {
-          if (typeof window !== "undefined" && window !== null) {
-            window.onhashchange(null, false);
-          }
           return;
         }
         planet = new P.Point(R.loadedBox.planetX, R.loadedBox.planetY);

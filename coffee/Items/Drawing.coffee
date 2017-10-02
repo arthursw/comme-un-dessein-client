@@ -467,7 +467,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				description: @description
 				svg: svg
 				png: imageURL
-				encodedTitle: encodeURIComponent(@title)
 			}
 
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'submitDrawing', args: args } ).done(@submitCallback)
