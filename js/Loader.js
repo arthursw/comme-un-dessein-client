@@ -24,6 +24,7 @@
         this.showLoadingBar();
         this.drawingPaths = [];
         this.drawingPk = null;
+        this.focusOnDrawing = null;
         return;
       }
 
@@ -247,7 +248,7 @@
       };
 
       Loader.prototype.loadSVGCallback = function(results) {
-        var drawing, item, itemString, k, len, ref;
+        var bounds, drawing, drawingPk, item, itemString, k, len, len1, m, ref, ref1;
         if (results.user != null) {
           this.setMe(results.user);
         }
@@ -259,6 +260,21 @@
         }
         this.endLoading();
         R.toolManager.updateButtonsVisibility();
+        if (this.focusOnDrawing != null) {
+          drawingPk = this.focusOnDrawing;
+          ref1 = R.drawings;
+          for (m = 0, len1 = ref1.length; m < len1; m++) {
+            drawing = ref1[m];
+            if (drawing.pk === drawingPk) {
+              bounds = drawing.getBounds();
+              if (bounds != null) {
+                R.view.fitRectangle(bounds, true);
+              }
+              break;
+            }
+          }
+          this.focusOnDrawing = null;
+        }
       };
 
       Loader.prototype.load = function(area) {

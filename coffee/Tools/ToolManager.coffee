@@ -356,12 +356,13 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				welcomeTextJ = $('#welcome-text')
 				modal = Modal.createModal( 
 					title: 'Welcome to Comme Un Dessein', 
-					submit: ( ()-> return location.pathname = '/accounts/signup/' ), 
-					postSubmit: 'load', 
-					submitButtonText: 'Sign up', 
-					submitButtonIcon: 'glyphicon-user', 
-					cancelButtonText: 'Just visit', 
-					cancelButtonIcon: 'glyphicon-sunglasses' )
+					# submit: ( ()-> return), 
+					# postSubmit: 'load', 
+					# submitButtonText: 'Sign up', 
+					# submitButtonIcon: 'glyphicon-user', 
+					# cancelButtonText: 'Just visit', 
+					# cancelButtonIcon: 'glyphicon-sunglasses' 
+					)
 				# modal.addText('''
 				# 	Comme un dessein is a participative piece created by the french collective IDLV (Indiens dans la Ville). 
 				# 	With the help of a simple web interface and a monumental plotter, everyone can submit a drawing which takes part of a larger pictural composition, thus compose a collective utopian artwork.
@@ -369,12 +370,12 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				# modal.addText('', 'welcome message 2', false)
 				# modal.addText('', 'welcome message 3', false)
 				modal.addCustomContent(divJ: welcomeTextJ.clone(), name: 'welcome-text')
-				modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning')
+				modal.modalJ.find('[name="cancel"]').hide()
 				# modal.addButton( type: 'info', name: 'Sign in', submit: (()-> return location.pathname = '/accounts/login/'), icon: 'glyphicon-log-in' )
-				modal.addButton( type: 'info', name: 'Sign in', icon: 'glyphicon-log-in' )
+				# modal.addButton( type: 'info', name: 'Sign in', icon: 'glyphicon-log-in' )
 
-				modal.modalJ.find('[name="Sign in"]').attr('data-toggle', 'dropdown').after($('#user-profile').find('.dropdown-menu').clone())
-				modal.modalJ.find('.dropdown-menu').find('li.sign-up').hide()
+				# modal.modalJ.find('[name="Sign in"]').attr('data-toggle', 'dropdown').after($('#user-profile').find('.dropdown-menu').clone())
+				# modal.modalJ.find('.dropdown-menu').find('li.sign-up').hide()
 
 				modal.show()
 				return

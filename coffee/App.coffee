@@ -61,6 +61,7 @@ requirejs.config
 		# 'table': ['//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.8.1/bootstrap-table.min', libs + 'table/bootstrap-table.min']
 		# 'zeroClipboard': ['//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.2.0/ZeroClipboard.min', libs + 'ZeroClipboard.min']
 		'facebook': ['//connect.facebook.net/en_US/sdk']
+		# 'twitter': ['//platform.twitter.com/widgets']
 
 		'domReady': [libs + 'domReady']
 		'i18next': [libs + 'i18next.min']
@@ -134,6 +135,8 @@ requirejs.config
 			exports: '$'
 		'facebook' :
 			exports: 'FB'
+		# 'twitter':
+		# 	exports: 'twttr'
 
 # Load the main app module to start the app
 requirejs [ 'R' ], (R) ->

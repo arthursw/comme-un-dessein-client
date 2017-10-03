@@ -167,28 +167,13 @@
           var modal, welcomeTextJ;
           welcomeTextJ = $('#welcome-text');
           modal = Modal.createModal({
-            title: 'Welcome to Comme Un Dessein',
-            submit: (function() {
-              return location.pathname = '/accounts/signup/';
-            }),
-            postSubmit: 'load',
-            submitButtonText: 'Sign up',
-            submitButtonIcon: 'glyphicon-user',
-            cancelButtonText: 'Just visit',
-            cancelButtonIcon: 'glyphicon-sunglasses'
+            title: 'Welcome to Comme Un Dessein'
           });
           modal.addCustomContent({
             divJ: welcomeTextJ.clone(),
             name: 'welcome-text'
           });
-          modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning');
-          modal.addButton({
-            type: 'info',
-            name: 'Sign in',
-            icon: 'glyphicon-log-in'
-          });
-          modal.modalJ.find('[name="Sign in"]').attr('data-toggle', 'dropdown').after($('#user-profile').find('.dropdown-menu').clone());
-          modal.modalJ.find('.dropdown-menu').find('li.sign-up').hide();
+          modal.modalJ.find('[name="cancel"]').hide();
           modal.show();
         });
       };

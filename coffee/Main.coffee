@@ -25,6 +25,13 @@ define [
 
 	# Initialize CommeUnDessein and handlers
 	$(document).ready () ->
+		canvasJ = $('#canvas')
+		mode = canvasJ.attr('data-drawing-mode')
+		R.city =
+				owner: null
+				name: mode
+				site: null
+		R.drawingMode = if mode in ['pixel', 'ortho', 'orthoDiag', 'image', 'line', 'lineOrthoDiag', 'dot', 'cross'] then mode else null
 
 		# just set some content and react to language changes
 		updateContent = ()->
@@ -136,9 +143,10 @@ define [
 		moment.locale('fr')
 
 		# R.me is the username (or ID if not authenticated) of the user (sent by the server in each ajax "load")
-		username = $('#canvas').attr("data-username")
+		
+		username = canvasJ.attr("data-username")
 		R.me = if username.length > 0 then username else null
-		userAuthenticated = $('#canvas').attr("data-is-authenticated")
+		userAuthenticated = canvasJ.attr("data-is-authenticated")
 		R.userAuthenticated = userAuthenticated == 'True'
 
 		if R.style?

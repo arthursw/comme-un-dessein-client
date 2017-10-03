@@ -16,6 +16,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			@drawingPaths = []
 			@drawingPk = null
 
+			@focusOnDrawing = null
+
 			return
 
 		initializeLoadingBar: ()->
@@ -206,6 +208,15 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			# setTimeout((()=>R.rasterizer.refresh()), 1000)
 			@endLoading()
 			R.toolManager.updateButtonsVisibility()
+			if @focusOnDrawing?
+				drawingPk = @focusOnDrawing
+				for drawing in R.drawings
+					if drawing.pk == drawingPk
+						bounds = drawing.getBounds()
+						if bounds?
+							R.view.fitRectangle(bounds, true)
+						break
+				@focusOnDrawing = null
 			return
 
 		# load an area from the server

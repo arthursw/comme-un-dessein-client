@@ -23,6 +23,9 @@
         this.setFullSize = bind(this.setFullSize, this);
         this.setHalfSize = bind(this.setHalfSize, this);
         this.onHandleDown = bind(this.onHandleDown, this);
+        this.shareOnTwitter = bind(this.shareOnTwitter, this);
+        this.shareOnFacebook = bind(this.shareOnFacebook, this);
+        this.submitComment = bind(this.submitComment, this);
         var closeBtnJ, handleJ, onSubmitDown, onSubmitUp, runBtnJ, titleJ;
         this.drawingPanelJ = $("#drawingPanel");
         this.contentJ = this.drawingPanelJ.find('.content-container');
@@ -35,26 +38,8 @@
             return console.log(response);
           };
         })(this));
-        this.contentJ.find('.share-facebook').click((function(_this) {
-          return function() {
-            var bounds;
-            bounds = _this.currentDrawing.getBounds();
-            if (bounds != null) {
-              R.view.fitRectangle(bounds, true);
-              R.view.updateHash();
-            }
-            FB.ui({
-              method: 'feed',
-              caption: i18next.t('Vote for this drawing on Comme un Dessein', {
-                drawing: _this.currentDrawing.title,
-                author: _this.currentDrawing.owner
-              }),
-              link: location.origin + '/drawing-' + _this.currentDrawing.pk
-            }, (function(response) {
-              console.log(response);
-            }));
-          };
-        })(this));
+        this.contentJ.find('.share-facebook').click(this.shareOnFacebook);
+        this.contentJ.find('button.share-twitter').click(this.shareOnTwitter);
         this.beginDrawingBtnJ = $('button.begin-drawing');
         this.beginDrawingBtnJ.click(this.beginDrawingClicked);
         this.submitDrawingBtnJ = $('button.submit-drawing');
@@ -107,8 +92,243 @@
           };
         })(this);
         titleJ.keydown(onSubmitDown).keyup(onSubmitUp);
+        this.contentJ.find('.comments-container .comment-area').keydown((function(_this) {
+          return function(event) {
+            if (Utils.specialKeys[event.keyCode] === 'enter' && !(event.shiftKey || event.metaKey || event.ctrlKey)) {
+              _this.submitComment();
+              event.preventDefault();
+              event.stopPropagation();
+              return -1;
+            }
+          };
+        })(this));
+        this.contentJ.find('.comments-container .submit-comment').click(this.submitComment);
         return;
       }
+
+      DrawingPanel.prototype.submitComment = function() {
+        var args, comment, commentAreaJ;
+        commentAreaJ = this.contentJ.find('.comments-container .comment-area');
+        comment = commentAreaJ.get(0).innerText;
+        if (comment.length === 0) {
+          return;
+        }
+        commentAreaJ.get(0).innerText = '';
+        args = {
+          drawingPk: this.currentDrawing.pk,
+          comment: comment,
+          date: Date.now()
+        };
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'addComment',
+              args: args
+            })
+          }
+        }).done((function(_this) {
+          return function(results) {
+            var c;
+            if (!R.loader.checkError(results)) {
+              return;
+            }
+            c = JSON.parse(results.comment);
+            _this.addComment(comment, results.commentPk, results.author, c.date.$date);
+          };
+        })(this));
+      };
+
+      DrawingPanel.prototype.addComment = function(comment, commentPk, author, date) {
+        var buttonsJ, deleteBtnJ, deleteIconJ, divJ, editBtnJ, editIconJ, headerJ, textJ;
+        divJ = $('<div>').addClass('cd-column cd-grow comment');
+        divJ.attr('id', 'comment-' + commentPk);
+        headerJ = $('<div>');
+        headerJ.addClass('cd-row comment-header').addClass('cd-row cd-grow');
+        headerJ.append($('<span>').addClass('author').text(author));
+        headerJ.append($('<span>').addClass('date').text(' - ' + moment(date).format('l - LT')));
+        if (author === R.me) {
+          buttonsJ = $('<div>').addClass('cd-row cd-grow cd-end edit-buttons');
+          editBtnJ = $('<button>');
+          editBtnJ.addClass('btn btn-default icon-only transparent');
+          editIconJ = $('<span>').addClass('glyphicon glyphicon-pencil');
+          editBtnJ.click((function(_this) {
+            return function(event) {
+              _this.exitCommentEditMode(_this.currentCommentPk);
+              _this.editComment(commentPk);
+              event.preventDefault();
+              event.stopPropagation();
+              return -1;
+            };
+          })(this));
+          editBtnJ.append(editIconJ);
+          buttonsJ.append(editBtnJ);
+          deleteBtnJ = $('<button>');
+          deleteBtnJ.addClass('btn btn-default icon-only transparent');
+          deleteIconJ = $('<span>').addClass('glyphicon glyphicon-remove');
+          deleteBtnJ.click((function(_this) {
+            return function(event) {
+              _this.deleteComment(commentPk);
+              event.preventDefault();
+              event.stopPropagation();
+              return -1;
+            };
+          })(this));
+          deleteBtnJ.append(deleteIconJ);
+          buttonsJ.append(deleteBtnJ);
+          headerJ.append(buttonsJ);
+        }
+        divJ.append(headerJ);
+        textJ = $('<div>').addClass('cd-grow comment-text');
+        textJ.get(0).innerText = comment;
+        divJ.append(textJ);
+        this.contentJ.find('.comments-container .comments').append(divJ);
+      };
+
+      DrawingPanel.prototype.emptyComments = function() {
+        this.contentJ.find('.comments-container .comments').empty();
+      };
+
+      DrawingPanel.prototype.addComments = function(comments) {
+        var author, authorPk, c, comment, i, len;
+        for (i = 0, len = comments.length; i < len; i++) {
+          comment = comments[i];
+          c = JSON.parse(comment.comment);
+          author = comment.author;
+          authorPk = comment.authorPk;
+          this.addComment(c.text, c._id.$oid, author, c.date.$date);
+        }
+      };
+
+      DrawingPanel.prototype.deleteComment = function(commentPk) {
+        this.contentJ.find('.comments-container #comment-' + commentPk).remove();
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'deleteComment',
+              args: {
+                commentPk: commentPk
+              }
+            })
+          }
+        }).done(function(results) {
+          if (!R.loader.checkError(results)) {
+            return;
+          }
+        });
+      };
+
+      DrawingPanel.prototype.exitCommentEditMode = function(commentPk) {
+        var commentJ, textJ;
+        if (commentPk == null) {
+          return;
+        }
+        this.currentCommentPk = null;
+        commentJ = this.contentJ.find('.comments-container #comment-' + commentPk);
+        commentJ.find('.comment-buttons').remove();
+        commentJ.find('.edit-buttons').show();
+        textJ = commentJ.find('.comment-text');
+        textJ.removeAttr('contenteditable');
+      };
+
+      DrawingPanel.prototype.validateCommentEdit = function(commentPk) {
+        var comment, commentJ;
+        commentJ = this.contentJ.find('.comments-container #comment-' + commentPk);
+        comment = commentJ.find('.comment-text').get(0).innerText;
+        this.exitCommentEditMode(commentPk);
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'modifyComment',
+              args: {
+                commentPk: commentPk,
+                comment: comment
+              }
+            })
+          }
+        }).done(function(results) {
+          if (!R.loader.checkError(results)) {
+            return;
+          }
+        });
+      };
+
+      DrawingPanel.prototype.editComment = function(commentPk) {
+        var cancelBtnJ, commentJ, editButtonsJ, initialComment, okBtnJ, textJ;
+        this.currentCommentPk = commentPk;
+        commentJ = this.contentJ.find('.comments-container #comment-' + commentPk);
+        commentJ.find('.edit-buttons').hide();
+        textJ = commentJ.find('.comment-text');
+        initialComment = textJ.get(0).innerText;
+        textJ.attr('contenteditable', 'true');
+        editButtonsJ = $('<div>').addClass('comment-buttons cd-row cd-end');
+        okBtnJ = $('<button>').addClass('comment-button').attr('data-i18n', 'Modify comment').text(i18next.t('Modify comment'));
+        okBtnJ.addClass('btn btn-default');
+        okBtnJ.click((function(_this) {
+          return function(event) {
+            _this.validateCommentEdit(commentPk);
+          };
+        })(this));
+        cancelBtnJ = $('<button>').addClass('comment-button').attr('data-i18n', 'Cancel').text(i18next.t('Cancel'));
+        cancelBtnJ.addClass('btn btn-default');
+        cancelBtnJ.click((function(_this) {
+          return function(event) {
+            commentJ.find('.comment-text').get(0).innerText = initialComment;
+            _this.exitCommentEditMode(commentPk);
+          };
+        })(this));
+        editButtonsJ.append(cancelBtnJ);
+        editButtonsJ.append(okBtnJ);
+        commentJ.append(editButtonsJ);
+        textJ.focus().select().keydown((function(_this) {
+          return function(event) {
+            if (Utils.specialKeys[event.keyCode] === 'enter' && !(event.shiftKey || event.metaKey || event.ctrlKey)) {
+              _this.validateCommentEdit(commentPk);
+              event.preventDefault();
+              event.stopPropagation();
+              return -1;
+            }
+          };
+        })(this));
+        textJ.on('blur', (function(_this) {
+          return function(event) {
+            _this.exitCommentEditMode(commentPk);
+          };
+        })(this));
+      };
+
+      DrawingPanel.prototype.shareOnFacebook = function(event) {
+        var bounds;
+        bounds = this.currentDrawing.getBounds();
+        if (bounds != null) {
+          R.view.fitRectangle(bounds, true);
+          R.view.updateHash();
+        }
+        FB.ui({
+          method: 'feed',
+          caption: i18next.t('Vote for this drawing on Comme un Dessein', {
+            drawing: this.currentDrawing.title,
+            author: this.currentDrawing.owner
+          }),
+          link: location.origin + '/drawing-' + this.currentDrawing.pk
+        }, (function(response) {
+          console.log(response);
+        }));
+      };
+
+      DrawingPanel.prototype.shareOnTwitter = function(event) {
+        var twitterHashTags, twitterLink, twitterText, twitterURL;
+        twitterText = '' + this.currentDrawing.title + ' ' + i18next.t('by') + ' ' + this.currentDrawing.owner + ', ' + i18next.t('on') + ' Comme un Dessein';
+        twitterURL = location.origin + '/drawing-' + this.currentDrawing.pk;
+        twitterHashTags = 'CommeUnDessein,idlv,Maintenant2017';
+        twitterLink = 'http://twitter.com/share?text=' + twitterText + '&url=' + twitterURL + '&hashtags=' + twitterHashTags;
+        window.open(twitterLink, 'popup', 'width=600, height=400');
+      };
 
 
       /* mouse interaction */
@@ -358,6 +578,7 @@
         R.toolManager.leaveDrawingMode(true);
         this.currentDrawing = draft;
         this.drawingPanelTitleJ.attr('data-i18n', 'Create drawing').text(i18next.t('Create drawing'));
+        this.contentJ.find('.comments-container').hide();
         this.open();
         this.showContent();
         this.contentJ.find('#drawing-title').focus();
@@ -446,6 +667,11 @@
         this.open();
         this.showContent();
         this.contentJ.find('.share-buttons').show();
+        if ((R.me == null) || !_.isString(R.me) || R.me.length === 0) {
+          this.contentJ.find('.comments-container').hide();
+        } else {
+          this.contentJ.find('.comments-container').show();
+        }
         latestDrawing = JSON.parse(drawingData.drawing);
         this.currentDrawing.votes = drawingData.votes;
         this.currentDrawing.status = latestDrawing.status;
@@ -473,6 +699,26 @@
         }
         this.setVotes();
         this.setDrawingThumbnail();
+        this.emptyComments();
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'loadComments',
+              args: {
+                drawingPk: this.currentDrawing.pk
+              }
+            })
+          }
+        }).done((function(_this) {
+          return function(results) {
+            if (!R.loader.checkError(results)) {
+              return;
+            }
+            _this.addComments(results.comments);
+          };
+        })(this));
       };
 
       DrawingPanel.prototype.onDrawingChange = function(data) {
@@ -508,6 +754,9 @@
                 })
               }
             }).done(function(results) {
+              if (!R.loader.checkError(results)) {
+                return;
+              }
               results.items = [results.drawing];
               R.loader.loadSVGCallback(results);
             });

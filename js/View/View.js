@@ -101,7 +101,7 @@
             touchcancel: this.mouseup
           });
           $(window).resize(this.onWindowResize);
-          window.addEventListener("hashchange", this.onHashChange, false);
+          window.onhashchange = this.onHashChange;
           hammertime = new Hammer(R.canvas);
           hammertime.get('pinch').set({
             enable: true
@@ -323,19 +323,25 @@
         return P.view.bounds;
       };
 
-      View.prototype.moveTo = function(pos, delay, addCommand, preventLoad) {
+      View.prototype.moveTo = function(pos, delay, addCommand, preventLoad, updateHash) {
         var initialPosition, somethingToLoad, tween;
+        if (delay == null) {
+          delay = null;
+        }
         if (addCommand == null) {
           addCommand = true;
         }
         if (preventLoad == null) {
           preventLoad = false;
         }
+        if (updateHash == null) {
+          updateHash = true;
+        }
         if (pos == null) {
           pos = new P.Point();
         }
         if (delay == null) {
-          somethingToLoad = this.moveBy(pos.subtract(P.view.center), addCommand, preventLoad);
+          somethingToLoad = this.moveBy(pos.subtract(P.view.center), addCommand, preventLoad, updateHash);
         } else {
           initialPosition = P.view.center;
           tween = new TWEEN.Tween(initialPosition).to(pos, delay).easing(TWEEN.Easing.Exponential.InOut).onUpdate(function() {
@@ -345,13 +351,16 @@
         return somethingToLoad;
       };
 
-      View.prototype.moveBy = function(delta, addCommand, preventLoad) {
+      View.prototype.moveBy = function(delta, addCommand, preventLoad, updateHash) {
         var area, div, i, j, len, len1, newEntireArea, newView, previousCenter, ref, ref1, ref2, restrictedAreaShrinked, somethingToLoad;
         if (addCommand == null) {
           addCommand = true;
         }
         if (preventLoad == null) {
           preventLoad = false;
+        }
+        if (updateHash == null) {
+          updateHash = true;
         }
         if (this.restrictedArea != null) {
           if (!this.restrictedArea.contains(P.view.center)) {
@@ -403,18 +412,23 @@
         }
         somethingToLoad = false;
         R.socket.updateRoom();
-        Utils.deferredExecution(this.updateHash, 'updateHash', 500);
+        if (updateHash) {
+          Utils.deferredExecution(this.updateHash, 'updateHash', 500);
+        }
         R.controllerManager.folders['General'].controllers['location'].setValue('' + P.view.center.x.toFixed(2) + ',' + P.view.center.y.toFixed(2));
         return somethingToLoad;
       };
 
-      View.prototype.fitRectangle = function(rectangle, considerPanels, zoom) {
+      View.prototype.fitRectangle = function(rectangle, considerPanels, zoom, updateHash) {
         var drawingPanelWidth, offset, rectangleRatio, sidebarWidth, viewRatio, visibleViewCenterInView, windowCenterInView, windowSize;
         if (considerPanels == null) {
           considerPanels = false;
         }
         if (zoom == null) {
           zoom = null;
+        }
+        if (updateHash == null) {
+          updateHash = true;
         }
         windowSize = new P.Size(window.innerWidth, window.innerHeight);
         if (window.innerWidth < 600) {
@@ -438,9 +452,9 @@
           windowCenterInView = P.view.viewToProject(new P.Point(window.innerWidth / 2, window.innerHeight / 2));
           visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + windowSize.width / 2, window.innerHeight / 2));
           offset = visibleViewCenterInView.subtract(windowCenterInView);
-          this.moveTo(rectangle.center.subtract(offset));
+          this.moveTo(rectangle.center.subtract(offset), null, true, false, updateHash);
         } else {
-          this.moveTo(rectangle.center);
+          this.moveTo(rectangle.center, null, true, false, updateHash);
         }
         this.updateSVG();
       };
@@ -459,29 +473,19 @@
       };
 
       View.prototype.updateHash = function() {
-        var hashParameters, thisOnHashChange;
+        var hashParameters;
         hashParameters = {};
         if (R.repository.commit != null) {
           hashParameters['repository-owner'] = R.repository.owner;
           hashParameters['repository-commit'] = R.repository.commit;
-        }
-        if ((R.city.name != null) && R.city.name !== 'CommeUnDessein') {
-          hashParameters['mode'] = R.city.name;
         }
         hashParameters['location'] = Utils.pointToString(P.view.center);
         hashParameters['zoom'] = P.view.zoom.toFixed(3).replace(/\.?0+$/, '');
         if (R.tipibot != null) {
           hashParameters['tipibot'] = true;
         }
-        if (R.style != null) {
-          hashParameters['style'] = R.style;
-        }
-        window.removeEventListener("hashchange", this.onHashChange, false);
-        thisOnHashChange = this.onHashChange;
-        this.onHashChange = function() {};
+        this.ignoreHashChange = true;
         location.hash = Utils.URL.setParameters(hashParameters);
-        this.onHashChange = thisOnHashChange;
-        window.addEventListener("hashchange", this.onHashChange, false);
       };
 
       View.prototype.setPositionFromString = function(positionString) {
@@ -489,9 +493,13 @@
       };
 
       View.prototype.onHashChange = function(event, reloadIfNecessary) {
-        var mustReload, p, parameters, zoom;
+        var drawingPk, drawingPrefix, mustReload, p, parameters, zoom;
         if (reloadIfNecessary == null) {
           reloadIfNecessary = true;
+        }
+        if (this.ignoreHashChange) {
+          this.ignoreHashChange = false;
+          return;
         }
         parameters = Utils.URL.getParameters(document.location.hash);
         if ((R.repository.commit != null) && (R.repository.owner !== parameters['repository-owner'] || R.repository.commit !== parameters['repository-commit'])) {
@@ -508,14 +516,15 @@
           }
         }
         mustReload = false;
-        if (parameters['mode'] != null) {
-          mustReload = parameters['mode'] !== R.city.name;
-          R.city.name = parameters['mode'];
-        }
         R.tipibot = parameters['tipibot'];
         mustReload |= parameters['style'] !== R.style;
         R.style = parameters['style'];
-        this.moveTo(p, null, !this.firstHashChange, this.firstHashChange);
+        drawingPrefix = location.pathname.indexOf('/drawing-') === 0 ? '/drawing-' : location.pathname.indexOf('/debug-drawing-') === 0 ? '/debug-drawing-' : null;
+        if (drawingPrefix != null) {
+          drawingPk = location.pathname.substring(drawingPrefix.length);
+          R.loader.focusOnDrawing = drawingPk;
+        }
+        this.moveTo(p, null, !this.firstHashChange, this.firstHashChange, false);
         this.firstHashChange = true;
         if (reloadIfNecessary && mustReload) {
           window.location.reload();
@@ -524,11 +533,7 @@
 
       View.prototype.initializePosition = function() {
         var boxRectangle, br, controller, folder, folderName, i, len, planet, pos, ref, ref1, site, siteString, svg, tl;
-        R.city = {
-          owner: R.canvasJ.attr("data-owner") !== '' ? R.canvasJ.attr("data-owner") : void 0,
-          city: R.canvasJ.attr("data-city") !== '' ? R.canvasJ.attr("data-city") : void 0,
-          site: R.canvasJ.attr("data-site") !== '' ? R.canvasJ.attr("data-site") : void 0
-        };
+        R.city.city = R.canvasJ.attr("data-city") !== '' ? R.canvasJ.attr("data-city") : void 0;
         this.restrictedArea = this.grid.limitCD.bounds.expand(100);
         P.view.zoom = 0.5;
         P.view.scrollBy(1, 1);
@@ -559,6 +564,9 @@
           };
         })(this));
         if (R.loadedBox == null) {
+          if (typeof window !== "undefined" && window !== null) {
+            window.onhashchange(null, false);
+          }
           return;
         }
         planet = new P.Point(R.loadedBox.planetX, R.loadedBox.planetY);

@@ -90,8 +90,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 				$(window).resize(@onWindowResize)
 
-				# window.onhashchange = @onHashChange
-				window.addEventListener("hashchange", @onHashChange, false)
+				window.onhashchange = @onHashChange
 
 				hammertime = new Hammer(R.canvas)
 				hammertime.get('pinch').set({ enable: true })
@@ -289,10 +288,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		# Move the commeUnDessein view to *pos*
 		# @param pos [P.Point] destination
 		# @param delay [Number] time of the animation to go to destination in millisecond
-		moveTo: (pos, delay, addCommand=true, preventLoad=false) ->
+		moveTo: (pos, delay=null, addCommand=true, preventLoad=false, updateHash=true) ->
 			pos ?= new P.Point()
 			if not delay?
-				somethingToLoad = @moveBy(pos.subtract(P.view.center), addCommand, preventLoad)
+				somethingToLoad = @moveBy(pos.subtract(P.view.center), addCommand, preventLoad, updateHash)
 			else
 				# console.log pos
 				# console.log delay
@@ -316,7 +315,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		# - update hash in 0.5 seconds
 		# - set location in the general options
 		# @param delta [P.Point]
-		moveBy: (delta, addCommand=true, preventLoad=false) ->
+		moveBy: (delta, addCommand=true, preventLoad=false, updateHash=true) ->
 
 			# if user is in a restricted area (a website or videogame with restrictedArea), the move will be constrained in this area
 			if @restrictedArea?
@@ -385,8 +384,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# 	somethingToLoad = if newEntireArea? then R.loader.load(@entireArea) else R.loader.load()
 
 			R.socket.updateRoom() 											# update websocket room
-
-			Utils.deferredExecution(@updateHash, 'updateHash', 500) 					# update hash in 500 milliseconds
+			
+			if updateHash
+				Utils.deferredExecution(@updateHash, 'updateHash', 500) 					# update hash in 500 milliseconds
 
 			# if addCommand
 			# 	Utils.deferredExecution(@addMoveCommand, 'add move command')
@@ -405,7 +405,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			return somethingToLoad
 
 
-		fitRectangle: (rectangle, considerPanels=false, zoom=null)->
+		fitRectangle: (rectangle, considerPanels=false, zoom=null, updateHash=true)->
 			windowSize = new P.Size(window.innerWidth, window.innerHeight)
 			
 			# WARNING: on small screen, the drawing panel takes the whole width, that would make window.width negative
@@ -433,9 +433,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				windowCenterInView = P.view.viewToProject(new P.Point(window.innerWidth / 2, window.innerHeight / 2))
 				visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + windowSize.width / 2, window.innerHeight / 2))
 				offset = visibleViewCenterInView.subtract(windowCenterInView)
-				@moveTo(rectangle.center.subtract(offset))
+				@moveTo(rectangle.center.subtract(offset), null, true, false, updateHash)
 			else
-				@moveTo(rectangle.center)
+				@moveTo(rectangle.center, null, true, false, updateHash)
 
 			# R.raph.setViewBox(P.view.bounds.left, P.view.bounds.top, P.view.bounds.width, P.view.bounds.height, false)
 
@@ -463,21 +463,18 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				hashParameters['repository-owner'] = R.repository.owner
 				hashParameters['repository-commit'] = R.repository.commit
 			# if R.city.owner? and R.city.name? and R.city.owner != 'CommeUnDesseinOrg' and R.city.name != 'CommeUnDessein'
-			if R.city.name? and R.city.name != 'CommeUnDessein'
-				hashParameters['mode'] = R.city.name
+			# if R.city.name? and R.city.name != 'CommeUnDessein'
+				# hashParameters['mode'] = R.city.name
 			hashParameters['location'] = Utils.pointToString(P.view.center)
 			hashParameters['zoom'] = P.view.zoom.toFixed(3).replace(/\.?0+$/, '')
 			if R.tipibot?
 				hashParameters['tipibot'] = true
-			if R.style?
-				hashParameters['style'] = R.style
+			# if R.style?
+				# hashParameters['style'] = R.style
 
-			window.removeEventListener("hashchange", @onHashChange, false)
-			thisOnHashChange = @onHashChange
-			@onHashChange = ()-> return
+			@ignoreHashChange = true
 			location.hash = Utils.URL.setParameters(hashParameters)
-			@onHashChange = thisOnHashChange
-			window.addEventListener("hashchange", @onHashChange, false)
+
 			return
 
 		setPositionFromString: (positionString)->
@@ -487,6 +484,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		# Update hash (the string after '#' in the url bar) according to the location of the (center of the) view
 		# set *@ignoreHashChange* flag to ignore this change in *window.onhashchange* callback
 		onHashChange: (event, reloadIfNecessary=true)=>
+			if @ignoreHashChange
+				@ignoreHashChange = false
+				return
 
 			parameters = Utils.URL.getParameters(document.location.hash)
 
@@ -504,9 +504,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			mustReload = false
 			
-			if parameters['mode']?
-				mustReload = parameters['mode'] != R.city.name
-				R.city.name = parameters['mode']
+			# if parameters['mode']?
+			# 	mustReload = parameters['mode'] != R.city.name
+			# 	R.city.name = parameters['mode']
 
 			R.tipibot = parameters['tipibot']
 
@@ -516,8 +516,14 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# if R.city.name != parameters['city-name'] or R.city.owner != parameters['city-owner']
 			# 	R.cityManager.loadCity(parameters['city-name'], parameters['city-owner'], p)
 			# 	return
+			
+			drawingPrefix = if location.pathname.indexOf('/drawing-') == 0 then '/drawing-' else if location.pathname.indexOf('/debug-drawing-') == 0 then '/debug-drawing-' else null
+			if drawingPrefix?
+				drawingPk = location.pathname.substring(drawingPrefix.length)
+				R.loader.focusOnDrawing = drawingPk
+			
+			@moveTo(p, null, !@firstHashChange, @firstHashChange, false)
 
-			@moveTo(p, null, !@firstHashChange, @firstHashChange)
 			@firstHashChange = true
 
 			if reloadIfNecessary and mustReload
@@ -531,11 +537,12 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		initializePosition: ()->
 
 			# R.githubLogin = R.canvasJ.attr("data-github-login")
-
-			R.city =
-				owner: if R.canvasJ.attr("data-owner") != '' then R.canvasJ.attr("data-owner") else undefined
-				city: if R.canvasJ.attr("data-city") != '' then R.canvasJ.attr("data-city") else undefined
-				site: if R.canvasJ.attr("data-site") != '' then R.canvasJ.attr("data-site") else undefined
+			R.city.city = if R.canvasJ.attr("data-city") != '' then R.canvasJ.attr("data-city") else undefined
+			
+			# R.city =
+			# 	owner: if R.canvasJ.attr("data-owner") != '' then R.canvasJ.attr("data-owner") else undefined
+			# 	city: if R.canvasJ.attr("data-city") != '' then R.canvasJ.attr("data-city") else undefined
+			# 	site: if R.canvasJ.attr("data-site") != '' then R.canvasJ.attr("data-site") else undefined
 
 
 			@restrictedArea = @grid.limitCD.bounds.expand(100)
@@ -572,7 +579,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			#
 			# if not boxString or boxString.length==0
 			if not R.loadedBox?
-				# window?.onhashchange(null, false)
+				window?.onhashchange(null, false)
 				return
 
 			# initialize the area rectangle *boxRectangle* from 'data-box' attr and move to the center of the box

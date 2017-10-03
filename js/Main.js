@@ -2,7 +2,15 @@
 (function() {
   define(['R', 'Utils/Utils', 'Loader', 'Socket', 'City', 'Rasterizers/RasterizerManager', 'UI/Sidebar', 'UI/Toolbar', 'UI/DrawingPanel', 'UI/Modal', 'UI/Button', 'UI/AlertManager', 'UI/Controllers/ControllerManager', 'Commands/CommandManager', 'View/View', 'Tools/ToolManager', 'RasterizerBot', 'i18next', 'i18nextXHRBackend', 'i18nextBrowserLanguageDetector', 'jqueryI18next', 'moment'], function(R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) {
     $(document).ready(function() {
-      var isPM, meridiem, ordinal, updateContent, userAuthenticated, username;
+      var canvasJ, isPM, meridiem, mode, ordinal, updateContent, userAuthenticated, username;
+      canvasJ = $('#canvas');
+      mode = canvasJ.attr('data-drawing-mode');
+      R.city = {
+        owner: null,
+        name: mode,
+        site: null
+      };
+      R.drawingMode = mode === 'pixel' || mode === 'ortho' || mode === 'orthoDiag' || mode === 'image' || mode === 'line' || mode === 'lineOrthoDiag' || mode === 'dot' || mode === 'cross' ? mode : null;
       updateContent = function() {
         $("body").localize();
         console.log('i18n tests:');
@@ -109,9 +117,9 @@
         }
       });
       moment.locale('fr');
-      username = $('#canvas').attr("data-username");
+      username = canvasJ.attr("data-username");
       R.me = username.length > 0 ? username : null;
-      userAuthenticated = $('#canvas').attr("data-is-authenticated");
+      userAuthenticated = canvasJ.attr("data-is-authenticated");
       R.userAuthenticated = userAuthenticated === 'True';
       if (R.style != null) {
         $('body').addClass(R.style);

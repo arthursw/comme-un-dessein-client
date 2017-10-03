@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command', 'i18next', 'moment', 'facebook' ], (P, R, Utils, Item, Modal, Command, i18next, moment, fb) -> 			# 'ace/ext-language_tools', required?
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command', 'i18next', 'moment', 'facebook'], (P, R, Utils, Item, Modal, Command, i18next, moment, fb) -> 			# 'ace/ext-language_tools', required?
 
 	class DrawingPanel
 
@@ -15,24 +15,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				console.log(response)
 			)
 
-			@contentJ.find('.share-facebook').click ()=>
-				bounds = @currentDrawing.getBounds()
-				if bounds?
-					R.view.fitRectangle(bounds, true)
-					R.view.updateHash()
+			@contentJ.find('.share-facebook').click @shareOnFacebook
 
-				# imageURL = R.view.getThumbnail(@currentDrawing, 1024, true)
-				FB.ui({
-					method: 'feed',
-					caption: i18next.t('Vote for this drawing on Comme un Dessein', { drawing: @currentDrawing.title, author: @currentDrawing.owner }),
-					link: location.origin + '/drawing-' + @currentDrawing.pk,
-					# link: window.location.href,
-				}, ((response)-> 
-					console.log(response)
-					return
-				))
-
-				return
+			@contentJ.find('button.share-twitter').click @shareOnTwitter
 
 			# the button to start drawing
 			@beginDrawingBtnJ = $('button.begin-drawing')
@@ -115,6 +100,181 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			titleJ.keydown(onSubmitDown).keyup(onSubmitUp)
 
+			@contentJ.find('.comments-container .comment-area').keydown (event)=>
+				if Utils.specialKeys[event.keyCode] == 'enter' and not (event.shiftKey or event.metaKey or event.ctrlKey)
+					@submitComment()
+					event.preventDefault()
+					event.stopPropagation()
+					return -1
+				return
+			@contentJ.find('.comments-container .submit-comment').click @submitComment
+			return
+
+		submitComment: ()=>
+			commentAreaJ = @contentJ.find('.comments-container .comment-area')
+			comment = commentAreaJ.get(0).innerText
+			if comment.length == 0
+				return
+			commentAreaJ.get(0).innerText = ''
+
+			args = {
+				drawingPk: @currentDrawing.pk
+				comment: comment
+				date: Date.now()
+			}
+
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'addComment', args: args } ).done((results)=>
+				if not R.loader.checkError(results) then return
+				c = JSON.parse(results.comment)
+				@addComment(comment, results.commentPk, results.author, c.date.$date)
+				return)
+			return
+
+		addComment: (comment, commentPk, author, date)->
+			divJ = $('<div>').addClass('cd-column cd-grow comment')
+			divJ.attr('id', 'comment-'+commentPk)
+			headerJ = $('<div>')
+			headerJ.addClass('cd-row comment-header').addClass('cd-row cd-grow')
+			headerJ.append($('<span>').addClass('author').text(author))
+			headerJ.append($('<span>').addClass('date').text(' - ' + moment(date).format('l - LT')))
+			if author == R.me
+				buttonsJ = $('<div>').addClass('cd-row cd-grow cd-end edit-buttons')
+
+				editBtnJ = $('<button>')
+				editBtnJ.addClass('btn btn-default icon-only transparent')
+				editIconJ = $('<span>').addClass('glyphicon glyphicon-pencil')
+
+				editBtnJ.click (event)=>
+					@exitCommentEditMode(@currentCommentPk)
+					@editComment(commentPk)
+					event.preventDefault()
+					event.stopPropagation()
+					return -1
+				editBtnJ.append(editIconJ)
+				buttonsJ.append(editBtnJ)
+
+				deleteBtnJ = $('<button>')
+				deleteBtnJ.addClass('btn btn-default icon-only transparent')
+				deleteIconJ = $('<span>').addClass('glyphicon glyphicon-remove')
+
+				deleteBtnJ.click (event)=>
+					@deleteComment(commentPk)
+					event.preventDefault()
+					event.stopPropagation()
+					return -1
+				deleteBtnJ.append(deleteIconJ)
+				buttonsJ.append(deleteBtnJ)
+				headerJ.append(buttonsJ)
+
+			divJ.append(headerJ)
+			textJ = $('<div>').addClass('cd-grow comment-text')
+			textJ.get(0).innerText = comment
+			divJ.append(textJ)
+			@contentJ.find('.comments-container .comments').append(divJ)
+			return
+
+		emptyComments: ()->
+			@contentJ.find('.comments-container .comments').empty()
+			return
+
+		addComments: (comments)->
+			for comment in comments
+				c = JSON.parse(comment.comment)
+				author = comment.author
+				authorPk = comment.authorPk
+				@addComment(c.text, c._id.$oid, author, c.date.$date)
+			return
+
+		deleteComment: (commentPk)->
+			@contentJ.find('.comments-container #comment-'+commentPk).remove()
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteComment', args: {commentPk: commentPk} } ).done((results)->
+				if not R.loader.checkError(results) then return
+				return)
+			return
+
+		exitCommentEditMode: (commentPk)->
+			if not commentPk? then return
+			@currentCommentPk = null
+			commentJ = @contentJ.find('.comments-container #comment-'+commentPk)
+			commentJ.find('.comment-buttons').remove()
+			commentJ.find('.edit-buttons').show()
+			textJ = commentJ.find('.comment-text')
+			textJ.removeAttr('contenteditable')
+			return
+
+		validateCommentEdit: (commentPk)->
+			commentJ = @contentJ.find('.comments-container #comment-'+commentPk)
+			comment = commentJ.find('.comment-text').get(0).innerText
+			@exitCommentEditMode(commentPk)
+			
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'modifyComment', args: {commentPk: commentPk, comment: comment} } ).done((results)->
+				if not R.loader.checkError(results) then return
+				return)
+			return
+
+		editComment: (commentPk)->
+			@currentCommentPk = commentPk
+			commentJ = @contentJ.find('.comments-container #comment-'+commentPk)
+			commentJ.find('.edit-buttons').hide()
+			textJ = commentJ.find('.comment-text')
+			initialComment = textJ.get(0).innerText
+			textJ.attr('contenteditable', 'true')
+
+			editButtonsJ = $('<div>').addClass('comment-buttons cd-row cd-end')
+
+			okBtnJ = $('<button>').addClass('comment-button').attr('data-i18n', 'Modify comment').text(i18next.t('Modify comment'))
+			okBtnJ.addClass('btn btn-default')
+			okBtnJ.click (event)=> 
+				@validateCommentEdit(commentPk)
+				return
+
+			cancelBtnJ = $('<button>').addClass('comment-button').attr('data-i18n', 'Cancel').text(i18next.t('Cancel'))
+			cancelBtnJ.addClass('btn btn-default')
+			cancelBtnJ.click (event)=> 
+				commentJ.find('.comment-text').get(0).innerText = initialComment
+				@exitCommentEditMode(commentPk)
+				return
+
+			editButtonsJ.append(cancelBtnJ)
+			editButtonsJ.append(okBtnJ)
+			commentJ.append(editButtonsJ)
+
+			textJ.focus().select().keydown (event)=>
+				if Utils.specialKeys[event.keyCode] == 'enter' and not (event.shiftKey or event.metaKey or event.ctrlKey)
+					@validateCommentEdit(commentPk)
+					event.preventDefault()
+					event.stopPropagation()
+					return -1
+				return
+
+			textJ.on('blur', (event)=>
+				@exitCommentEditMode(commentPk)
+				return)
+			return
+
+		shareOnFacebook: (event)=>
+			bounds = @currentDrawing.getBounds()
+			if bounds?
+				R.view.fitRectangle(bounds, true)
+				R.view.updateHash()
+
+			FB.ui({
+				method: 'feed',
+				caption: i18next.t('Vote for this drawing on Comme un Dessein', { drawing: @currentDrawing.title, author: @currentDrawing.owner }),
+				link: location.origin + '/drawing-' + @currentDrawing.pk,
+			}, ((response)-> 
+				console.log(response)
+				return
+			))
+
+			return
+
+		shareOnTwitter: (event)=>
+			twitterText = '' + @currentDrawing.title + ' ' + i18next.t('by') + ' ' + @currentDrawing.owner + ', ' + i18next.t('on') + ' Comme un Dessein'
+			twitterURL = location.origin + '/drawing-' + @currentDrawing.pk
+			twitterHashTags = 'CommeUnDessein,idlv,Maintenant2017'
+			twitterLink = 'http://twitter.com/share?text=' + twitterText + '&url=' + twitterURL + '&hashtags=' + twitterHashTags
+			window.open(twitterLink, 'popup', 'width=600, height=400')
 			return
 
 		### mouse interaction ###
@@ -423,6 +583,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			# @submitDrawingBtnJ.hide()
 			@drawingPanelTitleJ.attr('data-i18n', 'Create drawing').text(i18next.t('Create drawing'))
 			# @showBeginDrawing()
+			@contentJ.find('.comments-container').hide()
 			@open()
 			@showContent()
 
@@ -515,9 +676,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 		setDrawing: (@currentDrawing, drawingData)->
 			@drawingPanelTitleJ.attr('data-i18n', 'Drawing info').text(i18next.t('Drawing info'))
+
 			@open()
 			@showContent()
 			@contentJ.find('.share-buttons').show()
+
+			if not R.me? or not _.isString(R.me) or R.me.length == 0
+				@contentJ.find('.comments-container').hide()
+			else
+				@contentJ.find('.comments-container').show()
 
 			latestDrawing = JSON.parse(drawingData.drawing)
 
@@ -563,6 +730,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			# R.loader.createNewItems(pathsToLoad)
 
 			@setDrawingThumbnail()
+
+			@emptyComments()
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadComments', args: { drawingPk: @currentDrawing.pk } } ).done((results)=>
+				if not R.loader.checkError(results) then return
+				@addComments(results.comments)
+				return)
 			return
 
 		onDrawingChange: (data)->
@@ -584,6 +757,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					if R.items[data.pk]? or R.items[data.drawingId]? then return
 
 					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: { pk: data.pk, loadSVG: true } } ).done((results)->
+						if not R.loader.checkError(results) then return
 						results.items = [results.drawing]
 						R.loader.loadSVGCallback(results)
 						return)
