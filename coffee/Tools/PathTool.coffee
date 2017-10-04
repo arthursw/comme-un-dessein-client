@@ -395,6 +395,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 				path.controlPath.removeSegments()
 				path.controlPath.addSegments(@circlePath.segments)
 				path.controlPath.addSegment(@circlePath.firstSegment)
+				path.rectangle = path.controlPath.bounds.expand(3*path.data.strokeWidth)
 				path.draw()
 				
 				# step = 10

@@ -353,6 +353,7 @@
           path.controlPath.removeSegments();
           path.controlPath.addSegments(this.circlePath.segments);
           path.controlPath.addSegment(this.circlePath.firstSegment);
+          path.rectangle = path.controlPath.bounds.expand(3 * path.data.strokeWidth);
           path.draw();
           R.currentPaths[from] = path;
           this.circlePath.remove();

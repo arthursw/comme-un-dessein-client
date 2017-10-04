@@ -26,7 +26,9 @@
 
       PrecisePath.polygonMode = true;
 
-      PrecisePath.orthoGridSize = 5;
+      PrecisePath.orthoGridSize = 10;
+
+      PrecisePath.lineOrthoGridSize = 1;
 
       PrecisePath.pixelGridSize = 10;
 
@@ -352,7 +354,7 @@
         if (!this.data.polygonMode) {
           this.addControlPath();
           if (ref = R.drawingMode, indexOf.call(this.constructor.snappedModes, ref) >= 0) {
-            this.controlPath.add(Utils.Snap.snap2D(point, this.constructor.orthoGridSize));
+            this.controlPath.add(Utils.Snap.snap2D(point, R.drawingMode === 'lineOrthoDiag' ? this.constructor.lineOrthoGridSize : this.constructor.orthoGridSize));
           } else {
             this.controlPath.add(point);
           }
@@ -435,7 +437,7 @@
             } else if (R.drawingMode === 'lineOrthoDiag') {
               delta = point.subtract(this.controlPath.firstSegment.point);
               delta.angle = Utils.Snap.snap1D(delta.angle, 45);
-              this.controlPath.lastSegment.point = Utils.Snap.snap2D(this.controlPath.firstSegment.point.add(delta), this.constructor.orthoGridSize);
+              this.controlPath.lastSegment.point = Utils.Snap.snap2D(this.controlPath.firstSegment.point.add(delta), this.constructor.lineOrthoGridSize);
             } else {
               this.controlPath.add(point);
             }

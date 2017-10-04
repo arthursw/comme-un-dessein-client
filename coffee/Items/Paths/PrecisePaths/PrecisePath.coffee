@@ -64,7 +64,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 		@secureStep = 25
 		@polygonMode = true
-		@orthoGridSize = 5
+		@orthoGridSize = 10
+		@lineOrthoGridSize = 1
 		@pixelGridSize = 10
 
 		@drawingModes = ['orthoDiag', 'ortho', 'lineOrthoDiag', 'pixel', 'cross', 'dot', 'line']
@@ -367,7 +368,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			if not @data.polygonMode 				# in normal mode: just initialize the control path and begin drawing
 				@addControlPath()
 				if R.drawingMode in @constructor.snappedModes
-					@controlPath.add(Utils.Snap.snap2D(point, @constructor.orthoGridSize))
+					@controlPath.add(Utils.Snap.snap2D(point, if R.drawingMode == 'lineOrthoDiag' then @constructor.lineOrthoGridSize else @constructor.orthoGridSize))
 				else 
 					@controlPath.add(point)
 				if R.drawingMode in @constructor.lineModes
@@ -457,7 +458,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 						delta = point.subtract(@controlPath.firstSegment.point)
 						delta.angle = Utils.Snap.snap1D(delta.angle, 45)
-						@controlPath.lastSegment.point = Utils.Snap.snap2D(@controlPath.firstSegment.point.add(delta), @constructor.orthoGridSize)
+						@controlPath.lastSegment.point = Utils.Snap.snap2D(@controlPath.firstSegment.point.add(delta), @constructor.lineOrthoGridSize)
 					else
 						@controlPath.add(point)
 
