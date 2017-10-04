@@ -834,6 +834,27 @@
         }
       }).done(R.loader.checkError);
     };
+    R.getEmail = function(username) {
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'getEmail',
+            args: {
+              username: username
+            }
+          })
+        }
+      }).done((function(_this) {
+        return function(result) {
+          if (!R.loader.checkError(result)) {
+            return;
+          }
+          console.log(result.email);
+        };
+      })(this));
+    };
     R.updateDrawingSVGs = function() {
       var args, drawing, id, item, j, len, ref, ref1;
       R.Drawing.addPaths();

@@ -160,7 +160,7 @@
         headerJ.addClass('cd-row comment-header').addClass('cd-row cd-grow');
         headerJ.append($('<span>').addClass('author').text(author));
         headerJ.append($('<span>').addClass('date').text(' - ' + moment(date).format('l - LT')));
-        if (author === R.me) {
+        if (author === R.me || R.administrator) {
           buttonsJ = $('<div>').addClass('cd-row cd-grow cd-end edit-buttons');
           editBtnJ = $('<button>');
           editBtnJ.addClass('btn btn-default icon-only transparent');
