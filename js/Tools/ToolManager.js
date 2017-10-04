@@ -2,9 +2,9 @@
 (function() {
   var dependencies;
 
-  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool', 'UI/Modal'];
+  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool', 'UI/Modal', 'i18next'];
 
-  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Modal) {
+  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Modal, i18next) {
     var ToolManager;
     ToolManager = (function() {
       function ToolManager() {
@@ -164,16 +164,34 @@
           divType: 'div'
         });
         this.infoBtn.btnJ.click(function() {
-          var modal, welcomeTextJ;
+          var PrivacyPolicyJ, layersJ, layersParentJ, modal, termsOfServiceJ, welcomeTextJ;
           welcomeTextJ = $('#welcome-text');
+          layersJ = $('#RItems');
+          layersParentJ = layersJ.parent();
           modal = Modal.createModal({
-            title: 'Welcome to Comme Un Dessein'
+            id: 'info',
+            title: 'Welcome to Comme Un Dessein',
+            submit: (function() {})
           });
           modal.addCustomContent({
             divJ: welcomeTextJ.clone(),
             name: 'welcome-text'
           });
+          modal.addCustomContent({
+            divJ: layersJ
+          });
           modal.modalJ.find('[name="cancel"]').hide();
+          modal.modalJ.on('hide.bs.modal', function(event) {
+            layersParentJ.append($('#RItems'));
+          });
+          termsOfServiceJ = $('<div><a id="terms-of-service-link" href="/terms-of-service.html" data-i18n="Terms of Service">' + i18next.t('Terms of Service') + '</a></div>');
+          PrivacyPolicyJ = $('<div><a id="privacy-policy-link" href="/privacy-policy.html" data-i18n="Privacy Policy">' + i18next.t('Privacy Policy') + '</a></div>');
+          modal.addCustomContent({
+            divJ: termsOfServiceJ
+          });
+          modal.addCustomContent({
+            divJ: PrivacyPolicyJ
+          });
           modal.show();
         });
       };

@@ -9,6 +9,7 @@ dependencies = [
 	'Tools/EraserTool'
 	'Tools/ItemTool'
 	'UI/Modal'
+	'i18next'
 	# 'Tools/TextTool'
 	# 'Tools/GradientTool'
 ]
@@ -17,7 +18,7 @@ dependencies = [
 	# dependencies.push('Tools/ScreenshotTool')
 	# dependencies.push('Tools/CarTool')
 
-define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Modal) -> # , TextTool, GradientTool, CarTool) ->
+define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Modal, i18next) -> # , TextTool, GradientTool, CarTool) ->
 
 	class ToolManager
 
@@ -354,9 +355,12 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 
 			@infoBtn.btnJ.click ()-> 
 				welcomeTextJ = $('#welcome-text')
+				layersJ = $('#RItems')
+				layersParentJ = layersJ.parent()
 				modal = Modal.createModal( 
+					id: 'info',
 					title: 'Welcome to Comme Un Dessein', 
-					# submit: ( ()-> return), 
+					submit: ( ()-> return ), 
 					# postSubmit: 'load', 
 					# submitButtonText: 'Sign up', 
 					# submitButtonIcon: 'glyphicon-user', 
@@ -370,12 +374,24 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				# modal.addText('', 'welcome message 2', false)
 				# modal.addText('', 'welcome message 3', false)
 				modal.addCustomContent(divJ: welcomeTextJ.clone(), name: 'welcome-text')
+				
+				modal.addCustomContent(divJ: layersJ)
 				modal.modalJ.find('[name="cancel"]').hide()
 				# modal.addButton( type: 'info', name: 'Sign in', submit: (()-> return location.pathname = '/accounts/login/'), icon: 'glyphicon-log-in' )
 				# modal.addButton( type: 'info', name: 'Sign in', icon: 'glyphicon-log-in' )
 
 				# modal.modalJ.find('[name="Sign in"]').attr('data-toggle', 'dropdown').after($('#user-profile').find('.dropdown-menu').clone())
 				# modal.modalJ.find('.dropdown-menu').find('li.sign-up').hide()
+
+				modal.modalJ.on 'hide.bs.modal', (event)->
+					layersParentJ.append($('#RItems'))
+					return
+
+				termsOfServiceJ = $('<div><a id="terms-of-service-link" href="/terms-of-service.html" data-i18n="Terms of Service">'+i18next.t('Terms of Service')+'</a></div>')
+				PrivacyPolicyJ = $('<div><a id="privacy-policy-link" href="/privacy-policy.html" data-i18n="Privacy Policy">'+i18next.t('Privacy Policy')+'</a></div>')
+                
+				modal.addCustomContent(divJ: termsOfServiceJ)
+				modal.addCustomContent(divJ: PrivacyPolicyJ)
 
 				modal.show()
 				return

@@ -2,7 +2,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 
 	class AlertManager
 
-		@hideDelay = 5000
+		@hideDelay = 10000
 
 		constructor: ()->
 			@alertsContainer = $("#CommeUnDessein_alerts")
@@ -96,7 +96,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 
 			blink = ()=>
 				@nBlinks++
-				if @nBlinks > 2
+				if @nBlinks > 3
 					clearInterval(@blinkIntervalID)
 					@blinkIntervalID = null
 

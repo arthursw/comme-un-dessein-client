@@ -126,11 +126,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'addComment', args: args } ).done((results)=>
 				if not R.loader.checkError(results) then return
 				c = JSON.parse(results.comment)
-				@addComment(comment, results.commentPk, results.author, c.date.$date)
+				lastId = @addComment(comment, results.commentPk, results.author, c.date.$date)
+				R.socket.emit "drawing change", { type: 'addComment', comment: comment, commentPk: results.commentPk, author: results.author, date: c.date.$date, drawingPk: c.drawing.$oid, insertAfter: lastId }
 				return)
 			return
 
-		addComment: (comment, commentPk, author, date)->
+		addComment: (comment, commentPk, author, date, insertAfter=null)->
 			divJ = $('<div>').addClass('cd-column cd-grow comment')
 			divJ.attr('id', 'comment-'+commentPk)
 			headerJ = $('<div>')
@@ -170,8 +171,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			textJ = $('<div>').addClass('cd-grow comment-text')
 			textJ.get(0).innerText = comment
 			divJ.append(textJ)
-			@contentJ.find('.comments-container .comments').append(divJ)
-			return
+			lastId = @contentJ.find('.comments-container .comments .comment:last-child').attr('id')
+			if insertAfter?
+				divJ.insertAfter(@contentJ.find('#'+insertAfter))
+			else
+				@contentJ.find('.comments-container .comments').append(divJ)
+			return lastId
 
 		emptyComments: ()->
 			@contentJ.find('.comments-container .comments').empty()
@@ -189,6 +194,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@contentJ.find('.comments-container #comment-'+commentPk).remove()
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteComment', args: {commentPk: commentPk} } ).done((results)->
 				if not R.loader.checkError(results) then return
+				R.socket.emit "drawing change", { type: 'deleteComment', commentPk: results.commentPk, drawingPk: results.drawingPk }
 				return)
 			return
 
@@ -209,6 +215,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'modifyComment', args: {commentPk: commentPk, comment: comment} } ).done((results)->
 				if not R.loader.checkError(results) then return
+				R.socket.emit "drawing change", { type: 'modifyComment', comment: comment, commentPk: results.commentPk, drawingPk: results.drawingPk }
 				return)
 			return
 
@@ -782,6 +789,21 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					drawing = R.items[data.drawingId]
 					if drawing?
 						drawing.remove()
+				when 'addComment'
+					drawing = R.pkToDrawing[data.drawingPk]
+					if drawing?
+						if @currentDrawing == drawing
+							@addComment(data.comment, data.commentPk, data.author, data.date, data.insertAfter)
+				when 'modifyComment'
+					drawing = R.pkToDrawing[data.drawingPk]
+					if drawing?
+						if @currentDrawing == drawing
+							@contentJ.find('#comment-'+data.commentPk).find('.comment-text').get(0).innerText = data.comment
+				when 'deleteComment'
+					drawing = R.pkToDrawing[data.drawingPk]
+					if drawing?
+						if @currentDrawing == drawing
+							@contentJ.find('#comment-'+data.commentPk).remove()
 			return
 
 		### votes ###
@@ -811,6 +833,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			else if result.rejects
 				suffix = ', the drawing will be rejected'
+
+			if result.emailConfirmed? and not result.emailConfirmed
+				suffix = ' but email not confirmed'
 
 			R.alertManager.alert 'You successfully voted' + suffix, 'success', null, { duration: delay }
 

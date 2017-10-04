@@ -27,11 +27,12 @@ define [
 	$(document).ready () ->
 		canvasJ = $('#canvas')
 		mode = canvasJ.attr('data-drawing-mode')
-		R.city =
-				owner: null
-				name: mode
-				site: null
-		R.drawingMode = if mode in ['pixel', 'ortho', 'orthoDiag', 'image', 'line', 'lineOrthoDiag', 'dot', 'cross'] then mode else null
+		if mode != 'None'
+			R.city =
+					owner: null
+					name: mode
+					site: null
+			R.drawingMode = if mode in ['pixel', 'ortho', 'orthoDiag', 'image', 'line', 'lineOrthoDiag', 'dot', 'cross'] then mode else null
 
 		# just set some content and react to language changes
 		updateContent = ()->

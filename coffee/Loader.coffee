@@ -200,6 +200,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			return
 
 		loadSVGCallback: (results)=>
+			if not @checkError(results) then return
 			if results.user?
 				@setMe(results.user)
 			for itemString in results.items
@@ -217,6 +218,16 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 							R.view.fitRectangle(bounds, true)
 						break
 				@focusOnDrawing = null
+
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadVotes', args: { city: R.city } } ).done(@loadVotesCallback)
+			return
+
+		loadVotesCallback: (results)=>
+			if not @checkError(results) then return
+			
+			for vote in results.votes
+				R.items[vote.pk]?.setStrokeColorFromVote(vote.positive)
+
 			return
 
 		# load an area from the server

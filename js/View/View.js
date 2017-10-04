@@ -532,7 +532,10 @@
       };
 
       View.prototype.initializePosition = function() {
-        var boxRectangle, br, controller, folder, folderName, i, len, planet, pos, ref, ref1, site, siteString, svg, tl;
+        var boxRectangle, br, controller, defsJ, folder, folderName, i, len, patternRejectsJ, patternValidateJ, planet, pos, ref, ref1, site, siteString, svg, tl;
+        if (R.city == null) {
+          R.city = {};
+        }
         R.city.city = R.canvasJ.attr("data-city") !== '' ? R.canvasJ.attr("data-city") : void 0;
         this.restrictedArea = this.grid.limitCD.bounds.expand(100);
         P.view.zoom = 0.5;
@@ -540,6 +543,14 @@
         svg = P.project.exportSVG();
         R.svgJ = $(svg);
         R.svgJ.insertAfter(R.canvasJ);
+        defsJ = $('<defs>');
+        patternValidateJ = $("<pattern id='pattern-validate' width='8' height='8' patternUnits='userSpaceOnUse'>");
+        patternValidateJ.append("<path d='M-2 10L10 -2ZM10 6L6 10ZM-2 2L2 -2' stroke='green' stroke-width='4.5'/>");
+        patternRejectsJ = $("<pattern id='pattern-reject' width='8' height='8' patternUnits='userSpaceOnUse'>");
+        patternRejectsJ.append("<path d='M-2 10L10 -2ZM10 6L6 10ZM-2 2L2 -2' stroke='red' stroke-width='4.5'/>");
+        defsJ.append(patternValidateJ);
+        defsJ.append(patternRejectsJ);
+        R.svgJ.prepend(defsJ);
         R.svgJ.click((function(_this) {
           return function(event) {
             var drawing, drawingsToSelect, i, j, len, len1, point, rectangle, ref, ref1;

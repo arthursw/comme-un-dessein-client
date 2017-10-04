@@ -55,6 +55,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			R.drawings ?= []
 			R.drawings.push(@)
 
+			R.pkToDrawing ?= {}
+			R.pkToDrawing[@pk] = @
+
 			@paths = []
 			# @drawing = new P.Group()
 
@@ -114,6 +117,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			return
 		
+		setPK: (pk)->
+			super(pk)
+			R.pkToDrawing ?= {}
+			R.pkToDrawing[@pk] = @
+			return
+
 		getPointLists: ()->
 			pointLists = []
 			for path in @paths
@@ -154,6 +163,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				return -1
 			))
 
+			return
+
+		setStrokeColorFromVote: (positive)->
+			# @svg?.setAttribute('stroke', if positive then "url(#pattern-validate)" else 'url(#pattern-reject)')
+			# @svg?.setAttribute('stroke-dasharray', if positive then '.9' else '0.5')
+
+			# color = new P.Color(R.Path.colorMap[@status])
+			# color.lightness += if positive then 0.15 else -0.15
+			# @svg?.setAttribute('stroke', color.toCSS())
+
+			if @status == 'pending'
+				@svg?.setAttribute('stroke', if positive then 'green' else 'orange')
 			return
 
 		getPathIds: ()->
@@ -504,7 +525,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@setSVG(@svgString)
 			@svgString = null
 
-			R.alertManager.alert "Drawing successfully submitted", "success", null, {positiveVoteThreshold: result.positiveVoteThreshold}
+			if @status == 'emailNotConfirmed'
+				R.alertManager.alert "Drawing successfully submitted but email not confirmed", "success", null, {positiveVoteThreshold: result.positiveVoteThreshold}
+			else
+				R.alertManager.alert "Drawing successfully submitted", "success", null, {positiveVoteThreshold: result.positiveVoteThreshold}
 
 			@status = result.status
 			# R.socket.emit "drawing change", type: 'status', pk: result.pk, status: @status, city: R.city

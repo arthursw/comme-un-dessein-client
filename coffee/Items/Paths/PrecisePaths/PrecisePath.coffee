@@ -64,7 +64,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 		@secureStep = 25
 		@polygonMode = true
-		@orthoGridSize = 20
+		@orthoGridSize = 5
 		@pixelGridSize = 10
 
 		@drawingModes = ['orthoDiag', 'ortho', 'lineOrthoDiag', 'pixel', 'cross', 'dot', 'line']
@@ -292,7 +292,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# @param offset [Number] the offset along the control path to begin drawing
 		# @param step [Boolean] whether it is a key step or not (we must draw something special or not)
 		updateDraw: (segment, step, redrawing)->
-			if R.drawingMode not in @constructor.pixelModes and R.drawingMode not in @constructor.lineModes
+			if @ignoreDrawingMode or R.drawingMode not in @constructor.pixelModes and R.drawingMode not in @constructor.lineModes
 				@path.add(@controlPath.lastSegment)
 			else if R.drawingMode == 'line' or R.drawingMode == 'lineOrthoDiag'
 				if @path.segments.length < 2
@@ -407,56 +407,59 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				console.log 'updateCreate'
 
 				updateDrawing = true
-
-				if R.drawingMode == 'orthoDiag'
-					target = Utils.Snap.snap2D(point, @constructor.orthoGridSize)
-					delta = target.subtract(@controlPath.lastSegment.point)
-
-					if delta.x != 0 and delta.y != 0 and Math.abs(delta.x) != Math.abs(delta.y)
-
-						if Math.abs(delta.x) > Math.abs(delta.y)
-							@controlPath.add(@controlPath.lastSegment.point.x + Math.sign(delta.x)*(Math.abs(delta.x)-Math.abs(delta.y)), @controlPath.lastSegment.point.y)
-						else
-							@controlPath.add(@controlPath.lastSegment.point.x, @controlPath.lastSegment.point.y + Math.sign(delta.y)*(Math.abs(delta.y)-Math.abs(delta.x)))
-						@path.add(@controlPath.lastSegment)
-					else if @controlPath.segments.length > 2
-						# replace last step by slope (if any)
-						previousDelta = @controlPath.lastSegment.point.subtract(@controlPath.segments[@controlPath.segments.length-2].point)
-						if previousDelta.x == 0
-							if delta.y == 0
-								@controlPath.lastSegment.remove()
-								@path.lastSegment.remove()
-						else if previousDelta.y == 0
-							if delta.x == 0
-								@controlPath.lastSegment.remove()
-								@path.lastSegment.remove()
-					@controlPath.add(target)
-				else if R.drawingMode == 'ortho'
-					target = Utils.Snap.snap2D(point, @constructor.orthoGridSize)
-					delta = target.subtract(@controlPath.lastSegment.point)
-
-					if delta.x != 0 and delta.y != 0
-						if Math.abs(delta.x) > Math.abs(delta.y)
-							@controlPath.add(target.x, @controlPath.lastSegment.point.y)
-						else
-							@controlPath.add(@controlPath.lastSegment.point.x, target.y)
-						@path.add(@controlPath.lastSegment)
-					@controlPath.add(target)
-				else if R.drawingMode in @constructor.pixelModes
-					target = Utils.Snap.snap2D(point, @constructor.pixelGridSize)
-					if not @controlPath.lastSegment.point.equals(target)
-						@controlPath.add(target)
-					else
-						updateDrawing = false
-				else if R.drawingMode == 'line'
-					@controlPath.lastSegment.point = point
-				else if R.drawingMode == 'lineOrthoDiag'
-
-					delta = point.subtract(@controlPath.firstSegment.point)
-					delta.angle = Utils.Snap.snap1D(delta.angle, 45)
-					@controlPath.lastSegment.point = Utils.Snap.snap2D(@controlPath.firstSegment.point.add(delta), @constructor.orthoGridSize)
-				else
+				if @ignoreDrawingMode
 					@controlPath.add(point)
+				else
+
+					if R.drawingMode == 'orthoDiag'
+						target = Utils.Snap.snap2D(point, @constructor.orthoGridSize)
+						delta = target.subtract(@controlPath.lastSegment.point)
+
+						if delta.x != 0 and delta.y != 0 and Math.abs(delta.x) != Math.abs(delta.y)
+
+							if Math.abs(delta.x) > Math.abs(delta.y)
+								@controlPath.add(@controlPath.lastSegment.point.x + Math.sign(delta.x)*(Math.abs(delta.x)-Math.abs(delta.y)), @controlPath.lastSegment.point.y)
+							else
+								@controlPath.add(@controlPath.lastSegment.point.x, @controlPath.lastSegment.point.y + Math.sign(delta.y)*(Math.abs(delta.y)-Math.abs(delta.x)))
+							@path.add(@controlPath.lastSegment)
+						else if @controlPath.segments.length > 2
+							# replace last step by slope (if any)
+							previousDelta = @controlPath.lastSegment.point.subtract(@controlPath.segments[@controlPath.segments.length-2].point)
+							if previousDelta.x == 0
+								if delta.y == 0
+									@controlPath.lastSegment.remove()
+									@path.lastSegment.remove()
+							else if previousDelta.y == 0
+								if delta.x == 0
+									@controlPath.lastSegment.remove()
+									@path.lastSegment.remove()
+						@controlPath.add(target)
+					else if R.drawingMode == 'ortho'
+						target = Utils.Snap.snap2D(point, @constructor.orthoGridSize)
+						delta = target.subtract(@controlPath.lastSegment.point)
+
+						if delta.x != 0 and delta.y != 0
+							if Math.abs(delta.x) > Math.abs(delta.y)
+								@controlPath.add(target.x, @controlPath.lastSegment.point.y)
+							else
+								@controlPath.add(@controlPath.lastSegment.point.x, target.y)
+							@path.add(@controlPath.lastSegment)
+						@controlPath.add(target)
+					else if R.drawingMode in @constructor.pixelModes
+						target = Utils.Snap.snap2D(point, @constructor.pixelGridSize)
+						if not @controlPath.lastSegment.point.equals(target)
+							@controlPath.add(target)
+						else
+							updateDrawing = false
+					else if R.drawingMode == 'line'
+						@controlPath.lastSegment.point = point
+					else if R.drawingMode == 'lineOrthoDiag'
+
+						delta = point.subtract(@controlPath.firstSegment.point)
+						delta.angle = Utils.Snap.snap1D(delta.angle, 45)
+						@controlPath.lastSegment.point = Utils.Snap.snap2D(@controlPath.firstSegment.point.add(delta), @constructor.orthoGridSize)
+					else
+						@controlPath.add(point)
 
 				if updateDrawing
 					@checkUpdateDrawing(@controlPath.lastSegment, false)

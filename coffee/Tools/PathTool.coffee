@@ -171,7 +171,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 				R.currentPaths[from] = new @Path(Date.now(), data, null, null, null, null, R.me)
 				# R.currentPaths[from].select(false, false)
 
+				if @circleMode()
+					@circlePathRadius = 0.05
+					@circlePathCenter = event.point
+					@animateCircle(0, true)
+					requestAnimationFrame(@animateCircle)
+
 			R.currentPaths[from].beginCreate(event.point, event, false)
+
 
 			# emit event on websocket (if user is the author of the event)
 			# if R.me? and from==R.me then R.socket.emit( "begin", R.me, R.eventToObject(event), @name, R.currentPaths[from].data )
@@ -180,6 +187,20 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 				data = R.currentPaths[from].data
 				data.id = R.currentPaths[from].id
 				# R.socket.emit "bounce", tool: @name, function: "begin", arguments: [event, R.me, data]
+			return
+
+		circleMode: ()->
+			return R.drawingMode == 'line' or R.drawingMode == 'lineOrthoDiag' or R.drawingMode == 'orthoDiag'  or R.drawingMode == 'ortho'
+
+		animateCircle: (time, createCircle=false, from=R.me)=>
+			path = R.currentPaths[from]
+			if (createCircle or @circlePath?) and path?
+				@circlePathRadius += 0.2
+				@circlePath?.remove()
+				@circlePath = new P.Path.Circle(@circlePathCenter, @circlePathRadius)
+				@circlePath.strokeColor = path.data.strokeColor
+				@circlePath.strokeWidth = path.data.strokeWidth
+				requestAnimationFrame(@animateCircle)
 			return
 
 		showDraftLimits: ()->
@@ -234,9 +255,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		# @param [Paper event or REvent] (usually) mouse drag event
 		# @param [String] author (username) of the event
 		update: (event, from=R.me) ->
+
 			path = R.currentPaths[from]
 			
 			if not path? then return 		# when the path has been deleted because too big
+
+			if @circleMode() and @circlePath?
+				@circlePath.remove()
+				@circlePath = null
 
 			draftLimit = @showDraftLimits()
 
@@ -351,6 +377,43 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			path = R.currentPaths[from]
 			if not path? then return false		# when the path has been deleted because too big
 			
+			if @circlePath?
+				R.currentPaths[from].remove()
+				delete R.currentPaths[from]
+				draftIsOutsideFrame = not R.view.contains(@circlePath.bounds)
+				if draftIsOutsideFrame or (@draftLimit? and not @draftLimit.contains(@circlePath.bounds))
+					@constructor.displayDraftIsTooBigError()
+					return false
+				
+				
+
+				circleLength = @circlePath.getLength()
+
+				path = new @Path(Date.now(), null, null, null, null, null, R.me)
+				path.ignoreDrawingMode = true
+				path.beginCreate(@circlePath.getPointAt(0), event, false)
+				path.controlPath.removeSegments()
+				path.controlPath.addSegments(@circlePath.segments)
+				path.controlPath.addSegment(@circlePath.firstSegment)
+				path.draw()
+				
+				# step = 10
+				# for i in [step .. circleLength] by step
+				# 	p = @circlePath.getPointAt(i)
+				# 	path.updateCreate(p, event, false)
+
+				# path.endCreate(@circlePath.getPointAt(circleLength), event, false)
+
+				R.currentPaths[from] = path
+
+				@circlePath.remove()
+				@circlePath = null
+				@createPath(event, from)
+				R.drawingPanel.showSubmitDrawing()
+				return
+
+
+				
 
 			# if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))
 			# 	R.alertManager.alert 'Your path must be in the drawing area', 'error'

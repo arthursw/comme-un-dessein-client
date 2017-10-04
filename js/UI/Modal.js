@@ -61,6 +61,7 @@
         this.submitCallback = args.submit;
         this.extractors = [];
         this.modalJ = this.constructor.modalJ.clone();
+        this.modalJ.attr('id', 'modal-' + args.id);
         R.templatesJ.find('.modals').append(this.modalJ);
         this.modalBodyJ = this.modalJ.find('.modal-body');
         this.modalBodyJ.empty();
@@ -331,7 +332,9 @@
         if (args.args == null) {
           args.args = args.divJ;
         }
-        args.divJ.attr('id', 'modal-' + args.name);
+        if (args.name != null) {
+          args.divJ.attr('id', 'modal-' + args.name);
+        }
         this.modalBodyJ.append(args.divJ);
         if (args.extractor != null) {
           this.extractors[args.name] = args;

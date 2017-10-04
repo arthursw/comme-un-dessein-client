@@ -26,7 +26,7 @@
 
       PrecisePath.polygonMode = true;
 
-      PrecisePath.orthoGridSize = 20;
+      PrecisePath.orthoGridSize = 5;
 
       PrecisePath.pixelGridSize = 10;
 
@@ -302,7 +302,7 @@
 
       PrecisePath.prototype.updateDraw = function(segment, step, redrawing) {
         var circle, cross, ref, ref1, square;
-        if ((ref = R.drawingMode, indexOf.call(this.constructor.pixelModes, ref) < 0) && (ref1 = R.drawingMode, indexOf.call(this.constructor.lineModes, ref1) < 0)) {
+        if (this.ignoreDrawingMode || (ref = R.drawingMode, indexOf.call(this.constructor.pixelModes, ref) < 0) && (ref1 = R.drawingMode, indexOf.call(this.constructor.lineModes, ref1) < 0)) {
           this.path.add(this.controlPath.lastSegment);
         } else if (R.drawingMode === 'line' || R.drawingMode === 'lineOrthoDiag') {
           if (this.path.segments.length < 2) {
@@ -383,58 +383,62 @@
           }
           console.log('updateCreate');
           updateDrawing = true;
-          if (R.drawingMode === 'orthoDiag') {
-            target = Utils.Snap.snap2D(point, this.constructor.orthoGridSize);
-            delta = target.subtract(this.controlPath.lastSegment.point);
-            if (delta.x !== 0 && delta.y !== 0 && Math.abs(delta.x) !== Math.abs(delta.y)) {
-              if (Math.abs(delta.x) > Math.abs(delta.y)) {
-                this.controlPath.add(this.controlPath.lastSegment.point.x + Math.sign(delta.x) * (Math.abs(delta.x) - Math.abs(delta.y)), this.controlPath.lastSegment.point.y);
-              } else {
-                this.controlPath.add(this.controlPath.lastSegment.point.x, this.controlPath.lastSegment.point.y + Math.sign(delta.y) * (Math.abs(delta.y) - Math.abs(delta.x)));
-              }
-              this.path.add(this.controlPath.lastSegment);
-            } else if (this.controlPath.segments.length > 2) {
-              previousDelta = this.controlPath.lastSegment.point.subtract(this.controlPath.segments[this.controlPath.segments.length - 2].point);
-              if (previousDelta.x === 0) {
-                if (delta.y === 0) {
-                  this.controlPath.lastSegment.remove();
-                  this.path.lastSegment.remove();
-                }
-              } else if (previousDelta.y === 0) {
-                if (delta.x === 0) {
-                  this.controlPath.lastSegment.remove();
-                  this.path.lastSegment.remove();
-                }
-              }
-            }
-            this.controlPath.add(target);
-          } else if (R.drawingMode === 'ortho') {
-            target = Utils.Snap.snap2D(point, this.constructor.orthoGridSize);
-            delta = target.subtract(this.controlPath.lastSegment.point);
-            if (delta.x !== 0 && delta.y !== 0) {
-              if (Math.abs(delta.x) > Math.abs(delta.y)) {
-                this.controlPath.add(target.x, this.controlPath.lastSegment.point.y);
-              } else {
-                this.controlPath.add(this.controlPath.lastSegment.point.x, target.y);
-              }
-              this.path.add(this.controlPath.lastSegment);
-            }
-            this.controlPath.add(target);
-          } else if (ref = R.drawingMode, indexOf.call(this.constructor.pixelModes, ref) >= 0) {
-            target = Utils.Snap.snap2D(point, this.constructor.pixelGridSize);
-            if (!this.controlPath.lastSegment.point.equals(target)) {
-              this.controlPath.add(target);
-            } else {
-              updateDrawing = false;
-            }
-          } else if (R.drawingMode === 'line') {
-            this.controlPath.lastSegment.point = point;
-          } else if (R.drawingMode === 'lineOrthoDiag') {
-            delta = point.subtract(this.controlPath.firstSegment.point);
-            delta.angle = Utils.Snap.snap1D(delta.angle, 45);
-            this.controlPath.lastSegment.point = Utils.Snap.snap2D(this.controlPath.firstSegment.point.add(delta), this.constructor.orthoGridSize);
-          } else {
+          if (this.ignoreDrawingMode) {
             this.controlPath.add(point);
+          } else {
+            if (R.drawingMode === 'orthoDiag') {
+              target = Utils.Snap.snap2D(point, this.constructor.orthoGridSize);
+              delta = target.subtract(this.controlPath.lastSegment.point);
+              if (delta.x !== 0 && delta.y !== 0 && Math.abs(delta.x) !== Math.abs(delta.y)) {
+                if (Math.abs(delta.x) > Math.abs(delta.y)) {
+                  this.controlPath.add(this.controlPath.lastSegment.point.x + Math.sign(delta.x) * (Math.abs(delta.x) - Math.abs(delta.y)), this.controlPath.lastSegment.point.y);
+                } else {
+                  this.controlPath.add(this.controlPath.lastSegment.point.x, this.controlPath.lastSegment.point.y + Math.sign(delta.y) * (Math.abs(delta.y) - Math.abs(delta.x)));
+                }
+                this.path.add(this.controlPath.lastSegment);
+              } else if (this.controlPath.segments.length > 2) {
+                previousDelta = this.controlPath.lastSegment.point.subtract(this.controlPath.segments[this.controlPath.segments.length - 2].point);
+                if (previousDelta.x === 0) {
+                  if (delta.y === 0) {
+                    this.controlPath.lastSegment.remove();
+                    this.path.lastSegment.remove();
+                  }
+                } else if (previousDelta.y === 0) {
+                  if (delta.x === 0) {
+                    this.controlPath.lastSegment.remove();
+                    this.path.lastSegment.remove();
+                  }
+                }
+              }
+              this.controlPath.add(target);
+            } else if (R.drawingMode === 'ortho') {
+              target = Utils.Snap.snap2D(point, this.constructor.orthoGridSize);
+              delta = target.subtract(this.controlPath.lastSegment.point);
+              if (delta.x !== 0 && delta.y !== 0) {
+                if (Math.abs(delta.x) > Math.abs(delta.y)) {
+                  this.controlPath.add(target.x, this.controlPath.lastSegment.point.y);
+                } else {
+                  this.controlPath.add(this.controlPath.lastSegment.point.x, target.y);
+                }
+                this.path.add(this.controlPath.lastSegment);
+              }
+              this.controlPath.add(target);
+            } else if (ref = R.drawingMode, indexOf.call(this.constructor.pixelModes, ref) >= 0) {
+              target = Utils.Snap.snap2D(point, this.constructor.pixelGridSize);
+              if (!this.controlPath.lastSegment.point.equals(target)) {
+                this.controlPath.add(target);
+              } else {
+                updateDrawing = false;
+              }
+            } else if (R.drawingMode === 'line') {
+              this.controlPath.lastSegment.point = point;
+            } else if (R.drawingMode === 'lineOrthoDiag') {
+              delta = point.subtract(this.controlPath.firstSegment.point);
+              delta.angle = Utils.Snap.snap1D(delta.angle, 45);
+              this.controlPath.lastSegment.point = Utils.Snap.snap2D(this.controlPath.firstSegment.point.add(delta), this.constructor.orthoGridSize);
+            } else {
+              this.controlPath.add(point);
+            }
           }
           if (updateDrawing) {
             this.checkUpdateDrawing(this.controlPath.lastSegment, false);

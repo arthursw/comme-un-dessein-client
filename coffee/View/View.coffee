@@ -537,13 +537,13 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		initializePosition: ()->
 
 			# R.githubLogin = R.canvasJ.attr("data-github-login")
+			R.city ?= {}
 			R.city.city = if R.canvasJ.attr("data-city") != '' then R.canvasJ.attr("data-city") else undefined
 			
 			# R.city =
 			# 	owner: if R.canvasJ.attr("data-owner") != '' then R.canvasJ.attr("data-owner") else undefined
 			# 	city: if R.canvasJ.attr("data-city") != '' then R.canvasJ.attr("data-city") else undefined
 			# 	site: if R.canvasJ.attr("data-site") != '' then R.canvasJ.attr("data-site") else undefined
-
 
 			@restrictedArea = @grid.limitCD.bounds.expand(100)
 
@@ -553,6 +553,15 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			svg = P.project.exportSVG()
 			R.svgJ = $(svg)
 			R.svgJ.insertAfter(R.canvasJ)
+			defsJ = $('<defs>')
+			patternValidateJ = $("<pattern id='pattern-validate' width='8' height='8' patternUnits='userSpaceOnUse'>")
+			patternValidateJ.append("<path d='M-2 10L10 -2ZM10 6L6 10ZM-2 2L2 -2' stroke='green' stroke-width='4.5'/>")
+			patternRejectsJ = $("<pattern id='pattern-reject' width='8' height='8' patternUnits='userSpaceOnUse'>")
+			patternRejectsJ.append("<path d='M-2 10L10 -2ZM10 6L6 10ZM-2 2L2 -2' stroke='red' stroke-width='4.5'/>")
+
+			defsJ.append(patternValidateJ)
+			defsJ.append(patternRejectsJ)
+			R.svgJ.prepend(defsJ)
 			
 			R.svgJ.click((event)=>
 				

@@ -5,7 +5,7 @@
   define(['paper', 'R', 'Utils/Utils', 'i18next'], function(P, R, Utils, i18next) {
     var AlertManager;
     AlertManager = (function() {
-      AlertManager.hideDelay = 5000;
+      AlertManager.hideDelay = 10000;
 
       function AlertManager() {
         this.hide = bind(this.hide, this);
@@ -117,7 +117,7 @@
           return function() {
             var backgroundColor;
             _this.nBlinks++;
-            if (_this.nBlinks > 2) {
+            if (_this.nBlinks > 3) {
               clearInterval(_this.blinkIntervalID);
               _this.blinkIntervalID = null;
             }

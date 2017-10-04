@@ -130,18 +130,30 @@
           }
         }).done((function(_this) {
           return function(results) {
-            var c;
+            var c, lastId;
             if (!R.loader.checkError(results)) {
               return;
             }
             c = JSON.parse(results.comment);
-            _this.addComment(comment, results.commentPk, results.author, c.date.$date);
+            lastId = _this.addComment(comment, results.commentPk, results.author, c.date.$date);
+            R.socket.emit("drawing change", {
+              type: 'addComment',
+              comment: comment,
+              commentPk: results.commentPk,
+              author: results.author,
+              date: c.date.$date,
+              drawingPk: c.drawing.$oid,
+              insertAfter: lastId
+            });
           };
         })(this));
       };
 
-      DrawingPanel.prototype.addComment = function(comment, commentPk, author, date) {
-        var buttonsJ, deleteBtnJ, deleteIconJ, divJ, editBtnJ, editIconJ, headerJ, textJ;
+      DrawingPanel.prototype.addComment = function(comment, commentPk, author, date, insertAfter) {
+        var buttonsJ, deleteBtnJ, deleteIconJ, divJ, editBtnJ, editIconJ, headerJ, lastId, textJ;
+        if (insertAfter == null) {
+          insertAfter = null;
+        }
         divJ = $('<div>').addClass('cd-column cd-grow comment');
         divJ.attr('id', 'comment-' + commentPk);
         headerJ = $('<div>');
@@ -183,7 +195,13 @@
         textJ = $('<div>').addClass('cd-grow comment-text');
         textJ.get(0).innerText = comment;
         divJ.append(textJ);
-        this.contentJ.find('.comments-container .comments').append(divJ);
+        lastId = this.contentJ.find('.comments-container .comments .comment:last-child').attr('id');
+        if (insertAfter != null) {
+          divJ.insertAfter(this.contentJ.find('#' + insertAfter));
+        } else {
+          this.contentJ.find('.comments-container .comments').append(divJ);
+        }
+        return lastId;
       };
 
       DrawingPanel.prototype.emptyComments = function() {
@@ -218,6 +236,11 @@
           if (!R.loader.checkError(results)) {
             return;
           }
+          R.socket.emit("drawing change", {
+            type: 'deleteComment',
+            commentPk: results.commentPk,
+            drawingPk: results.drawingPk
+          });
         });
       };
 
@@ -255,6 +278,12 @@
           if (!R.loader.checkError(results)) {
             return;
           }
+          R.socket.emit("drawing change", {
+            type: 'modifyComment',
+            comment: comment,
+            commentPk: results.commentPk,
+            drawingPk: results.drawingPk
+          });
         });
       };
 
@@ -791,6 +820,30 @@
             if (drawing != null) {
               drawing.remove();
             }
+            break;
+          case 'addComment':
+            drawing = R.pkToDrawing[data.drawingPk];
+            if (drawing != null) {
+              if (this.currentDrawing === drawing) {
+                this.addComment(data.comment, data.commentPk, data.author, data.date, data.insertAfter);
+              }
+            }
+            break;
+          case 'modifyComment':
+            drawing = R.pkToDrawing[data.drawingPk];
+            if (drawing != null) {
+              if (this.currentDrawing === drawing) {
+                this.contentJ.find('#comment-' + data.commentPk).find('.comment-text').get(0).innerText = data.comment;
+              }
+            }
+            break;
+          case 'deleteComment':
+            drawing = R.pkToDrawing[data.drawingPk];
+            if (drawing != null) {
+              if (this.currentDrawing === drawing) {
+                this.contentJ.find('#comment-' + data.commentPk).remove();
+              }
+            }
         }
       };
 
@@ -826,6 +879,9 @@
           suffix = ', the drawing will be validated';
         } else if (result.rejects) {
           suffix = ', the drawing will be rejected';
+        }
+        if ((result.emailConfirmed != null) && !result.emailConfirmed) {
+          suffix = ' but email not confirmed';
         }
         R.alertManager.alert('You successfully voted' + suffix, 'success', null, {
           duration: delay

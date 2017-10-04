@@ -50,11 +50,11 @@
         return this.draft;
       };
 
-      function Drawing(rectangle1, data1, id1, pk, owner, date, title1, description, status, pathList, svg) {
+      function Drawing(rectangle1, data1, id1, pk1, owner, date, title1, description, status, pathList, svg) {
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
         this.id = id1 != null ? id1 : null;
-        this.pk = pk != null ? pk : null;
+        this.pk = pk1 != null ? pk1 : null;
         this.owner = owner != null ? owner : null;
         this.date = date;
         this.title = title1;
@@ -81,6 +81,10 @@
           R.drawings = [];
         }
         R.drawings.push(this);
+        if (R.pkToDrawing == null) {
+          R.pkToDrawing = {};
+        }
+        R.pkToDrawing[this.pk] = this;
         this.paths = [];
         this.group.remove();
         this.votes = [];
@@ -98,6 +102,14 @@
         this.addPathsFromPathList(pathList);
         return;
       }
+
+      Drawing.prototype.setPK = function(pk) {
+        Drawing.__super__.setPK.call(this, pk);
+        if (R.pkToDrawing == null) {
+          R.pkToDrawing = {};
+        }
+        R.pkToDrawing[this.pk] = this;
+      };
 
       Drawing.prototype.getPointLists = function() {
         var i, len, path, pointLists, ref;
@@ -154,6 +166,15 @@
             return -1;
           };
         })(this)));
+      };
+
+      Drawing.prototype.setStrokeColorFromVote = function(positive) {
+        var ref;
+        if (this.status === 'pending') {
+          if ((ref = this.svg) != null) {
+            ref.setAttribute('stroke', positive ? 'green' : 'orange');
+          }
+        }
       };
 
       Drawing.prototype.getPathIds = function() {
@@ -555,9 +576,15 @@
         this.removePaths();
         this.setSVG(this.svgString);
         this.svgString = null;
-        R.alertManager.alert("Drawing successfully submitted", "success", null, {
-          positiveVoteThreshold: result.positiveVoteThreshold
-        });
+        if (this.status === 'emailNotConfirmed') {
+          R.alertManager.alert("Drawing successfully submitted but email not confirmed", "success", null, {
+            positiveVoteThreshold: result.positiveVoteThreshold
+          });
+        } else {
+          R.alertManager.alert("Drawing successfully submitted", "success", null, {
+            positiveVoteThreshold: result.positiveVoteThreshold
+          });
+        }
         this.status = result.status;
       };
 

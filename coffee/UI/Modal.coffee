@@ -41,6 +41,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			@extractors = [] 				# an array of function used to extract data on the added forms
 
 			@modalJ = @constructor.modalJ.clone()
+			@modalJ.attr('id', 'modal-'+args.id)
 
 			R.templatesJ.find('.modals').append(@modalJ)
 
@@ -276,7 +277,8 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 
 		addCustomContent: (args)->
 			args.args ?= args.divJ
-			args.divJ.attr('id', 'modal-' + args.name)
+			if args.name?
+				args.divJ.attr('id', 'modal-' + args.name)
 			@modalBodyJ.append(args.divJ)
 			if args.extractor?
 				@extractors[args.name] = args

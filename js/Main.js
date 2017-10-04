@@ -5,12 +5,14 @@
       var canvasJ, isPM, meridiem, mode, ordinal, updateContent, userAuthenticated, username;
       canvasJ = $('#canvas');
       mode = canvasJ.attr('data-drawing-mode');
-      R.city = {
-        owner: null,
-        name: mode,
-        site: null
-      };
-      R.drawingMode = mode === 'pixel' || mode === 'ortho' || mode === 'orthoDiag' || mode === 'image' || mode === 'line' || mode === 'lineOrthoDiag' || mode === 'dot' || mode === 'cross' ? mode : null;
+      if (mode !== 'None') {
+        R.city = {
+          owner: null,
+          name: mode,
+          site: null
+        };
+        R.drawingMode = mode === 'pixel' || mode === 'ortho' || mode === 'orthoDiag' || mode === 'image' || mode === 'line' || mode === 'lineOrthoDiag' || mode === 'dot' || mode === 'cross' ? mode : null;
+      }
       updateContent = function() {
         $("body").localize();
         console.log('i18n tests:');

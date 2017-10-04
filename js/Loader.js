@@ -13,6 +13,7 @@
         this.checkError = bind(this.checkError, this);
         this.loadCallbackTipibot = bind(this.loadCallbackTipibot, this);
         this.loadCallback = bind(this.loadCallback, this);
+        this.loadVotesCallback = bind(this.loadVotesCallback, this);
         this.loadSVGCallback = bind(this.loadSVGCallback, this);
         this.hideLoadingBar = bind(this.hideLoadingBar, this);
         this.showLoadingBar = bind(this.showLoadingBar, this);
@@ -249,6 +250,9 @@
 
       Loader.prototype.loadSVGCallback = function(results) {
         var bounds, drawing, drawingPk, item, itemString, k, len, len1, m, ref, ref1;
+        if (!this.checkError(results)) {
+          return;
+        }
         if (results.user != null) {
           this.setMe(results.user);
         }
@@ -274,6 +278,32 @@
             }
           }
           this.focusOnDrawing = null;
+        }
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'loadVotes',
+              args: {
+                city: R.city
+              }
+            })
+          }
+        }).done(this.loadVotesCallback);
+      };
+
+      Loader.prototype.loadVotesCallback = function(results) {
+        var k, len, ref, ref1, vote;
+        if (!this.checkError(results)) {
+          return;
+        }
+        ref = results.votes;
+        for (k = 0, len = ref.length; k < len; k++) {
+          vote = ref[k];
+          if ((ref1 = R.items[vote.pk]) != null) {
+            ref1.setStrokeColorFromVote(vote.positive);
+          }
         }
       };
 
