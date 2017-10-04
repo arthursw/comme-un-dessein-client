@@ -27,6 +27,9 @@ define [
 	$(document).ready () ->
 		canvasJ = $('#canvas')
 		mode = canvasJ.attr('data-drawing-mode')
+		if mode == 'None'
+			mode = canvasJ.attr('data-city')
+		
 		if mode != 'None'
 			R.city =
 					owner: null

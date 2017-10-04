@@ -5,6 +5,9 @@
       var canvasJ, isPM, meridiem, mode, ordinal, updateContent, userAuthenticated, username;
       canvasJ = $('#canvas');
       mode = canvasJ.attr('data-drawing-mode');
+      if (mode === 'None') {
+        mode = canvasJ.attr('data-city');
+      }
       if (mode !== 'None') {
         R.city = {
           owner: null,
