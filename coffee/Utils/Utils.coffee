@@ -782,6 +782,11 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawings', args: {} } ).done(R.loader.checkError)
 		return
 
+	R.createDrawingThumbnail = ()->
+		imageURL = R.view.getThumbnail(R.s, 1024, true)		
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'createDrawingThumbnail', args: {png: imageURL, pk: R.s.pk} } ).done(R.loader.checkError)
+		return
+
 	R.updateDrawingSVGs = ()->
 		R.Drawing.addPaths()
 		for drawing in R.drawings

@@ -380,13 +380,17 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			if @circlePath?
 				R.currentPaths[from].remove()
 				delete R.currentPaths[from]
+				
 				draftIsOutsideFrame = not R.view.contains(@circlePath.bounds)
-				if draftIsOutsideFrame or (@draftLimit? and not @draftLimit.contains(@circlePath.bounds))
+				draftIsTooBig = @draftLimit? and not @draftLimit.contains(@circlePath.bounds)
+				
+				if draftIsTooBig
 					@constructor.displayDraftIsTooBigError()
 					return false
+				else if draftIsOutsideFrame
+					R.alertManager.alert 'Your path must be in the drawing area', 'error'
+					return false
 				
-				
-
 				circleLength = @circlePath.getLength()
 
 				path = new @Path(Date.now(), null, null, null, null, null, R.me)

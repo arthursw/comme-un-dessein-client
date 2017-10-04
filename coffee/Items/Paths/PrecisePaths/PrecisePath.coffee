@@ -363,8 +363,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		beginCreate: (point, event)->
 			super()
 
-			console.log 'beginCreate'
-
 			if not @data.polygonMode 				# in normal mode: just initialize the control path and begin drawing
 				@addControlPath()
 				if R.drawingMode in @constructor.snappedModes

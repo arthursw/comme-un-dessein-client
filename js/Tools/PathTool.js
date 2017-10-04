@@ -330,7 +330,7 @@
       };
 
       PathTool.prototype.end = function(event, from) {
-        var circleLength, draftIsOutsideFrame, path, ref;
+        var circleLength, draftIsOutsideFrame, draftIsTooBig, path, ref;
         if (from == null) {
           from = R.me;
         }
@@ -342,8 +342,12 @@
           R.currentPaths[from].remove();
           delete R.currentPaths[from];
           draftIsOutsideFrame = !R.view.contains(this.circlePath.bounds);
-          if (draftIsOutsideFrame || ((this.draftLimit != null) && !this.draftLimit.contains(this.circlePath.bounds))) {
+          draftIsTooBig = (this.draftLimit != null) && !this.draftLimit.contains(this.circlePath.bounds);
+          if (draftIsTooBig) {
             this.constructor.displayDraftIsTooBigError();
+            return false;
+          } else if (draftIsOutsideFrame) {
+            R.alertManager.alert('Your path must be in the drawing area', 'error');
             return false;
           }
           circleLength = this.circlePath.getLength();

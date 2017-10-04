@@ -621,7 +621,7 @@
 
       View.prototype.contains = function(item, tolerance) {
         if (tolerance == null) {
-          tolerance = 50;
+          tolerance = 25;
         }
         return this.grid.contains(item, tolerance);
       };

@@ -817,6 +817,23 @@
         }
       }).done(R.loader.checkError);
     };
+    R.createDrawingThumbnail = function() {
+      var imageURL;
+      imageURL = R.view.getThumbnail(R.s, 1024, true);
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'createDrawingThumbnail',
+            args: {
+              png: imageURL,
+              pk: R.s.pk
+            }
+          })
+        }
+      }).done(R.loader.checkError);
+    };
     R.updateDrawingSVGs = function() {
       var args, drawing, id, item, j, len, ref, ref1;
       R.Drawing.addPaths();

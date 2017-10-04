@@ -350,7 +350,6 @@
       PrecisePath.prototype.beginCreate = function(point, event) {
         var ref, ref1;
         PrecisePath.__super__.beginCreate.call(this);
-        console.log('beginCreate');
         if (!this.data.polygonMode) {
           this.addControlPath();
           if (ref = R.drawingMode, indexOf.call(this.constructor.snappedModes, ref) >= 0) {
