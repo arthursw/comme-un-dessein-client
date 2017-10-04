@@ -794,6 +794,13 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 			return
 		return
 
+	R.confirmEmail = (username)->
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'confirmEmail', args: { username: username } } ).done (result)=> 
+			if not R.loader.checkError(result) then return
+			console.log(result.email)
+			return
+		return
+
 	R.updateDrawingSVGs = ()->
 		R.Drawing.addPaths()
 		for drawing in R.drawings
@@ -826,10 +833,10 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteAllItems', args: args } ).done(R.loader.checkError)
 		return
 
-	R.deleteDrawing = (drawingToDelete, confirm)->
+	R.deleteDrawing = (drawingPkToDelete, confirm)->
 		return R.deleteDrawings([drawingToDelete], confirm)
 
-	R.deleteDrawings = (drawingsToDelete, confirm)->
+	R.deleteDrawings = (drawingPksToDelete, confirm)->
 		args =
 			drawingsToDelete: drawingsToDelete
 			confirm: confirm

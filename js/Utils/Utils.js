@@ -855,6 +855,27 @@
         };
       })(this));
     };
+    R.confirmEmail = function(username) {
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'confirmEmail',
+            args: {
+              username: username
+            }
+          })
+        }
+      }).done((function(_this) {
+        return function(result) {
+          if (!R.loader.checkError(result)) {
+            return;
+          }
+          console.log(result.email);
+        };
+      })(this));
+    };
     R.updateDrawingSVGs = function() {
       var args, drawing, id, item, j, len, ref, ref1;
       R.Drawing.addPaths();
@@ -917,10 +938,10 @@
         }
       }).done(R.loader.checkError);
     };
-    R.deleteDrawing = function(drawingToDelete, confirm) {
+    R.deleteDrawing = function(drawingPkToDelete, confirm) {
       return R.deleteDrawings([drawingToDelete], confirm);
     };
-    R.deleteDrawings = function(drawingsToDelete, confirm) {
+    R.deleteDrawings = function(drawingPksToDelete, confirm) {
       var args;
       args = {
         drawingsToDelete: drawingsToDelete,
