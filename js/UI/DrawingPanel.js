@@ -770,7 +770,7 @@
             }
             break;
           case 'new':
-            sameCity = data.city === R.city.name || data.city === 'CommeUnDessein' && (R.city.name == null);
+            sameCity = data.city === R.city.name || data.city === 'CommeUnDessein' && ((R.city.name == null) || R.city.name === '');
             if (!sameCity) {
               return;
             }

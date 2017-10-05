@@ -225,10 +225,12 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			return
 
 		loadVotesCallback: (results)=>
-			if not @checkError(results) then return
+			if results.state != 'not_logged_in'
+				if not @checkError(results) then return
 			
-			for vote in results.votes
-				R.items[vote.pk]?.setStrokeColorFromVote(vote.positive)
+			if results.votes?
+				for vote in results.votes
+					R.items[vote.pk]?.setStrokeColorFromVote(vote.positive)
 
 			return
 

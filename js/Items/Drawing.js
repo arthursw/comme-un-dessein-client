@@ -172,7 +172,7 @@
         var ref;
         if (this.status === 'pending') {
           if ((ref = this.svg) != null) {
-            ref.setAttribute('stroke', positive ? 'green' : 'orange');
+            ref.setAttribute('stroke', positive ? '#009688' : '#f44336');
           }
         }
       };

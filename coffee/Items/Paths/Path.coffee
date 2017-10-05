@@ -53,12 +53,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 		@constructor.secureDistance = 2 					# the points of the flattened path must not be 5 pixels away from the recorded points
 
 		@colorMap = {
-			draft: '#00C2E0',
-			pending: '#0079BF',
-			emailNotConfirmed: '#0079BF',
+			draft: '#808080',
+			pending: '#005fb8',
+			emailNotConfirmed: '#005fb8',
 			notConfirmed: '#E91E63',
-			drawing: '#61BD4F',
-			drawn: '#4d4d4d',
+			drawing: '#11a74f',
+			drawn: 'black',
 			rejected: '#EB5A46'
 		}
 

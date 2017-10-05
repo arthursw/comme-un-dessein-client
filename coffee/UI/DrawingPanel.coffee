@@ -757,7 +757,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 							@setVotes()
 				when 'new'
 					# ok if both are undefined: corresponds to CommeUnDessein
-					sameCity = data.city == R.city.name or data.city == 'CommeUnDessein' and not R.city.name?
+					sameCity = data.city == R.city.name or data.city == 'CommeUnDessein' and ( not R.city.name? or R.city.name == '' )
 					
 					if not sameCity then return
 					

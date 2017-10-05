@@ -298,14 +298,18 @@
 
       Loader.prototype.loadVotesCallback = function(results) {
         var k, len, ref, ref1, vote;
-        if (!this.checkError(results)) {
-          return;
+        if (results.state !== 'not_logged_in') {
+          if (!this.checkError(results)) {
+            return;
+          }
         }
-        ref = results.votes;
-        for (k = 0, len = ref.length; k < len; k++) {
-          vote = ref[k];
-          if ((ref1 = R.items[vote.pk]) != null) {
-            ref1.setStrokeColorFromVote(vote.positive);
+        if (results.votes != null) {
+          ref = results.votes;
+          for (k = 0, len = ref.length; k < len; k++) {
+            vote = ref[k];
+            if ((ref1 = R.items[vote.pk]) != null) {
+              ref1.setStrokeColorFromVote(vote.positive);
+            }
           }
         }
       };

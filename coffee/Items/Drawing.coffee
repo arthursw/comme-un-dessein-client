@@ -174,7 +174,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# @svg?.setAttribute('stroke', color.toCSS())
 
 			if @status == 'pending'
-				@svg?.setAttribute('stroke', if positive then 'green' else 'orange')
+				@svg?.setAttribute('stroke', if positive then '#009688' else '#f44336')
 			return
 
 		getPathIds: ()->
