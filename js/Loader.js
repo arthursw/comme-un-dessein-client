@@ -249,7 +249,7 @@
       };
 
       Loader.prototype.loadSVGCallback = function(results) {
-        var bounds, drawing, drawingPk, item, itemString, k, len, len1, m, ref, ref1;
+        var bounds, drawing, drawingPk, item, itemString, k, len, len1, m, ref, ref1, ref2;
         if (!this.checkError(results)) {
           return;
         }
@@ -260,15 +260,18 @@
         for (k = 0, len = ref.length; k < len; k++) {
           itemString = ref[k];
           item = JSON.parse(itemString);
+          if (((ref1 = R.pkToDrawing) != null ? ref1[item._id.$oid] : void 0) != null) {
+            continue;
+          }
           drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg);
         }
         this.endLoading();
         R.toolManager.updateButtonsVisibility();
         if (this.focusOnDrawing != null) {
           drawingPk = this.focusOnDrawing;
-          ref1 = R.drawings;
-          for (m = 0, len1 = ref1.length; m < len1; m++) {
-            drawing = ref1[m];
+          ref2 = R.drawings;
+          for (m = 0, len1 = ref2.length; m < len1; m++) {
+            drawing = ref2[m];
             if (drawing.pk === drawingPk) {
               bounds = drawing.getBounds();
               if (bounds != null) {

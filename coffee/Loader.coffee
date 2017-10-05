@@ -205,6 +205,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				@setMe(results.user)
 			for itemString in results.items
 				item = JSON.parse(itemString)
+				if R.pkToDrawing?[item._id.$oid]?
+					continue
 				drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg)
 			# setTimeout((()=>R.rasterizer.refresh()), 1000)
 			@endLoading()
