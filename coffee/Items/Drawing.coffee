@@ -478,7 +478,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			svg = @getSVG()
 			@svgString = svg
 
-			imageURL = R.view.getThumbnail(@, 1200, 630, true)
+			imageURL = R.view.getThumbnail(@, 1200, 630, true, true)
 
 			args = {
 				pk: @pk

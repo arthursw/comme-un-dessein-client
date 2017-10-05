@@ -521,7 +521,7 @@
         var args, imageURL, svg;
         svg = this.getSVG();
         this.svgString = svg;
-        imageURL = R.view.getThumbnail(this, 1200, 630, true);
+        imageURL = R.view.getThumbnail(this, 1200, 630, true, true);
         args = {
           pk: this.pk,
           clientId: this.id,

@@ -837,7 +837,7 @@
     };
     R.createDrawingThumbnail = function() {
       var imageURL;
-      imageURL = R.view.getThumbnail(R.s, 1200, 630, true);
+      imageURL = R.view.getThumbnail(R.s, 1200, 630, true, true);
       $.ajax({
         method: "POST",
         url: "ajaxCall/",

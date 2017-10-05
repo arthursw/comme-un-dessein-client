@@ -118,7 +118,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			paper.projects[0].activate()
 			return
 
-		getThumbnail: (drawing, sizeX=@constructor.thumbnailSize, sizeY=@constructor.thumbnailSize, toDataURL=false)->
+		getThumbnail: (drawing, sizeX=@constructor.thumbnailSize, sizeY=@constructor.thumbnailSize, toDataURL=false, blackStroke=false)->
 			@thumbnailProject.activate()
 			@thumbnailProject.view.viewSize = new P.Size(sizeX, sizeY)
 			@thumbnailCanvas.width = sizeX
@@ -144,7 +144,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				@thumbnailProject.view.zoom = Math.min(sizeY / rectangle.height, 1)
 
 			@thumbnailProject.view.setCenter(rectangle.center)
-			@thumbnailProject.activeLayer.strokeColor = R.Path.colorMap[drawing.status]
+			@thumbnailProject.activeLayer.strokeColor = if blackStroke then 'black' else R.Path.colorMap[drawing.status]
 			@thumbnailProject.view.update()
 			@thumbnailProject.view.draw()
 			result = if toDataURL then @thumbnailCanvas.toDataURL() else @thumbnailProject.exportSVG()

@@ -130,7 +130,7 @@
         paper.projects[0].activate();
       };
 
-      View.prototype.getThumbnail = function(drawing, sizeX, sizeY, toDataURL) {
+      View.prototype.getThumbnail = function(drawing, sizeX, sizeY, toDataURL, blackStroke) {
         var i, len, path, rectangle, rectangleRatio, ref, result, viewRatio;
         if (sizeX == null) {
           sizeX = this.constructor.thumbnailSize;
@@ -140,6 +140,9 @@
         }
         if (toDataURL == null) {
           toDataURL = false;
+        }
+        if (blackStroke == null) {
+          blackStroke = false;
         }
         this.thumbnailProject.activate();
         this.thumbnailProject.view.viewSize = new P.Size(sizeX, sizeY);
@@ -168,7 +171,7 @@
           this.thumbnailProject.view.zoom = Math.min(sizeY / rectangle.height, 1);
         }
         this.thumbnailProject.view.setCenter(rectangle.center);
-        this.thumbnailProject.activeLayer.strokeColor = R.Path.colorMap[drawing.status];
+        this.thumbnailProject.activeLayer.strokeColor = blackStroke ? 'black' : R.Path.colorMap[drawing.status];
         this.thumbnailProject.view.update();
         this.thumbnailProject.view.draw();
         result = toDataURL ? this.thumbnailCanvas.toDataURL() : this.thumbnailProject.exportSVG();
