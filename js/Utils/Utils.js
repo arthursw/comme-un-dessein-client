@@ -957,12 +957,12 @@
       }).done(R.loader.checkError);
     };
     R.deleteDrawing = function(drawingPkToDelete, confirm) {
-      return R.deleteDrawings([drawingToDelete], confirm);
+      return R.deleteDrawings([drawingPkToDelete], confirm);
     };
     R.deleteDrawings = function(drawingPksToDelete, confirm) {
       var args;
       args = {
-        drawingsToDelete: drawingsToDelete,
+        drawingsToDelete: drawingPksToDelete,
         confirm: confirm
       };
       $.ajax({

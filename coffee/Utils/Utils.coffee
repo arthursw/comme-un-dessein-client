@@ -839,11 +839,11 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		return
 
 	R.deleteDrawing = (drawingPkToDelete, confirm)->
-		return R.deleteDrawings([drawingToDelete], confirm)
+		return R.deleteDrawings([drawingPkToDelete], confirm)
 
 	R.deleteDrawings = (drawingPksToDelete, confirm)->
 		args =
-			drawingsToDelete: drawingsToDelete
+			drawingsToDelete: drawingPksToDelete
 			confirm: confirm
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteDrawings', args: args } ).done(R.loader.checkError)
 		return
