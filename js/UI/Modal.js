@@ -83,7 +83,7 @@
         if (args.submitButtonText != null) {
           spanJ = $('<span>');
           spanJ.attr('data-i18n', args.submitButtonText).append(i18next.t(args.submitButtonText));
-          this.modalJ.find('[name="submit"]').append(spanJ);
+          this.modalJ.find('[name="submit"]').html(spanJ);
         }
         if (args.cancelButtonIcon != null) {
           iconJ = $('<span>');
@@ -93,7 +93,7 @@
         if (args.cancelButtonText != null) {
           spanJ = $('<span>');
           spanJ.attr('data-i18n', args.cancelButtonText).append(i18next.t(args.cancelButtonText));
-          this.modalJ.find('[name="cancel"]').append(spanJ);
+          this.modalJ.find('[name="cancel"]').html(spanJ);
         }
         this.modalJ.find('.btn-primary').click((function(_this) {
           return function(event) {
@@ -105,23 +105,29 @@
         return;
       }
 
-      Modal.prototype.addText = function(text, textKey, escapeValue) {
+      Modal.prototype.addText = function(text, textKey, escapeValue, options) {
         var content;
         if (textKey == null) {
           textKey = null;
         }
         if (escapeValue == null) {
-          escapeValue = true;
+          escapeValue = false;
+        }
+        if (options == null) {
+          options = null;
         }
         if (textKey == null) {
           textKey = text;
         }
-        content = i18next.t(textKey, {
-          interpolation: {
-            escapeValue: false
-          }
-        });
-        this.modalBodyJ.append("<p data-i18n='[html]" + textKey + "'>" + content + "</p>");
+        if (options == null) {
+          options = {};
+        }
+        if (options.interpolation == null) {
+          options.interpolation = {};
+        }
+        options.interpolation.escapeValue = escapeValue;
+        content = i18next.t(textKey, options);
+        this.modalBodyJ.append("<p data-i18n-options='" + (JSON.stringify(options)) + "' data-i18n='[html]" + textKey + "'>" + content + "</p>");
       };
 
       Modal.prototype.addTextInput = function(args) {

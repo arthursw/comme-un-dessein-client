@@ -26,9 +26,9 @@
 
       PrecisePath.polygonMode = true;
 
-      PrecisePath.orthoGridSize = 10;
+      PrecisePath.orthoGridSize = 20;
 
-      PrecisePath.lineOrthoGridSize = 1;
+      PrecisePath.lineOrthoGridSize = 2;
 
       PrecisePath.pixelGridSize = 10;
 
@@ -348,11 +348,31 @@
       };
 
       PrecisePath.prototype.beginCreate = function(point, event) {
-        var ref, ref1;
+        var draft, hitResult, ref, ref1;
         PrecisePath.__super__.beginCreate.call(this);
         if (!this.data.polygonMode) {
           this.addControlPath();
           if (ref = R.drawingMode, indexOf.call(this.constructor.snappedModes, ref) >= 0) {
+            if (R.drawingMode === 'lineOrthoDiag') {
+              draft = R.Drawing.getDraft();
+              if (draft != null) {
+                hitResult = draft.group.hitTest(point, {
+                  tolerance: 6,
+                  segments: true,
+                  fill: false,
+                  stroke: false,
+                  curves: false,
+                  handles: false,
+                  position: false,
+                  bounds: false,
+                  guides: false,
+                  selected: false
+                });
+                if ((hitResult != null ? hitResult.point : void 0) != null) {
+                  point = hitResult.point;
+                }
+              }
+            }
             this.controlPath.add(Utils.Snap.snap2D(point, R.drawingMode === 'lineOrthoDiag' ? this.constructor.lineOrthoGridSize : this.constructor.orthoGridSize));
           } else {
             this.controlPath.add(point);
@@ -379,8 +399,10 @@
       PrecisePath.prototype.updateCreate = function(point, event) {
         var delta, lastSegment, previousDelta, previousSegment, ref, target, updateDrawing;
         if (!this.data.polygonMode) {
-          if (this.controlPath.lastSegment.point.getDistance(point, true) < 20) {
-            return;
+          if (R.drawingMode !== 'line') {
+            if (this.controlPath.lastSegment.point.getDistance(point, true) < 10) {
+              return;
+            }
           }
           console.log('updateCreate');
           updateDrawing = true;

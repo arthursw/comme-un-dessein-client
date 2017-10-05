@@ -331,9 +331,12 @@
         })(this));
       };
 
-      DrawingPanel.prototype.shareOnFacebook = function(event) {
+      DrawingPanel.prototype.shareOnFacebook = function(event, drawing) {
         var bounds;
-        bounds = this.currentDrawing.getBounds();
+        if (drawing == null) {
+          drawing = this.currentDrawing;
+        }
+        bounds = drawing.getBounds();
         if (bounds != null) {
           R.view.fitRectangle(bounds, true);
           R.view.updateHash();
@@ -341,19 +344,22 @@
         FB.ui({
           method: 'feed',
           caption: i18next.t('Vote for this drawing on Comme un Dessein', {
-            drawing: this.currentDrawing.title,
-            author: this.currentDrawing.owner
+            drawing: drawing.title,
+            author: drawing.owner
           }),
-          link: location.origin + '/drawing-' + this.currentDrawing.pk
+          link: location.origin + '/drawing-' + drawing.pk
         }, (function(response) {
           console.log(response);
         }));
       };
 
-      DrawingPanel.prototype.shareOnTwitter = function(event) {
+      DrawingPanel.prototype.shareOnTwitter = function(event, drawing) {
         var twitterHashTags, twitterLink, twitterText, twitterURL;
-        twitterText = '' + this.currentDrawing.title + ' ' + i18next.t('by') + ' ' + this.currentDrawing.owner + ', ' + i18next.t('on') + ' Comme un Dessein';
-        twitterURL = location.origin + '/drawing-' + this.currentDrawing.pk;
+        if (drawing == null) {
+          drawing = this.currentDrawing;
+        }
+        twitterText = '' + drawing.title + ' ' + i18next.t('by') + ' ' + drawing.owner + ', ' + i18next.t('on') + ' Comme un Dessein';
+        twitterURL = location.origin + '/drawing-' + drawing.pk;
         twitterHashTags = 'CommeUnDessein,idlv,Maintenant2017';
         twitterLink = 'http://twitter.com/share?text=' + twitterText + '&url=' + twitterURL + '&hashtags=' + twitterHashTags;
         window.open(twitterLink, 'popup', 'width=600, height=400');

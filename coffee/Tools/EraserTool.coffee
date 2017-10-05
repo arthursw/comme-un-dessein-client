@@ -31,7 +31,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		# the icon will be made with the first two letters of the name if the name is in one word, or the first letter of each words of the name otherwise
 		constructor: (@Path, justCreated=false) ->
 			@name = @constructor.label
-			@radius = 15
+			@radius = 0.1
 			R.tools[@name] = @
 
 			# check if a button already exists (when created fom a module)
@@ -115,6 +115,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			if @circle?
 				@circle.remove()
 				@circle = null
+				clearInterval(@circleIntervalID)
 			R.view.tool.onMouseMove = null
 			return
 
@@ -196,6 +197,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 			@updateCircle(event.point)
 
+			@circleIntervalID = setInterval(@createCircle, 20)
+
 			draft = R.Drawing.getDraft()
 			@duplicateData = draft?.getDuplicateData()
 
@@ -229,12 +232,17 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			# if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "update", arguments: [event, R.me]
 			return
 
-		createCircle: (point)->
+		createCircle: (point)=>
+			point ?= @circle?.position
+			if not point then return
+			@circle?.remove()
 			@circle = new P.Path.Circle(point, @radius)
 			@circle.strokeWidth = 1
 			@circle.strokeColor = '#2fa1d6'
 			@circle.strokeScaling = false
 			R.view.selectionLayer.addChild(@circle)
+			if @radius < 15
+				@radius += 0.5
 			return
 
 		updateCircle: (point)->
@@ -260,6 +268,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		end: (event, from=R.me) ->
 			@circle.position = event.point
 			@erase()
+
+			clearInterval(@circleIntervalID)
+			@radius = 0.1
 
 			draft = R.Drawing.getDraft()
 			

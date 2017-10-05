@@ -2,7 +2,8 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
+    hasProp = {}.hasOwnProperty,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define(['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next'], function(P, R, Utils, Tool, Button, i18next) {
     var PathTool;
@@ -153,7 +154,7 @@
       };
 
       PathTool.prototype.begin = function(event, from, data) {
-        var ref;
+        var ref, ref1;
         if (from == null) {
           from = R.me;
         }
@@ -175,10 +176,13 @@
           R.tools.select.deselectAll(false);
           R.currentPaths[from] = new this.Path(Date.now(), data, null, null, null, null, R.me);
           if (this.circleMode()) {
-            this.circlePathRadius = 0.05;
+            this.circlePathRadius = 0.1;
             this.circlePathCenter = event.point;
+            if (ref1 = R.drawingMode, indexOf.call(R.Path.PrecisePath.snappedModes, ref1) >= 0) {
+              this.circlePathCenter = Utils.Snap.snap2D(event.point, R.drawingMode === 'lineOrthoDiag' ? R.Path.PrecisePath.lineOrthoGridSize : R.Path.PrecisePath.orthoGridSize / 2);
+            }
             this.animateCircle(0, true);
-            requestAnimationFrame(this.animateCircle);
+            this.animateCircleIntervalID = setInterval(this.animateCircle, 150);
           }
         }
         R.currentPaths[from].beginCreate(event.point, event, false);
@@ -202,14 +206,16 @@
         }
         path = R.currentPaths[from];
         if ((createCircle || (this.circlePath != null)) && (path != null)) {
-          this.circlePathRadius += 0.2;
           if ((ref = this.circlePath) != null) {
             ref.remove();
           }
           this.circlePath = new P.Path.Circle(this.circlePathCenter, this.circlePathRadius);
           this.circlePath.strokeColor = path.data.strokeColor;
           this.circlePath.strokeWidth = path.data.strokeWidth;
-          requestAnimationFrame(this.animateCircle);
+          this.circlePathRadius += 4;
+        } else {
+          clearInterval(this.animateCircleIntervalID);
+          this.animateCircleIntervalID = null;
         }
       };
 
@@ -267,6 +273,7 @@
         if (this.circleMode() && (this.circlePath != null)) {
           this.circlePath.remove();
           this.circlePath = null;
+          clearInterval(this.animateCircleIntervalID);
         }
         draftLimit = this.showDraftLimits();
         draftIsTooBig = (draftLimit != null) && !draftLimit.expand(-20).contains(event.point);
@@ -362,6 +369,7 @@
           R.currentPaths[from] = path;
           this.circlePath.remove();
           this.circlePath = null;
+          clearInterval(this.animateCircleIntervalID);
           this.createPath(event, from);
           R.drawingPanel.showSubmitDrawing();
           return;

@@ -106,6 +106,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 				@onClickWhenNotLoaded()
 			return
 
+		click: ()->
+			@btnJ.click()
+			return
+
 		addPopover: (parameters)->
 			# initialize the popover (help tooltip)
 			# popoverOptions =

@@ -172,10 +172,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 				# R.currentPaths[from].select(false, false)
 
 				if @circleMode()
-					@circlePathRadius = 0.05
+					@circlePathRadius = 0.1
 					@circlePathCenter = event.point
+					if R.drawingMode in R.Path.PrecisePath.snappedModes
+						@circlePathCenter = Utils.Snap.snap2D(event.point, if R.drawingMode == 'lineOrthoDiag' then R.Path.PrecisePath.lineOrthoGridSize else R.Path.PrecisePath.orthoGridSize / 2)
 					@animateCircle(0, true)
-					requestAnimationFrame(@animateCircle)
+					@animateCircleIntervalID = setInterval(@animateCircle, 150)
 
 			R.currentPaths[from].beginCreate(event.point, event, false)
 
@@ -195,12 +197,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		animateCircle: (time, createCircle=false, from=R.me)=>
 			path = R.currentPaths[from]
 			if (createCircle or @circlePath?) and path?
-				@circlePathRadius += 0.2
 				@circlePath?.remove()
 				@circlePath = new P.Path.Circle(@circlePathCenter, @circlePathRadius)
 				@circlePath.strokeColor = path.data.strokeColor
 				@circlePath.strokeWidth = path.data.strokeWidth
-				requestAnimationFrame(@animateCircle)
+				@circlePathRadius += 4
+			else
+				clearInterval(@animateCircleIntervalID)
+				@animateCircleIntervalID = null
 			return
 
 		showDraftLimits: ()->
@@ -263,6 +267,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			if @circleMode() and @circlePath?
 				@circlePath.remove()
 				@circlePath = null
+				clearInterval(@animateCircleIntervalID)
 
 			draftLimit = @showDraftLimits()
 
@@ -413,6 +418,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 
 				@circlePath.remove()
 				@circlePath = null
+				clearInterval(@animateCircleIntervalID)
 				@createPath(event, from)
 				R.drawingPanel.showSubmitDrawing()
 				return

@@ -682,6 +682,18 @@
         if (event.key === 'space' && ((ref = R.selectedTool) != null ? ref.name : void 0) !== 'Move') {
           R.tools.move.select();
         }
+        if (event.key === 'z' && (event.modifiers.control || event.modifiers.meta)) {
+          R.commandManager.undo();
+          event.event.preventDefault();
+          event.event.stopPropagation();
+          return -1;
+        }
+        if (event.key === 'y' && (event.modifiers.control || event.modifiers.meta)) {
+          R.commandManager["do"]();
+          event.event.preventDefault();
+          event.event.stopPropagation();
+          return -1;
+        }
       };
 
       View.prototype.onKeyUp = function(event) {

@@ -259,16 +259,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				return)
 			return
 
-		shareOnFacebook: (event)=>
-			bounds = @currentDrawing.getBounds()
+		shareOnFacebook: (event, drawing=@currentDrawing)=>
+			bounds = drawing.getBounds()
 			if bounds?
 				R.view.fitRectangle(bounds, true)
 				R.view.updateHash()
 
 			FB.ui({
 				method: 'feed',
-				caption: i18next.t('Vote for this drawing on Comme un Dessein', { drawing: @currentDrawing.title, author: @currentDrawing.owner }),
-				link: location.origin + '/drawing-' + @currentDrawing.pk,
+				caption: i18next.t('Vote for this drawing on Comme un Dessein', { drawing: drawing.title, author: drawing.owner }),
+				link: location.origin + '/drawing-' + drawing.pk,
 			}, ((response)-> 
 				console.log(response)
 				return
@@ -276,9 +276,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			return
 
-		shareOnTwitter: (event)=>
-			twitterText = '' + @currentDrawing.title + ' ' + i18next.t('by') + ' ' + @currentDrawing.owner + ', ' + i18next.t('on') + ' Comme un Dessein'
-			twitterURL = location.origin + '/drawing-' + @currentDrawing.pk
+		shareOnTwitter: (event, drawing=@currentDrawing)=>
+			twitterText = '' + drawing.title + ' ' + i18next.t('by') + ' ' + drawing.owner + ', ' + i18next.t('on') + ' Comme un Dessein'
+			twitterURL = location.origin + '/drawing-' + drawing.pk
 			twitterHashTags = 'CommeUnDessein,idlv,Maintenant2017'
 			twitterLink = 'http://twitter.com/share?text=' + twitterText + '&url=' + twitterURL + '&hashtags=' + twitterHashTags
 			window.open(twitterLink, 'popup', 'width=600, height=400')

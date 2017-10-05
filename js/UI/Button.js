@@ -117,6 +117,10 @@
         return;
       }
 
+      Button.prototype.click = function() {
+        this.btnJ.click();
+      };
+
       Button.prototype.addPopover = function(parameters) {
         var attrs, is_touch_device, prefix;
         is_touch_device = (indexOf.call(window, "ontouchstart") >= 0) || window.DocumentTouch && document instanceof DocumentTouch || window.innerWidth <= 1024;

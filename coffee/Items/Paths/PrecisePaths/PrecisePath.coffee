@@ -64,8 +64,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 		@secureStep = 25
 		@polygonMode = true
-		@orthoGridSize = 10
-		@lineOrthoGridSize = 1
+		@orthoGridSize = 20
+		@lineOrthoGridSize = 2
 		@pixelGridSize = 10
 
 		@drawingModes = ['orthoDiag', 'ortho', 'lineOrthoDiag', 'pixel', 'cross', 'dot', 'line']
@@ -366,6 +366,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			if not @data.polygonMode 				# in normal mode: just initialize the control path and begin drawing
 				@addControlPath()
 				if R.drawingMode in @constructor.snappedModes
+					if R.drawingMode == 'lineOrthoDiag'
+						draft = R.Drawing.getDraft()
+						if draft?
+							hitResult = draft.group.hitTest(point, { tolerance: 6, segments: true, fill: false, stroke: false, curves: false, handles: false, position: false, bounds: false, guides: false, selected: false })
+							if hitResult?.point?
+								point = hitResult.point
+
 					@controlPath.add(Utils.Snap.snap2D(point, if R.drawingMode == 'lineOrthoDiag' then @constructor.lineOrthoGridSize else @constructor.orthoGridSize))
 				else 
 					@controlPath.add(point)
@@ -400,8 +407,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		updateCreate: (point, event)->
 			if not @data.polygonMode
 
-				if @controlPath.lastSegment.point.getDistance(point, true) < 20
-					return
+				if R.drawingMode != 'line'
+					if @controlPath.lastSegment.point.getDistance(point, true) < 10
+						return
 
 				console.log 'updateCreate'
 

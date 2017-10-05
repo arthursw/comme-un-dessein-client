@@ -564,6 +564,7 @@
       };
 
       Drawing.prototype.submitCallback = function(result) {
+        var modal;
         if (!R.loader.checkError(result)) {
           return;
         }
@@ -576,16 +577,38 @@
         this.removePaths();
         this.setSVG(this.svgString);
         this.svgString = null;
+        this.status = result.status;
+        modal = Modal.createModal({
+          id: 'share-facebook',
+          title: 'Drawing submitted',
+          submit: ((function(_this) {
+            return function() {
+              return R.drawingPanel.shareOnFacebook(null, _this);
+            };
+          })(this)),
+          submitButtonText: 'Share on Facebook',
+          cancelButtonText: 'No thanks'
+        });
+        modal.addButton({
+          type: 'info',
+          name: 'Tweet',
+          submit: ((function(_this) {
+            return function() {
+              return R.drawingPanel.shareOnTwitter(null, _this);
+            };
+          })(this))
+        });
         if (this.status === 'emailNotConfirmed') {
-          R.alertManager.alert("Drawing successfully submitted but email not confirmed", "success", null, {
+          modal.addText("Drawing successfully submitted but email not confirmed", "Drawing successfully submitted but email not confirmed", false, {
             positiveVoteThreshold: result.positiveVoteThreshold
           });
         } else {
-          R.alertManager.alert("Drawing successfully submitted", "success", null, {
+          modal.addText("Drawing successfully submitted", "Drawing successfully submitted", false, {
             positiveVoteThreshold: result.positiveVoteThreshold
           });
         }
-        this.status = result.status;
+        modal.addText('Would you like to share your drawing on Facebook or Twitter');
+        modal.show();
       };
 
       Drawing.prototype.updatePaths = function() {

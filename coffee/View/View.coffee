@@ -703,6 +703,18 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if event.key == 'space' and R.selectedTool?.name != 'Move'
 				R.tools.move.select()
 
+			if event.key == 'z' and (event.modifiers.control or event.modifiers.meta)
+				R.commandManager.undo()
+				event.event.preventDefault()
+				event.event.stopPropagation()
+				return -1
+			
+			if event.key == 'y' and (event.modifiers.control or event.modifiers.meta)
+				R.commandManager.do()
+				event.event.preventDefault()
+				event.event.stopPropagation()
+				return -1
+			
 			return
 
 		onKeyUp: (event) =>

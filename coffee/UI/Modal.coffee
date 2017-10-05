@@ -65,7 +65,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			if args.submitButtonText?
 				spanJ = $('<span>')
 				spanJ.attr('data-i18n', args.submitButtonText).append(i18next.t(args.submitButtonText))
-				@modalJ.find('[name="submit"]').append(spanJ)
+				@modalJ.find('[name="submit"]').html(spanJ)
 			
 			if args.cancelButtonIcon?
 				iconJ = $('<span>')
@@ -75,7 +75,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			if args.cancelButtonText?
 				spanJ = $('<span>')
 				spanJ.attr('data-i18n', args.cancelButtonText).append(i18next.t(args.cancelButtonText))
-				@modalJ.find('[name="cancel"]').append(spanJ)
+				@modalJ.find('[name="cancel"]').html(spanJ)
 
 			@modalJ.find('.btn-primary').click( (event)=> @modalSubmit() )
 
@@ -84,10 +84,14 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 
 			return
 
-		addText: (text, textKey=null, escapeValue=true)->
+		addText: (text, textKey=null, escapeValue=false, options=null)->
 			textKey ?= text
-			content = i18next.t(textKey, { interpolation: { escapeValue: false } })
-			@modalBodyJ.append("<p data-i18n='[html]#{textKey}'>#{content}</p>")
+			options ?= {}
+			options.interpolation ?= {}
+			options.interpolation.escapeValue = escapeValue
+			content = i18next.t(textKey, options)
+			@modalBodyJ.append("<p data-i18n-options='#{JSON.stringify(options)}' data-i18n='[html]#{textKey}'>#{content}</p>")
+
 			return
 
 		addTextInput: (args)->

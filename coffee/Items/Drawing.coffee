@@ -525,13 +525,34 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@setSVG(@svgString)
 			@svgString = null
 
-			if @status == 'emailNotConfirmed'
-				R.alertManager.alert "Drawing successfully submitted but email not confirmed", "success", null, {positiveVoteThreshold: result.positiveVoteThreshold}
-			else
-				R.alertManager.alert "Drawing successfully submitted", "success", null, {positiveVoteThreshold: result.positiveVoteThreshold}
+			# if @status == 'emailNotConfirmed'
+			# 	R.alertManager.alert "Drawing successfully submitted but email not confirmed", "success", null, {positiveVoteThreshold: result.positiveVoteThreshold}
+			# else
+			# 	R.alertManager.alert "Drawing successfully submitted", "success", null, {positiveVoteThreshold: result.positiveVoteThreshold}
 
 			@status = result.status
 			# R.socket.emit "drawing change", type: 'status', pk: result.pk, status: @status, city: R.city
+
+			modal = Modal.createModal( 
+				id: 'share-facebook',
+				title: 'Drawing submitted', 
+				submit: ( ()=> R.drawingPanel.shareOnFacebook(null, @) ), 
+				# postSubmit: 'load', 
+				submitButtonText: 'Share on Facebook', 
+				# submitButtonIcon: 'glyphicon-user', 
+				cancelButtonText: 'No thanks', 
+				# cancelButtonIcon: 'glyphicon-sunglasses' 
+				)
+			modal.addButton( type: 'info', name: 'Tweet', submit: (()=> R.drawingPanel.shareOnTwitter(null, @)) )
+
+			if @status == 'emailNotConfirmed'
+				modal.addText("Drawing successfully submitted but email not confirmed", "Drawing successfully submitted but email not confirmed", false, {positiveVoteThreshold: result.positiveVoteThreshold})
+			else
+				modal.addText("Drawing successfully submitted", "Drawing successfully submitted", false, {positiveVoteThreshold: result.positiveVoteThreshold})
+
+			modal.addText('Would you like to share your drawing on Facebook or Twitter')
+			
+			modal.show()
 
 			return
 		
