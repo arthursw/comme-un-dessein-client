@@ -123,7 +123,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 				if draft?
 					bounds = draft.getBounds()
 					if bounds?
-						R.view.fitRectangle(bounds, false, if P.view.zoom < 1 then 1 else P.view.zoom)
+						if not P.view.bounds.expand(-75).contains(bounds.center)
+							R.view.fitRectangle(bounds, false, if P.view.zoom < 1 then 1 else P.view.zoom)
 
 			if P.view.zoom < 1
 				R.alertManager.alert 'You can zoom in to draw more easily', 'info'

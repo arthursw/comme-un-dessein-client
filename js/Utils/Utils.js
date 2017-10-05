@@ -817,9 +817,27 @@
         }
       }).done(R.loader.checkError);
     };
+    R.validateDrawing = function() {
+      var ref;
+      if (((ref = R.s) != null ? ref.pk : void 0) == null) {
+        return;
+      }
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'validateDrawing',
+            args: {
+              pk: R.s.pk
+            }
+          })
+        }
+      }).done(R.loader.checkError);
+    };
     R.createDrawingThumbnail = function() {
       var imageURL;
-      imageURL = R.view.getThumbnail(R.s, 1024, true);
+      imageURL = R.view.getThumbnail(R.s, 1200, 630, true);
       $.ajax({
         method: "POST",
         url: "ajaxCall/",

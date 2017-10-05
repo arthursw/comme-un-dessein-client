@@ -211,6 +211,7 @@
         switch (this.status) {
           case 'pending':
           case 'emailNotConfirmed':
+          case 'notConfirmed':
             itemListJ = R.view.pendingListJ;
             break;
           case 'drawing':
@@ -485,7 +486,7 @@
 
       Drawing.prototype.getLayerName = function() {
         var statusName;
-        statusName = this.status === 'emailNotConfirmed' ? 'pending' : this.status;
+        statusName = this.status === 'emailNotConfirmed' || this.status === 'notConfirmed' ? 'pending' : this.status;
         return statusName + 'Layer';
       };
 
@@ -520,7 +521,7 @@
         var args, imageURL, svg;
         svg = this.getSVG();
         this.svgString = svg;
-        imageURL = R.view.getThumbnail(this, 1024, true);
+        imageURL = R.view.getThumbnail(this, 1200, 630, true);
         args = {
           pk: this.pk,
           clientId: this.id,
@@ -600,6 +601,10 @@
         });
         if (this.status === 'emailNotConfirmed') {
           modal.addText("Drawing successfully submitted but email not confirmed", "Drawing successfully submitted but email not confirmed", false, {
+            positiveVoteThreshold: result.positiveVoteThreshold
+          });
+        } else if (this.status === 'notConfirmed') {
+          modal.addText("Drawing successfully submitted but not confirmed", "Drawing successfully submitted but not confirmed", false, {
             positiveVoteThreshold: result.positiveVoteThreshold
           });
         } else {

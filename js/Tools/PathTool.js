@@ -133,7 +133,9 @@
           if (draft != null) {
             bounds = draft.getBounds();
             if (bounds != null) {
-              R.view.fitRectangle(bounds, false, P.view.zoom < 1 ? 1 : P.view.zoom);
+              if (!P.view.bounds.expand(-75).contains(bounds.center)) {
+                R.view.fitRectangle(bounds, false, P.view.zoom < 1 ? 1 : P.view.zoom);
+              }
             }
           }
         }

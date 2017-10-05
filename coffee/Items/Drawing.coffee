@@ -203,7 +203,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			itemListJ = null
 			switch @status
-				when 'pending', 'emailNotConfirmed'
+				when 'pending', 'emailNotConfirmed', 'notConfirmed'
 					# R.view.pendingLayer.addChild(@group)
 					itemListJ = R.view.pendingListJ
 				when 'drawing'
@@ -457,7 +457,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		getLayerName: () ->
-			statusName = if @status == 'emailNotConfirmed' then 'pending' else @status
+			statusName = if @status == 'emailNotConfirmed' or @status == 'notConfirmed' then 'pending' else @status
 			return statusName + 'Layer'
 
 		getBounds: ()->
@@ -478,7 +478,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			svg = @getSVG()
 			@svgString = svg
 
-			imageURL = R.view.getThumbnail(@, 1024, true)
+			imageURL = R.view.getThumbnail(@, 1200, 630, true)
 
 			args = {
 				pk: @pk
@@ -547,6 +547,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			if @status == 'emailNotConfirmed'
 				modal.addText("Drawing successfully submitted but email not confirmed", "Drawing successfully submitted but email not confirmed", false, {positiveVoteThreshold: result.positiveVoteThreshold})
+			else if @status == 'notConfirmed'
+				modal.addText("Drawing successfully submitted but not confirmed", "Drawing successfully submitted but not confirmed", false, {positiveVoteThreshold: result.positiveVoteThreshold})
 			else
 				modal.addText("Drawing successfully submitted", "Drawing successfully submitted", false, {positiveVoteThreshold: result.positiveVoteThreshold})
 

@@ -118,11 +118,11 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			paper.projects[0].activate()
 			return
 
-		getThumbnail: (drawing, size=@constructor.thumbnailSize, toDataURL=false)->
+		getThumbnail: (drawing, sizeX=@constructor.thumbnailSize, sizeY=@constructor.thumbnailSize, toDataURL=false)->
 			@thumbnailProject.activate()
-			@thumbnailProject.view.viewSize = new P.Size(size, size)
-			@thumbnailCanvas.width = size
-			@thumbnailCanvas.height = size
+			@thumbnailProject.view.viewSize = new P.Size(sizeX, sizeY)
+			@thumbnailCanvas.width = sizeX
+			@thumbnailCanvas.height = sizeY
 			rectangle = drawing.getBounds()
 
 			if not rectangle? then return null
@@ -139,9 +139,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				console.error('drawing is empty')
 
 			if viewRatio < rectangleRatio
-				@thumbnailProject.view.zoom = Math.min(size / rectangle.width, 1)
+				@thumbnailProject.view.zoom = Math.min(sizeX / rectangle.width, 1)
 			else
-				@thumbnailProject.view.zoom = Math.min(size / rectangle.height, 1)
+				@thumbnailProject.view.zoom = Math.min(sizeY / rectangle.height, 1)
 
 			@thumbnailProject.view.setCenter(rectangle.center)
 			@thumbnailProject.activeLayer.strokeColor = R.Path.colorMap[drawing.status]
@@ -708,7 +708,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				event.event.preventDefault()
 				event.event.stopPropagation()
 				return -1
-			
+
 			if event.key == 'y' and (event.modifiers.control or event.modifiers.meta)
 				R.commandManager.do()
 				event.event.preventDefault()

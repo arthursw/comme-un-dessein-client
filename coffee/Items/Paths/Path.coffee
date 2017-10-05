@@ -56,6 +56,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			draft: '#00C2E0',
 			pending: '#0079BF',
 			emailNotConfirmed: '#0079BF',
+			notConfirmed: '#E91E63',
 			drawing: '#61BD4F',
 			drawn: '#4d4d4d',
 			rejected: '#EB5A46'

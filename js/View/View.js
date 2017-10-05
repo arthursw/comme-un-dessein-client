@@ -130,18 +130,21 @@
         paper.projects[0].activate();
       };
 
-      View.prototype.getThumbnail = function(drawing, size, toDataURL) {
+      View.prototype.getThumbnail = function(drawing, sizeX, sizeY, toDataURL) {
         var i, len, path, rectangle, rectangleRatio, ref, result, viewRatio;
-        if (size == null) {
-          size = this.constructor.thumbnailSize;
+        if (sizeX == null) {
+          sizeX = this.constructor.thumbnailSize;
+        }
+        if (sizeY == null) {
+          sizeY = this.constructor.thumbnailSize;
         }
         if (toDataURL == null) {
           toDataURL = false;
         }
         this.thumbnailProject.activate();
-        this.thumbnailProject.view.viewSize = new P.Size(size, size);
-        this.thumbnailCanvas.width = size;
-        this.thumbnailCanvas.height = size;
+        this.thumbnailProject.view.viewSize = new P.Size(sizeX, sizeY);
+        this.thumbnailCanvas.width = sizeX;
+        this.thumbnailCanvas.height = sizeY;
         rectangle = drawing.getBounds();
         if (rectangle == null) {
           return null;
@@ -160,9 +163,9 @@
           console.error('drawing is empty');
         }
         if (viewRatio < rectangleRatio) {
-          this.thumbnailProject.view.zoom = Math.min(size / rectangle.width, 1);
+          this.thumbnailProject.view.zoom = Math.min(sizeX / rectangle.width, 1);
         } else {
-          this.thumbnailProject.view.zoom = Math.min(size / rectangle.height, 1);
+          this.thumbnailProject.view.zoom = Math.min(sizeY / rectangle.height, 1);
         }
         this.thumbnailProject.view.setCenter(rectangle.center);
         this.thumbnailProject.activeLayer.strokeColor = R.Path.colorMap[drawing.status];

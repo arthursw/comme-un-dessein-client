@@ -347,7 +347,8 @@
             drawing: drawing.title,
             author: drawing.owner
           }),
-          link: location.origin + '/drawing-' + drawing.pk
+          link: location.origin + '/drawing-' + drawing.pk,
+          mobile_iframe: true
         }, (function(response) {
           console.log(response);
         }));
@@ -688,7 +689,7 @@
         this.voteUpBtnJ.removeClass('disabled');
         this.voteDownBtnJ.removeClass('disabled');
         if (this.currentDrawing.owner === R.me || R.administrator) {
-          if (this.currentDrawing.status === 'pending' || this.currentDrawing.status === 'emailNotConfirmed') {
+          if (this.currentDrawing.status === 'pending' || this.currentDrawing.status === 'emailNotConfirmed' || this.currentDrawing.status === 'notConfirmed') {
             this.voteUpBtnJ.removeClass('disabled');
             this.voteDownBtnJ.removeClass('disabled');
           }
@@ -720,7 +721,7 @@
         this.thumbnailFooterTitle.text(this.currentDrawing.title);
         this.contentJ.find('#drawing-description').val(this.currentDrawing.description);
         if (this.currentDrawing.owner === R.me || R.administrator) {
-          if (latestDrawing.status === 'pending' || latestDrawing.status === 'emailNotConfirmed') {
+          if (latestDrawing.status === 'pending' || latestDrawing.status === 'emailNotConfirmed' || latestDrawing.status === 'notConfirmed') {
             this.contentJ.find('.title-group').show();
             this.modifyBtnJ.show();
             this.cancelBtnJ.show();
@@ -900,7 +901,7 @@
           R.alertManager.alert('You cannot vote for your own drawing', 'error');
           return;
         }
-        if (this.currentDrawing.status !== 'pending' && this.currentDrawing.status !== 'emailNotConfirmed') {
+        if (this.currentDrawing.status !== 'pending' && this.currentDrawing.status !== 'emailNotConfirmed' && this.currentDrawing.status !== 'notConfirmed') {
           R.alertManager.alert('The drawing is already validated', 'error');
           return;
         }
@@ -963,7 +964,7 @@
           R.alertManager.alert("You must select a drawing first", "error");
           return;
         }
-        if (this.currentDrawing.status !== 'pending' && this.currentDrawing.status !== 'emailNotConfirmed') {
+        if (this.currentDrawing.status !== 'pending' && this.currentDrawing.status !== 'emailNotConfirmed' && this.currentDrawing.status !== 'notConfirmed') {
           R.alertManager.alert("The drawing is already validated, it cannot be modified anymore", "error");
           return;
         }
@@ -982,7 +983,7 @@
           this.close();
           return;
         }
-        if (this.currentDrawing.status !== 'pending' && this.currentDrawing.status !== 'draft' && this.currentDrawing.status !== 'emailNotConfirmed') {
+        if (this.currentDrawing.status !== 'pending' && this.currentDrawing.status !== 'draft' && this.currentDrawing.status !== 'emailNotConfirmed' && this.currentDrawing.status !== 'notConfirmed') {
           R.alertManager.alert("The drawing is already validated, it cannot be cancelled anymore", "error");
           return;
         }
