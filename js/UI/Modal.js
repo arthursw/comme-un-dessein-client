@@ -75,25 +75,25 @@
           };
         })(this));
         this.modalJ.on('hidden.bs.modal', this["delete"]);
-        if (args.submitButtonIcon != null) {
-          iconJ = $('<span>');
-          iconJ.addClass('glyphicon ' + args.submitButtonIcon);
-          this.modalJ.find('[name="submit"]').html(iconJ);
-        }
         if (args.submitButtonText != null) {
           spanJ = $('<span>');
           spanJ.attr('data-i18n', args.submitButtonText).append(i18next.t(args.submitButtonText));
-          this.modalJ.find('[name="submit"]').html(spanJ);
+          this.modalJ.find('[name="submit"]').removeAttr('data-i18n').html(spanJ);
         }
-        if (args.cancelButtonIcon != null) {
+        if (args.submitButtonIcon != null) {
           iconJ = $('<span>');
-          iconJ.addClass('glyphicon ' + args.cancelButtonIcon);
-          this.modalJ.find('[name="cancel"]').html(iconJ);
+          iconJ.addClass('glyphicon ' + args.submitButtonIcon);
+          this.modalJ.find('[name="submit"]').prepend(iconJ);
         }
         if (args.cancelButtonText != null) {
           spanJ = $('<span>');
           spanJ.attr('data-i18n', args.cancelButtonText).append(i18next.t(args.cancelButtonText));
           this.modalJ.find('[name="cancel"]').html(spanJ);
+        }
+        if (args.cancelButtonIcon != null) {
+          iconJ = $('<span>');
+          iconJ.addClass('glyphicon ' + args.cancelButtonIcon);
+          this.modalJ.find('[name="cancel"]').removeAttr('data-i18n').prepend(iconJ);
         }
         this.modalJ.find('.btn-primary').click((function(_this) {
           return function(event) {

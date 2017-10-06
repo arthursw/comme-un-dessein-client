@@ -172,6 +172,9 @@
         }
         this.thumbnailProject.view.setCenter(rectangle.center);
         this.thumbnailProject.activeLayer.strokeColor = blackStroke ? 'black' : R.Path.colorMap[drawing.status];
+        if (blackStroke) {
+          this.thumbnailProject.activeLayer.strokeWidth = 3;
+        }
         this.thumbnailProject.view.update();
         this.thumbnailProject.view.draw();
         result = toDataURL ? this.thumbnailCanvas.toDataURL() : this.thumbnailProject.exportSVG();

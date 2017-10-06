@@ -57,25 +57,26 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 
 			@modalJ.on('hidden.bs.modal', @delete)
 
-			if args.submitButtonIcon?
-				iconJ = $('<span>')
-				iconJ.addClass('glyphicon ' + args.submitButtonIcon)
-				@modalJ.find('[name="submit"]').html(iconJ)
-
 			if args.submitButtonText?
 				spanJ = $('<span>')
 				spanJ.attr('data-i18n', args.submitButtonText).append(i18next.t(args.submitButtonText))
-				@modalJ.find('[name="submit"]').html(spanJ)
+				@modalJ.find('[name="submit"]').removeAttr('data-i18n').html(spanJ)
 			
-			if args.cancelButtonIcon?
+			if args.submitButtonIcon?
 				iconJ = $('<span>')
-				iconJ.addClass('glyphicon ' + args.cancelButtonIcon)
-				@modalJ.find('[name="cancel"]').html(iconJ)
+				iconJ.addClass('glyphicon ' + args.submitButtonIcon)
+				@modalJ.find('[name="submit"]').prepend(iconJ)
+
 			
 			if args.cancelButtonText?
 				spanJ = $('<span>')
 				spanJ.attr('data-i18n', args.cancelButtonText).append(i18next.t(args.cancelButtonText))
 				@modalJ.find('[name="cancel"]').html(spanJ)
+
+			if args.cancelButtonIcon?
+				iconJ = $('<span>')
+				iconJ.addClass('glyphicon ' + args.cancelButtonIcon)
+				@modalJ.find('[name="cancel"]').removeAttr('data-i18n').prepend(iconJ)
 
 			@modalJ.find('.btn-primary').click( (event)=> @modalSubmit() )
 
