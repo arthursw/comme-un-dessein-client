@@ -646,7 +646,7 @@
 
       View.prototype.contains = function(item, tolerance) {
         if (tolerance == null) {
-          tolerance = 25;
+          tolerance = 0;
         }
         return this.grid.contains(item, tolerance);
       };

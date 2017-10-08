@@ -666,7 +666,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			return
 
-		contains: (item, tolerance=25)->
+		contains: (item, tolerance=0)->
 			return @grid.contains(item, tolerance)
 
 		## mouse and key listeners
