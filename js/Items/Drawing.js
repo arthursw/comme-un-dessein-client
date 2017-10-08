@@ -169,12 +169,16 @@
       };
 
       Drawing.prototype.setStrokeColorFromVote = function(positive) {
-        var ref;
+        var colorClass, ref, spanJ;
         if (this.status === 'pending') {
           if ((ref = this.svg) != null) {
             ref.setAttribute('stroke', positive ? '#009688' : '#f44336');
           }
         }
+        colorClass = positive ? 'drawing-color' : 'rejected-color';
+        spanJ = $('<span class="badge ' + colorClass + '"></span>');
+        spanJ.text(i18next.t(positive ? 'voted for' : 'voted against'));
+        $('#RItems li[data-id="' + this.id + '"]').append(spanJ);
       };
 
       Drawing.prototype.getPathIds = function() {
@@ -226,6 +230,9 @@
           case 'draft':
             itemListJ = R.view.draftListJ;
             break;
+          case 'flagged':
+            itemListJ = R.view.flaggedListJ;
+            break;
           default:
             R.alertManager.alert("Error: drawing status is invalid", "error");
         }
@@ -276,6 +283,7 @@
         if (!P.view.bounds.intersects(bounds)) {
           R.view.moveTo(bounds.center, 1000);
         }
+        R.drawingPanel.fromGeneralInformation = true;
         this.select();
       };
 
@@ -458,7 +466,7 @@
             pointLists.push(path.getPoints());
           }
           args = {
-            clientId: this.clientId,
+            clientId: this.id,
             pk: this.pk,
             pointLists: pointLists
           };

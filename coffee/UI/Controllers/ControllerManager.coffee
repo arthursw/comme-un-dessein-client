@@ -4,12 +4,10 @@ if document?
 
 define 'UI/Controllers/ControllerManager', dependencies, (P, R, Utils, Controller, ColorController, Folder, GUI) ->
 
-	console.log 'ControllerManager'
 
 	class ControllerManager
 
 		@initializeGlobalParameters: ()->
-			console.log 'initializeGlobalParameters'
 			# R.defaultColors = ['#bfb7e6', '#7d86c1', '#403874', '#261c4e', '#1f0937', '#574331', '#9d9121', '#a49959', '#b6b37e', '#91a3f5' ]
 			# R.defaultColors = ['#d7dddb', '#4f8a83', '#e76278', '#fac699', '#712164']
 			# R.defaultColors = ['#395A8F', '#4A79B1', '#659ADF', '#A4D2F3', '#EBEEF3']
@@ -330,7 +328,6 @@ define 'UI/Controllers/ControllerManager', dependencies, (P, R, Utils, Controlle
 			R.displayGrid = false
 			return
 
-		console.log 'call initializeGlobalParameters'
 		@initializeGlobalParameters()
 
 

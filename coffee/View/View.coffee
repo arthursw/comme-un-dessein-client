@@ -263,12 +263,24 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@draftLayer = new P.Layer()
 			@draftLayer.name  = 'draftLayer'
 			@draftLayer.strokeColor = Path.colorMap['draft']
+			@flaggedLayer = new P.Layer()
+			@flaggedLayer.name  = 'flaggedLayer'
+			
+			if not R.administrator
+				@rejectedLayer.visible = false
+			else
+				@flaggedLayer.strokeColor = Path.colorMap['flagged']
 
 			@draftListJ = @createLayerListItem('Draft', @draftLayer, true)
 			@pendingListJ = @createLayerListItem('Pending', @pendingLayer)
+			@pendingListJ.removeClass('closed')
 			@drawingListJ = @createLayerListItem('Drawing', @drawingLayer)
 			@drawnListJ = @createLayerListItem('Drawn', @drawnLayer)
 			@rejectedListJ = @createLayerListItem('Rejected', @rejectedLayer)
+			@flaggedListJ = @createLayerListItem('Flagged', @flaggedLayer)
+			
+			if not R.administrator
+				@flaggedListJ.hide()
 
 			return
 
@@ -469,6 +481,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				# hashParameters['mode'] = R.city.name
 			hashParameters['location'] = Utils.pointToString(P.view.center)
 			hashParameters['zoom'] = P.view.zoom.toFixed(3).replace(/\.?0+$/, '')
+			
+			if R.administrator
+				hashParameters['administrator'] = true
+
 			if R.tipibot?
 				hashParameters['tipibot'] = true
 			# if R.style?
@@ -514,6 +530,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			mustReload |= parameters['style'] != R.style
 			R.style = parameters['style']
+
+			R.administrator = parameters['administrator']
 
 			# if R.city.name != parameters['city-name'] or R.city.owner != parameters['city-owner']
 			# 	R.cityManager.loadCity(parameters['city-name'], parameters['city-owner'], p)

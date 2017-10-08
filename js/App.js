@@ -113,6 +113,7 @@
     R.style = parameters['style'] || 'line';
     R.initialZoom = parameters['zoom'];
     R.getParameters = getParameters;
+    R.administrator = parameters['administrator'];
     requirejs(['Main']);
   });
 

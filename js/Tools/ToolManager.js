@@ -125,7 +125,7 @@
       ToolManager.prototype.createUndoRedoButtons = function() {
         this.undoBtn = new Button({
           name: 'Undo',
-          iconURL: R.style === 'line' ? 'icones_icon_back.png' : R.style === 'hand' ? 'a-undo.png' : 'glyphicon-share-alt',
+          iconURL: R.style === 'line' ? 'icones_icon_back_02.png' : R.style === 'hand' ? 'a-undo.png' : 'glyphicon-share-alt',
           favorite: true,
           category: null,
           popover: true,
@@ -138,7 +138,7 @@
         });
         this.redoBtn = new Button({
           name: 'Redo',
-          iconURL: R.style === 'line' ? 'icones_icon_forward.png' : R.style === 'hand' ? 'a-redo.png' : 'glyphicon-share-alt',
+          iconURL: R.style === 'line' ? 'icones_icon_forward_02.png' : R.style === 'hand' ? 'a-redo.png' : 'glyphicon-share-alt',
           favorite: true,
           category: null,
           popover: true,
@@ -153,7 +153,7 @@
       ToolManager.prototype.createInfoButton = function() {
         this.infoBtn = new Button({
           name: 'Help',
-          iconURL: 'glyphicon-info-sign',
+          iconURL: 'icones_info.png',
           favorite: false,
           category: null,
           popover: true,
@@ -164,10 +164,10 @@
           divType: 'div'
         });
         this.infoBtn.btnJ.click(function() {
-          var PrivacyPolicyJ, layersJ, layersParentJ, modal, termsOfServiceJ, welcomeTextJ;
+          var PrivacyPolicyJ, liveJ, modal, termsOfServiceJ, welcomeTextJ;
           welcomeTextJ = $('#welcome-text');
-          layersJ = $('#RItems');
-          layersParentJ = layersJ.parent();
+          liveJ = $("<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/live_stream?channel=UCRMrTkJJYvGAerb1j-H-Miw\" frameborder=\"0\" allowfullscreen></iframe>");
+          welcomeTextJ.find('#tipibot-live').append(liveJ);
           modal = Modal.createModal({
             id: 'info',
             title: 'Welcome to Comme Un Dessein',
@@ -177,13 +177,7 @@
             divJ: welcomeTextJ.clone(),
             name: 'welcome-text'
           });
-          modal.addCustomContent({
-            divJ: layersJ
-          });
           modal.modalJ.find('[name="cancel"]').hide();
-          modal.modalJ.on('hide.bs.modal', function(event) {
-            layersParentJ.append($('#RItems'));
-          });
           termsOfServiceJ = $('<div><a id="terms-of-service-link" href="/terms-of-service.html" data-i18n="Terms of Service">' + i18next.t('Terms of Service') + '</a></div>');
           PrivacyPolicyJ = $('<div><a id="privacy-policy-link" href="/privacy-policy.html" data-i18n="Privacy Policy">' + i18next.t('Privacy Policy') + '</a></div>');
           modal.addCustomContent({
@@ -199,7 +193,7 @@
       ToolManager.prototype.createSubmitButton = function() {
         this.submitButton = new Button({
           name: 'Submit drawing',
-          iconURL: 'icones_icon_ok.png',
+          iconURL: 'icones_icon_proposer_02.png',
           classes: 'btn-success displayName',
           parentJ: $('#submit-drawing-button'),
           ignoreFavorite: true,
@@ -215,7 +209,7 @@
       ToolManager.prototype.createDeleteButton = function() {
         this.deleteButton = new Button({
           name: 'Delete draft',
-          iconURL: 'icones_cancel.png',
+          iconURL: 'icones_cancel_02.png',
           classes: 'btn-danger',
           parentJ: $('#submit-drawing-button'),
           ignoreFavorite: true,
@@ -253,7 +247,7 @@
         if (draft == null) {
           draft = R.Drawing.getDraft();
         }
-        if ((draft == null) || (draft.paths == null) || draft.paths.length === 0 || R.drawingPanel.visible) {
+        if ((draft == null) || (draft.paths == null) || draft.paths.length === 0 || (R.drawingPanel.opened && R.drawingPanel.status !== 'information')) {
           this.submitButton.hide();
           this.deleteButton.hide();
         } else {

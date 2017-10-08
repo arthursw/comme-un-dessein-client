@@ -73,11 +73,11 @@ define [
 		# just set some content and react to language changes
 		updateContent = ()->
 			$("body").localize()
-			console.log('i18n tests:')
-			console.log(i18next.t('Simple'))
-			console.log(i18next.t('You are logged as username', {username: 'username'}))
-			console.log(i18next.t('key', { what: 'i18next', how: 'great' }))
-			console.log(i18next.t('You successfully voted, the drawing will be rejected', {duration: ' 10 seconds'}))
+			# console.log('i18n tests:')
+			# console.log(i18next.t('Simple'))
+			# console.log(i18next.t('You are logged as username', {username: 'username'}))
+			# console.log(i18next.t('key', { what: 'i18next', how: 'great' }))
+			# console.log(i18next.t('You successfully voted, the drawing will be rejected', {duration: ' 10 seconds'}))
 			return
 
 		i18next

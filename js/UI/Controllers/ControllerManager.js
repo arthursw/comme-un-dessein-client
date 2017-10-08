@@ -11,11 +11,9 @@
 
   define('UI/Controllers/ControllerManager', dependencies, function(P, R, Utils, Controller, ColorController, Folder, GUI) {
     var ControllerManager;
-    console.log('ControllerManager');
     ControllerManager = (function() {
       ControllerManager.initializeGlobalParameters = function() {
         var colorName, hueRange, i, j, minHue, step;
-        console.log('initializeGlobalParameters');
         R.defaultColors = [];
         R.polygonMode = false;
         R.selectionBlue = '#2fa1d6';
@@ -236,8 +234,6 @@
         R.fillColor = "rgb(255,255,255,255)";
         R.displayGrid = false;
       };
-
-      console.log('call initializeGlobalParameters');
 
       ControllerManager.initializeGlobalParameters();
 

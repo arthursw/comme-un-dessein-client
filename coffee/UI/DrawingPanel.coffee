@@ -3,21 +3,30 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 	class DrawingPanel
 
 		constructor: ()->
+			@status = 'closed'
+
 			@drawingPanelJ = $("#drawingPanel")
+
+			@openBtnJ = $('#drawing-panel-handle')
+			
+			@openBtnJ.click (event)=>
+				if @drawingPanelJ.hasClass('opened')
+					@close()
+				else
+					@setGeneralInformation()
+				return
+
 			@contentJ = @drawingPanelJ.find('.content-container')
 
-			FB.init({
-				appId      : '263330707483013',
-				version    : 'v2.10'
-			})
-			
-			FB.getLoginStatus((response) =>
-				console.log(response)
-			)
+			@contentJ.find('.report-abuse').click @reportAbuse
+
+			@contentJ.find('.copy-link').click @copyLink
 
 			@contentJ.find('.share-facebook').click @shareOnFacebook
 
 			@contentJ.find('button.share-twitter').click @shareOnTwitter
+
+			@contentJ.find('.share-buttons button').popover()
 
 			# the button to start drawing
 			@beginDrawingBtnJ = $('button.begin-drawing')
@@ -53,8 +62,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@fileNameJ = @drawingPanelJ.find(".header .fileName input")
 			@linkFileInputJ = @drawingPanelJ.find("input.link-file")
 			@linkFileInputJ.change(@linkFile)
+
 			closeBtnJ = @drawingPanelJ.find("button.close-panel")
-			closeBtnJ.click @close
+			closeBtnJ.click ()=>
+				fromGeneralInformation = @fromGeneralInformation
+				@close()
+				if fromGeneralInformation
+					@setGeneralInformation()
 
 			# footer
 			@votesJ = @drawingPanelJ.find('.votes')
@@ -79,7 +93,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@cancelBtnJ.click(@cancelDrawing)
 			# @deleteBtnJ.click(@deleteDrawing)
 			
-			@visible = false
+			@opened = false
 
 			titleJ = @contentJ.find('#drawing-title')
 			
@@ -108,6 +122,82 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					return -1
 				return
 			@contentJ.find('.comments-container .submit-comment').click @submitComment
+
+			# @close()
+			return
+
+		reportAbuse: ()=>
+			if @currentDrawing?
+				modal = Modal.createModal( 
+					id: 'report-abuse',
+					title: 'Report abuse', 
+					submit: ( ()=> 
+						$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'reportAbuse', args: {pk:@currentDrawing.pk} } ).done((results)=>
+							if not R.loader.checkError(results) then return
+							R.alertManager.alert 'Your report was taken into account', 'success'
+							return)
+						return),
+					submitButtonText: 'Report abuse', 
+					submitButtonIcon: 'glyphicon-flag',
+					# cancelButtonText: 'Just visit', 
+					# cancelButtonIcon: 'glyphicon-sunglasses',
+					)
+			
+				modal.addText('You are about to report an abuse')
+				modal.addText('The drawing will be hidden and checked by a moderator')
+				modal.addText('Make sure the drawing is really inappropiate, false reports can lead to suspension of account')
+				modal.addText(null, 'If you are unsure about what to do plase send an email to idlv', false, {mail: 'idlv.contact@gmail.com'})
+				modal.modalJ.find('[name="submit"]').addClass('btn-danger').removeClass('btn-primary')
+				modal.show()
+			return
+
+		copyLink: ()=>
+			textArea = document.createElement('textarea')
+			#
+			# *** This styling is an extra step which is likely not required. ***
+			#
+			# Why is it here? To ensure:
+			# 1. the element is able to have focus and selection.
+			# 2. if element was to flash render it has minimal visual impact.
+			# 3. less flakyness with selection and copying which **might** occur if
+			#    the textarea element is not visible.
+			#
+			# The likelihood is the element won't even render, not even a flash,
+			# so some of these are just precautions. However in IE the element
+			# is visible whilst the popup box asking the user for permission for
+			# the web page to copy to the clipboard.
+			#
+			# Place in top-left corner of screen regardless of scroll position.
+			textArea.style.position = 'fixed'
+			textArea.style.top = 0
+			textArea.style.left = 0
+			# Ensure it has a small width and height. Setting to 1px / 1em
+			# doesn't work as this gives a negative w/h on some browsers.
+			textArea.style.width = '2em'
+			textArea.style.height = '2em'
+			# We don't need padding, reducing the size if it does flash render.
+			textArea.style.padding = 0
+			# Clean up any borders.
+			textArea.style.border = 'none'
+			textArea.style.outline = 'none'
+			textArea.style.boxShadow = 'none'
+			# Avoid flash of white box if rendered for any reason.
+			textArea.style.background = 'transparent'
+			textArea.value = @getDrawingLink()
+			document.body.appendChild textArea
+			textArea.select()
+
+			try
+				successful = document.execCommand('copy')
+				msg = if successful then 'successful' else 'unsuccessful'
+				console.log 'Copying text command was ' + msg
+				R.alertManager.alert 'The drawing link was successfully copied to the clipboard', 'success'
+			catch err
+				console.log 'Oops, unable to copy'
+				R.alertManager.alert 'An error occured while copying the drawing link to the clipboard', 'error'
+
+			document.body.removeChild textArea
+
 			return
 
 		submitComment: ()=>
@@ -259,27 +349,42 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				return)
 			return
 
-		shareOnFacebook: (event, drawing=@currentDrawing)=>
-			bounds = drawing.getBounds()
-			if bounds?
-				R.view.fitRectangle(bounds, true)
-				R.view.updateHash()
+		getDrawingLink: (drawing=@currentDrawing)->
+			return location.origin + '/drawing-' + drawing.pk
 
-			FB.ui({
-				method: 'feed',
-				caption: i18next.t('Vote for this drawing on Comme un Dessein', { drawing: drawing.title, author: drawing.owner }),
-				link: location.origin + '/drawing-' + drawing.pk,
-				mobile_iframe: true
-			}, ((response)-> 
-				console.log(response)
-				return
-			))
+		shareOnFacebook: (event, drawing=@currentDrawing)=>
+			# FB.init({
+			# 	appId      : '263330707483013',
+			# 	version    : 'v2.10'
+			# })
+			
+			# FB.getLoginStatus((response) =>
+			# 	if response.status == "connected"
+			# 		bounds = drawing.getBounds()
+			# 		if bounds?
+			# 			R.view.fitRectangle(bounds, true)
+			# 			R.view.updateHash()
+
+			# 		FB.ui({
+			# 			method: 'feed',
+			# 			caption: i18next.t('Vote for this drawing on Comme un Dessein', { drawing: drawing.title, author: drawing.owner }),
+			# 			link: location.origin + '/drawing-' + drawing.pk,
+			# 			mobile_iframe: true
+			# 		}, ((response)-> 
+			# 			console.log(response)
+			# 			return
+			# 		))
+			# )
+
+			facebookURL = @getDrawingLink(drawing)
+			facebookLink = 'https://www.facebook.com/sharer/sharer.php?u=' + facebookURL
+			window.open(facebookLink, 'popup', 'width=600, height=400')
 
 			return
 
 		shareOnTwitter: (event, drawing=@currentDrawing)=>
 			twitterText = '' + drawing.title + ' ' + i18next.t('by') + ' ' + drawing.owner + ', ' + i18next.t('on') + ' Comme un Dessein'
-			twitterURL = location.origin + '/drawing-' + drawing.pk
+			twitterURL = @getDrawingLink(drawing)
 			twitterHashTags = 'CommeUnDessein,idlv,Maintenant2017'
 			twitterLink = 'http://twitter.com/share?text=' + twitterText + '&url=' + twitterURL + '&hashtags=' + twitterHashTags
 			window.open(twitterLink, 'popup', 'width=600, height=400')
@@ -305,10 +410,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 		onWindowResize: ()->
 			width = @drawingPanelJ.outerWidth()
 			height = @drawingPanelJ.outerHeight()
-			if width > height
+			if width > height and @status != 'information'
 				@drawingPanelJ.find('.cd-column-row').addClass('cd-row').removeClass('cd-column')
 			else
 				@drawingPanelJ.find('.cd-column-row').addClass('cd-column').removeClass('cd-row')
+
+			@resizeGeneralInformation()
 			return
 
 		onMouseMove: (event)->
@@ -361,18 +468,28 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 		### open close ###
 
 		isOpened: ()->
-			return @drawingPanelJ.hasClass('visible')
+			return @drawingPanelJ.hasClass('opened')
 
 		open: ()->
+			$('#submit-drawing-button').addClass('drawingPanel')
+			@drawingPanelJ.removeClass('general')
+			# @contentJ.find('#drawing-panel-no-selection')
 			@onWindowResize()
-			@drawingPanelJ.show()
-			@drawingPanelJ.addClass('visible')
-			@visible = true
+			# @drawingPanelJ.show()
+			@drawingPanelJ.find('#drawing-panel-handle span').removeClass('glyphicon-chevron-left').addClass('glyphicon-chevron-right')
+			@drawingPanelJ.addClass('opened')
+			@opened = true
 
 			R.toolManager.updateButtonsVisibility()
 			return
 
 		close: (removeDrawingIfNotSaved=true)=>
+			@fromGeneralInformation = false
+			$('#submit-drawing-button').removeClass('drawingPanel')
+			@drawingPanelJ.removeClass('general')
+
+			@generalInformation = false
+			@drawingPanelJ.find('#drawing-panel-handle span').removeClass('glyphicon-chevron-right').addClass('glyphicon-chevron-left')
 			# if @currentDrawing? and not @currentDrawing.pk?
 			# 	if removeDrawingIfNotSaved
 			# 		@showSubmitDrawing()
@@ -381,14 +498,42 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					
 
 				# @showBeginDrawing()
-			@drawingPanelJ.hide()
-			@drawingPanelJ.removeClass('visible')
-			@visible = false
+			# @drawingPanelJ.hide()
+			@drawingPanelJ.removeClass('opened')
+			@opened = false
 			if R.selectedItems.length > 0
 				@currentDrawing = null
 				R.tools.select.deselectAll()
 
+
 			R.toolManager.updateButtonsVisibility()
+			return
+
+		setGeneralInformation: ()=>
+			previousStatus = @status
+			@status = 'information'
+			@generalInformation = true
+			@drawingPanelTitleJ.attr('data-i18n', 'Drawings').text(i18next.t('Drawings'))
+			@open()
+			@drawingPanelJ.find('.loading-animation').hide()
+
+			if previousStatus == 'select-drawing'
+				@drawingPanelJ.find('.content-container').children().show()
+				selectedDrawingsJ = @drawingPanelJ.find('.selected-drawings')
+				selectedDrawingsJ.hide()
+
+			@resizeGeneralInformation()
+
+			@drawingPanelJ.addClass('general')
+
+			return
+
+		resizeGeneralInformation: ()=>
+			if @status == 'information'
+				height = @drawingPanelJ.innerHeight()-100
+				@contentJ.find('#drawing-panel-no-selection').height(height).show().siblings().hide()
+				@contentJ.find('#drawing-panel-no-selection #RItems').height(height)
+				@contentJ.find('#drawing-panel-no-selection #RItems .mCustomScrollbar').height(height-200)
 			return
 
 		### set drawing ###
@@ -441,6 +586,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return
 
 		showSelectedDrawings: ()->
+			@drawingPanelJ.removeClass('general')
+			@status = 'select-drawing'
 			@drawingPanelTitleJ.attr('data-i18n', 'Select a single drawing').text(i18next.t('Select a single drawing'))
 
 			@drawingPanelJ.find('.content-container').children().hide()
@@ -456,6 +603,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return
 
 		showLoadAnimation: ()=>
+			@generalInformation = false
 			@drawingPanelJ.find('.loading-animation').show()
 			@drawingPanelJ.find('.content').hide()
 			@drawingPanelJ.find('.selected-drawings').hide()
@@ -479,6 +627,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return
 
 		hideSubmitDrawing: ()->
+			# $('#submit-drawing-button').hide()
 			@submitDrawingBtnJ.hide()
 			# @cancelDrawingBtnJ.hide()
 			return
@@ -590,12 +739,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			# @submitDrawingBtnJ.hide()
 			@drawingPanelTitleJ.attr('data-i18n', 'Create drawing').text(i18next.t('Create drawing'))
+
 			# @showBeginDrawing()
 			@contentJ.find('.comments-container').hide()
 			@open()
 			@showContent()
 
-			@contentJ.find('#drawing-title').focus()
+			@contentJ.find('#drawing-panel-no-selection').hide().siblings().show()
+
+			setTimeout (() => @contentJ.find('#drawing-title').focus() ), 200
 
 			@contentJ.find('#drawing-author').val(R.me)
 			@contentJ.find('.title-group').show()
@@ -653,17 +805,20 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				liJ = $('<li data-author-pk="'+vote.authorPk+'">'+vote.author+'</li>')
 				if v.positive
 					nPositiveVotes++
-					positiveVoteListJ.append(liJ)
+					# positiveVoteListJ.append(liJ)
 					if vote.author == R.me
 						@voteUpBtnJ.addClass('voted')
 				else
 					nNegativeVotes++
-					negativeVoteListJ.append(liJ)
+					# negativeVoteListJ.append(liJ)
 					if vote.author == R.me
 						@voteDownBtnJ.addClass('voted')
 
-			if nPositiveVotes > 0 then @drawingPanelJ.find('.vote-list.positive').removeClass('hidden') else @drawingPanelJ.find('.vote-list.positive').addClass('hidden')
-			if nNegativeVotes > 0 then @drawingPanelJ.find('.vote-list.negative').removeClass('hidden') else @drawingPanelJ.find('.vote-list.negative').addClass('hidden')
+			@drawingPanelJ.find('.vote-list.positive').addClass('hidden')
+			@drawingPanelJ.find('.vote-list.negative').addClass('hidden')
+			
+			# if nPositiveVotes > 0 then @drawingPanelJ.find('.vote-list.positive').removeClass('hidden') else @drawingPanelJ.find('.vote-list.positive').addClass('hidden')
+			# if nNegativeVotes > 0 then @drawingPanelJ.find('.vote-list.negative').removeClass('hidden') else @drawingPanelJ.find('.vote-list.negative').addClass('hidden')
 
 			@votesJ.find('.n-votes.positive').html(nPositiveVotes)
 			@votesJ.find('.n-votes.negative').html(nNegativeVotes)
@@ -683,9 +838,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return
 
 		setDrawing: (@currentDrawing, drawingData)->
+			@drawingPanelJ.removeClass('general')
+
+			@status = 'drawing'
 			@drawingPanelTitleJ.attr('data-i18n', 'Drawing info').text(i18next.t('Drawing info'))
 
 			@open()
+			@contentJ.find('#drawing-panel-no-selection').hide().siblings().show()
 			@showContent()
 			@contentJ.find('.share-buttons').show()
 
@@ -744,18 +903,45 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				if not R.loader.checkError(results) then return
 				@addComments(results.comments)
 				return)
+
+			# if @currentDrawing.title and @currentDrawing.pk and @currentDrawing.status != 'draft'
+			# 	history.pushState('', 'Drawing ' + @currentDrawing.title, window.location.origin + '/drawing-' + @currentDrawing.pk)
+
+			return
+
+		notify: (title, body=null, icon=null)->
+			options =
+				body: body
+				icon: icon
+			if !('Notification' of window)
+				console.log 'This browser does not support desktop notification'
+			else if Notification.permission == 'granted'
+				# If it's okay let's create a notification
+				notification = new Notification(title, options)
+			else if Notification.permission != 'denied'
+				Notification.requestPermission (permission) ->
+					`var notification`
+					# If the user accepts, let's create a notification
+					if permission == 'granted'
+						notification = new Notification(title, options)
 			return
 
 		onDrawingChange: (data)->
 
 			switch data.type
 				when 'votes'
+					if R.administrator
+						@notify('New vote', 'drawing: ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png')
+
 					drawing = R.items[data.drawingId]
 					if drawing?
 						drawing.votes = data.votes
 						if @currentDrawing == drawing
 							@setVotes()
 				when 'new'
+					if R.administrator
+						@notify('New drawing', 'drawing url: ' + @getDrawingLink(data), window.location.origin + '/static/images/icons/plus.png')
+
 					# ok if both are undefined: corresponds to CommeUnDessein
 					sameCity = data.city == R.city.name or data.city == 'CommeUnDessein' and ( not R.city.name? or R.city.name == '' )
 					
@@ -770,6 +956,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 						R.loader.loadSVGCallback(results)
 						return)
 				when 'description', 'title'
+					if R.administrator
+						@notify('Title modified', 'drawing url: ' + @getDrawingLink(data) + ', title : ' + data.title )
+
 					drawing = R.items[data.drawingId]
 					if drawing?
 						drawing.title = data.title
@@ -779,28 +968,46 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 							@thumbnailFooterTitle.text(data.title)
 							@contentJ.find('#drawing-description').val(data.description)
 				when 'status'
+					if R.administrator
+						@notify('Status changed', 'drawing url: ' + @getDrawingLink(data) + ', status : ' + data.status )
+
 					drawing = R.items[data.drawingId]
 					if drawing?
 						drawing.updateStatus(data.status)
 				when 'cancel'
+					if R.administrator
+						@notify('Drawing cancelled', 'drawing url: ' + @getDrawingLink(data))
+
 					drawing = R.items[data.drawingId]
 					if drawing? and drawing.owner != R.me
 						drawing.remove()
 				when 'delete'
+					if R.administrator
+						@notify('Drawing deleted', 'drawing url: ' + @getDrawingLink(data))
+
 					drawing = R.items[data.drawingId]
 					if drawing?
 						drawing.remove()
 				when 'addComment'
+					if R.administrator
+						@notify('New comment', 'comment: ' + data.comment + 'drawing url: ' + @getDrawingLink({pk: data.drawingPk}))
+
 					drawing = R.pkToDrawing[data.drawingPk]
 					if drawing?
 						if @currentDrawing == drawing
 							@addComment(data.comment, data.commentPk, data.author, data.date, data.insertAfter)
 				when 'modifyComment'
+					if R.administrator
+						@notify('Comment modified', 'comment: ' + data.comment + ', drawing url: ' + @getDrawingLink({pk: data.drawingPk}))
+
 					drawing = R.pkToDrawing[data.drawingPk]
 					if drawing?
 						if @currentDrawing == drawing
 							@contentJ.find('#comment-'+data.commentPk).find('.comment-text').get(0).innerText = data.comment
 				when 'deleteComment'
+					if R.administrator
+						@notify('Comment deleted', 'drawing url: ' + @getDrawingLink({pk: data.drawingPk}))
+
 					drawing = R.pkToDrawing[data.drawingPk]
 					if drawing?
 						if @currentDrawing == drawing

@@ -310,11 +310,23 @@
         this.draftLayer = new P.Layer();
         this.draftLayer.name = 'draftLayer';
         this.draftLayer.strokeColor = Path.colorMap['draft'];
+        this.flaggedLayer = new P.Layer();
+        this.flaggedLayer.name = 'flaggedLayer';
+        if (!R.administrator) {
+          this.rejectedLayer.visible = false;
+        } else {
+          this.flaggedLayer.strokeColor = Path.colorMap['flagged'];
+        }
         this.draftListJ = this.createLayerListItem('Draft', this.draftLayer, true);
         this.pendingListJ = this.createLayerListItem('Pending', this.pendingLayer);
+        this.pendingListJ.removeClass('closed');
         this.drawingListJ = this.createLayerListItem('Drawing', this.drawingLayer);
         this.drawnListJ = this.createLayerListItem('Drawn', this.drawnLayer);
         this.rejectedListJ = this.createLayerListItem('Rejected', this.rejectedLayer);
+        this.flaggedListJ = this.createLayerListItem('Flagged', this.flaggedLayer);
+        if (!R.administrator) {
+          this.flaggedListJ.hide();
+        }
       };
 
       View.prototype.getViewBounds = function(considerPanels) {
@@ -490,6 +502,9 @@
         }
         hashParameters['location'] = Utils.pointToString(P.view.center);
         hashParameters['zoom'] = P.view.zoom.toFixed(3).replace(/\.?0+$/, '');
+        if (R.administrator) {
+          hashParameters['administrator'] = true;
+        }
         if (R.tipibot != null) {
           hashParameters['tipibot'] = true;
         }
@@ -528,6 +543,7 @@
         R.tipibot = parameters['tipibot'];
         mustReload |= parameters['style'] !== R.style;
         R.style = parameters['style'];
+        R.administrator = parameters['administrator'];
         drawingPrefix = location.pathname.indexOf('/drawing-') === 0 ? '/drawing-' : location.pathname.indexOf('/debug-drawing-') === 0 ? '/debug-drawing-' : null;
         if (drawingPrefix != null) {
           drawingPk = location.pathname.substring(drawingPrefix.length);

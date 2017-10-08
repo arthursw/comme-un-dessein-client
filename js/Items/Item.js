@@ -95,7 +95,6 @@
 
       Item.initializeParameters = function() {
         var parameters;
-        console.log('Item.initializeParameters');
         parameters = {
           'Items': {
             "delete": R.parameters["delete"]

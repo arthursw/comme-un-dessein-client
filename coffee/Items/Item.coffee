@@ -157,7 +157,6 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 			return
 
 		@initializeParameters: ()->
-			console.log 'Item.initializeParameters'
 			parameters =
 				'Items':
 					# align: R.parameters.align

@@ -856,6 +856,12 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteUsers', args: {logins: logins} } ).done(R.loader.checkError)
 		return
 
+	R.loadAdmin = ()->
+		prefix = if window.location.hash.length == 0 or window.location.href.indexOf('#') == -1 then '#' else '&'
+		window.location += prefix + 'administrator=true'
+		R.administrator = true
+		return
+
 	R.deleteItems = (itemsToDelete, confirm)->
 
 		console.log """

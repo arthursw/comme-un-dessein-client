@@ -59,7 +59,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			notConfirmed: '#E91E63',
 			drawing: '#11a74f',
 			drawn: 'black',
-			rejected: '#EB5A46'
+			rejected: '#EB5A46',
+			flagged: '#EE2233'
 		}
 
 		@strokeWidth = Utils.CS.mmToPixel(5)

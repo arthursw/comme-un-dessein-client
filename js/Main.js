@@ -52,18 +52,6 @@
       }
       updateContent = function() {
         $("body").localize();
-        console.log('i18n tests:');
-        console.log(i18next.t('Simple'));
-        console.log(i18next.t('You are logged as username', {
-          username: 'username'
-        }));
-        console.log(i18next.t('key', {
-          what: 'i18next',
-          how: 'great'
-        }));
-        console.log(i18next.t('You successfully voted, the drawing will be rejected', {
-          duration: ' 10 seconds'
-        }));
       };
       i18next.use(i18nextXHRBackend).use(i18nextBrowserLanguageDetector).init({
         fallbackLng: 'en',

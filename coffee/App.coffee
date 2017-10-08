@@ -145,5 +145,6 @@ requirejs [ 'R' ], (R) ->
 	R.style = parameters['style'] or 'line'
 	R.initialZoom = parameters['zoom']
 	R.getParameters = getParameters
+	R.administrator = parameters['administrator']
 	requirejs [ 'Main' ]
 	return

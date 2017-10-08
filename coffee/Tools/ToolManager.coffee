@@ -310,7 +310,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				name: 'Undo'
 				# iconURL: 'glyphicon-share-alt'
 				# iconURL: 'icones_icon_back.png'
-				iconURL: if R.style == 'line' then 'icones_icon_back.png' else if R.style == 'hand' then 'a-undo.png' else 'glyphicon-share-alt'
+				iconURL: if R.style == 'line' then 'icones_icon_back_02.png' else if R.style == 'hand' then 'a-undo.png' else 'glyphicon-share-alt'
 				favorite: true
 				category: null
 				# description: 'Undo'
@@ -325,7 +325,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				name: 'Redo'
 				# iconURL: 'glyphicon-share-alt'
 				# iconURL: 'icones_icon_forward.png'
-				iconURL: if R.style == 'line' then 'icones_icon_forward.png' else if R.style == 'hand' then 'a-redo.png' else 'glyphicon-share-alt'
+				iconURL: if R.style == 'line' then 'icones_icon_forward_02.png' else if R.style == 'hand' then 'a-redo.png' else 'glyphicon-share-alt'
 				favorite: true
 				category: null
 				# description: 'Redo'
@@ -341,7 +341,8 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 
 			@infoBtn = new Button(
 				name: 'Help'
-				iconURL: 'glyphicon-info-sign'
+				# iconURL: 'glyphicon-info-sign'
+				iconURL: 'icones_info.png'
 				favorite: false
 				category: null
 				# description: 'Info'
@@ -355,8 +356,12 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 
 			@infoBtn.btnJ.click ()-> 
 				welcomeTextJ = $('#welcome-text')
-				layersJ = $('#RItems')
-				layersParentJ = layersJ.parent()
+
+				liveJ = $("""<iframe width="560" height="315" src="https://www.youtube.com/embed/live_stream?channel=UCRMrTkJJYvGAerb1j-H-Miw" frameborder="0" allowfullscreen></iframe>""")
+				welcomeTextJ.find('#tipibot-live').append(liveJ)
+
+				# layersJ = $('#RItems')
+				# layersParentJ = layersJ.parent()
 				modal = Modal.createModal( 
 					id: 'info',
 					title: 'Welcome to Comme Un Dessein', 
@@ -375,7 +380,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				# modal.addText('', 'welcome message 3', false)
 				modal.addCustomContent(divJ: welcomeTextJ.clone(), name: 'welcome-text')
 				
-				modal.addCustomContent(divJ: layersJ)
+				# modal.addCustomContent(divJ: layersJ)
 				modal.modalJ.find('[name="cancel"]').hide()
 				# modal.addButton( type: 'info', name: 'Sign in', submit: (()-> return location.pathname = '/accounts/login/'), icon: 'glyphicon-log-in' )
 				# modal.addButton( type: 'info', name: 'Sign in', icon: 'glyphicon-log-in' )
@@ -383,9 +388,9 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				# modal.modalJ.find('[name="Sign in"]').attr('data-toggle', 'dropdown').after($('#user-profile').find('.dropdown-menu').clone())
 				# modal.modalJ.find('.dropdown-menu').find('li.sign-up').hide()
 
-				modal.modalJ.on 'hide.bs.modal', (event)->
-					layersParentJ.append($('#RItems'))
-					return
+				# modal.modalJ.on 'hide.bs.modal', (event)->
+				# 	layersParentJ.append($('#RItems'))
+				# 	return
 
 				termsOfServiceJ = $('<div><a id="terms-of-service-link" href="/terms-of-service.html" data-i18n="Terms of Service">'+i18next.t('Terms of Service')+'</a></div>')
 				PrivacyPolicyJ = $('<div><a id="privacy-policy-link" href="/privacy-policy.html" data-i18n="Privacy Policy">'+i18next.t('Privacy Policy')+'</a></div>')
@@ -402,7 +407,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 			@submitButton = new Button({
 				name: 'Submit drawing'
 				# favorite: true
-				iconURL: 'icones_icon_ok.png'
+				iconURL: 'icones_icon_proposer_02.png'
 				# order: 0
 				classes: 'btn-success displayName'
 				parentJ: $('#submit-drawing-button')
@@ -418,7 +423,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 			@deleteButton = new Button({
 				name: 'Delete draft'
 				# favorite: true
-				iconURL: 'icones_cancel.png'
+				iconURL: 'icones_cancel_02.png'
 				# order: 0
 				classes: 'btn-danger'
 				parentJ: $('#submit-drawing-button')
@@ -470,7 +475,7 @@ define 'Tools/ToolManager', dependencies, (R, Utils, Tool, Button, MoveTool, Sel
 				R.tools.eraser.btn.hide()
 
 			draft ?= R.Drawing.getDraft()
-			if not draft? or not draft.paths? or draft.paths.length == 0 or R.drawingPanel.visible
+			if not draft? or not draft.paths? or draft.paths.length == 0 or (R.drawingPanel.opened && R.drawingPanel.status != 'information')
 				@submitButton.hide()
 				@deleteButton.hide()
 			else

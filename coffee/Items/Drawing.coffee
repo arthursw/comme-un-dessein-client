@@ -175,6 +175,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			if @status == 'pending'
 				@svg?.setAttribute('stroke', if positive then '#009688' else '#f44336')
+
+			colorClass = if positive then 'drawing-color' else 'rejected-color'
+			spanJ = $('<span class="badge ' + colorClass + '"></span>')
+			spanJ.text(i18next.t(if positive then 'voted for' else 'voted against'))
+			$('#RItems li[data-id="'+@id+'"]').append(spanJ)
 			return
 
 		getPathIds: ()->
@@ -218,6 +223,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				when 'draft'
 					# R.view.mainLayer.addChild(@group)
 					itemListJ = R.view.draftListJ
+				when 'flagged'
+					# R.view.mainLayer.addChild(@group)
+					itemListJ = R.view.flaggedListJ
 				else
 					R.alertManager.alert "Error: drawing status is invalid", "error"
 
@@ -260,6 +268,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			bounds = @getBounds()
 			if not P.view.bounds.intersects(bounds)
 				R.view.moveTo(bounds.center, 1000)
+			R.drawingPanel.fromGeneralInformation = true
 			@select()
 			return
 
@@ -443,7 +452,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				for path in @pathsToSave
 					pointLists.push(path.getPoints())
 				args = 
-					clientId: @clientId
+					clientId: @id
 					pk: @pk
 					pointLists: pointLists
 				@pathsToSave = []

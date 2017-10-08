@@ -1004,6 +1004,12 @@
         }
       }).done(R.loader.checkError);
     };
+    R.loadAdmin = function() {
+      var prefix;
+      prefix = window.location.hash.length === 0 || window.location.href.indexOf('#') === -1 ? '#' : '&';
+      window.location += prefix + 'administrator=true';
+      R.administrator = true;
+    };
     R.deleteItems = function(itemsToDelete, confirm) {
       var args;
       console.log("itemsToDelete: [\n	{\n		itemType: 'Drawing'\n		pks: [data.pk]\n	},\n	{\n		itemType: 'Path'\n		pks: [data.pathPks]\n	}\n]");
