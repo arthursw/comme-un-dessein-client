@@ -128,7 +128,7 @@
           return;
         }
         this.btnJ.attr('data-placement', 'bottom');
-        this.btnJ.attr('data-container', 'body');
+        this.btnJ.attr('data-container', '#popovers');
         this.btnJ.attr('data-trigger', 'hover');
         this.btnJ.attr('data-delay', {
           show: 500,

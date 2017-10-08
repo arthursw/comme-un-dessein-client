@@ -30,6 +30,7 @@
         this.submitComment = bind(this.submitComment, this);
         this.copyLink = bind(this.copyLink, this);
         this.reportAbuse = bind(this.reportAbuse, this);
+        this.startDiscussion = bind(this.startDiscussion, this);
         var adminJ, closeBtnJ, handleJ, onSubmitDown, onSubmitUp, runBtnJ, titleJ;
         this.status = 'closed';
         this.drawingPanelJ = $("#drawingPanel");
@@ -48,6 +49,8 @@
         this.contentJ.find('.copy-link').click(this.copyLink);
         this.contentJ.find('.share-facebook').click(this.shareOnFacebook);
         this.contentJ.find('button.share-twitter').click(this.shareOnTwitter);
+        this.startDiscussionBtnJ = this.contentJ.find('button.start-discussion');
+        this.startDiscussionBtnJ.click(this.startDiscussion);
         this.contentJ.find('.share-buttons button').popover();
         this.beginDrawingBtnJ = $('button.begin-drawing');
         this.beginDrawingBtnJ.click(this.beginDrawingClicked);
@@ -146,9 +149,42 @@
         return;
       }
 
+      DrawingPanel.prototype.startDiscussion = function(id) {
+        if (id == null) {
+          id = null;
+        }
+        if (id == null) {
+          id = this.startDiscussionBtnJ.attr('data-discussion-id');
+        }
+        if (id.length > 0) {
+          window.location.href = 'http://discussion.commeundessein.co/t/' + id;
+        }
+      };
+
       DrawingPanel.prototype.reportAbuse = function() {
         var modal;
         if (this.currentDrawing != null) {
+          if (this.currentDrawing.status === 'flagged' && R.administrator) {
+            $.ajax({
+              method: "POST",
+              url: "ajaxCall/",
+              data: {
+                data: JSON.stringify({
+                  "function": 'cancelAbuse',
+                  args: {
+                    pk: this.currentDrawing.pk
+                  }
+                })
+              }
+            }).done((function(_this) {
+              return function(results) {
+                if (!R.loader.checkError(results)) {
+                  return;
+                }
+                R.alertManager.alert('The report was successfully cancelled', 'success');
+              };
+            })(this));
+          }
           modal = Modal.createModal({
             id: 'report-abuse',
             title: 'Report abuse',
@@ -560,6 +596,7 @@
       };
 
       DrawingPanel.prototype.open = function() {
+        this.contentJ.find('.delete-drawing').show();
         $('#submit-drawing-button').addClass('drawingPanel');
         this.drawingPanelJ.removeClass('general');
         this.onWindowResize();
@@ -755,6 +792,7 @@
         this.contentJ.find('.comments-container').hide();
         this.open();
         this.showContent();
+        this.contentJ.find('.delete-drawing').hide();
         this.contentJ.find('#drawing-panel-no-selection').hide().siblings().show();
         setTimeout(((function(_this) {
           return function() {
@@ -830,7 +868,7 @@
       };
 
       DrawingPanel.prototype.setDrawing = function(currentDrawing, drawingData) {
-        var latestDrawing, script;
+        var latestDrawing;
         this.currentDrawing = currentDrawing;
         this.drawingPanelJ.removeClass('general');
         this.status = 'drawing';
@@ -891,15 +929,21 @@
             _this.addComments(results.comments);
           };
         })(this));
-        window.DiscourseEmbed = {
-          discourseUrl: 'http://discussion.commeundessein.co/',
-          discourseEmbedUrl: this.getDrawingLink()
-        };
-        script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.async = true;
-        script.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
-        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(script);
+        if (latestDrawing.discussionId != null) {
+          this.startDiscussionBtnJ.show();
+          this.startDiscussionBtnJ.attr('data-discussion-id', latestDrawing.discussionId);
+        } else {
+          this.startDiscussionBtnJ.hide();
+        }
+        if (R.administrator) {
+          if (this.currentDrawing.status === 'flagged') {
+            this.contentJ.find('.report-abuse').removeClass('btn-danger').addClass('btn-success');
+            this.contentJ.find('.report-abuse').attr('data-content', i18next.t('Cancel report')).attr('data-i18n', '[data-content]Cancel report');
+          } else {
+            this.contentJ.find('.report-abuse').addClass('btn-danger').removeClass('btn-success');
+            this.contentJ.find('.report-abuse').attr('data-content', i18next.t('Report abuse')).attr('data-i18n', '[data-content]Report abuse');
+          }
+        }
       };
 
       DrawingPanel.prototype.notify = function(title, body, icon) {
@@ -933,7 +977,7 @@
         switch (data.type) {
           case 'votes':
             if (R.administrator) {
-              this.notify('New vote', 'drawing: ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png');
+              this.notify('New vote', 'Author' + data.author + '\n Drawing: ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png');
             }
             drawing = R.items[data.drawingId];
             if (drawing != null) {
@@ -1002,28 +1046,28 @@
             break;
           case 'status':
             if (R.administrator) {
-              this.notify('Status changed', 'drawing url: ' + this.getDrawingLink(data) + ', status : ' + data.status);
+              this.notify('Status changed', 'status : ' + data.status + ', drawing url: ' + this.getDrawingLink(data));
             }
             drawing = R.items[data.drawingId];
             if (drawing != null) {
               if (drawing.owner === R.me) {
                 if (drawing.status === 'drawing') {
-                  R.alertManager.alert('You drawing has been validated', 'success', null, {
+                  R.alertManager.alert('Your drawing has been validated', 'success', null, {
                     drawingTitle: drawing.title
                   });
                 }
                 if (drawing.status === 'rejected') {
-                  R.alertManager.alert('You drawing has been rejected', 'danger', null, {
+                  R.alertManager.alert('Your drawing has been rejected', 'danger', null, {
                     drawingTitle: drawing.title
                   });
                 }
                 if (drawing.status === 'drawn') {
-                  R.alertManager.alert('You drawing has been drawn', 'success', null, {
+                  R.alertManager.alert('Your drawing has been drawn', 'success', null, {
                     drawingTitle: drawing.title
                   });
                 }
                 if (drawing.status === 'flagged') {
-                  R.alertManager.alert('You drawing has been flagged', 'danger', null, {
+                  R.alertManager.alert('Your drawing has been flagged', 'danger', null, {
                     drawingTitle: drawing.title
                   });
                 }

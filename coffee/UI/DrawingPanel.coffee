@@ -26,6 +26,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			@contentJ.find('button.share-twitter').click @shareOnTwitter
 
+			@startDiscussionBtnJ = @contentJ.find('button.start-discussion')
+
+			@startDiscussionBtnJ.click @startDiscussion
+
 			@contentJ.find('.share-buttons button').popover()
 
 			# the button to start drawing
@@ -146,8 +150,20 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			# @close()
 			return
 
+		startDiscussion: (id=null)=>
+			id ?= @startDiscussionBtnJ.attr('data-discussion-id')
+			if id.length > 0
+				window.location.href = 'http://discussion.commeundessein.co/t/' + id
+			return
+
 		reportAbuse: ()=>
 			if @currentDrawing?
+				if @currentDrawing.status == 'flagged' and R.administrator
+					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'cancelAbuse', args: {pk:@currentDrawing.pk} } ).done((results)=>
+						if not R.loader.checkError(results) then return
+						R.alertManager.alert 'The report was successfully cancelled', 'success'
+						return)
+
 				modal = Modal.createModal( 
 					id: 'report-abuse',
 					title: 'Report abuse', 
@@ -491,6 +507,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return @drawingPanelJ.hasClass('opened')
 
 		open: ()->
+			@contentJ.find('.delete-drawing').show()
 			$('#submit-drawing-button').addClass('drawingPanel')
 			@drawingPanelJ.removeClass('general')
 			# @contentJ.find('#drawing-panel-no-selection')
@@ -765,6 +782,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@open()
 			@showContent()
 
+			@contentJ.find('.delete-drawing').hide()
+
 			@contentJ.find('#drawing-panel-no-selection').hide().siblings().show()
 
 			setTimeout (() => @contentJ.find('#drawing-title').focus() ), 200
@@ -924,20 +943,34 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				@addComments(results.comments)
 				return)
 
+			if latestDrawing.discussionId?
+				@startDiscussionBtnJ.show()
+				@startDiscussionBtnJ.attr('data-discussion-id', latestDrawing.discussionId)
+			else
+				@startDiscussionBtnJ.hide()
+
 			# if @currentDrawing.title and @currentDrawing.pk and @currentDrawing.status != 'draft'
 			# 	history.pushState('', 'Drawing ' + @currentDrawing.title, window.location.origin + '/drawing-' + @currentDrawing.pk)
 
-			window.DiscourseEmbed = { discourseUrl: 'http://discussion.commeundessein.co/', discourseEmbedUrl: @getDrawingLink() }
+			# window.DiscourseEmbed = { discourseUrl: 'http://discussion.commeundessein.co/', discourseEmbedUrl: @getDrawingLink() }
 
 			# require [DiscourseEmbed.discourseUrl], (discourse)=>
 			# 	console.log(discourse + 'javascripts/embed.js')
 			# 	return
-			
-			script = document.createElement('script')
-			script.type = 'text/javascript'
-			script.async = true
-			script.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js'
-			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(script)
+
+			# script = document.createElement('script')
+			# script.type = 'text/javascript'
+			# script.async = true
+			# script.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js'
+			# (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(script)
+
+			if R.administrator
+				if @currentDrawing.status == 'flagged'
+					@contentJ.find('.report-abuse').removeClass('btn-danger').addClass('btn-success')
+					@contentJ.find('.report-abuse').attr('data-content', i18next.t('Cancel report')).attr('data-i18n', '[data-content]Cancel report')
+				else
+					@contentJ.find('.report-abuse').addClass('btn-danger').removeClass('btn-success')
+					@contentJ.find('.report-abuse').attr('data-content', i18next.t('Report abuse')).attr('data-i18n', '[data-content]Report abuse')
 
 			return
 
@@ -963,7 +996,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			switch data.type
 				when 'votes'
 					if R.administrator
-						@notify('New vote', 'drawing: ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png')
+						@notify('New vote', 'Author' + data.author + '\n Drawing: ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png')
 
 					drawing = R.items[data.drawingId]
 					if drawing?
@@ -1008,20 +1041,20 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 							@contentJ.find('#drawing-description').val(data.description)
 				when 'status'
 					if R.administrator
-						@notify('Status changed', 'drawing url: ' + @getDrawingLink(data) + ', status : ' + data.status )
+						@notify('Status changed', 'status : ' + data.status + ', drawing url: ' + @getDrawingLink(data) )
 
 					drawing = R.items[data.drawingId]
 					if drawing?
 
 						if drawing.owner == R.me
 							if drawing.status == 'drawing'
-								R.alertManager.alert 'You drawing has been validated', 'success', null, { drawingTitle: drawing.title }
+								R.alertManager.alert 'Your drawing has been validated', 'success', null, { drawingTitle: drawing.title }
 							if drawing.status == 'rejected'
-								R.alertManager.alert 'You drawing has been rejected', 'danger', null, { drawingTitle: drawing.title }
+								R.alertManager.alert 'Your drawing has been rejected', 'danger', null, { drawingTitle: drawing.title }
 							if drawing.status == 'drawn'
-								R.alertManager.alert 'You drawing has been drawn', 'success', null, { drawingTitle: drawing.title }
+								R.alertManager.alert 'Your drawing has been drawn', 'success', null, { drawingTitle: drawing.title }
 							if drawing.status == 'flagged'
-								R.alertManager.alert 'You drawing has been flagged', 'danger', null, { drawingTitle: drawing.title }
+								R.alertManager.alert 'Your drawing has been flagged', 'danger', null, { drawingTitle: drawing.title }
 
 						drawing.updateStatus(data.status)
 				when 'cancel'

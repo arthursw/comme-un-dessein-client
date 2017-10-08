@@ -123,7 +123,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 			if is_touch_device then return
 
 			@btnJ.attr('data-placement', 'bottom')
-			@btnJ.attr('data-container', 'body')
+			@btnJ.attr('data-container', '#popovers')
 			@btnJ.attr('data-trigger', 'hover')
 			@btnJ.attr('data-delay', {show: 500, hide: 100})
 

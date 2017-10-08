@@ -46,11 +46,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		@getDraft: ()->
 			return @draft
 
-		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @title, @description, @status='pending', pathList=[], svg=null) ->
+		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @title, @description, @status='pending', pathList=[], svg=null, bounds=null) ->
 			super(@data, @id, @pk)
 
 			if @pk?
 				@constructor.pkToId[@pk] = @id
+
+			if bounds?
+				@bounds = new P.Rectangle(bounds)
 
 			R.drawings ?= []
 			R.drawings.push(@)
@@ -74,12 +77,39 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			if @status == 'draft'
 				@constructor.draft = @
 
-			if svg?
-				@setSVG(svg)
-				if @status != 'draft'
+			if @pk?
+				jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg', ((result)=>
+					# console.log( "success" )
+					# console.log( result )
+					@setSVG(svg)
 					return
+				))
+				# .done(()=>
+				# 	console.log("second success" )
+				# )
+				.fail(()=>
+
+					# console.log("error" )
+					if @svg? then return
+
+					args =
+						pk: @pk
+						svgOnly: true
+					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+						drawing = JSON.parse(result.drawing)
+						@setSVG(drawing.svg)
+					)
+				)
+				# .always(()=>
+				# 	console.log("finished" )
+				# )
+			# if svg?
+				# @setSVG(svg)
+
+			if @status == 'draft'
+				@addPathsFromPathList(pathList)
+
 			
-			@addPathsFromPathList(pathList)
 				# path.rasterize()
 				# R.rasterizer.rasterize(path)
 
@@ -179,7 +209,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			colorClass = if positive then 'drawing-color' else 'rejected-color'
 			spanJ = $('<span class="badge ' + colorClass + '"></span>')
 			spanJ.text(i18next.t(if positive then 'voted for' else 'voted against'))
-			$('#RItems li[data-id="'+@id+'"]').append(spanJ)
+			$('#RItems li[data-id="'+@id+'"] .badge-container').append(spanJ)
 			return
 
 		getPathIds: ()->
@@ -231,11 +261,39 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			return itemListJ
 
+		toggleVisibility: ()->
+			@group.visible = !@group.visible
+			if @group.visible
+				@eyeIconJ.removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open')
+			else
+				@eyeIconJ.addClass('glyphicon-eye-close').removeClass('glyphicon-eye-open')
+			if @svg?
+				if @group.visible
+					$(@svg).show()
+				else
+					$(@svg).hide()
+
+			return
+
 		addToListItem: (@itemListJ)->
 
 			title = '' + @title + ' <span data-i18n="by">' + i18next.t('by') + '</span> ' + @owner
 			@liJ = $("<li>")
 			@liJ.html(title)
+
+			divJ = $("<div class='cd-row cd-end badge-container'>")
+			showBtnJ = $('<button type="button" class="btn btn-default show-btn" aria-label="Show">')
+			@eyeIconJ = $('<span class="glyphicon eye glyphicon-eye-open" aria-hidden="true"></span>')
+			showBtnJ.append(@eyeIconJ)
+			showBtnJ.click (event)=>
+				@toggleVisibility()
+				event.preventDefault()
+				event.stopPropagation()
+				return -1
+
+			divJ.append(showBtnJ)
+			@liJ.append(divJ)
+
 			@liJ.attr("data-id", @id)
 			@liJ.click(@onLiClick)
 			@liJ.mouseover (event)=>
@@ -244,6 +302,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@liJ.mouseout (event)=>
 				@unhighlight()
 				return
+
+
 			@liJ.rItem = @
 
 			@itemListJ?.find('.rPath-list').prepend(@liJ)
@@ -273,10 +333,20 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		computeRectangle: ()->
+			if @bounds? 
+				@rectangle = @bounds.clone()
+				return @rectangle
+
 			if @svg?
-				@rectangle = new P.Rectangle(@svg.getBBox())
-				return
+				if @svg.getBBox?
+					@rectangle = new P.Rectangle(@svg.getBBox())
+				return 
+
 			@rectangle = null
+			
+			if @group.children.length > 0
+				return @group.bounds.expand(2*R.Path.strokeWidth)
+
 			for path in @paths
 				bounds = path.getDrawingBounds()
 				if bounds?
@@ -302,6 +372,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# 	when 'rejected'
 			# 		R.view.rejectedLayer.addChild(path.group)
 			return
+
+		convertToGroup: ()->
+			item = P.project.importSVG(@svg, (item, svg)=>
+				console.log(item.bounds)
+				return)
+			return item
 
 		addPaths: ()->
 			for path in @paths
@@ -484,6 +560,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				return @svg
 
 		submit: () ->
+			bounds = @getBounds()
+
 			svg = @getSVG()
 			@svgString = svg
 
@@ -497,6 +575,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				description: @description
 				svg: svg
 				png: imageURL
+				bounds: JSON.stringify(bounds)
 			}
 
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'submitDrawing', args: args } ).done(@submitCallback)
@@ -553,6 +632,17 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				# cancelButtonIcon: 'glyphicon-sunglasses' 
 				)
 			modal.addButton( type: 'info', name: 'Tweet', submit: (()=> R.drawingPanel.shareOnTwitter(null, @)) )
+			modal.addButton( type: 'success', name: 'See discussion page', submit: (()=> 
+				
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getDrawingDiscussionId', args: {pk: @pk} } ).done( (results)=>
+					if not R.loader.checkError(results) then return
+					drawing = JSON.parse(results.drawing)
+					if drawing.discussionId?
+						R.drawingPanel.startDiscussion(results.discussionId)
+					else
+						R.alertManager.alert "The discussion page is not created yet", "error"
+					return)
+				return) )
 
 			if @status == 'emailNotConfirmed'
 				modal.addText("Drawing successfully submitted but email not confirmed", "Drawing successfully submitted but email not confirmed", false, {positiveVoteThreshold: result.positiveVoteThreshold})
@@ -560,6 +650,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				modal.addText("Drawing successfully submitted but not confirmed", "Drawing successfully submitted but not confirmed", false, {positiveVoteThreshold: result.positiveVoteThreshold})
 			else
 				modal.addText("Drawing successfully submitted", "Drawing successfully submitted", false, {positiveVoteThreshold: result.positiveVoteThreshold})
+
+			modal.addText('A discussion page for this drawing will be created in a few seconds')
 
 			modal.addText('Would you like to share your drawing on Facebook or Twitter')
 			
@@ -734,6 +826,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 		# can not select a drawing which the user does not own
 		select: (updateOptions=true, showPanelAndLoad=true, force=false) =>
+			if not @group.visible then return false
 			if not super(updateOptions, force) then return false
 			
 			for item in @children()

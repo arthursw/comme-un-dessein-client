@@ -818,6 +818,17 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawingSVG', args: args } ).done(R.loader.checkError)
 		return
 
+	R.updateDrawingBounds = ()->
+		for item in R.drawings
+			group = item.convertToGroup()
+			svg = group.exportSVG( asString: true )
+			args = 
+				pk: item.pk
+				svg: svg
+				bounds: JSON.stringify(group.bounds)
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawingBounds', args: args } ).done(R.loader.checkError)
+		return
+
 	R.saveSVG = ()->
 		svg = P.project.exportSVG( { asString: true })
 

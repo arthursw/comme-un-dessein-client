@@ -263,7 +263,8 @@
           if (((ref1 = R.pkToDrawing) != null ? ref1[item._id.$oid] : void 0) != null) {
             continue;
           }
-          drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg);
+          bounds = item.bounds != null ? JSON.parse(item.bounds) : null;
+          drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg, bounds);
         }
         this.endLoading();
         R.toolManager.updateButtonsVisibility();

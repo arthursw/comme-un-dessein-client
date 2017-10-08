@@ -924,6 +924,32 @@
         }
       }
     };
+    R.updateDrawingBounds = function() {
+      var args, group, item, j, len, ref, svg;
+      ref = R.drawings;
+      for (j = 0, len = ref.length; j < len; j++) {
+        item = ref[j];
+        group = item.convertToGroup();
+        svg = group.exportSVG({
+          asString: true
+        });
+        args = {
+          pk: item.pk,
+          svg: svg,
+          bounds: JSON.stringify(group.bounds)
+        };
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'updateDrawingBounds',
+              args: args
+            })
+          }
+        }).done(R.loader.checkError);
+      }
+    };
     R.saveSVG = function() {
       var blob, link, svg, url;
       svg = P.project.exportSVG({

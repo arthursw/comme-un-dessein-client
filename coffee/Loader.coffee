@@ -207,7 +207,9 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				item = JSON.parse(itemString)
 				if R.pkToDrawing?[item._id.$oid]?
 					continue
-				drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg)
+				# bounds = null
+				bounds = if item.bounds? then JSON.parse(item.bounds) else null
+				drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg, bounds)
 			# setTimeout((()=>R.rasterizer.refresh()), 1000)
 			@endLoading()
 			R.toolManager.updateButtonsVisibility()

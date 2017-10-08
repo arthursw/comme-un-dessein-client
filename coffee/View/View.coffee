@@ -130,13 +130,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			viewRatio = 1
 			rectangleRatio = rectangle.width / rectangle.height
 			
-			if drawing.svg?
-				@thumbnailProject.importSVG(drawing.svg)
-			else if drawing.paths? and drawing.paths.length > 0
+			if not drawing.svg? and drawing.paths? and drawing.paths.length > 0
 				for path in drawing.paths
 					@thumbnailProject.activeLayer.addChild(path.path)
-			else
-				console.error('drawing is empty')
 
 			if viewRatio < rectangleRatio
 				@thumbnailProject.view.zoom = Math.min(sizeX / rectangle.width, 1)
@@ -144,6 +140,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				@thumbnailProject.view.zoom = Math.min(sizeY / rectangle.height, 1)
 
 			@thumbnailProject.view.setCenter(rectangle.center)
+			@thumbnailProject.activeLayer.name = 'mainLayer'
 			@thumbnailProject.activeLayer.strokeColor = if blackStroke then 'black' else R.Path.colorMap[drawing.status]
 			if blackStroke
 				@thumbnailProject.activeLayer.strokeWidth = 3
@@ -151,6 +148,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@thumbnailProject.view.draw()
 			result = if toDataURL then @thumbnailCanvas.toDataURL() else @thumbnailProject.exportSVG()
 			# drawing.group.remove()
+
+			if drawing.svg? and not toDataURL
+				$(result).find('#mainLayer').append(drawing.svg.cloneNode(true))
+
 			@thumbnailProject.clear()
 			paper.projects[0].activate()
 			return result

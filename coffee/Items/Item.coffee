@@ -244,7 +244,6 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 			return @group?.parent
 
 		isVisible: ()->
-			# WARNING: returns true even if @group is not visible since it can be rasterized (in which case @group.visible == false)
 			return @containingLayer().visible
 
 		secureData: ()->

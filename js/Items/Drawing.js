@@ -50,7 +50,8 @@
         return this.draft;
       };
 
-      function Drawing(rectangle1, data1, id1, pk1, owner, date, title1, description, status, pathList, svg) {
+      function Drawing(rectangle1, data1, id1, pk1, owner, date, title1, description, status, pathList, svg, bounds) {
+        var jqxhr;
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
         this.id = id1 != null ? id1 : null;
@@ -66,6 +67,9 @@
         if (svg == null) {
           svg = null;
         }
+        if (bounds == null) {
+          bounds = null;
+        }
         this.select = bind(this.select, this);
         this.deleteFromDatabaseCallback = bind(this.deleteFromDatabaseCallback, this);
         this.update = bind(this.update, this);
@@ -76,6 +80,9 @@
         Drawing.__super__.constructor.call(this, this.data, this.id, this.pk);
         if (this.pk != null) {
           this.constructor.pkToId[this.pk] = this.id;
+        }
+        if (bounds != null) {
+          this.bounds = new P.Rectangle(bounds);
         }
         if (R.drawings == null) {
           R.drawings = [];
@@ -93,13 +100,41 @@
         if (this.status === 'draft') {
           this.constructor.draft = this;
         }
-        if (svg != null) {
-          this.setSVG(svg);
-          if (this.status !== 'draft') {
-            return;
-          }
+        if (this.pk != null) {
+          jqxhr = $.get(location.origin + '/static/drawings/' + this.pk + '.svg', ((function(_this) {
+            return function(result) {
+              _this.setSVG(svg);
+            };
+          })(this))).fail((function(_this) {
+            return function() {
+              var args;
+              if (_this.svg != null) {
+                return;
+              }
+              args = {
+                pk: _this.pk,
+                svgOnly: true
+              };
+              return $.ajax({
+                method: "POST",
+                url: "ajaxCall/",
+                data: {
+                  data: JSON.stringify({
+                    "function": 'loadDrawing',
+                    args: args
+                  })
+                }
+              }).done(function(result) {
+                var drawing;
+                drawing = JSON.parse(result.drawing);
+                return _this.setSVG(drawing.svg);
+              });
+            };
+          })(this));
         }
-        this.addPathsFromPathList(pathList);
+        if (this.status === 'draft') {
+          this.addPathsFromPathList(pathList);
+        }
         return;
       }
 
@@ -178,7 +213,7 @@
         colorClass = positive ? 'drawing-color' : 'rejected-color';
         spanJ = $('<span class="badge ' + colorClass + '"></span>');
         spanJ.text(i18next.t(positive ? 'voted for' : 'voted against'));
-        $('#RItems li[data-id="' + this.id + '"]').append(spanJ);
+        $('#RItems li[data-id="' + this.id + '"] .badge-container').append(spanJ);
       };
 
       Drawing.prototype.getPathIds = function() {
@@ -239,12 +274,42 @@
         return itemListJ;
       };
 
+      Drawing.prototype.toggleVisibility = function() {
+        this.group.visible = !this.group.visible;
+        if (this.group.visible) {
+          this.eyeIconJ.removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open');
+        } else {
+          this.eyeIconJ.addClass('glyphicon-eye-close').removeClass('glyphicon-eye-open');
+        }
+        if (this.svg != null) {
+          if (this.group.visible) {
+            $(this.svg).show();
+          } else {
+            $(this.svg).hide();
+          }
+        }
+      };
+
       Drawing.prototype.addToListItem = function(itemListJ1) {
-        var nItemsJ, ref, ref1, title;
+        var divJ, nItemsJ, ref, ref1, showBtnJ, title;
         this.itemListJ = itemListJ1;
         title = '' + this.title + ' <span data-i18n="by">' + i18next.t('by') + '</span> ' + this.owner;
         this.liJ = $("<li>");
         this.liJ.html(title);
+        divJ = $("<div class='cd-row cd-end badge-container'>");
+        showBtnJ = $('<button type="button" class="btn btn-default show-btn" aria-label="Show">');
+        this.eyeIconJ = $('<span class="glyphicon eye glyphicon-eye-open" aria-hidden="true"></span>');
+        showBtnJ.append(this.eyeIconJ);
+        showBtnJ.click((function(_this) {
+          return function(event) {
+            _this.toggleVisibility();
+            event.preventDefault();
+            event.stopPropagation();
+            return -1;
+          };
+        })(this));
+        divJ.append(showBtnJ);
+        this.liJ.append(divJ);
         this.liJ.attr("data-id", this.id);
         this.liJ.click(this.onLiClick);
         this.liJ.mouseover((function(_this) {
@@ -289,11 +354,20 @@
 
       Drawing.prototype.computeRectangle = function() {
         var bounds, i, len, path, ref;
+        if (this.bounds != null) {
+          this.rectangle = this.bounds.clone();
+          return this.rectangle;
+        }
         if (this.svg != null) {
-          this.rectangle = new P.Rectangle(this.svg.getBBox());
+          if (this.svg.getBBox != null) {
+            this.rectangle = new P.Rectangle(this.svg.getBBox());
+          }
           return;
         }
         this.rectangle = null;
+        if (this.group.children.length > 0) {
+          return this.group.bounds.expand(2 * R.Path.strokeWidth);
+        }
         ref = this.paths;
         for (i = 0, len = ref.length; i < len; i++) {
           path = ref[i];
@@ -318,6 +392,16 @@
 
       Drawing.prototype.addPathToProperLayer = function(path) {
         this.group.addChild(path.path);
+      };
+
+      Drawing.prototype.convertToGroup = function() {
+        var item;
+        item = P.project.importSVG(this.svg, (function(_this) {
+          return function(item, svg) {
+            console.log(item.bounds);
+          };
+        })(this));
+        return item;
       };
 
       Drawing.prototype.addPaths = function() {
@@ -526,7 +610,8 @@
       };
 
       Drawing.prototype.submit = function() {
-        var args, imageURL, svg;
+        var args, bounds, imageURL, svg;
+        bounds = this.getBounds();
         svg = this.getSVG();
         this.svgString = svg;
         imageURL = R.view.getThumbnail(this, 1200, 630, true, true);
@@ -537,7 +622,8 @@
           title: this.title,
           description: this.description,
           svg: svg,
-          png: imageURL
+          png: imageURL,
+          bounds: JSON.stringify(bounds)
         };
         $.ajax({
           method: "POST",
@@ -607,6 +693,37 @@
             };
           })(this))
         });
+        modal.addButton({
+          type: 'success',
+          name: 'See discussion page',
+          submit: ((function(_this) {
+            return function() {
+              $.ajax({
+                method: "POST",
+                url: "ajaxCall/",
+                data: {
+                  data: JSON.stringify({
+                    "function": 'getDrawingDiscussionId',
+                    args: {
+                      pk: _this.pk
+                    }
+                  })
+                }
+              }).done(function(results) {
+                var drawing;
+                if (!R.loader.checkError(results)) {
+                  return;
+                }
+                drawing = JSON.parse(results.drawing);
+                if (drawing.discussionId != null) {
+                  R.drawingPanel.startDiscussion(results.discussionId);
+                } else {
+                  R.alertManager.alert("The discussion page is not created yet", "error");
+                }
+              });
+            };
+          })(this))
+        });
         if (this.status === 'emailNotConfirmed') {
           modal.addText("Drawing successfully submitted but email not confirmed", "Drawing successfully submitted but email not confirmed", false, {
             positiveVoteThreshold: result.positiveVoteThreshold
@@ -620,6 +737,7 @@
             positiveVoteThreshold: result.positiveVoteThreshold
           });
         }
+        modal.addText('A discussion page for this drawing will be created in a few seconds');
         modal.addText('Would you like to share your drawing on Facebook or Twitter');
         modal.show();
       };
@@ -887,6 +1005,9 @@
         }
         if (force == null) {
           force = false;
+        }
+        if (!this.group.visible) {
+          return false;
         }
         if (!Drawing.__super__.select.call(this, updateOptions, force)) {
           return false;

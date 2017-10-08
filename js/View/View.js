@@ -154,16 +154,12 @@
         }
         viewRatio = 1;
         rectangleRatio = rectangle.width / rectangle.height;
-        if (drawing.svg != null) {
-          this.thumbnailProject.importSVG(drawing.svg);
-        } else if ((drawing.paths != null) && drawing.paths.length > 0) {
+        if ((drawing.svg == null) && (drawing.paths != null) && drawing.paths.length > 0) {
           ref = drawing.paths;
           for (i = 0, len = ref.length; i < len; i++) {
             path = ref[i];
             this.thumbnailProject.activeLayer.addChild(path.path);
           }
-        } else {
-          console.error('drawing is empty');
         }
         if (viewRatio < rectangleRatio) {
           this.thumbnailProject.view.zoom = Math.min(sizeX / rectangle.width, 1);
@@ -171,6 +167,7 @@
           this.thumbnailProject.view.zoom = Math.min(sizeY / rectangle.height, 1);
         }
         this.thumbnailProject.view.setCenter(rectangle.center);
+        this.thumbnailProject.activeLayer.name = 'mainLayer';
         this.thumbnailProject.activeLayer.strokeColor = blackStroke ? 'black' : R.Path.colorMap[drawing.status];
         if (blackStroke) {
           this.thumbnailProject.activeLayer.strokeWidth = 3;
@@ -178,6 +175,9 @@
         this.thumbnailProject.view.update();
         this.thumbnailProject.view.draw();
         result = toDataURL ? this.thumbnailCanvas.toDataURL() : this.thumbnailProject.exportSVG();
+        if ((drawing.svg != null) && !toDataURL) {
+          $(result).find('#mainLayer').append(drawing.svg.cloneNode(true));
+        }
         this.thumbnailProject.clear();
         paper.projects[0].activate();
         return result;
