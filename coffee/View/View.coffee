@@ -531,7 +531,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			mustReload |= parameters['style'] != R.style
 			R.style = parameters['style']
 
-			R.administrator = parameters['administrator']
+			if parameters['administrator']?
+				R.administrator = parameters['administrator']
 
 			# if R.city.name != parameters['city-name'] or R.city.owner != parameters['city-owner']
 			# 	R.cityManager.loadCity(parameters['city-name'], parameters['city-owner'], p)

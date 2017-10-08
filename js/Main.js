@@ -31,6 +31,7 @@
       }
       canvasJ = $('#canvas');
       mode = canvasJ.attr('data-drawing-mode');
+      R.administrator = canvasJ.attr('data-is-admin') === 'True';
       if (mode === 'None') {
         mode = canvasJ.attr('data-city');
       }

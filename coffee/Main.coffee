@@ -42,7 +42,7 @@ define [
 				cancelButtonText: 'Just visit', 
 				cancelButtonIcon: 'glyphicon-sunglasses',
 				)
-		
+
 			modal.addCustomContent(divJ: welcomeTextJ.clone(), name: 'beta-text')
 			modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning')
 
@@ -51,6 +51,9 @@ define [
 
 		canvasJ = $('#canvas')
 		mode = canvasJ.attr('data-drawing-mode')
+
+		R.administrator = canvasJ.attr('data-is-admin') == 'True'
+
 		if mode == 'None'
 			mode = canvasJ.attr('data-city')
 

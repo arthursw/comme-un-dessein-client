@@ -123,6 +123,26 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				return
 			@contentJ.find('.comments-container .submit-comment').click @submitComment
 
+			if R.administrator
+				adminJ = @contentJ.find('.admin-buttons')
+				adminJ.removeClass('hidden').show()
+				adminJ.find('button.delete-drawing').click (event)=>
+					modal = Modal.createModal( 
+						id: 'delete-drawing',
+						title: 'Delete drawing', 
+						submit: ( ()=> 
+							R.deleteDrawing(R.s.pk, 'confirm')
+							return),
+						submitButtonText: 'Delete drawing', 
+						submitButtonIcon: 'glyphicon-trash',
+						)
+				
+					modal.addText('Are you sure you really want to delete the drawing')
+					modal.addText('There is no way to undo this action')
+					modal.modalJ.find('[name="submit"]').addClass('btn-danger').removeClass('btn-primary')
+					modal.show()
+					return
+
 			# @close()
 			return
 
@@ -935,20 +955,27 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 					drawing = R.items[data.drawingId]
 					if drawing?
+						if drawing.owner == R.me
+							forOrAgainst = if data.positive then 'for' else 'against'
+							R.alertManager.alert 'Someone voted ' + forOrAgainst + ' your drawing', (if data.positive then 'success' else 'warning'), null, { drawingTitle: drawing.title }
+
 						drawing.votes = data.votes
 						if @currentDrawing == drawing
 							@setVotes()
 				when 'new'
+					drawingLink = @getDrawingLink(data)
 					if R.administrator
-						@notify('New drawing', 'drawing url: ' + @getDrawingLink(data), window.location.origin + '/static/images/icons/plus.png')
+						@notify('New drawing', 'drawing url: ' + drawingLink, window.location.origin + '/static/images/icons/plus.png')
 
 					# ok if both are undefined: corresponds to CommeUnDessein
 					sameCity = data.city == R.city.name or data.city == 'CommeUnDessein' and ( not R.city.name? or R.city.name == '' )
 					
 					if not sameCity then return
-					
+
 					# if the drawing is already loaded, no need to load it
 					if R.items[data.pk]? or R.items[data.drawingId]? then return
+
+					R.alertManager.alert 'A new drawing has been created', 'success', null, {drawingLink: drawingLink}
 
 					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: { pk: data.pk, loadSVG: true } } ).done((results)->
 						if not R.loader.checkError(results) then return
@@ -973,6 +1000,17 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 					drawing = R.items[data.drawingId]
 					if drawing?
+
+						if drawing.owner == R.me
+							if drawing.status == 'drawing'
+								R.alertManager.alert 'You drawing has been validated', 'success', null, { drawingTitle: drawing.title }
+							if drawing.status == 'rejected'
+								R.alertManager.alert 'You drawing has been rejected', 'danger', null, { drawingTitle: drawing.title }
+							if drawing.status == 'drawn'
+								R.alertManager.alert 'You drawing has been drawn', 'success', null, { drawingTitle: drawing.title }
+							if drawing.status == 'flagged'
+								R.alertManager.alert 'You drawing has been flagged', 'danger', null, { drawingTitle: drawing.title }
+
 						drawing.updateStatus(data.status)
 				when 'cancel'
 					if R.administrator
@@ -994,6 +1032,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 					drawing = R.pkToDrawing[data.drawingPk]
 					if drawing?
+						if drawing.owner == R.me
+							R.alertManager.alert 'Someone has commented your drawing', 'info', null, { author: data.author, drawingTitle: drawing.title }
+
 						if @currentDrawing == drawing
 							@addComment(data.comment, data.commentPk, data.author, data.date, data.insertAfter)
 				when 'modifyComment'
@@ -1002,6 +1043,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 					drawing = R.pkToDrawing[data.drawingPk]
 					if drawing?
+
+						if drawing.owner == R.me
+							R.alertManager.alert 'Someone has modified a comment on your drawing', 'info', null, { author: data.author, drawingTitle: drawing.title }
+
 						if @currentDrawing == drawing
 							@contentJ.find('#comment-'+data.commentPk).find('.comment-text').get(0).innerText = data.comment
 				when 'deleteComment'
@@ -1010,6 +1055,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 					drawing = R.pkToDrawing[data.drawingPk]
 					if drawing?
+						
+						if drawing.owner == R.me
+							R.alertManager.alert 'Someone has deleted a comment on your drawing', 'info', null, { author: data.author, drawingTitle: drawing.title }
+
 						if @currentDrawing == drawing
 							@contentJ.find('#comment-'+data.commentPk).remove()
 			return

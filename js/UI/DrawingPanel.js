@@ -30,7 +30,7 @@
         this.submitComment = bind(this.submitComment, this);
         this.copyLink = bind(this.copyLink, this);
         this.reportAbuse = bind(this.reportAbuse, this);
-        var closeBtnJ, handleJ, onSubmitDown, onSubmitUp, runBtnJ, titleJ;
+        var adminJ, closeBtnJ, handleJ, onSubmitDown, onSubmitUp, runBtnJ, titleJ;
         this.status = 'closed';
         this.drawingPanelJ = $("#drawingPanel");
         this.openBtnJ = $('#drawing-panel-handle');
@@ -121,6 +121,28 @@
           };
         })(this));
         this.contentJ.find('.comments-container .submit-comment').click(this.submitComment);
+        if (R.administrator) {
+          adminJ = this.contentJ.find('.admin-buttons');
+          adminJ.removeClass('hidden').show();
+          adminJ.find('button.delete-drawing').click((function(_this) {
+            return function(event) {
+              var modal;
+              modal = Modal.createModal({
+                id: 'delete-drawing',
+                title: 'Delete drawing',
+                submit: (function() {
+                  R.deleteDrawing(R.s.pk, 'confirm');
+                }),
+                submitButtonText: 'Delete drawing',
+                submitButtonIcon: 'glyphicon-trash'
+              });
+              modal.addText('Are you sure you really want to delete the drawing');
+              modal.addText('There is no way to undo this action');
+              modal.modalJ.find('[name="submit"]').addClass('btn-danger').removeClass('btn-primary');
+              modal.show();
+            };
+          })(this));
+        }
         return;
       }
 
@@ -901,7 +923,7 @@
       };
 
       DrawingPanel.prototype.onDrawingChange = function(data) {
-        var drawing, sameCity;
+        var drawing, drawingLink, forOrAgainst, sameCity;
         switch (data.type) {
           case 'votes':
             if (R.administrator) {
@@ -909,6 +931,12 @@
             }
             drawing = R.items[data.drawingId];
             if (drawing != null) {
+              if (drawing.owner === R.me) {
+                forOrAgainst = data.positive ? 'for' : 'against';
+                R.alertManager.alert('Someone voted ' + forOrAgainst + ' your drawing', (data.positive ? 'success' : 'warning'), null, {
+                  drawingTitle: drawing.title
+                });
+              }
               drawing.votes = data.votes;
               if (this.currentDrawing === drawing) {
                 this.setVotes();
@@ -916,8 +944,9 @@
             }
             break;
           case 'new':
+            drawingLink = this.getDrawingLink(data);
             if (R.administrator) {
-              this.notify('New drawing', 'drawing url: ' + this.getDrawingLink(data), window.location.origin + '/static/images/icons/plus.png');
+              this.notify('New drawing', 'drawing url: ' + drawingLink, window.location.origin + '/static/images/icons/plus.png');
             }
             sameCity = data.city === R.city.name || data.city === 'CommeUnDessein' && ((R.city.name == null) || R.city.name === '');
             if (!sameCity) {
@@ -926,6 +955,9 @@
             if ((R.items[data.pk] != null) || (R.items[data.drawingId] != null)) {
               return;
             }
+            R.alertManager.alert('A new drawing has been created', 'success', null, {
+              drawingLink: drawingLink
+            });
             $.ajax({
               method: "POST",
               url: "ajaxCall/",
@@ -968,6 +1000,28 @@
             }
             drawing = R.items[data.drawingId];
             if (drawing != null) {
+              if (drawing.owner === R.me) {
+                if (drawing.status === 'drawing') {
+                  R.alertManager.alert('You drawing has been validated', 'success', null, {
+                    drawingTitle: drawing.title
+                  });
+                }
+                if (drawing.status === 'rejected') {
+                  R.alertManager.alert('You drawing has been rejected', 'danger', null, {
+                    drawingTitle: drawing.title
+                  });
+                }
+                if (drawing.status === 'drawn') {
+                  R.alertManager.alert('You drawing has been drawn', 'success', null, {
+                    drawingTitle: drawing.title
+                  });
+                }
+                if (drawing.status === 'flagged') {
+                  R.alertManager.alert('You drawing has been flagged', 'danger', null, {
+                    drawingTitle: drawing.title
+                  });
+                }
+              }
               drawing.updateStatus(data.status);
             }
             break;
@@ -997,6 +1051,12 @@
             }
             drawing = R.pkToDrawing[data.drawingPk];
             if (drawing != null) {
+              if (drawing.owner === R.me) {
+                R.alertManager.alert('Someone has commented your drawing', 'info', null, {
+                  author: data.author,
+                  drawingTitle: drawing.title
+                });
+              }
               if (this.currentDrawing === drawing) {
                 this.addComment(data.comment, data.commentPk, data.author, data.date, data.insertAfter);
               }
@@ -1010,6 +1070,12 @@
             }
             drawing = R.pkToDrawing[data.drawingPk];
             if (drawing != null) {
+              if (drawing.owner === R.me) {
+                R.alertManager.alert('Someone has modified a comment on your drawing', 'info', null, {
+                  author: data.author,
+                  drawingTitle: drawing.title
+                });
+              }
               if (this.currentDrawing === drawing) {
                 this.contentJ.find('#comment-' + data.commentPk).find('.comment-text').get(0).innerText = data.comment;
               }
@@ -1023,6 +1089,12 @@
             }
             drawing = R.pkToDrawing[data.drawingPk];
             if (drawing != null) {
+              if (drawing.owner === R.me) {
+                R.alertManager.alert('Someone has deleted a comment on your drawing', 'info', null, {
+                  author: data.author,
+                  drawingTitle: drawing.title
+                });
+              }
               if (this.currentDrawing === drawing) {
                 this.contentJ.find('#comment-' + data.commentPk).remove();
               }

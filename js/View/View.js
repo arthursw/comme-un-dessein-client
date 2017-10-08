@@ -543,7 +543,9 @@
         R.tipibot = parameters['tipibot'];
         mustReload |= parameters['style'] !== R.style;
         R.style = parameters['style'];
-        R.administrator = parameters['administrator'];
+        if (parameters['administrator'] != null) {
+          R.administrator = parameters['administrator'];
+        }
         drawingPrefix = location.pathname.indexOf('/drawing-') === 0 ? '/drawing-' : location.pathname.indexOf('/debug-drawing-') === 0 ? '/debug-drawing-' : null;
         if (drawingPrefix != null) {
           drawingPk = location.pathname.substring(drawingPrefix.length);
