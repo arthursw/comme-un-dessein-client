@@ -830,7 +830,7 @@
       };
 
       DrawingPanel.prototype.setDrawing = function(currentDrawing, drawingData) {
-        var latestDrawing;
+        var latestDrawing, script;
         this.currentDrawing = currentDrawing;
         this.drawingPanelJ.removeClass('general');
         this.status = 'drawing';
@@ -895,11 +895,11 @@
           discourseUrl: 'http://discussion.commeundessein.co/',
           discourseEmbedUrl: this.getDrawingLink()
         };
-        require([DiscourseEmbed.discourseUrl], (function(_this) {
-          return function(discourse) {
-            console.log(discourse + 'javascripts/embed.js');
-          };
-        })(this));
+        script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.async = true;
+        script.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(script);
       };
 
       DrawingPanel.prototype.notify = function(title, body, icon) {

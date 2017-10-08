@@ -929,15 +929,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			window.DiscourseEmbed = { discourseUrl: 'http://discussion.commeundessein.co/', discourseEmbedUrl: @getDrawingLink() }
 
-			require [DiscourseEmbed.discourseUrl], (discourse)=>
-				console.log(discourse + 'javascripts/embed.js')
-				return
+			# require [DiscourseEmbed.discourseUrl], (discourse)=>
+			# 	console.log(discourse + 'javascripts/embed.js')
+			# 	return
 			
-			# script = document.createElement('script')
-			# script.type = 'text/javascript'
-			# script.async = true
-			# script.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js'
-			# (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d)
+			script = document.createElement('script')
+			script.type = 'text/javascript'
+			script.async = true
+			script.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js'
+			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(script)
 
 			return
 
