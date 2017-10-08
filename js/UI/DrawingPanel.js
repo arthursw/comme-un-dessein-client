@@ -895,6 +895,11 @@
           discourseUrl: 'http://discussion.commeundessein.co/',
           discourseEmbedUrl: this.getDrawingLink()
         };
+        require([DiscourseEmbed.discourseUrl], (function(_this) {
+          return function(discourse) {
+            console.log(discourse + 'javascripts/embed.js');
+          };
+        })(this));
       };
 
       DrawingPanel.prototype.notify = function(title, body, icon) {

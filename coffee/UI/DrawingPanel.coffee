@@ -929,9 +929,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			window.DiscourseEmbed = { discourseUrl: 'http://discussion.commeundessein.co/', discourseEmbedUrl: @getDrawingLink() }
 
-			# require [DiscourseEmbed.discourseUrl], (discourse)=>
-			# 	console.log(discourse + 'javascripts/embed.js')
-			# 	return
+			require [DiscourseEmbed.discourseUrl], (discourse)=>
+				console.log(discourse + 'javascripts/embed.js')
+				return
 			
 			# script = document.createElement('script')
 			# script.type = 'text/javascript'
