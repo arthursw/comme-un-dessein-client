@@ -690,10 +690,7 @@
         this.drawingPanelJ.find('.loading-animation').hide();
       };
 
-      DrawingPanel.prototype.showSubmitDrawing = function() {
-        this.hideBeginDrawing();
-        this.contentJ.find('#drawing-title').focus();
-      };
+      DrawingPanel.prototype.showSubmitDrawing = function() {};
 
       DrawingPanel.prototype.hideSubmitDrawing = function() {
         this.submitDrawingBtnJ.hide();

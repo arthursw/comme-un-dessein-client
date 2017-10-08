@@ -636,14 +636,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return
 
 		showSubmitDrawing: ()->
-			@hideBeginDrawing()
+			# @hideBeginDrawing()
 			
 			# @submitDrawingBtnJ.removeClass('hidden')
 			# @submitDrawingBtnJ.show()
 			
 			# @cancelDrawingBtnJ.removeClass('hidden')
 			# @cancelDrawingBtnJ.show()
-			@contentJ.find('#drawing-title').focus()
+			# @contentJ.find('#drawing-title').focus()
 			return
 
 		hideSubmitDrawing: ()->
