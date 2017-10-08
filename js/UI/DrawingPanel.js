@@ -891,6 +891,10 @@
             _this.addComments(results.comments);
           };
         })(this));
+        window.DiscourseEmbed = {
+          discourseUrl: 'http://discussion.commeundessein.co/',
+          discourseEmbedUrl: this.getDrawingLink()
+        };
       };
 
       DrawingPanel.prototype.notify = function(title, body, icon) {

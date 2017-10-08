@@ -927,6 +927,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			# if @currentDrawing.title and @currentDrawing.pk and @currentDrawing.status != 'draft'
 			# 	history.pushState('', 'Drawing ' + @currentDrawing.title, window.location.origin + '/drawing-' + @currentDrawing.pk)
 
+			window.DiscourseEmbed = { discourseUrl: 'http://discussion.commeundessein.co/', discourseEmbedUrl: @getDrawingLink() }
+
+			# require [DiscourseEmbed.discourseUrl], (discourse)=>
+			# 	console.log(discourse + 'javascripts/embed.js')
+			# 	return
+			
+			# script = document.createElement('script')
+			# script.type = 'text/javascript'
+			# script.async = true
+			# script.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js'
+			# (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d)
+
 			return
 
 		notify: (title, body=null, icon=null)->
