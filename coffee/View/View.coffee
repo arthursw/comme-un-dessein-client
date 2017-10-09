@@ -76,6 +76,11 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			R.stageJ.mousewheel( @mousewheel )
 			R.stageJ.mousedown( @mousedown )
 			R.stageJ.on( touchstart: @mousedown )
+			R.stageJ.on( touchmove: (event)-> 
+				event.stopPropagation()
+				return -1
+			)
+
 			# R.stageJ[0].addEventListener('touchstart', @mousedown, false)
 
 			if window?

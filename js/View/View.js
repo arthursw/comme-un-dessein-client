@@ -84,6 +84,12 @@
         R.stageJ.on({
           touchstart: this.mousedown
         });
+        R.stageJ.on({
+          touchmove: function(event) {
+            event.stopPropagation();
+            return -1;
+          }
+        });
         if (typeof window !== "undefined" && window !== null) {
           $(window).mousemove(this.mousemove);
           $(window).on({
