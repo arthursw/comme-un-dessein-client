@@ -8,11 +8,10 @@
   if (typeof document !== "undefined" && document !== null) {
     dependencies.push('i18next');
     dependencies.push('hammer');
-    dependencies.push('tween');
     dependencies.push('mousewheel');
   }
 
-  define('View/View', dependencies, function(P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, tw, mousewheel) {
+  define(dependencies, function(P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, mousewheel) {
     var View;
     View = (function() {
       View.thumbnailSize = 300;
@@ -345,7 +344,7 @@
       };
 
       View.prototype.moveTo = function(pos, delay, addCommand, preventLoad, updateHash) {
-        var initialPosition, somethingToLoad, tween;
+        var somethingToLoad;
         if (delay == null) {
           delay = null;
         }
@@ -361,14 +360,7 @@
         if (pos == null) {
           pos = new P.Point();
         }
-        if (delay == null) {
-          somethingToLoad = this.moveBy(pos.subtract(P.view.center), addCommand, preventLoad, updateHash);
-        } else {
-          initialPosition = P.view.center;
-          tween = new TWEEN.Tween(initialPosition).to(pos, delay).easing(TWEEN.Easing.Exponential.InOut).onUpdate(function() {
-            return this.moveTo(this, addCommand, preventLoad);
-          }).start();
-        }
+        somethingToLoad = this.moveBy(pos.subtract(P.view.center), addCommand, preventLoad, updateHash);
         return somethingToLoad;
       };
 
@@ -753,7 +745,6 @@
 
       View.prototype.onFrame = function(event) {
         var i, item, len, ref, ref1, ref2;
-        TWEEN.update(event.time);
         if ((ref = R.rasterizer) != null) {
           if (typeof ref.updateLoadingBar === "function") {
             ref.updateLoadingBar(event.time);

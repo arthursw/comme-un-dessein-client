@@ -3,13 +3,13 @@
   var dependencies,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  dependencies = ['paper', 'R', 'Utils/Utils', 'UI/Controllers/Controller', 'UI/Controllers/ColorController', 'UI/Controllers/Folder'];
+  dependencies = ['paper', 'R', 'Utils/Utils', 'UI/Controllers/Controller', 'UI/Controllers/Folder'];
 
   if (typeof document !== "undefined" && document !== null) {
     dependencies.push('gui');
   }
 
-  define('UI/Controllers/ControllerManager', dependencies, function(P, R, Utils, Controller, ColorController, Folder, GUI) {
+  define(dependencies, function(P, R, Utils, Controller, Folder, GUI) {
     var ControllerManager;
     ControllerManager = (function() {
       ControllerManager.initializeGlobalParameters = function() {
@@ -299,13 +299,7 @@
       ControllerManager.prototype.createController = function(name, parameter, folder) {
         var controller;
         controller = null;
-        switch (parameter.type) {
-          case 'color':
-            controller = new ColorController(name, parameter, folder);
-            break;
-          default:
-            controller = new Controller(name, parameter, folder);
-        }
+        controller = new Controller(name, parameter, folder);
         return controller;
       };
 

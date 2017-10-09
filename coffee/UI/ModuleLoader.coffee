@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils','UI/Button', 'UI/Code'], (P, R, Utils, Button, Code) ->
+define ['paper', 'R', 'Utils/Utils','UI/Button'], (P, R, Utils, Button) ->
 
     ModuleLoader = {}
 

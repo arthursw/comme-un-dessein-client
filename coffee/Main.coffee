@@ -17,8 +17,8 @@ define [
 	'Tools/ToolManager'
 	'RasterizerBot'
 	'i18next'
-	'i18nextXHRBackend'
-	'i18nextBrowserLanguageDetector'
+	'i18nextXHRBackendID'
+	'i18nextBrowserLanguageDetectorID'
 	'jqueryI18next'
 	'moment'
 ], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->

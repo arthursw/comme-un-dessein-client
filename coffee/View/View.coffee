@@ -2,10 +2,10 @@ dependencies = ['paper', 'R',  'Utils/Utils', 'View/Grid', 'Commands/Command', '
 if document?
 	dependencies.push('i18next')
 	dependencies.push('hammer')
-	dependencies.push('tween')
 	dependencies.push('mousewheel')
+	# dependencies.push('tween')
 
-define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, tw, mousewheel) ->
+define dependencies, (P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, mousewheel) ->
 
 	class View
 		
@@ -305,17 +305,19 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		# @param delay [Number] time of the animation to go to destination in millisecond
 		moveTo: (pos, delay=null, addCommand=true, preventLoad=false, updateHash=true) ->
 			pos ?= new P.Point()
-			if not delay?
-				somethingToLoad = @moveBy(pos.subtract(P.view.center), addCommand, preventLoad, updateHash)
-			else
-				# console.log pos
-				# console.log delay
-				initialPosition = P.view.center
-				tween = new TWEEN.Tween( initialPosition )
-				.to( pos, delay )
-				.easing( TWEEN.Easing.Exponential.InOut )
-				.onUpdate( ()-> @moveTo(this, addCommand, preventLoad) )
-				.start()
+			somethingToLoad = @moveBy(pos.subtract(P.view.center), addCommand, preventLoad, updateHash)
+			
+			# if not delay?
+				
+			# else
+			# 	# console.log pos
+			# 	# console.log delay
+			# 	initialPosition = P.view.center
+			# 	tween = new TWEEN.Tween( initialPosition )
+			# 	.to( pos, delay )
+			# 	.easing( TWEEN.Easing.Exponential.InOut )
+			# 	.onUpdate( ()-> @moveTo(this, addCommand, preventLoad) )
+			# 	.start()
 			return somethingToLoad
 
 		# Move the commeUnDessein view from *delta*
@@ -764,7 +766,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		# - update animatedItems
 		# - update cars positions
 		onFrame: (event)=>
-			TWEEN.update(event.time)
+			# TWEEN.update(event.time)
 
 			R.rasterizer?.updateLoadingBar?(event.time)
 

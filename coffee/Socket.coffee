@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'socket.io', 'i18next' ], (P, R, Utils, ioo, i18next) ->
+define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, ioo, i18next) ->
 
 	class Socket 
 

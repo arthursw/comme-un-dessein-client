@@ -3,7 +3,7 @@
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  define(['paper', 'R', 'Utils/Utils', 'socket.io', 'i18next'], function(P, R, Utils, ioo, i18next) {
+  define(['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next'], function(P, R, Utils, ioo, i18next) {
     var Socket;
     Socket = (function() {
       function Socket() {

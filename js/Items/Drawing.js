@@ -875,7 +875,7 @@
       };
 
       Drawing.prototype.cancelCallback = function(result) {
-        var draft, i, j, k, len, len1, len2, path, ref, ref1, ref2, ref3;
+        var draft, i, j, len, len1, path, ref, ref1, ref2;
         if (!R.loader.checkError(result)) {
           return;
         }
@@ -900,11 +900,6 @@
         this.addPathsFromPathList(result.pathList);
         this.updateStatus(result.status);
         this.constructor.draft = this;
-        ref3 = this.paths;
-        for (k = 0, len2 = ref3.length; k < len2; k++) {
-          path = ref3[k];
-          console.log(path.getPoints());
-        }
       };
 
       Drawing.prototype.setRectangle = function(rectangle, update) {

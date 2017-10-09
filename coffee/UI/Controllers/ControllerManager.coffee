@@ -1,8 +1,8 @@
-dependencies = ['paper', 'R', 'Utils/Utils', 'UI/Controllers/Controller', 'UI/Controllers/ColorController', 'UI/Controllers/Folder']
+dependencies = ['paper', 'R', 'Utils/Utils', 'UI/Controllers/Controller', 'UI/Controllers/Folder'] #, 'UI/Controllers/ColorController', 'UI/Controllers/Folder']
 if document?
 	dependencies.push('gui')
 
-define 'UI/Controllers/ControllerManager', dependencies, (P, R, Utils, Controller, ColorController, Folder, GUI) ->
+define dependencies, (P, R, Utils, Controller, Folder, GUI) ->
 
 
 	class ControllerManager
@@ -399,11 +399,12 @@ define 'UI/Controllers/ControllerManager', dependencies, (P, R, Utils, Controlle
 
 		createController: (name, parameter, folder)->
 			controller = null
-			switch parameter.type
-				when 'color'
-					controller = new ColorController(name, parameter, folder)
-				else
-					controller = new Controller(name, parameter, folder)
+			controller = new Controller(name, parameter, folder)
+			# switch parameter.type
+			# 	when 'color'
+			# 		controller = new ColorController(name, parameter, folder)
+			# 	else
+			# 		controller = new Controller(name, parameter, folder)
 			return controller
 
 		initializeControllers: ()->

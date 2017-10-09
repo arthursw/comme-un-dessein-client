@@ -760,8 +760,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@addPathsFromPathList(result.pathList)
 			@updateStatus(result.status)
 			@constructor.draft = @
-			for path in @paths
-				console.log(path.getPoints())
+			# for path in @paths
+			# 	console.log(path.getPoints())
 			return
 
 		setRectangle: (rectangle, update=true)->

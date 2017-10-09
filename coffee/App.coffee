@@ -31,6 +31,7 @@ else
 # Configure loading modules from the lib directory,
 # except 'app' ones,
 requirejs.config
+	waitSeconds: 300
 	baseUrl: baseUrl
 
 	# enforceDefine: true 	# to make fallback work?? but throws Uncaught Error: No define call for app
@@ -63,15 +64,15 @@ requirejs.config
 		'facebook': ['//connect.facebook.net/en_US/sdk']
 		# 'twitter': ['//platform.twitter.com/widgets']
 
-		'domReady': [libs + 'domReady']
+		# 'domReady': [libs + 'domReady']
 		'i18next': [libs + 'i18next.min']
-		'i18nextXHRBackend': [libs + 'i18nextXHRBackend']
-		'i18nextBrowserLanguageDetector': [libs + 'i18nextBrowserLanguageDetector']
+		'i18nextXHRBackendID': [libs + 'i18nextXHRBackend']
+		'i18nextBrowserLanguageDetectorID': [libs + 'i18nextBrowserLanguageDetector']
 		'moment': [libs + 'moment.min']
 		'jqueryI18next': [libs + 'jquery-i18next.min']
 		'hammer': [libs + 'hammer.min']
 		# 'ace': [libs + 'ace']
-		'aceTools': [libs + 'ace/ext-language_tools']
+		# 'aceTools': [libs + 'ace/ext-language_tools']
 		'underscore': [libs + 'underscore-min']
 		'jquery': [libs + 'jquery-2.1.3.min']
 		'jqueryUi': [libs + 'jquery-ui.min']
@@ -86,31 +87,31 @@ requirejs.config
 		# 'modalManager': ['//cdnjs.cloudflare.com/ajax/libs/bootstrap-modal/2.2.5/js/bootstrap-modalmanager.min', libs + 'bootstrap-modalmanager.min']
 		# 'paper': ['//cdnjs.cloudflare.com/ajax/libs/paper.js/0.9.22/paper-full.min', libs + 'paper-full.min']
 		'paper': [libs + 'paper-full']
-		'raphael': [libs + 'raphael.min']
-		'three': [libs + 'three']
+		# 'raphael': [libs + 'raphael.min']
+		# 'three': [libs + 'three']
 		'gui': [libs + 'dat.gui']
-		'typeahead': [libs + 'typeahead.bundle.min']
-		'pinit': [libs + 'pinit']
-		'howler': [libs + 'howler']
+		# 'typeahead': [libs + 'typeahead.bundle.min']
+		# 'pinit': [libs + 'pinit']
+		# 'howler': [libs + 'howler']
 		# 'spin': [libs + 'spin.min']
 
 		'zeroClipboard': [libs + 'ZeroClipboard.min']
 
-		'diffMatch': libs + 'AceDiff/diff_match_patch'
-		'aceDiff': libs + 'AceDiff/ace-diff'
-		'colorpickersliders': libs + 'bootstrap-colorpickersliders/bootstrap.colorpickersliders.nocielch'
-		'requestAnimationFrame': libs + 'RequestAnimationFrame'
-		'coffeescript-compiler': libs + 'coffee-script'
-		'tween': libs + 'tween.min'
-		'socket.io': libs + 'socket.io'
-		'oembed': libs + 'jquery.oembed'
-		'jqtree': libs + 'jqtree/tree.jquery'
+		# 'diffMatch': libs + 'AceDiff/diff_match_patch'
+		# 'aceDiff': libs + 'AceDiff/ace-diff'
+		# 'colorpickersliders': libs + 'bootstrap-colorpickersliders/bootstrap.colorpickersliders.nocielch'
+		# 'requestAnimationFrame': libs + 'RequestAnimationFrame'
+		# 'coffeescript-compiler': libs + 'coffee-script'
+		# 'tween': libs + 'tween.min'
+		'socket.ioID': libs + 'socket.io'
+		# 'oembed': libs + 'jquery.oembed'
+		# 'jqtree': libs + 'jqtree/tree.jquery'
 		'js-cookie': libs + 'js.cookie'
-		'octokat': libs + 'octokat'
-		'spacebrew': libs + 'sb-1.4.1.min'
-		'jszip': libs + 'jszip/jszip'
-		'fileSaver': libs + 'FileSaver.min'
-		'color-classifier': libs + 'color-classifier'
+		# 'octokat': libs + 'octokat'
+		# 'spacebrew': libs + 'sb-1.4.1.min'
+		# 'jszip': libs + 'jszip/jszip'
+		# 'fileSaver': libs + 'FileSaver.min'
+		# 'color-classifier': libs + 'color-classifier'
 
 	shim:
 		'oembed': ['jquery']
