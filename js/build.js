@@ -15,7 +15,7 @@
       'jquery': '../../comme-un-dessein-server/CommeUnDessein/static/libs/jquery-2.1.3.min',
       'jqueryUi': '../../comme-un-dessein-server/CommeUnDessein/static/libs/jquery-ui.min',
       'mousewheel': '../../comme-un-dessein-server/CommeUnDessein/static/libs/jquery.mousewheel.min',
-      'scrollbar': '../../comme-un-dessein-server/CommeUnDessein/static/libs/jquery.mCustomScrollbar.min',
+      // 'scrollbar': '../../comme-un-dessein-server/CommeUnDessein/static/libs/jquery.mCustomScrollbar.min',
       'tinycolor2': '../../comme-un-dessein-server/CommeUnDessein/static/libs/tinycolor',
       'bootstrap': '../../comme-un-dessein-server/CommeUnDessein/static/libs/bootstrap.min',
       'paper': '../../comme-un-dessein-server/CommeUnDessein/static/libs/paper-full',
@@ -43,7 +43,7 @@
     },
     shim: {
       'mousewheel': ['jquery'],
-      'scrollbar': ['jquery'],
+      // 'scrollbar': ['jquery'],
       'jqueryUi': ['jquery'],
       'bootstrap': ['jquery'],
       'js-cookie': ['jquery'],
