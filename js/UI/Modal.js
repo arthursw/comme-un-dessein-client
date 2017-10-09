@@ -388,7 +388,6 @@
 
       Modal.prototype.hide = function() {
         this.modalJ.modal('hide');
-        $('#templates').hide();
       };
 
       Modal.prototype.addProgressBar = function() {
@@ -436,6 +435,7 @@
       };
 
       Modal.prototype["delete"] = function() {
+        $('#templates').hide();
         this.modalJ.remove();
         Utils.Array.remove(this.constructor.modals, this);
       };

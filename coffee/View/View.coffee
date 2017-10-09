@@ -76,8 +76,11 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			R.stageJ.mousewheel( @mousewheel )
 			R.stageJ.mousedown( @mousedown )
 			R.stageJ.on( touchstart: @mousedown )
-			R.stageJ.on( touchmove: (event)-> 
+			R.stageJ.on( touchmove: @mousemove )
+			
+			$(window).on( touchmove: (event)-> 
 				event.stopPropagation()
+				event.preventDefault()
 				return -1
 			)
 
@@ -85,7 +88,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			if window?
 				$(window).mousemove( @mousemove )
-				$(window).on( touchmove: @mousemove )
+				# $(window).on( touchmove: @mousemove )
 
 				$(window).mouseup( @mouseup )
 

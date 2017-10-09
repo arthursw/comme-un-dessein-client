@@ -85,16 +85,17 @@
           touchstart: this.mousedown
         });
         R.stageJ.on({
+          touchmove: this.mousemove
+        });
+        $(window).on({
           touchmove: function(event) {
             event.stopPropagation();
+            event.preventDefault();
             return -1;
           }
         });
         if (typeof window !== "undefined" && window !== null) {
           $(window).mousemove(this.mousemove);
-          $(window).on({
-            touchmove: this.mousemove
-          });
           $(window).mouseup(this.mouseup);
           $(window).on({
             touchend: this.mouseup

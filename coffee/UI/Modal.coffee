@@ -329,7 +329,6 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 		# the modal will be delete as soon as it is hidden
 		hide: ()->
 			@modalJ.modal('hide')
-			$('#templates').hide()
 			return
 
 		addProgressBar: ()->
@@ -370,6 +369,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			return
 
 		delete: ()=>
+			$('#templates').hide()
 			@modalJ.remove()
 			Utils.Array.remove(@constructor.modals, @)
 			return
