@@ -149,7 +149,6 @@
         }
         this.updateSound();
         this.car.previousSpeed = this.car.speed;
-        R.controllerManager.getController('Car', 'speed').setValue(this.car.speed.toFixed(2));
         this.car.rotation = this.car.direction.angle + 90;
         if (Math.abs(this.car.speed) > this.constructor.minSpeed) {
           this.car.position = this.car.position.add(this.car.direction.multiply(this.car.speed));

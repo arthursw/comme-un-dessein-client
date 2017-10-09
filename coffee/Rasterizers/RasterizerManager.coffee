@@ -23,7 +23,7 @@ define ['paper', 'R', 'Utils/Utils', 'Rasterizers/Rasterizer', 'UI/Controllers/F
 			for type, rasterizer of @rasterizers
 				renderingModes.push(type)
 
-			# @rasterizerFolder = new Folder('Rasterizer', true, R.controllerManager.folders['General'])
+			# @rasterizerFolder = new Folder('Rasterizer', true, # R.controllerManager.folders['General'])
 
 			divJ = $('<div>')
 			# divJ.addClass('loadingBar')
@@ -80,7 +80,7 @@ define ['paper', 'R', 'Utils/Utils', 'Rasterizers/Rasterizer', 'UI/Controllers/F
 					label: 'Rasterize'
 
 			# for name, parameter of parameters
-				# R.controllerManager.createController(name, parameter, @rasterizerFolder)
+				# # R.controllerManager.createController(name, parameter, @rasterizerFolder)
 
 			return
 

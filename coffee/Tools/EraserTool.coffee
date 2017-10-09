@@ -98,7 +98,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			return
 
 		updateParameters: ()->
-			# R.controllerManager.setSelectedTool(@Path)
+			# # R.controllerManager.setSelectedTool(@Path)
 			return
 
 		# Deselect: remove the mouse move listener

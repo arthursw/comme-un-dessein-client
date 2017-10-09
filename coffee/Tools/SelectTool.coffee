@@ -85,7 +85,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		updateParameters: ()->
-			R.controllerManager.updateParametersForSelectedItems()
+			# R.controllerManager.updateParametersForSelectedItems()
 			return
 
 		highlightItemsUnderRectangle: (rectangle)->

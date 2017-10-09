@@ -12,7 +12,6 @@
         this.controllers = {};
         this.folders = {};
         if (!this.parentFolder) {
-          R.controllerManager.folders[this.name] = this;
           this.datFolder = R.gui.addFolder(this.name);
         } else {
           this.parentFolder.folders[this.name] = this;

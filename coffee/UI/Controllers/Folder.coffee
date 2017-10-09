@@ -7,7 +7,7 @@ define ['paper', 'R',  'Utils/Utils' ], (P, R, Utils) ->
 			@folders = {}
 
 			if not @parentFolder
-				R.controllerManager.folders[@name] = @
+				# R.controllerManager.folders[@name] = @
 				@datFolder = R.gui.addFolder(@name)
 			else
 				@parentFolder.folders[@name] = @

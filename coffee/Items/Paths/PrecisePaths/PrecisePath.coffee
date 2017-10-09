@@ -755,7 +755,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@selectionHighlight.strokeColor = R.selectionBlue
 			@selectionHighlight.strokeWidth = 1
 			R.view.selectionLayer.addChild(@selectionHighlight)
-			R.controllerManager.getController('Edit curve', 'pointType')?.setValue(@selectedSegment.rtype)
+			# R.controllerManager.getController('Edit curve', 'pointType')?.setValue(@selectedSegment.rtype)
 			# @constructor.parameters['Edit curve'].pointType.controller.setValue(@selectedSegment.rtype)
 			return
 

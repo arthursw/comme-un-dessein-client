@@ -5,7 +5,7 @@
     hasProp = {}.hasOwnProperty,
     slice = [].slice;
 
-  define(['paper', 'R', 'Utils/Utils', 'UI/Controllers/ControllerManager'], function(P, R, Utils, ControllerManager) {
+  define(['paper', 'R', 'Utils/Utils'], function(P, R, Utils) {
     var AddPointCommand, Command, CreateItemCommand, CreateItemsCommand, DeferredCommand, DeleteItemCommand, DeleteItemsCommand, DeletePointCommand, DeselectCommand, DuplicateItemCommand, ItemCommand, ItemsCommand, ModifyControlPathCommand, ModifyDrawing, ModifyPointCommand, ModifyPointTypeCommand, ModifySpeedCommand, ModifyTextCommand, MoveViewCommand, RotateCommand, ScaleCommand, SelectCommand, SelectionRectangleCommand, SetParameterCommand, TranslateCommand;
     Command = (function() {
       function Command(name) {
@@ -539,7 +539,6 @@
           item = ref[id];
           item.setParameter(this.name, this.newValue);
         }
-        R.controllerManager.updateController(this.name, this.newValue);
         this.updateItems(this.name);
         SetParameterCommand.__super__["do"].call(this);
       };
@@ -551,7 +550,6 @@
           item = ref[id];
           item.setParameter(this.name, this.previousValues[id]);
         }
-        R.controllerManager.updateController(this.name, this.previousValue);
         this.updateItems(this.name);
         SetParameterCommand.__super__.undo.call(this);
       };

@@ -1,7 +1,7 @@
 ({
     baseUrl: ".",	    
     paths: {
-      'facebook': '//connect.facebook.net/en_US/sdk',
+      // 'facebook': '//connect.facebook.net/en_US/sdk',
       'requirejs': '../../comme-un-dessein-server/CommeUnDessein/static/libs/require.min',
       // 'domReady': '../../comme-un-dessein-server/CommeUnDessein/static/libs/domReady',
       'i18next': '../../comme-un-dessein-server/CommeUnDessein/static/libs/i18next.min',
@@ -42,29 +42,19 @@
       // 'color-classifier': '../../comme-un-dessein-server/CommeUnDessein/static/libs/color-classifier'
     },
     shim: {
-      'oembed': ['jquery'],
       'mousewheel': ['jquery'],
       'scrollbar': ['jquery'],
       'jqueryUi': ['jquery'],
       'bootstrap': ['jquery'],
-      'typeahead': ['jquery'],
       'js-cookie': ['jquery'],
-      'jqtree': ['jquery'],
-      'aceDiff': ['jquery', 'diffMatch', 'ace/ace'],
-      'i18nextXHRBackend': ['i18next'],
-      'i18nextBrowserLanguageDetector': ['i18next'],
+      'i18nextXHRBackendID': ['i18next'],
+      'i18nextBrowserLanguageDetectorID': ['i18next'],
       'jqueryI18next': ['i18next'],
-      'colorpickersliders': {
-        deps: ['jquery', 'tinycolor2']
-      },
       'underscore': {
         exports: '_'
       },
       'jquery': {
         exports: '$'
-      },
-      'facebook': {
-        exports: 'FB'
       }
     },
     include: ["requirejs", 

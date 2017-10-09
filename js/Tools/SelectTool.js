@@ -119,9 +119,7 @@
         SelectTool.__super__.deselect.apply(this, arguments);
       };
 
-      SelectTool.prototype.updateParameters = function() {
-        R.controllerManager.updateParametersForSelectedItems();
-      };
+      SelectTool.prototype.updateParameters = function() {};
 
       SelectTool.prototype.highlightItemsUnderRectangle = function(rectangle) {
         var itemsToHighlight;

@@ -40,7 +40,6 @@
     waitSeconds: 300,
     baseUrl: baseUrl,
     paths: {
-      'facebook': ['//connect.facebook.net/en_US/sdk'],
       'i18next': [libs + 'i18next.min'],
       'i18nextXHRBackendID': [libs + 'i18nextXHRBackend'],
       'i18nextBrowserLanguageDetectorID': [libs + 'i18nextBrowserLanguageDetector'],
@@ -61,34 +60,54 @@
       'js-cookie': libs + 'js.cookie'
     },
     shim: {
-      'oembed': ['jquery'],
       'mousewheel': ['jquery'],
       'scrollbar': ['jquery'],
       'jqueryUi': ['jquery'],
       'bootstrap': ['jquery'],
-      'typeahead': ['jquery'],
       'js-cookie': ['jquery'],
-      'jqtree': ['jquery'],
-      'aceDiff': ['jquery', 'diffMatch', 'ace/ace'],
-      'i18nextXHRBackend': ['i18next'],
-      'i18nextBrowserLanguageDetector': ['i18next'],
+      'i18nextXHRBackendID': ['i18next'],
+      'i18nextBrowserLanguageDetectorID': ['i18next'],
       'jqueryI18next': ['i18next'],
-      'colorpickersliders': {
-        deps: ['jquery', 'tinycolor2']
-      },
       'underscore': {
         exports: '_'
       },
       'jquery': {
         exports: '$'
-      },
-      'facebook': {
-        exports: 'FB'
       }
     }
   });
 
   requirejs(['R'], function(R) {
+    R.defaultColors = [];
+    R.polygonMode = false;
+    R.selectionBlue = '#2fa1d6';
+    R.parameters = {};
+    R.parameters['General'] = {};
+    R.parameters['General'].location = {
+      type: 'string',
+      label: 'Location',
+      "default": '0.0, 0.0',
+      permanent: true
+    };
+    R.parameters["default"] = {};
+    R.parameters.strokeWidth = {
+      type: 'slider',
+      label: 'Stroke width',
+      min: 1,
+      max: 100,
+      "default": 5
+    };
+    R.parameters.strokeColor = {
+      type: 'color',
+      label: 'Stroke color'
+    };
+    R.parameters.fillColor = {
+      type: 'color',
+      label: 'Fill color'
+    };
+    R.strokeColor = 'black';
+    R.fillColor = "rgb(255,255,255,255)";
+    R.displayGrid = false;
     R.repository = repository;
     R.tipibot = parameters['tipibot'];
     R.style = parameters['style'] || 'line';

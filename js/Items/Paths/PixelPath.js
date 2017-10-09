@@ -286,7 +286,7 @@
       };
 
       PixelPath.prototype.highlightSelectedPoint = function() {
-        var base, offset, point, ref;
+        var base, offset, point;
         if (!this.controlPath.selected) {
           return;
         }
@@ -314,9 +314,6 @@
         this.selectionHighlight.strokeColor = R.selectionBlue;
         this.selectionHighlight.strokeWidth = 1;
         R.view.selectionLayer.addChild(this.selectionHighlight);
-        if ((ref = R.controllerManager.getController('Edit curve', 'pointType')) != null) {
-          ref.setValue(this.selectedSegment.rtype);
-        }
       };
 
       PixelPath.prototype.updateSelectionHighlight = function() {

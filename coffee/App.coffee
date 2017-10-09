@@ -61,7 +61,7 @@ requirejs.config
 		# 'pinit': ['//assets.pinterest.com/js/pinit', libs + 'pinit']
 		# 'table': ['//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.8.1/bootstrap-table.min', libs + 'table/bootstrap-table.min']
 		# 'zeroClipboard': ['//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.2.0/ZeroClipboard.min', libs + 'ZeroClipboard.min']
-		'facebook': ['//connect.facebook.net/en_US/sdk']
+		# 'facebook': ['//connect.facebook.net/en_US/sdk']
 		# 'twitter': ['//platform.twitter.com/widgets']
 
 		# 'domReady': [libs + 'domReady']
@@ -114,33 +114,53 @@ requirejs.config
 		# 'color-classifier': libs + 'color-classifier'
 
 	shim:
-		'oembed': ['jquery']
 		'mousewheel': ['jquery']
 		'scrollbar': ['jquery']
 		'jqueryUi': ['jquery']
 		'bootstrap': ['jquery']
-		'typeahead': ['jquery']
 		'js-cookie': ['jquery']
-		'jqtree': ['jquery']
-		'aceDiff': ['jquery', 'diffMatch', 'ace/ace']
-		'i18nextXHRBackend': ['i18next']
-		'i18nextBrowserLanguageDetector': ['i18next']
+		'i18nextXHRBackendID': ['i18next']
+		'i18nextBrowserLanguageDetectorID': ['i18next']
 		'jqueryI18next': ['i18next']
-		# 'modal': ['bootstrap', 'modalManager']
-		'colorpickersliders':
-			deps: ['jquery', 'tinycolor2']
-		# 'ace': ['aceTools']
 		'underscore':
 			exports: '_'
 		'jquery':
 			exports: '$'
-		'facebook' :
-			exports: 'FB'
-		# 'twitter':
-		# 	exports: 'twttr'
-
+		
 # Load the main app module to start the app
 requirejs [ 'R' ], (R) ->
+
+	R.defaultColors = []
+
+	R.polygonMode = false					# whether to draw in polygon mode or not (in polygon mode: each time the user clicks a point
+											# will be created, in default mode: each time the user moves the mouse a point will be created)
+	R.selectionBlue = '#2fa1d6'
+
+	R.parameters = {}
+	R.parameters['General'] = {}
+	R.parameters['General'].location =
+		type: 'string'
+		label: 'Location'
+		default: '0.0, 0.0'
+		permanent: true
+
+	R.parameters.default = {}
+	R.parameters.strokeWidth =
+		type: 'slider'
+		label: 'Stroke width'
+		min: 1
+		max: 100
+		default: 5
+	R.parameters.strokeColor =
+		type: 'color'
+		label: 'Stroke color'
+	R.parameters.fillColor =
+		type: 'color'
+		label: 'Fill color'
+	R.strokeColor = 'black'
+	R.fillColor = "rgb(255,255,255,255)"
+	R.displayGrid = false
+
 	R.repository = repository
 	R.tipibot = parameters['tipibot']
 	R.style = parameters['style'] or 'line'

@@ -17,7 +17,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 			return
 
 		updateParameters: ()->
-			R.controllerManager.setSelectedTool(@Item)
+			# R.controllerManager.setSelectedTool(@Item)
 			return
 
 		select: (deselectItems=true, updateParameters=true)->

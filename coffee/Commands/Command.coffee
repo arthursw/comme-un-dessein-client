@@ -1,4 +1,5 @@
-define ['paper', 'R',  'Utils/Utils', 'UI/Controllers/ControllerManager' ], (P, R, Utils, ControllerManager) ->
+define ['paper', 'R',  'Utils/Utils'], (P, R, Utils) ->
+	# define ['paper', 'R',  'Utils/Utils', 'UI/Controllers/ControllerManager' ], (P, R, Utils, ControllerManager) ->
 
 	class Command
 
@@ -416,7 +417,7 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Controllers/ControllerManager' ], (P, 
 		do: ()->
 			for id, item of @items
 				item.setParameter(@name, @newValue)
-			R.controllerManager.updateController(@name, @newValue)
+			# R.controllerManager.updateController(@name, @newValue)
 			@updateItems(@name)
 			super()
 			return
@@ -424,7 +425,7 @@ define ['paper', 'R',  'Utils/Utils', 'UI/Controllers/ControllerManager' ], (P, 
 		undo: ()->
 			for id, item of @items
 				item.setParameter(@name, @previousValues[id])
-			R.controllerManager.updateController(@name, @previousValue)
+			# R.controllerManager.updateController(@name, @previousValue)
 			@updateItems(@name)
 			super()
 			return

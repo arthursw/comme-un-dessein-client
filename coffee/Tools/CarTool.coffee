@@ -148,7 +148,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 
 			@car.previousSpeed = @car.speed
 
-			R.controllerManager.getController('Car', 'speed').setValue(@car.speed.toFixed(2))
+			# R.controllerManager.getController('Car', 'speed').setValue(@car.speed.toFixed(2))
 			# @constructor.parameters['Car'].speed.controller.setValue(@car.speed.toFixed(2), false)
 
 			@car.rotation = @car.direction.angle+90

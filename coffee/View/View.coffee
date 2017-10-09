@@ -5,7 +5,7 @@ if document?
 	dependencies.push('mousewheel')
 	# dependencies.push('tween')
 
-define dependencies, (P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, mousewheel) ->
+define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, mousewheel) ->
 
 	class View
 		
@@ -417,7 +417,7 @@ define dependencies, (P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, mo
 			# 		break
 
 			# update location in sidebar
-			R.controllerManager.folders['General'].controllers['location'].setValue('' + P.view.center.x.toFixed(2) + ',' + P.view.center.y.toFixed(2))
+			# R.controllerManager.folders['General'].controllers['location'].setValue('' + P.view.center.x.toFixed(2) + ',' + P.view.center.y.toFixed(2))
 
 			return somethingToLoad
 

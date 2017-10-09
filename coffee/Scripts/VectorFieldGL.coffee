@@ -82,8 +82,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Controllers/Folder', 'three'], (P, R, U
 	# 	default: false
 	# 	onFinishChange: updateField
 
-	for name, parameter of parameters
-		R.controllerManager.createController(name, parameter, folder)
+	# for name, parameter of parameters
+	#	 R.controllerManager.createController(name, parameter, folder)
 
 	geometry = new THREE.BoxGeometry( 1, 1, 1 )
 	material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } )

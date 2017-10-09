@@ -144,9 +144,7 @@
         }
       };
 
-      PathTool.prototype.updateParameters = function() {
-        R.controllerManager.setSelectedTool(this.Path);
-      };
+      PathTool.prototype.updateParameters = function() {};
 
       PathTool.prototype.deselect = function() {
         PathTool.__super__.deselect.call(this);

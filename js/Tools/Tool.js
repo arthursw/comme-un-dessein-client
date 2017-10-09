@@ -133,9 +133,7 @@
         }
       };
 
-      Tool.prototype.updateParameters = function() {
-        R.controllerManager.setSelectedTool(this.constructor);
-      };
+      Tool.prototype.updateParameters = function() {};
 
       Tool.prototype.updateCursor = function() {
         if (this.constructor.cursor.icon != null) {

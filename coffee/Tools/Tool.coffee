@@ -128,7 +128,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 			return
 
 		updateParameters: ()->
-			R.controllerManager.setSelectedTool(@constructor)
+			# R.controllerManager.setSelectedTool(@constructor)
 			return
 
 		updateCursor: ()->

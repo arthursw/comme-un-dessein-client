@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command', 'i18next', 'moment', 'facebook'], function(P, R, Utils, Item, Modal, Command, i18next, moment, fb) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command', 'i18next', 'moment'], function(P, R, Utils, Item, Modal, Command, i18next, moment) {
     var DrawingPanel;
     DrawingPanel = (function() {
       function DrawingPanel() {

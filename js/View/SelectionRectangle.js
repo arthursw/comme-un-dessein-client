@@ -315,25 +315,15 @@
       };
 
       SelectionRectangle.prototype.updatePositionController = function() {
-        var position, ref, ref1, string;
+        var position, string;
         position = this.rectangle.topLeft;
         string = '' + position.x.toFixed(2) + ', ' + position.y.toFixed(2);
-        if ((ref = R.controllerManager.folders["Position & size"]) != null) {
-          if ((ref1 = ref.controllers.position) != null) {
-            ref1.setValue(string);
-          }
-        }
       };
 
       SelectionRectangle.prototype.updateSizeController = function() {
-        var ref, ref1, size, string;
+        var size, string;
         size = this.rectangle.size;
         string = '' + size.width.toFixed(2) + ', ' + size.height.toFixed(2);
-        if ((ref = R.controllerManager.folders["Position & size"]) != null) {
-          if ((ref1 = ref.controllers.size) != null) {
-            ref1.setValue(string);
-          }
-        }
       };
 
       SelectionRectangle.prototype.beginTranslate = function(event) {

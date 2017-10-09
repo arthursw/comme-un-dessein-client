@@ -237,13 +237,13 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Items/Content'
 		updatePositionController: ()->
 			position = @rectangle.topLeft
 			string = '' + position.x.toFixed(2) + ', ' + position.y.toFixed(2)
-			R.controllerManager.folders["Position & size"]?.controllers.position?.setValue(string)
+			# R.controllerManager.folders["Position & size"]?.controllers.position?.setValue(string)
 			return
 
 		updateSizeController: ()->
 			size = @rectangle.size
 			string = '' + size.width.toFixed(2) + ', ' + size.height.toFixed(2)
-			R.controllerManager.folders["Position & size"]?.controllers.size?.setValue(string)
+			# R.controllerManager.folders["Position & size"]?.controllers.size?.setValue(string)
 			return
 
 		beginTranslate: (event)->

@@ -65,15 +65,7 @@
         }
       };
 
-      Item.updatePositionAndSizeControllers = function(position, size) {
-        var ref, ref1;
-        if ((ref = R.controllerManager.getController('Position & size', 'position')) != null) {
-          ref.setValue(Utils.pointToString(position));
-        }
-        if ((ref1 = R.controllerManager.getController('Position & size', 'size')) != null) {
-          ref1.setValue(Utils.pointToString(size));
-        }
-      };
+      Item.updatePositionAndSizeControllers = function(position, size) {};
 
       Item.onPositionFinishChange = function(position) {
         var ref, ref1;
@@ -131,7 +123,6 @@
           this.secureData();
         } else {
           this.data = new Object();
-          R.controllerManager.updateItemData(this);
         }
         if (this.rectangle == null) {
           this.rectangle = null;
@@ -356,9 +347,6 @@
         R.s = this;
         R.selectedItems.push(this);
         R.tools.select.updateSelectionRectangle();
-        if (updateOptions) {
-          R.controllerManager.updateParametersForSelectedItems();
-        }
         R.rasterizer.selectItem(this);
         this.zindex = this.group.index;
         if (this.group.parent !== R.view.selectionLayer || (this.parentBeforeSelection == null)) {
@@ -379,9 +367,6 @@
         this.selected = false;
         Utils.Array.remove(R.selectedItems, this);
         R.tools.select.updateSelectionRectangle();
-        if (updateOptions) {
-          R.controllerManager.updateParametersForSelectedItems();
-        }
         if (this.group != null) {
           R.rasterizer.deselectItem(this);
           if ((ref = this.parentBeforeSelection) != null) {

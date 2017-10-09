@@ -11,7 +11,7 @@ define [
 	'UI/Modal'
 	'UI/Button'
 	'UI/AlertManager'
-	'UI/Controllers/ControllerManager'
+	# 'UI/Controllers/ControllerManager'
 	'Commands/CommandManager'
 	'View/View'
 	'Tools/ToolManager'
@@ -21,7 +21,7 @@ define [
 	'i18nextBrowserLanguageDetectorID'
 	'jqueryI18next'
 	'moment'
-], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, ControllerManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
+], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
 
 	# Initialize CommeUnDessein and handlers
 	$(document).ready () ->
@@ -223,10 +223,11 @@ define [
 		R.view = new View()
 		R.alertManager = new AlertManager()
 		R.toolbar = new Toolbar()
+	
 
-		if document?		
-			R.controllerManager = new ControllerManager()
-			R.controllerManager.createGlobalControllers()
+		# if document?		
+		# 	# R.controllerManager = new ControllerManager()
+		# 	# R.controllerManager.createGlobalControllers()
 		
 		R.rasterizerManager = new RasterizerManager()
 		R.rasterizerManager.initializeRasterizers()

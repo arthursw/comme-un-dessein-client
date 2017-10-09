@@ -144,8 +144,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 		# 	return
 
 		@updatePositionAndSizeControllers: (position, size)->
-			R.controllerManager.getController('Position & size', 'position')?.setValue(Utils.pointToString(position))
-			R.controllerManager.getController('Position & size', 'size')?.setValue(Utils.pointToString(size))
+			# R.controllerManager.getController('Position & size', 'position')?.setValue(Utils.pointToString(position))
+			# R.controllerManager.getController('Position & size', 'size')?.setValue(Utils.pointToString(size))
 			return
 
 		@onPositionFinishChange: (position)->
@@ -226,7 +226,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 				@secureData()
 			else
 				@data = new Object()
-				R.controllerManager.updateItemData(@)
+				# R.controllerManager.updateItemData(@)
 
 			@rectangle ?= null
 
@@ -645,8 +645,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 			R.selectedItems.push(@)
 			R.tools.select.updateSelectionRectangle()
 			
-			if updateOptions
-				R.controllerManager.updateParametersForSelectedItems()
+			# if updateOptions
+			# 	R.controllerManager.updateParametersForSelectedItems()
 
 			R.rasterizer.selectItem(@)
 
@@ -669,8 +669,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 
 			R.tools.select.updateSelectionRectangle()
 			
-			if updateOptions
-				R.controllerManager.updateParametersForSelectedItems()
+			# if updateOptions
+			#	 R.controllerManager.updateParametersForSelectedItems()
 
 			if @group? 	# @group is null when item is removed (called from @remove())
 

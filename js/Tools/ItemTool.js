@@ -14,9 +14,7 @@
         return;
       }
 
-      ItemTool.prototype.updateParameters = function() {
-        R.controllerManager.setSelectedTool(this.Item);
-      };
+      ItemTool.prototype.updateParameters = function() {};
 
       ItemTool.prototype.select = function(deselectItems, updateParameters) {
         if (deselectItems == null) {

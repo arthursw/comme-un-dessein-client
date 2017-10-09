@@ -11,7 +11,7 @@
     dependencies.push('mousewheel');
   }
 
-  define(dependencies, function(P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, mousewheel) {
+  define('View/View', dependencies, function(P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, mousewheel) {
     var View;
     View = (function() {
       View.thumbnailSize = 300;
@@ -428,7 +428,6 @@
         if (updateHash) {
           Utils.deferredExecution(this.updateHash, 'updateHash', 500);
         }
-        R.controllerManager.folders['General'].controllers['location'].setValue('' + P.view.center.x.toFixed(2) + ',' + P.view.center.y.toFixed(2));
         return somethingToLoad;
       };
 
