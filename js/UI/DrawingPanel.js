@@ -643,7 +643,7 @@
       DrawingPanel.prototype.resizeGeneralInformation = function() {
         var height;
         if (this.status === 'information') {
-          height = this.drawingPanelJ.innerHeight() - 100;
+          height = this.drawingPanelJ.innerHeight() * window.devicePixelRatio - 100;
           this.contentJ.find('#drawing-panel-no-selection').height(height).show().siblings().hide();
           this.contentJ.find('#drawing-panel-no-selection #RItems').height(height);
           this.contentJ.find('#drawing-panel-no-selection #RItems .mCustomScrollbar').height(height - 200);
