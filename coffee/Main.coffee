@@ -25,53 +25,54 @@ define [
 
 	# Initialize CommeUnDessein and handlers
 	$(document).ready () ->
-
-		chooseRandomMode = false
-
-		if window.location.pathname == '/' || window.location.pathname == '/debug'
-			chooseRandomMode = true
-			welcomeTextJ = $('#beta-text')
-			modal = Modal.createModal( 
-				id: 'choose-mode',
-				title: 'Welcome to Comme Un Dessein', 
-				submit: ( ()=> 
-					modes = ['line', 'line-ortho-diag', 'pen', 'ortho-diag']
-					return window.location.pathname = modes[Math.floor(Math.random()*modes.length)] ),
-				submitButtonText: 'Choose random mode', 
-				submitButtonIcon: 'glyphicon-random',
-				cancelButtonText: 'Just visit', 
-				cancelButtonIcon: 'glyphicon-sunglasses',
-				)
-
-			modal.addCustomContent(divJ: welcomeTextJ.clone(), name: 'beta-text')
-			modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning')
-
-			# modal.modalJ.find('[name="cancel"]').hide()
-			modal.show()
-
+		
 		canvasJ = $('#canvas')
-		mode = canvasJ.attr('data-drawing-mode')
+		
+		# chooseRandomMode = false
 
-		R.administrator = canvasJ.attr('data-is-admin') == 'True'
+		# if window.location.pathname == '/' || window.location.pathname == '/debug'
+		# 	chooseRandomMode = true
+		# 	welcomeTextJ = $('#beta-text')
+		# 	modal = Modal.createModal( 
+		# 		id: 'choose-mode',
+		# 		title: 'Welcome to Comme Un Dessein', 
+		# 		submit: ( ()=> 
+		# 			modes = ['line', 'line-ortho-diag', 'pen', 'ortho-diag']
+		# 			return window.location.pathname = modes[Math.floor(Math.random()*modes.length)] ),
+		# 		submitButtonText: 'Choose random mode', 
+		# 		submitButtonIcon: 'glyphicon-random',
+		# 		cancelButtonText: 'Just visit', 
+		# 		cancelButtonIcon: 'glyphicon-sunglasses',
+		# 		)
 
-		if mode == 'None'
-			mode = canvasJ.attr('data-city')
+		# 	modal.addCustomContent(divJ: welcomeTextJ.clone(), name: 'beta-text')
+		# 	modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning')
 
-		if mode == 'pen'
-			mode = 'CommeUnDessein'
+		# 	# modal.modalJ.find('[name="cancel"]').hide()
+		# 	modal.show()
 
-		if mode == 'None' or mode == '' and chooseRandomMode
-			modes = ['line', 'lineOrthoDiag', 'CommeUnDessein', 'orthoDiag']
-			mode = modes[Math.floor(Math.random()*modes.length)]
+		# mode = canvasJ.attr('data-drawing-mode')
 
-		console.log(mode)
+		# R.administrator = canvasJ.attr('data-is-admin') == 'True'
 
-		if mode != 'None'
-			R.city =
-					owner: null
-					name: mode
-					site: null
-			R.drawingMode = if mode in ['pixel', 'ortho', 'orthoDiag', 'image', 'line', 'lineOrthoDiag', 'dot', 'cross'] then mode else null
+		# if mode == 'None'
+		# 	mode = canvasJ.attr('data-city')
+
+		# if mode == 'pen'
+		# 	mode = 'CommeUnDessein'
+
+		# if mode == 'None' or mode == '' and chooseRandomMode
+		# 	modes = ['line', 'lineOrthoDiag', 'CommeUnDessein', 'orthoDiag']
+		# 	mode = modes[Math.floor(Math.random()*modes.length)]
+
+		# console.log(mode)
+
+		# if mode != 'None'
+		# 	R.city =
+		# 			owner: null
+		# 			name: mode
+		# 			site: null
+		# 	R.drawingMode = if mode in ['pixel', 'ortho', 'orthoDiag', 'image', 'line', 'lineOrthoDiag', 'dot', 'cross'] then mode else null
 
 		# just set some content and react to language changes
 		updateContent = ()->

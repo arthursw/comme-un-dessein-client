@@ -2,55 +2,8 @@
 (function() {
   define(['R', 'Utils/Utils', 'Loader', 'Socket', 'City', 'Rasterizers/RasterizerManager', 'UI/Sidebar', 'UI/Toolbar', 'UI/DrawingPanel', 'UI/Modal', 'UI/Button', 'UI/AlertManager', 'Commands/CommandManager', 'View/View', 'Tools/ToolManager', 'RasterizerBot', 'i18next', 'i18nextXHRBackendID', 'i18nextBrowserLanguageDetectorID', 'jqueryI18next', 'moment'], function(R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) {
     $(document).ready(function() {
-      var canvasJ, chooseRandomMode, isPM, meridiem, modal, mode, modes, ordinal, updateContent, userAuthenticated, username, welcomeTextJ;
-      chooseRandomMode = false;
-      if (window.location.pathname === '/' || window.location.pathname === '/debug') {
-        chooseRandomMode = true;
-        welcomeTextJ = $('#beta-text');
-        modal = Modal.createModal({
-          id: 'choose-mode',
-          title: 'Welcome to Comme Un Dessein',
-          submit: ((function(_this) {
-            return function() {
-              var modes;
-              modes = ['line', 'line-ortho-diag', 'pen', 'ortho-diag'];
-              return window.location.pathname = modes[Math.floor(Math.random() * modes.length)];
-            };
-          })(this)),
-          submitButtonText: 'Choose random mode',
-          submitButtonIcon: 'glyphicon-random',
-          cancelButtonText: 'Just visit',
-          cancelButtonIcon: 'glyphicon-sunglasses'
-        });
-        modal.addCustomContent({
-          divJ: welcomeTextJ.clone(),
-          name: 'beta-text'
-        });
-        modal.modalJ.find('[name="cancel"]').removeClass('btn-default').addClass('btn-warning');
-        modal.show();
-      }
+      var canvasJ, isPM, meridiem, ordinal, updateContent, userAuthenticated, username;
       canvasJ = $('#canvas');
-      mode = canvasJ.attr('data-drawing-mode');
-      R.administrator = canvasJ.attr('data-is-admin') === 'True';
-      if (mode === 'None') {
-        mode = canvasJ.attr('data-city');
-      }
-      if (mode === 'pen') {
-        mode = 'CommeUnDessein';
-      }
-      if (mode === 'None' || mode === '' && chooseRandomMode) {
-        modes = ['line', 'lineOrthoDiag', 'CommeUnDessein', 'orthoDiag'];
-        mode = modes[Math.floor(Math.random() * modes.length)];
-      }
-      console.log(mode);
-      if (mode !== 'None') {
-        R.city = {
-          owner: null,
-          name: mode,
-          site: null
-        };
-        R.drawingMode = mode === 'pixel' || mode === 'ortho' || mode === 'orthoDiag' || mode === 'image' || mode === 'line' || mode === 'lineOrthoDiag' || mode === 'dot' || mode === 'cross' ? mode : null;
-      }
       updateContent = function() {
         $("body").localize();
       };
@@ -200,7 +153,7 @@
         return R.loader.loadSVG();
       });
       $('#about-link').click(function(event) {
-        var divJ;
+        var divJ, modal;
         modal = Modal.createModal({
           title: 'About Comme Un Dessein',
           postSubmit: 'hide',
