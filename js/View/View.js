@@ -89,9 +89,11 @@
         });
         $(window).on({
           touchmove: function(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            return -1;
+            if (!$(event.target).parents('.scroll')[0]) {
+              event.stopPropagation();
+              event.preventDefault();
+              return -1;
+            }
           }
         });
         if (typeof window !== "undefined" && window !== null) {

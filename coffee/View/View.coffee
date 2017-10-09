@@ -79,9 +79,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			R.stageJ.on( touchmove: @mousemove )
 			
 			$(window).on( touchmove: (event)-> 
-				event.stopPropagation()
-				event.preventDefault()
-				return -1
+				if !$(event.target).parents('.scroll')[0]
+					event.stopPropagation()
+					event.preventDefault()
+					return -1
 			)
 
 			# R.stageJ[0].addEventListener('touchstart', @mousedown, false)
