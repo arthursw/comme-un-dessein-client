@@ -164,10 +164,8 @@
           divType: 'div'
         });
         this.infoBtn.btnJ.click(function() {
-          var PrivacyPolicyJ, liveJ, modal, termsOfServiceJ, welcomeTextJ;
+          var PrivacyPolicyJ, modal, termsOfServiceJ, welcomeTextJ;
           welcomeTextJ = $('#welcome-text');
-          liveJ = $("<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/live_stream?channel=UCRMrTkJJYvGAerb1j-H-Miw\" frameborder=\"0\" allowfullscreen></iframe>");
-          welcomeTextJ.find('#tipibot-live').append(liveJ);
           modal = Modal.createModal({
             id: 'info',
             title: 'Welcome to Comme Un Dessein',

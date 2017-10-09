@@ -784,7 +784,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# R.backgroundCanvasJ.width(window.innerWidth)
 			# R.backgroundCanvasJ.height(window.innerHeight)
 			@grid.update()
-			$(".mCustomScrollbar").mCustomScrollbar("update")
+			# $(".mCustomScrollbar").mCustomScrollbar("update")
 			@moveBy(new P.Point())
 
 			# R.canvasJ.width(window.innerWidth)

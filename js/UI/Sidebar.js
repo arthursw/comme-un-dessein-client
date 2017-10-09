@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi', 'scrollbar'], function(P, R, Utils, Item, ModuleLoader, jqui, sb) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi'], function(P, R, Utils, Item, ModuleLoader, jqui) {
     var Sidebar;
     Sidebar = (function() {
       function Sidebar() {
@@ -35,9 +35,6 @@
         });
         this.sortedPaths = R.sortedPaths;
         this.sortedDivs = R.sortedDivs;
-        $(".mCustomScrollbar").mCustomScrollbar({
-          keyboard: false
-        });
         return;
       }
 

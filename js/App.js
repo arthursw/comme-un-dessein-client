@@ -50,7 +50,6 @@
       'jquery': [libs + 'jquery-2.1.3.min'],
       'jqueryUi': [libs + 'jquery-ui.min'],
       'mousewheel': [libs + 'jquery.mousewheel.min'],
-      'scrollbar': [libs + 'jquery.mCustomScrollbar.min'],
       'tinycolor2': [libs + 'tinycolor'],
       'bootstrap': [libs + 'bootstrap.min'],
       'paper': [libs + 'paper-full'],
@@ -61,7 +60,6 @@
     },
     shim: {
       'mousewheel': ['jquery'],
-      'scrollbar': ['jquery'],
       'jqueryUi': ['jquery'],
       'bootstrap': ['jquery'],
       'js-cookie': ['jquery'],

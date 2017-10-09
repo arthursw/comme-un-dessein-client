@@ -323,11 +323,13 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 					@modalSubmit()
 				return
 			@modalJ.modal('show')
+			$('#templates').removeClass('hidden').show()
 			return
 
 		# the modal will be delete as soon as it is hidden
 		hide: ()->
 			@modalJ.modal('hide')
+			$('#templates').hide()
 			return
 
 		addProgressBar: ()->

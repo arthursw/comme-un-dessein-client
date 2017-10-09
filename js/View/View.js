@@ -763,7 +763,6 @@
 
       View.prototype.onWindowResize = function(event) {
         this.grid.update();
-        $(".mCustomScrollbar").mCustomScrollbar("update");
         this.moveBy(new P.Point());
         P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight());
         R.svgJ.attr('width', R.stageJ.innerWidth());

@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi', 'scrollbar' ], (P, R, Utils, Item, ModuleLoader, jqui, sb ) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi' ], (P, R, Utils, Item, ModuleLoader, jqui ) ->
 
 	class Sidebar
 
@@ -29,7 +29,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi'
 			@sortedPaths = R.sortedPaths
 			@sortedDivs = R.sortedDivs
 
-			$(".mCustomScrollbar").mCustomScrollbar( keyboard: false )
+			# $(".mCustomScrollbar").mCustomScrollbar( keyboard: false )
 			return
 
 		initialize: ()->

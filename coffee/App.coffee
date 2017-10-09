@@ -77,7 +77,7 @@ requirejs.config
 		'jquery': [libs + 'jquery-2.1.3.min']
 		'jqueryUi': [libs + 'jquery-ui.min']
 		'mousewheel': [libs + 'jquery.mousewheel.min']
-		'scrollbar': [libs + 'jquery.mCustomScrollbar.min']
+		# 'scrollbar': [libs + 'jquery.mCustomScrollbar.min']
 		'tinycolor2': [ libs + 'tinycolor']
 		# 'socketio': '//cdn.socket.io/socket.io-1.3.4'
 		# 'socketio': '//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io'
@@ -115,7 +115,7 @@ requirejs.config
 
 	shim:
 		'mousewheel': ['jquery']
-		'scrollbar': ['jquery']
+		# 'scrollbar': ['jquery']
 		'jqueryUi': ['jquery']
 		'bootstrap': ['jquery']
 		'js-cookie': ['jquery']

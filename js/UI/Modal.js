@@ -383,10 +383,12 @@
           };
         })(this));
         this.modalJ.modal('show');
+        $('#templates').removeClass('hidden').show();
       };
 
       Modal.prototype.hide = function() {
         this.modalJ.modal('hide');
+        $('#templates').hide();
       };
 
       Modal.prototype.addProgressBar = function() {

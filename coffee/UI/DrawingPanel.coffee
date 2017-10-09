@@ -567,10 +567,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 		resizeGeneralInformation: ()=>
 			if @status == 'information'
-				height = @drawingPanelJ.innerHeight() * window.devicePixelRatio - 100
-				@contentJ.find('#drawing-panel-no-selection').height(height).show().siblings().hide()
+				height = @drawingPanelJ.innerHeight() - 300
+				@contentJ.find('#drawing-panel-no-selection').show().siblings().hide()
 				@contentJ.find('#drawing-panel-no-selection #RItems').height(height)
-				@contentJ.find('#drawing-panel-no-selection #RItems .mCustomScrollbar').height(height-200)
+				# @contentJ.find('#drawing-panel-no-selection #RItems .cd-tree').height(height-200)
 			return
 
 		### set drawing ###

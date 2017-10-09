@@ -357,8 +357,8 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			@infoBtn.btnJ.click ()-> 
 				welcomeTextJ = $('#welcome-text')
 
-				liveJ = $("""<iframe width="560" height="315" src="https://www.youtube.com/embed/live_stream?channel=UCRMrTkJJYvGAerb1j-H-Miw" frameborder="0" allowfullscreen></iframe>""")
-				welcomeTextJ.find('#tipibot-live').append(liveJ)
+				# liveJ = $("""<iframe width="560" height="315" src="https://www.youtube.com/embed/live_stream?channel=UCRMrTkJJYvGAerb1j-H-Miw" frameborder="0" allowfullscreen></iframe>""")
+				# welcomeTextJ.find('#tipibot-live').append(liveJ)
 
 				# layersJ = $('#RItems')
 				# layersParentJ = layersJ.parent()
