@@ -194,7 +194,7 @@
         }
       }
       if (R.initialZoom == null) {
-        R.view.fitRectangle(R.view.grid.limitCD.bounds, true);
+        R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true);
       }
       require(['Items/Paths/PrecisePaths/PrecisePath'], function() {
         return R.loader.loadSVG();

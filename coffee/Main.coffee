@@ -287,7 +287,7 @@ define [
 		# rect.attr("fill", "#f00")
 
 		if not R.initialZoom?
-			R.view.fitRectangle(R.view.grid.limitCD.bounds, true)
+			R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true)
 
 		require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> R.loader.loadSVG() )
 

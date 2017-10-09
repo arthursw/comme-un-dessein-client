@@ -126,7 +126,6 @@
         this.contentJ.find('.comments-container .submit-comment').click(this.submitComment);
         if (R.administrator) {
           adminJ = this.contentJ.find('.admin-buttons');
-          adminJ.removeClass('hidden').show();
           adminJ.find('button.delete-drawing').click((function(_this) {
             return function(event) {
               var modal;
@@ -977,7 +976,7 @@
         switch (data.type) {
           case 'votes':
             if (R.administrator) {
-              this.notify('New vote', 'Author' + data.author + '\n Drawing: ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png');
+              this.notify('New vote', 'Author' + data.author + '\n Drawing: ' + data.title + ' - ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png');
             }
             drawing = R.items[data.drawingId];
             if (drawing != null) {

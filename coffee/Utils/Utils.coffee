@@ -739,31 +739,54 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		console.log "" + message + ": " + time + " sec."
 		return
 
+	checkError = (results)->
+		if not R.loader.checkError(results) then return false
+		console.log(results.message)
+		console.log(results.status)
+		return true
+
 	R.setDebugMode = (debugMode)->
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDebugMode', args: debug: debugMode } ).done(R.loader.checkError)
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDebugMode', args: debug: debugMode } ).done(checkError)
 		return
 	
 	R.setDrawingMode = (mode)->
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingMode', args: mode: mode } ).done(R.loader.checkError)
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingMode', args: mode: mode } ).done(checkError)
+		return
+
+	R.setDrawingStatus = (drawingPk, status)->
+		if not R.administrator then return false
+		if not drawingPk
+			console.log("setDrawingStatus(drawingPk, status)")
+		args = 
+			pk: drawingPk
+			status: status
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingStatus', args: args } ).done(checkError)
 		return
 
 	R.setNegativeVoteThreshold = (voteThreshold)->
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setNegativeVoteThreshold', args: voteThreshold: voteThreshold } ).done(R.loader.checkError)
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setNegativeVoteThreshold', args: voteThreshold: voteThreshold } ).done(checkError)
 		return
 
 	R.setPositiveVoteThreshold = (voteThreshold)->
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPositiveVoteThreshold', args: voteThreshold: voteThreshold } ).done(R.loader.checkError)
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPositiveVoteThreshold', args: voteThreshold: voteThreshold } ).done(checkError)
 		return
 
 	R.setVoteValidationDelay = (hours, minutes, seconds)->
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteValidationDelay', args: { hours: hours, minutes: minutes, seconds: seconds } } ).done(R.loader.checkError)
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteValidationDelay', args: { hours: hours, minutes: minutes, seconds: seconds } } ).done(checkError)
 		return
 
 	R.setVoteMinDuration = (hours, minutes, seconds)->
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteMinDuration', args: { hours: hours, minutes: minutes, seconds: seconds } } ).done(R.loader.checkError)
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteMinDuration', args: { hours: hours, minutes: minutes, seconds: seconds } } ).done(checkError)
 		return
 
-	R.setTestVoteParameters = (negativeVoteThreshold=2, positiveVoteThreshold=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5)->
+	R.setVoteParameters = (negativeVoteThreshold=2, positiveVoteThreshold=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5)->
+		if not R.administrator then return false
 		R.setNegativeVoteThreshold(negativeVoteThreshold)
 		R.setPositiveVoteThreshold(positiveVoteThreshold)
 		R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds)
@@ -775,33 +798,33 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 			pk: R.s.pk
 			city: name: city
 		}
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingToCity', args: args } ).done(R.loader.checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingToCity', args: args } ).done(checkError)
 		return
 
 	R.updateDrawings = ()->
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawings', args: {} } ).done(R.loader.checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawings', args: {} } ).done(checkError)
 		return
 
 	R.validateDrawing = ()->
 		if not R.s?.pk? then return
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'validateDrawing', args: {pk: R.s.pk} } ).done(R.loader.checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'validateDrawing', args: {pk: R.s.pk} } ).done(checkError)
 		return
 
 	R.createDrawingThumbnail = ()->
 		imageURL = R.view.getThumbnail(R.s, 1200, 630, true, true)
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'createDrawingThumbnail', args: {png: imageURL, pk: R.s.pk} } ).done(R.loader.checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'createDrawingThumbnail', args: {png: imageURL, pk: R.s.pk} } ).done(checkError)
 		return
 
 	R.getEmail = (username)->
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getEmail', args: { username: username } } ).done (result)=> 
-			if not R.loader.checkError(result) then return
+			if not checkError(result) then return
 			console.log(result.email)
 			return
 		return
 
 	R.confirmEmail = (username)->
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'confirmEmail', args: { username: username } } ).done (result)=> 
-			if not R.loader.checkError(result) then return
+			if not checkError(result) then return
 			console.log(result.email)
 			return
 		return
@@ -815,7 +838,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 				args = 
 					pk: item.pk
 					svg: item.getSVG()
-				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawingSVG', args: args } ).done(R.loader.checkError)
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawingSVG', args: args } ).done(checkError)
 		return
 
 	R.updateDrawingBounds = ()->
@@ -826,7 +849,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 				pk: item.pk
 				svg: svg
 				bounds: JSON.stringify(group.bounds)
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawingBounds', args: args } ).done(R.loader.checkError)
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawingBounds', args: args } ).done(checkError)
 		return
 
 	R.saveSVG = ()->
@@ -846,7 +869,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 	R.deleteAllItems = (confirm)->
 		args =
 			confirm: confirm
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteAllItems', args: args } ).done(R.loader.checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteAllItems', args: args } ).done(checkError)
 		return
 
 	R.deleteDrawing = (drawingPkToDelete, confirm)->
@@ -856,15 +879,15 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		args =
 			drawingsToDelete: drawingPksToDelete
 			confirm: confirm
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteDrawings', args: args } ).done(R.loader.checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteDrawings', args: args } ).done(checkError)
 		return
 
 	R.createUsers = (logins)->
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'createUsers', args: {logins: logins} } ).done(R.loader.checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'createUsers', args: {logins: logins} } ).done(checkError)
 		return
 
 	R.deleteUsers = (logins)->
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteUsers', args: {logins: logins} } ).done(R.loader.checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteUsers', args: {logins: logins} } ).done(checkError)
 		return
 
 	R.loadAdmin = ()->
@@ -891,7 +914,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		args =
 			itemsToDelete: itemsToDelete
 			confirm: confirm
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteItems', args: args } ).done(R.loader.checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteItems', args: args } ).done(checkError)
 		return
 
 	R.Utils = Utils

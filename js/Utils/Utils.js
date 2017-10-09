@@ -3,7 +3,7 @@
   var hasProp = {}.hasOwnProperty;
 
   define(['paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2', 'bootstrap'], function(P, R, CS, _, $, tinycolor, bs) {
-    var EPSILON, Formatter, Utils, __nativeSI__, __nativeST__, sqrtTwoPi;
+    var EPSILON, Formatter, Utils, __nativeSI__, __nativeST__, checkError, sqrtTwoPi;
     if (typeof window !== "undefined" && window !== null) {
       window.tinycolor = tinycolor;
     }
@@ -680,7 +680,18 @@
       time = (Date.now() - R.timerStartTime) / 1000;
       console.log("" + message + ": " + time + " sec.");
     };
+    checkError = function(results) {
+      if (!R.loader.checkError(results)) {
+        return false;
+      }
+      console.log(results.message);
+      console.log(results.status);
+      return true;
+    };
     R.setDebugMode = function(debugMode) {
+      if (!R.administrator) {
+        return false;
+      }
       $.ajax({
         method: "POST",
         url: "ajaxCall/",
@@ -692,9 +703,12 @@
             }
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
     R.setDrawingMode = function(mode) {
+      if (!R.administrator) {
+        return false;
+      }
       $.ajax({
         method: "POST",
         url: "ajaxCall/",
@@ -706,9 +720,35 @@
             }
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
+    };
+    R.setDrawingStatus = function(drawingPk, status) {
+      var args;
+      if (!R.administrator) {
+        return false;
+      }
+      if (!drawingPk) {
+        console.log("setDrawingStatus(drawingPk, status)");
+      }
+      args = {
+        pk: drawingPk,
+        status: status
+      };
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'setDrawingStatus',
+            args: args
+          })
+        }
+      }).done(checkError);
     };
     R.setNegativeVoteThreshold = function(voteThreshold) {
+      if (!R.administrator) {
+        return false;
+      }
       $.ajax({
         method: "POST",
         url: "ajaxCall/",
@@ -720,9 +760,12 @@
             }
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
     R.setPositiveVoteThreshold = function(voteThreshold) {
+      if (!R.administrator) {
+        return false;
+      }
       $.ajax({
         method: "POST",
         url: "ajaxCall/",
@@ -734,9 +777,12 @@
             }
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
     R.setVoteValidationDelay = function(hours, minutes, seconds) {
+      if (!R.administrator) {
+        return false;
+      }
       $.ajax({
         method: "POST",
         url: "ajaxCall/",
@@ -750,9 +796,12 @@
             }
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
     R.setVoteMinDuration = function(hours, minutes, seconds) {
+      if (!R.administrator) {
+        return false;
+      }
       $.ajax({
         method: "POST",
         url: "ajaxCall/",
@@ -766,9 +815,9 @@
             }
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
-    R.setTestVoteParameters = function(negativeVoteThreshold, positiveVoteThreshold, voteValidationDelayInSeconds, voteMinDurationInSeconds) {
+    R.setVoteParameters = function(negativeVoteThreshold, positiveVoteThreshold, voteValidationDelayInSeconds, voteMinDurationInSeconds) {
       if (negativeVoteThreshold == null) {
         negativeVoteThreshold = 2;
       }
@@ -780,6 +829,9 @@
       }
       if (voteMinDurationInSeconds == null) {
         voteMinDurationInSeconds = 5;
+      }
+      if (!R.administrator) {
+        return false;
       }
       R.setNegativeVoteThreshold(negativeVoteThreshold);
       R.setPositiveVoteThreshold(positiveVoteThreshold);
@@ -803,7 +855,7 @@
             args: args
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
     R.updateDrawings = function() {
       $.ajax({
@@ -815,7 +867,7 @@
             args: {}
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
     R.validateDrawing = function() {
       var ref;
@@ -833,7 +885,7 @@
             }
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
     R.createDrawingThumbnail = function() {
       var imageURL;
@@ -850,7 +902,7 @@
             }
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
     R.getEmail = function(username) {
       $.ajax({
@@ -866,7 +918,7 @@
         }
       }).done((function(_this) {
         return function(result) {
-          if (!R.loader.checkError(result)) {
+          if (!checkError(result)) {
             return;
           }
           console.log(result.email);
@@ -887,7 +939,7 @@
         }
       }).done((function(_this) {
         return function(result) {
-          if (!R.loader.checkError(result)) {
+          if (!checkError(result)) {
             return;
           }
           console.log(result.email);
@@ -920,7 +972,7 @@
                 args: args
               })
             }
-          }).done(R.loader.checkError);
+          }).done(checkError);
         }
       }
     };
@@ -947,7 +999,7 @@
               args: args
             })
           }
-        }).done(R.loader.checkError);
+        }).done(checkError);
       }
     };
     R.saveSVG = function() {
@@ -980,7 +1032,7 @@
             args: args
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
     R.deleteDrawing = function(drawingPkToDelete, confirm) {
       return R.deleteDrawings([drawingPkToDelete], confirm);
@@ -1000,7 +1052,7 @@
             args: args
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
     R.createUsers = function(logins) {
       $.ajax({
@@ -1014,7 +1066,7 @@
             }
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
     R.deleteUsers = function(logins) {
       $.ajax({
@@ -1028,7 +1080,7 @@
             }
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
     R.loadAdmin = function() {
       var prefix;
@@ -1052,7 +1104,7 @@
             args: args
           })
         }
-      }).done(R.loader.checkError);
+      }).done(checkError);
     };
     R.Utils = Utils;
     return Utils;

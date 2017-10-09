@@ -129,7 +129,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			if R.administrator
 				adminJ = @contentJ.find('.admin-buttons')
-				adminJ.removeClass('hidden').show()
+				# adminJ.removeClass('hidden').show()
 				adminJ.find('button.delete-drawing').click (event)=>
 					modal = Modal.createModal( 
 						id: 'delete-drawing',
@@ -996,7 +996,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			switch data.type
 				when 'votes'
 					if R.administrator
-						@notify('New vote', 'Author' + data.author + '\n Drawing: ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png')
+						@notify('New vote', 'Author' + data.author + '\n Drawing: ' + data.title + ' - ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png')
 
 					drawing = R.items[data.drawingId]
 					if drawing?
