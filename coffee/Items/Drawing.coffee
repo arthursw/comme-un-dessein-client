@@ -81,7 +81,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg', ((result)=>
 					# console.log( "success" )
 					# console.log( result )
-					@setSVG(svg)
+					@setSVG(result, false)
 					return
 				))
 				# .done(()=>
@@ -97,7 +97,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 						svgOnly: true
 					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
 						drawing = JSON.parse(result.drawing)
-						@setSVG(drawing.svg)
+						if drawing.svg?
+							@setSVG(drawing.svg)
 					)
 				)
 				# .always(()=>
@@ -159,7 +160,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				pointLists.push(path.getPoints())
 			return pointLists
 
-		addPathsFromPathList: (pathList, parseJSON=true)->
+		addPathsFromPathList: (pathList, parseJSON=true, highlight=false)->
 			for p in pathList
 				points = if parseJSON then JSON.parse(p) else p
 				if not points? then continue
@@ -170,15 +171,20 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				path = new Item.Path.PrecisePath(Date.now(), data, null, null, null, null, R.me, @id)
 				path.pk = path.id
 				path.loadPath()
+				if highlight
+					path.data.strokeColor = 'purple'
 				path.draw()
 			return
 
-		setSVG: (svg)->
+		setSVG: (svg, parse=true)->
 			layerName = @getLayerName()
 			layer = document.getElementById(layerName)
 			# layer.insertAdjacentHTML('afterbegin', svg)
-			parser = new DOMParser()
-			doc = parser.parseFromString(svg, "image/svg+xml")
+			if parse
+				parser = new DOMParser()
+				doc = parser.parseFromString(svg, "image/svg+xml")
+			else
+				doc = svg
 			doc.documentElement.removeAttribute('visibility')
 			doc.documentElement.removeAttribute('xmlns')
 			doc.documentElement.removeAttribute('stroke')
@@ -333,6 +339,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		computeRectangle: ()->
+			@rectangle = null
+
 			if @bounds? 
 				@rectangle = @bounds.clone()
 				return @rectangle
@@ -340,19 +348,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			if @svg?
 				if @svg.getBBox?
 					@rectangle = new P.Rectangle(@svg.getBBox())
-				return 
-
-			@rectangle = null
+					return @rectangle
 			
 			if @group.children.length > 0
-				return @group.bounds.expand(2*R.Path.strokeWidth)
+				@rectangle = @group.bounds.expand(2*R.Path.strokeWidth)
+				if @rectangle? and @rectangle.area > 0
+					return @rectangle
 
 			for path in @paths
 				bounds = path.getDrawingBounds()
 				if bounds?
 					@rectangle ?= bounds.clone()
 					@rectangle = @rectangle.unite(bounds)
-			return
+			return @rectangle
 
 		getLayer: ()->
 			return R.view[@getLayerName()]

@@ -1206,6 +1206,42 @@
           R.alertManager.alert('You already voted for this drawing', 'error');
           return;
         }
+        if (R.administrator) {
+          if (!this.currentDrawing.pathListchecked) {
+            R.alertManager.alert('Check the drawing', 'info');
+            args = {
+              pk: this.currentDrawing.pk,
+              loadPathList: true
+            };
+            $.ajax({
+              method: "POST",
+              url: "ajaxCall/",
+              data: {
+                data: JSON.stringify({
+                  "function": 'loadDrawing',
+                  args: args
+                })
+              }
+            }).done((function(_this) {
+              return function(results) {
+                var drawing;
+                if (!R.loader.checkError(results)) {
+                  return;
+                }
+                drawing = JSON.parse(results.drawing);
+                R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true);
+                _this.currentDrawing.addPathsFromPathList(drawing.pathList, true, true);
+                $(_this.currentDrawing.svg).show().siblings().hide();
+                $(_this.currentDrawing.svg).parent().siblings().hide();
+                _this.currentDrawing.pathListchecked = true;
+              };
+            })(this));
+            return;
+          } else {
+            $(this.currentDrawing.svg).show().siblings().show();
+            $(this.currentDrawing.svg).parent().siblings().show();
+          }
+        }
         args = {
           pk: this.currentDrawing.pk,
           date: Date.now(),
@@ -1272,6 +1308,7 @@
       };
 
       DrawingPanel.prototype.cancelDrawing = function() {
+        var draft;
         if (this.currentDrawing == null) {
           this.close();
           return;
@@ -1286,6 +1323,11 @@
         }
         if ((R.me == null) || !_.isString(R.me)) {
           R.alertManager.alert("You must be logged in to cancel a drawing", "error");
+          return;
+        }
+        draft = Item.Drawing.getDraft();
+        if (draft.paths.length > 0) {
+          R.alertManager.alert("You must submit your draft before cancelling a drawing", "error");
           return;
         }
         this.currentDrawing.cancel();

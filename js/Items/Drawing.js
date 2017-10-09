@@ -103,7 +103,7 @@
         if (this.pk != null) {
           jqxhr = $.get(location.origin + '/static/drawings/' + this.pk + '.svg', ((function(_this) {
             return function(result) {
-              _this.setSVG(svg);
+              _this.setSVG(result, false);
             };
           })(this))).fail((function(_this) {
             return function() {
@@ -127,7 +127,9 @@
               }).done(function(result) {
                 var drawing;
                 drawing = JSON.parse(result.drawing);
-                return _this.setSVG(drawing.svg);
+                if (drawing.svg != null) {
+                  return _this.setSVG(drawing.svg);
+                }
               });
             };
           })(this));
@@ -157,10 +159,13 @@
         return pointLists;
       };
 
-      Drawing.prototype.addPathsFromPathList = function(pathList, parseJSON) {
+      Drawing.prototype.addPathsFromPathList = function(pathList, parseJSON, highlight) {
         var data, i, len, p, path, points;
         if (parseJSON == null) {
           parseJSON = true;
+        }
+        if (highlight == null) {
+          highlight = false;
         }
         for (i = 0, len = pathList.length; i < len; i++) {
           p = pathList[i];
@@ -176,16 +181,26 @@
           path = new Item.Path.PrecisePath(Date.now(), data, null, null, null, null, R.me, this.id);
           path.pk = path.id;
           path.loadPath();
+          if (highlight) {
+            path.data.strokeColor = 'purple';
+          }
           path.draw();
         }
       };
 
-      Drawing.prototype.setSVG = function(svg) {
+      Drawing.prototype.setSVG = function(svg, parse) {
         var doc, layer, layerName, parser;
+        if (parse == null) {
+          parse = true;
+        }
         layerName = this.getLayerName();
         layer = document.getElementById(layerName);
-        parser = new DOMParser();
-        doc = parser.parseFromString(svg, "image/svg+xml");
+        if (parse) {
+          parser = new DOMParser();
+          doc = parser.parseFromString(svg, "image/svg+xml");
+        } else {
+          doc = svg;
+        }
         doc.documentElement.removeAttribute('visibility');
         doc.documentElement.removeAttribute('xmlns');
         doc.documentElement.removeAttribute('stroke');
@@ -354,6 +369,7 @@
 
       Drawing.prototype.computeRectangle = function() {
         var bounds, i, len, path, ref;
+        this.rectangle = null;
         if (this.bounds != null) {
           this.rectangle = this.bounds.clone();
           return this.rectangle;
@@ -361,12 +377,14 @@
         if (this.svg != null) {
           if (this.svg.getBBox != null) {
             this.rectangle = new P.Rectangle(this.svg.getBBox());
+            return this.rectangle;
           }
-          return;
         }
-        this.rectangle = null;
         if (this.group.children.length > 0) {
-          return this.group.bounds.expand(2 * R.Path.strokeWidth);
+          this.rectangle = this.group.bounds.expand(2 * R.Path.strokeWidth);
+          if ((this.rectangle != null) && this.rectangle.area > 0) {
+            return this.rectangle;
+          }
         }
         ref = this.paths;
         for (i = 0, len = ref.length; i < len; i++) {
@@ -379,6 +397,7 @@
             this.rectangle = this.rectangle.unite(bounds);
           }
         }
+        return this.rectangle;
       };
 
       Drawing.prototype.getLayer = function() {

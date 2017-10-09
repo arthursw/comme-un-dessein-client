@@ -1157,6 +1157,33 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				R.alertManager.alert 'You already voted for this drawing', 'error'
 				return
 
+			if R.administrator
+
+				if not @currentDrawing.pathListchecked
+					R.alertManager.alert 'Check the drawing', 'info'
+
+					args = 
+						pk: @currentDrawing.pk
+						loadPathList: true
+					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done (results)=>
+						if not R.loader.checkError(results) then return
+
+						drawing = JSON.parse(results.drawing)
+
+						R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true)
+
+						@currentDrawing.addPathsFromPathList(drawing.pathList, true, true)
+						$(@currentDrawing.svg).show().siblings().hide()
+						$(@currentDrawing.svg).parent().siblings().hide()
+
+						@currentDrawing.pathListchecked = true
+						return
+					return
+				else
+					$(@currentDrawing.svg).show().siblings().show()
+					$(@currentDrawing.svg).parent().siblings().show()
+
+
 			args =
 				pk: @currentDrawing.pk
 				date: Date.now()
@@ -1236,6 +1263,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			if not R.me? or not _.isString(R.me)
 				R.alertManager.alert "You must be logged in to cancel a drawing", "error"
+				return
+
+			draft = Item.Drawing.getDraft()
+			if draft.paths.length > 0
+				R.alertManager.alert "You must submit your draft before cancelling a drawing", "error"
 				return
 
 			@currentDrawing.cancel()
