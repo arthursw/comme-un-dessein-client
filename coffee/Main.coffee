@@ -224,7 +224,19 @@ define [
 		R.view = new View()
 		R.alertManager = new AlertManager()
 		R.toolbar = new Toolbar()
-	
+		
+		userWhoClosedLastTime = localStorage.getItem('showWelcomMessage')
+		if (not R.me) or userWhoClosedLastTime != R.me
+			setTimeout (()=>
+				R.alertManager.alert 'Welcome to Comme un Dessein', 'info'
+				return), 1000
+
+			setTimeout (()=>
+				if R.ignoreNextAlert 
+					R.ignoreNextAlert = null
+					return
+				R.alertManager.alert 'You can discuss about drawings', 'info', null, {html: 'Venez discuter sur <a style="color: #2196f3;text-decoration: underline;" href="http://discussion.commeundessein.co/">http://discussion.commeundessein.co/</a> pour que l\'on crée ensemble une oeuvre collective !'}
+				return), 4000
 
 		# if document?		
 		# 	# R.controllerManager = new ControllerManager()

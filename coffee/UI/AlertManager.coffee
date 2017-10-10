@@ -17,6 +17,14 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			@alertTimeOut = null
 			@alertsContainer.find(".btn-up").click( ()=> @showAlert(@currentAlert-1) )
 			@alertsContainer.find(".btn-down").click( ()=> @showAlert(@currentAlert+1) )
+			@alertsContainer.find(".btn-close").click( ()=> 
+				R.ignoreNextAlert = true
+				localStorage.setItem('showWelcomMessage', R.me)
+				console.log(localStorage.getItem('showWelcomMessage'))
+				@hide()
+				return
+			)
+			
 			return
 
 		showAlert: (index)->
@@ -30,13 +38,17 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			alertJ = @alertsContainer.find(".alert")
 
 			messageOptions = ''
-			if alertData.messageOptions?
+			if alertData.messageOptions? and not alertData.messageOptions.html?
 				messageOptions = "data-i18n-options='" + JSON.stringify(alertData.messageOptions) + "'"
+			
 			newAlertJ = $("<div class='alert fade in' data-i18n='" + alertData.message + "' " + messageOptions + ">")
 			newAlertJ.addClass(alertData.type)
 			
-			text = if alertData.messageOptions? then i18next.t(alertData.message.replace(/\./g, ''), alertData.messageOptions) else i18next.t(alertData.message)
-			newAlertJ.text(text)
+			if alertData.messageOptions?.html?
+				newAlertJ.append(alertData.messageOptions.html)
+			else
+				text = if alertData.messageOptions? then i18next.t(alertData.message.replace(/\./g, ''), alertData.messageOptions) else i18next.t(alertData.message)
+				newAlertJ.text(text)
 
 			newAlertJ.insertAfter(alertJ)
 			alertJ.remove()
@@ -96,7 +108,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 
 			blink = ()=>
 				@nBlinks++
-				if @nBlinks > 3
+				if @nBlinks > 4
 					clearInterval(@blinkIntervalID)
 					@blinkIntervalID = null
 

@@ -2,7 +2,7 @@
 (function() {
   define(['R', 'Utils/Utils', 'Loader', 'Socket', 'City', 'Rasterizers/RasterizerManager', 'UI/Sidebar', 'UI/Toolbar', 'UI/DrawingPanel', 'UI/Modal', 'UI/Button', 'UI/AlertManager', 'Commands/CommandManager', 'View/View', 'Tools/ToolManager', 'RasterizerBot', 'i18next', 'i18nextXHRBackendID', 'i18nextBrowserLanguageDetectorID', 'jqueryI18next', 'moment'], function(R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) {
     $(document).ready(function() {
-      var canvasJ, isPM, meridiem, ordinal, updateContent, userAuthenticated, username;
+      var canvasJ, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
       canvasJ = $('#canvas');
       updateContent = function() {
         $("body").localize();
@@ -130,6 +130,25 @@
       R.view = new View();
       R.alertManager = new AlertManager();
       R.toolbar = new Toolbar();
+      userWhoClosedLastTime = localStorage.getItem('showWelcomMessage');
+      if ((!R.me) || userWhoClosedLastTime !== R.me) {
+        setTimeout(((function(_this) {
+          return function() {
+            R.alertManager.alert('Welcome to Comme un Dessein', 'info');
+          };
+        })(this)), 1000);
+        setTimeout(((function(_this) {
+          return function() {
+            if (R.ignoreNextAlert) {
+              R.ignoreNextAlert = null;
+              return;
+            }
+            R.alertManager.alert('You can discuss about drawings', 'info', null, {
+              html: 'Venez discuter sur <a style="color: #2196f3;text-decoration: underline;" href="http://discussion.commeundessein.co/">http://discussion.commeundessein.co/</a> pour que l\'on crée ensemble une oeuvre collective !'
+            });
+          };
+        })(this)), 4000);
+      }
       R.rasterizerManager = new RasterizerManager();
       R.rasterizerManager.initializeRasterizers();
       R.view.createBackground();

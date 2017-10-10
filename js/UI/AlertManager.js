@@ -29,11 +29,19 @@
             return _this.showAlert(_this.currentAlert + 1);
           };
         })(this));
+        this.alertsContainer.find(".btn-close").click((function(_this) {
+          return function() {
+            R.ignoreNextAlert = true;
+            localStorage.setItem('showWelcomMessage', R.me);
+            console.log(localStorage.getItem('showWelcomMessage'));
+            _this.hide();
+          };
+        })(this));
         return;
       }
 
       AlertManager.prototype.showAlert = function(index) {
-        var alertData, alertJ, messageOptions, newAlertJ, previousType, ref, text;
+        var alertData, alertJ, messageOptions, newAlertJ, previousType, ref, ref1, text;
         if (this.alerts.length <= 0 || index < 0 || index >= this.alerts.length) {
           return;
         }
@@ -42,13 +50,17 @@
         alertData = this.alerts[this.currentAlert];
         alertJ = this.alertsContainer.find(".alert");
         messageOptions = '';
-        if (alertData.messageOptions != null) {
+        if ((alertData.messageOptions != null) && (alertData.messageOptions.html == null)) {
           messageOptions = "data-i18n-options='" + JSON.stringify(alertData.messageOptions) + "'";
         }
         newAlertJ = $("<div class='alert fade in' data-i18n='" + alertData.message + "' " + messageOptions + ">");
         newAlertJ.addClass(alertData.type);
-        text = alertData.messageOptions != null ? i18next.t(alertData.message.replace(/\./g, ''), alertData.messageOptions) : i18next.t(alertData.message);
-        newAlertJ.text(text);
+        if (((ref1 = alertData.messageOptions) != null ? ref1.html : void 0) != null) {
+          newAlertJ.append(alertData.messageOptions.html);
+        } else {
+          text = alertData.messageOptions != null ? i18next.t(alertData.message.replace(/\./g, ''), alertData.messageOptions) : i18next.t(alertData.message);
+          newAlertJ.text(text);
+        }
         newAlertJ.insertAfter(alertJ);
         alertJ.remove();
         this.alertsContainer.find(".alert-number").text(this.currentAlert + 1);
@@ -117,7 +129,7 @@
           return function() {
             var backgroundColor;
             _this.nBlinks++;
-            if (_this.nBlinks > 3) {
+            if (_this.nBlinks > 4) {
               clearInterval(_this.blinkIntervalID);
               _this.blinkIntervalID = null;
             }
