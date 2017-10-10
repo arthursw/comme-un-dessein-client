@@ -857,7 +857,7 @@
         this.votesJ.find('.n-votes.negative').html(nNegativeVotes);
         nVotes = nPositiveVotes + nNegativeVotes;
         this.votesJ.find('.n-votes.total').html(nVotes);
-        this.votesJ.find('.percentage-votes').html(nVotes > 0 ? 100 * nPositiveVotes / nVotes : 0);
+        this.votesJ.find('.percentage-votes').html((nVotes > 0 ? 100 * nPositiveVotes / nVotes : 0).toFixed(0));
         this.votesJ.find('.status').attr('data-i18n', this.currentDrawing.status).html(i18next.t(this.currentDrawing.status));
         this.voteUpBtnJ.removeClass('disabled');
         this.voteDownBtnJ.removeClass('disabled');
@@ -978,6 +978,9 @@
         var drawing, drawingLink, forOrAgainst, sameCity;
         switch (data.type) {
           case 'votes':
+            if (data.author === R.me) {
+              return;
+            }
             if (R.administrator) {
               this.notify('New vote', 'Author' + data.author + '\n Drawing: ' + data.title + ' - ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png');
             }
@@ -1175,7 +1178,7 @@
       };
 
       DrawingPanel.prototype.voteCallback = function(result) {
-        var delay, suffix;
+        var delay, modal, suffix;
         if (!R.loader.checkError(result)) {
           return;
         }
@@ -1194,9 +1197,19 @@
         if ((result.emailConfirmed != null) && !result.emailConfirmed) {
           suffix = ' but email not confirmed';
         }
-        R.alertManager.alert('You successfully voted' + suffix, 'success', null, {
-          duration: delay
-        });
+        if (result.emailConfirmed) {
+          R.alertManager.alert('You successfully voted' + suffix, 'success', null, {
+            duration: delay
+          });
+        } else {
+          modal = Modal.createModal({
+            id: 'vote-feedback',
+            title: 'Your voted was sent'
+          });
+          modal.addText('Your vote was successfully sent, but you must confirm your email before it is taken into account');
+          modal.addText('If you have troubles confirming your account, please email us');
+          modal.show();
+        }
       };
 
       DrawingPanel.prototype.vote = function(positive) {

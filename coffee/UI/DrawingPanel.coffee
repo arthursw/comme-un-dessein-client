@@ -863,7 +863,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@votesJ.find('.n-votes.negative').html(nNegativeVotes)
 			nVotes = nPositiveVotes+nNegativeVotes
 			@votesJ.find('.n-votes.total').html(nVotes)
-			@votesJ.find('.percentage-votes').html(if nVotes > 0 then 100*nPositiveVotes/nVotes else 0)
+			@votesJ.find('.percentage-votes').html((if nVotes > 0 then 100*nPositiveVotes/nVotes else 0).toFixed(0))
 			
 			@votesJ.find('.status').attr('data-i18n', @currentDrawing.status).html(i18next.t(@currentDrawing.status))
 
@@ -995,6 +995,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			switch data.type
 				when 'votes'
+					if data.author == R.me then return
+					
 					if R.administrator
 						@notify('New vote', 'Author' + data.author + '\n Drawing: ' + data.title + ' - ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png')
 
@@ -1147,7 +1149,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			if result.emailConfirmed? and not result.emailConfirmed
 				suffix = ' but email not confirmed'
 
-			R.alertManager.alert 'You successfully voted' + suffix, 'success', null, { duration: delay }
+			if result.emailConfirmed
+				R.alertManager.alert 'You successfully voted' + suffix, 'success', null, { duration: delay }
+			else
+				modal = Modal.createModal( 
+					id: 'vote-feedback',
+					title: 'Your voted was sent' )
+			
+				modal.addText('Your vote was successfully sent, but you must confirm your email before it is taken into account')
+				modal.addText('If you have troubles confirming your account, please email us')
+				modal.show()
 
 			# R.socket.emit "drawing change", type: 'votes', votes: @currentDrawing.votes, drawingId: @currentDrawing.id
 			return
