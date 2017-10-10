@@ -26,7 +26,7 @@
         flagged: '#EE2233'
       };
 
-      Path.strokeWidth = Utils.CS.mmToPixel(5);
+      Path.strokeWidth = Utils.CS.mmToPixel(8);
 
       Path.strokeColor = 'black';
 
