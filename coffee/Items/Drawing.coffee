@@ -351,7 +351,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 					@rectangle = new P.Rectangle(@svg.getBBox())
 					return @rectangle
 			
-			if @group.children.length == @paths.length
+			if @group.children.length == @paths.length && @group.bounds.area > 0
 				@rectangle = @group.bounds.expand(2*R.Path.strokeWidth)
 				if @rectangle? and @rectangle.area > 0
 					return @rectangle

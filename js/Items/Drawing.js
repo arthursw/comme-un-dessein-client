@@ -381,7 +381,7 @@
             return this.rectangle;
           }
         }
-        if (this.group.children.length === this.paths.length) {
+        if (this.group.children.length === this.paths.length && this.group.bounds.area > 0) {
           this.rectangle = this.group.bounds.expand(2 * R.Path.strokeWidth);
           if ((this.rectangle != null) && this.rectangle.area > 0) {
             return this.rectangle;
