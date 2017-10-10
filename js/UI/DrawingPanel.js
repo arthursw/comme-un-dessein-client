@@ -1184,7 +1184,6 @@
           R.alertManager.alert('Your vote was successfully cancelled', 'success');
           return;
         }
-        this.currentDrawing.votes = result.votes;
         delay = moment.duration(result.delay, 'seconds').humanize();
         suffix = '';
         if (result.validates) {

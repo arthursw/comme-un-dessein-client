@@ -1133,7 +1133,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				R.alertManager.alert 'Your vote was successfully cancelled', 'success'
 				return
 
-			@currentDrawing.votes = result.votes
+			# @currentDrawing.votes = result.votes
 			
 			delay = moment.duration(result.delay, 'seconds').humanize()
 
