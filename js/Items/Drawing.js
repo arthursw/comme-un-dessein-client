@@ -381,7 +381,7 @@
             return this.rectangle;
           }
         }
-        if (this.group.children.length > 0) {
+        if (this.group.children.length === this.paths.length) {
           this.rectangle = this.group.bounds.expand(2 * R.Path.strokeWidth);
           if ((this.rectangle != null) && this.rectangle.area > 0) {
             return this.rectangle;
@@ -604,9 +604,6 @@
 
       Drawing.prototype.getBounds = function() {
         this.computeRectangle();
-        if ((this.svg == null) && this.paths.length === 0) {
-          return null;
-        }
         return this.rectangle;
       };
 

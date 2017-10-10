@@ -686,6 +686,7 @@
       }
       console.log(results.message);
       console.log(results.status);
+      console.log(results.state);
       return true;
     };
     R.setDebugMode = function(debugMode) {
@@ -701,6 +702,21 @@
             args: {
               debug: debugMode
             }
+          })
+        }
+      }).done(checkError);
+    };
+    R.removeDeadReferences = function() {
+      if (!R.administrator) {
+        return false;
+      }
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'removeDeadReferences',
+            args: {}
           })
         }
       }).done(checkError);

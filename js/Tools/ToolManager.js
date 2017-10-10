@@ -172,7 +172,7 @@
           welcomeTextJ = $('#welcome-text');
           modal = Modal.createModal({
             id: 'info',
-            title: 'Welcome to Comme Un Dessein',
+            title: 'Welcome to Comme un Dessein',
             submit: (function() {})
           });
           modal.addCustomContent({

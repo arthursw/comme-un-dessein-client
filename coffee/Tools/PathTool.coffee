@@ -27,10 +27,13 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		@maxDraftSize = 500
 
 		@computeDraftBounds: (paths=null)->
-			return R.Drawing.getDraft()?.getBounds()
+			bounds = R.Drawing.getDraft()?.getBounds()
+			console.log(bounds)
+			return bounds
 
 		@draftIsTooBig: (paths=null, tolerance=0)->
 			draftBounds = @computeDraftBounds(paths)
+			console.log(draftBounds)
 			return @draftBoundsIsTooBig(draftBounds, tolerance)
 
 		@draftBoundsIsTooBig: (draftBounds, tolerance=0)->

@@ -1020,7 +1020,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					# if the drawing is already loaded, no need to load it
 					if R.items[data.pk]? or R.items[data.drawingId]? then return
 
-					R.alertManager.alert 'A new drawing has been created', 'success', null, {drawingLink: drawingLink}
+					# R.alertManager.alert 'A new drawing has been created', 'success', null, {drawingLink: drawingLink}
+					R.alertManager.alert 'A new drawing has been created', 'info', null, {html: '<a style="color: #2196f3;text-decoration: underline;" href="'+drawingLink+'">Un nouveau dessin</a> a été créé !'}
+					# Un nouveau dessin a été créé ! Retrouvez le sur {{drawingLink}}
 
 					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: { pk: data.pk, loadSVG: true } } ).done((results)->
 						if not R.loader.checkError(results) then return

@@ -368,7 +368,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				# layersParentJ = layersJ.parent()
 				modal = Modal.createModal( 
 					id: 'info',
-					title: 'Welcome to Comme Un Dessein', 
+					title: 'Welcome to Comme un Dessein', 
 					submit: ( ()-> return ), 
 					# postSubmit: 'load', 
 					# submitButtonText: 'Sign up', 

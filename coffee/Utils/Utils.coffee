@@ -743,11 +743,17 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		if not R.loader.checkError(results) then return false
 		console.log(results.message)
 		console.log(results.status)
+		console.log(results.state)
 		return true
 
 	R.setDebugMode = (debugMode)->
 		if not R.administrator then return false
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDebugMode', args: debug: debugMode } ).done(checkError)
+		return
+
+	R.removeDeadReferences = ()->
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'removeDeadReferences', args: {} } ).done(checkError)
 		return
 	
 	R.setDrawingMode = (mode)->

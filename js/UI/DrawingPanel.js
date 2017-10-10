@@ -1007,8 +1007,8 @@
             if ((R.items[data.pk] != null) || (R.items[data.drawingId] != null)) {
               return;
             }
-            R.alertManager.alert('A new drawing has been created', 'success', null, {
-              drawingLink: drawingLink
+            R.alertManager.alert('A new drawing has been created', 'info', null, {
+              html: '<a style="color: #2196f3;text-decoration: underline;" href="' + drawingLink + '">Un nouveau dessin</a> a été créé !'
             });
             $.ajax({
               method: "POST",

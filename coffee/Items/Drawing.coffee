@@ -351,7 +351,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 					@rectangle = new P.Rectangle(@svg.getBBox())
 					return @rectangle
 			
-			if @group.children.length > 0
+			if @group.children.length == @paths.length
 				@rectangle = @group.bounds.expand(2*R.Path.strokeWidth)
 				if @rectangle? and @rectangle.area > 0
 					return @rectangle
@@ -361,6 +361,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				if bounds?
 					@rectangle ?= bounds.clone()
 					@rectangle = @rectangle.unite(bounds)
+
 			return @rectangle
 
 		getLayer: ()->
@@ -556,8 +557,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 		getBounds: ()->
 			@computeRectangle()
-			if not @svg? and @paths.length == 0
-				return null
+			# if not @svg? and @paths.length == 0
+			# 	return null
 			return @rectangle
 
 		getSVG: (asString=true) ->

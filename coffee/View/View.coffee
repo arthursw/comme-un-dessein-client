@@ -153,6 +153,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@thumbnailProject.activeLayer.strokeColor = if blackStroke then 'black' else R.Path.colorMap[drawing.status]
 			if blackStroke
 				@thumbnailProject.activeLayer.strokeWidth = 3
+			else
+				@thumbnailProject.activeLayer.strokeWidth = R.Path.strokeWidth
 			@thumbnailProject.view.update()
 			@thumbnailProject.view.draw()
 			result = if toDataURL then @thumbnailCanvas.toDataURL() else @thumbnailProject.exportSVG()
@@ -280,6 +282,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@draftLayer.strokeWidth = Path.strokeWidth
 			@flaggedLayer = new P.Layer()
 			@flaggedLayer.name  = 'flaggedLayer'
+			@flaggedLayer.strokeWidth = Path.strokeWidth
 			
 			if not R.administrator
 				@rejectedLayer.visible = false

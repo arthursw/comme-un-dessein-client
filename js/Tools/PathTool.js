@@ -34,11 +34,13 @@
       PathTool.maxDraftSize = 500;
 
       PathTool.computeDraftBounds = function(paths) {
-        var ref;
+        var bounds, ref;
         if (paths == null) {
           paths = null;
         }
-        return (ref = R.Drawing.getDraft()) != null ? ref.getBounds() : void 0;
+        bounds = (ref = R.Drawing.getDraft()) != null ? ref.getBounds() : void 0;
+        console.log(bounds);
+        return bounds;
       };
 
       PathTool.draftIsTooBig = function(paths, tolerance) {
@@ -50,6 +52,7 @@
           tolerance = 0;
         }
         draftBounds = this.computeDraftBounds(paths);
+        console.log(draftBounds);
         return this.draftBoundsIsTooBig(draftBounds, tolerance);
       };
 

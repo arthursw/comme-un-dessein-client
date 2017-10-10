@@ -223,6 +223,10 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 						break
 				@focusOnDrawing = null
 
+			@loadVotes()
+			return
+
+		loadVotes: ()=>
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadVotes', args: { city: R.city } } ).done(@loadVotesCallback)
 			return
 

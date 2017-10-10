@@ -14,6 +14,7 @@
         this.loadCallbackTipibot = bind(this.loadCallbackTipibot, this);
         this.loadCallback = bind(this.loadCallback, this);
         this.loadVotesCallback = bind(this.loadVotesCallback, this);
+        this.loadVotes = bind(this.loadVotes, this);
         this.loadSVGCallback = bind(this.loadSVGCallback, this);
         this.hideLoadingBar = bind(this.hideLoadingBar, this);
         this.showLoadingBar = bind(this.showLoadingBar, this);
@@ -283,6 +284,10 @@
           }
           this.focusOnDrawing = null;
         }
+        this.loadVotes();
+      };
+
+      Loader.prototype.loadVotes = function() {
         $.ajax({
           method: "POST",
           url: "ajaxCall/",

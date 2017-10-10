@@ -179,6 +179,8 @@
         this.thumbnailProject.activeLayer.strokeColor = blackStroke ? 'black' : R.Path.colorMap[drawing.status];
         if (blackStroke) {
           this.thumbnailProject.activeLayer.strokeWidth = 3;
+        } else {
+          this.thumbnailProject.activeLayer.strokeWidth = R.Path.strokeWidth;
         }
         this.thumbnailProject.view.update();
         this.thumbnailProject.view.draw();
@@ -325,6 +327,7 @@
         this.draftLayer.strokeWidth = Path.strokeWidth;
         this.flaggedLayer = new P.Layer();
         this.flaggedLayer.name = 'flaggedLayer';
+        this.flaggedLayer.strokeWidth = Path.strokeWidth;
         if (!R.administrator) {
           this.rejectedLayer.visible = false;
         } else {
