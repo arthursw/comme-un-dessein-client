@@ -27,6 +27,8 @@ define [
 	$(document).ready () ->
 		
 		canvasJ = $('#canvas')
+
+		R.administrator = canvasJ.attr('data-is-admin') == 'True'
 		
 		# chooseRandomMode = false
 
@@ -52,8 +54,6 @@ define [
 		# 	modal.show()
 
 		# mode = canvasJ.attr('data-drawing-mode')
-
-		# R.administrator = canvasJ.attr('data-is-admin') == 'True'
 
 		# if mode == 'None'
 		# 	mode = canvasJ.attr('data-city')

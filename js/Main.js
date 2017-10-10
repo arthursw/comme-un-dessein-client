@@ -4,6 +4,7 @@
     $(document).ready(function() {
       var canvasJ, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
       canvasJ = $('#canvas');
+      R.administrator = canvasJ.attr('data-is-admin') === 'True';
       updateContent = function() {
         $("body").localize();
       };
