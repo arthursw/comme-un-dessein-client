@@ -253,11 +253,22 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				if not R.loader.checkError(results) then return
 				c = JSON.parse(results.comment)
 				lastId = @addComment(comment, results.commentPk, results.author, c.date.$date)
-				R.socket.emit "drawing change", { type: 'addComment', comment: comment, commentPk: results.commentPk, author: results.author, date: c.date.$date, drawingPk: c.drawing.$oid, insertAfter: lastId }
+				
+				if not results.emailConfirmed
+					modal = Modal.createModal( 
+						id: 'vote-feedback',
+						title: 'Your comment was received' )
+				
+					modal.addText('Your comment was successfully received, but you must confirm your email before it is taken into account')
+					modal.addText('You received an email to activate your account')
+					modal.addText('If you have troubles confirming your account, please email us')
+					modal.show()
+				else
+					R.socket.emit "drawing change", { type: 'addComment', comment: comment, commentPk: results.commentPk, author: results.author, date: c.date.$date, drawingPk: c.drawing.$oid, insertAfter: lastId }
 				return)
 			return
 
-		addComment: (comment, commentPk, author, date, insertAfter=null)->
+		addComment: (comment, commentPk, author, date, insertAfter=null, emailConfirmed)->
 			divJ = $('<div>').addClass('cd-column cd-grow comment')
 			divJ.attr('id', 'comment-'+commentPk)
 			headerJ = $('<div>')
@@ -298,6 +309,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			textJ.get(0).innerText = comment
 			divJ.append(textJ)
 			lastId = @contentJ.find('.comments-container .comments .comment:last-child').attr('id')
+			if not emailConfirmed
+				textJ.addClass('btn-danger')
 			if insertAfter?
 				divJ.insertAfter(@contentJ.find('#'+insertAfter))
 			else
@@ -313,7 +326,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				c = JSON.parse(comment.comment)
 				author = comment.author
 				authorPk = comment.authorPk
-				@addComment(c.text, c._id.$oid, author, c.date.$date)
+				if comment.emailConfirmed or R.administrator
+					@addComment(c.text, c._id.$oid, author, c.date.$date, null, comment.emailConfirmed)
 			return
 
 		deleteComment: (commentPk)->
@@ -839,19 +853,28 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			negativeVoteListJ.empty()
 			nPositiveVotes = 0
 			nNegativeVotes = 0
+			
+			@voteUpBtnJ.find('span.text').attr('data-i18n', 'Vote up').text(i18next.t('Vote up'))
+			@voteDownBtnJ.find('span.text').attr('data-i18n', 'Vote down').text(i18next.t('Vote down'))
+
 			for vote in @currentDrawing.votes
 				v = JSON.parse(vote.vote)
-				liJ = $('<li data-author-pk="'+vote.authorPk+'">'+vote.author+'</li>')
+				# liJ = $('<li data-author-pk="'+vote.authorPk+'">'+vote.author+'</li>')
 				if v.positive
-					nPositiveVotes++
+					if vote.emailConfirmed
+						nPositiveVotes++
 					# positiveVoteListJ.append(liJ)
 					if vote.author == R.me
+						@voteUpBtnJ.find('span.text').attr('data-i18n', 'You voted up').text(i18next.t('You voted up'))
 						@voteUpBtnJ.addClass('voted')
 				else
-					nNegativeVotes++
+					if vote.emailConfirmed
+						nNegativeVotes++
 					# negativeVoteListJ.append(liJ)
 					if vote.author == R.me
+						@voteDownBtnJ.find('span.text').attr('data-i18n', 'You voted down').text(i18next.t('You voted down'))
 						@voteDownBtnJ.addClass('voted')
+
 
 			@drawingPanelJ.find('.vote-list.positive').addClass('hidden')
 			@drawingPanelJ.find('.vote-list.negative').addClass('hidden')
@@ -1154,9 +1177,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			else
 				modal = Modal.createModal( 
 					id: 'vote-feedback',
-					title: 'Your voted was sent' )
+					title: 'Your vote was received' )
 			
-				modal.addText('Your vote was successfully sent, but you must confirm your email before it is taken into account')
+				modal.addText('Your vote was successfully received, but you must confirm your email before it is taken into account')
+				modal.addText('You received an email to activate your account')
 				modal.addText('If you have troubles confirming your account, please email us')
 				modal.show()
 

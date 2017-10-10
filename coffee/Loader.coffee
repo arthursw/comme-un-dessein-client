@@ -236,7 +236,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			
 			if results.votes?
 				for vote in results.votes
-					R.items[vote.pk]?.setStrokeColorFromVote(vote.positive)
+					if vote.emailConfirmed
+						R.items[vote.pk]?.setStrokeColorFromVote(vote.positive)
 
 			return
 

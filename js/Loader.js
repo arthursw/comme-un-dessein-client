@@ -313,8 +313,10 @@
           ref = results.votes;
           for (k = 0, len = ref.length; k < len; k++) {
             vote = ref[k];
-            if ((ref1 = R.items[vote.pk]) != null) {
-              ref1.setStrokeColorFromVote(vote.positive);
+            if (vote.emailConfirmed) {
+              if ((ref1 = R.items[vote.pk]) != null) {
+                ref1.setStrokeColorFromVote(vote.positive);
+              }
             }
           }
         }

@@ -279,26 +279,37 @@
           }
         }).done((function(_this) {
           return function(results) {
-            var c, lastId;
+            var c, lastId, modal;
             if (!R.loader.checkError(results)) {
               return;
             }
             c = JSON.parse(results.comment);
             lastId = _this.addComment(comment, results.commentPk, results.author, c.date.$date);
-            R.socket.emit("drawing change", {
-              type: 'addComment',
-              comment: comment,
-              commentPk: results.commentPk,
-              author: results.author,
-              date: c.date.$date,
-              drawingPk: c.drawing.$oid,
-              insertAfter: lastId
-            });
+            if (!results.emailConfirmed) {
+              modal = Modal.createModal({
+                id: 'vote-feedback',
+                title: 'Your comment was received'
+              });
+              modal.addText('Your comment was successfully received, but you must confirm your email before it is taken into account');
+              modal.addText('You received an email to activate your account');
+              modal.addText('If you have troubles confirming your account, please email us');
+              modal.show();
+            } else {
+              R.socket.emit("drawing change", {
+                type: 'addComment',
+                comment: comment,
+                commentPk: results.commentPk,
+                author: results.author,
+                date: c.date.$date,
+                drawingPk: c.drawing.$oid,
+                insertAfter: lastId
+              });
+            }
           };
         })(this));
       };
 
-      DrawingPanel.prototype.addComment = function(comment, commentPk, author, date, insertAfter) {
+      DrawingPanel.prototype.addComment = function(comment, commentPk, author, date, insertAfter, emailConfirmed) {
         var buttonsJ, deleteBtnJ, deleteIconJ, divJ, editBtnJ, editIconJ, headerJ, lastId, textJ;
         if (insertAfter == null) {
           insertAfter = null;
@@ -345,6 +356,9 @@
         textJ.get(0).innerText = comment;
         divJ.append(textJ);
         lastId = this.contentJ.find('.comments-container .comments .comment:last-child').attr('id');
+        if (!emailConfirmed) {
+          textJ.addClass('btn-danger');
+        }
         if (insertAfter != null) {
           divJ.insertAfter(this.contentJ.find('#' + insertAfter));
         } else {
@@ -364,7 +378,9 @@
           c = JSON.parse(comment.comment);
           author = comment.author;
           authorPk = comment.authorPk;
-          this.addComment(c.text, c._id.$oid, author, c.date.$date);
+          if (comment.emailConfirmed || R.administrator) {
+            this.addComment(c.text, c._id.$oid, author, c.date.$date, null, comment.emailConfirmed);
+          }
         }
       };
 
@@ -824,7 +840,7 @@
       };
 
       DrawingPanel.prototype.setVotes = function() {
-        var i, len, liJ, nNegativeVotes, nPositiveVotes, nVotes, negativeVoteListJ, positiveVoteListJ, ref, v, vote;
+        var i, len, nNegativeVotes, nPositiveVotes, nVotes, negativeVoteListJ, positiveVoteListJ, ref, v, vote;
         this.votesJ.show();
         this.voteUpBtnJ.removeClass('voted');
         this.voteDownBtnJ.removeClass('voted');
@@ -834,19 +850,26 @@
         negativeVoteListJ.empty();
         nPositiveVotes = 0;
         nNegativeVotes = 0;
+        this.voteUpBtnJ.find('span.text').attr('data-i18n', 'Vote up').text(i18next.t('Vote up'));
+        this.voteDownBtnJ.find('span.text').attr('data-i18n', 'Vote down').text(i18next.t('Vote down'));
         ref = this.currentDrawing.votes;
         for (i = 0, len = ref.length; i < len; i++) {
           vote = ref[i];
           v = JSON.parse(vote.vote);
-          liJ = $('<li data-author-pk="' + vote.authorPk + '">' + vote.author + '</li>');
           if (v.positive) {
-            nPositiveVotes++;
+            if (vote.emailConfirmed) {
+              nPositiveVotes++;
+            }
             if (vote.author === R.me) {
+              this.voteUpBtnJ.find('span.text').attr('data-i18n', 'You voted up').text(i18next.t('You voted up'));
               this.voteUpBtnJ.addClass('voted');
             }
           } else {
-            nNegativeVotes++;
+            if (vote.emailConfirmed) {
+              nNegativeVotes++;
+            }
             if (vote.author === R.me) {
+              this.voteDownBtnJ.find('span.text').attr('data-i18n', 'You voted down').text(i18next.t('You voted down'));
               this.voteDownBtnJ.addClass('voted');
             }
           }
@@ -1204,9 +1227,10 @@
         } else {
           modal = Modal.createModal({
             id: 'vote-feedback',
-            title: 'Your voted was sent'
+            title: 'Your vote was received'
           });
-          modal.addText('Your vote was successfully sent, but you must confirm your email before it is taken into account');
+          modal.addText('Your vote was successfully received, but you must confirm your email before it is taken into account');
+          modal.addText('You received an email to activate your account');
           modal.addText('If you have troubles confirming your account, please email us');
           modal.show();
         }
