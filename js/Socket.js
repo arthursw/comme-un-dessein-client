@@ -191,11 +191,6 @@
           this.chatMessagesJ.append($("<p data-i18n='" + message + "'>").append(i18next.t(message)));
         }
         this.chatMessageJ.val('');
-        if (from === R.me) {
-          $("#chatMessagesScroll").mCustomScrollbar("scrollTo", "bottom");
-        } else if ($(document.activeElement).parents("#Chat").length > 0) {
-          $("#chatMessagesScroll").mCustomScrollbar("scrollTo", "bottom");
-        }
       };
 
       Socket.prototype.onKeyPress = function(event) {

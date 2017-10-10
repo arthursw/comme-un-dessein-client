@@ -99,6 +99,7 @@
           iconURL: R.style === 'line' ? 'icones_icon_zoomin.png' : R.style === 'hand' ? 'a-zoomIn.png' : 'glyphicon-zoom-in',
           favorite: true,
           category: null,
+          disableHover: true,
           popover: true,
           order: 1
         });
@@ -112,6 +113,7 @@
           iconURL: R.style === 'line' ? 'icones_icon_zoomout.png' : R.style === 'hand' ? 'a-zoomOut.png' : 'glyphicon-zoom-out',
           favorite: true,
           category: null,
+          disableHover: true,
           popover: true,
           order: 2
         });
@@ -128,6 +130,7 @@
           iconURL: R.style === 'line' ? 'icones_icon_back_02.png' : R.style === 'hand' ? 'a-undo.png' : 'glyphicon-share-alt',
           favorite: true,
           category: null,
+          disableHover: true,
           popover: true,
           order: null,
           transform: 'scaleX(-1)'
@@ -141,6 +144,7 @@
           iconURL: R.style === 'line' ? 'icones_icon_forward_02.png' : R.style === 'hand' ? 'a-redo.png' : 'glyphicon-share-alt',
           favorite: true,
           category: null,
+          disableHover: true,
           popover: true,
           order: null
         });
@@ -164,7 +168,7 @@
           divType: 'div'
         });
         this.infoBtn.btnJ.click(function() {
-          var PrivacyPolicyJ, modal, termsOfServiceJ, welcomeTextJ;
+          var mailJ, modal, welcomeTextJ;
           welcomeTextJ = $('#welcome-text');
           modal = Modal.createModal({
             id: 'info',
@@ -176,13 +180,9 @@
             name: 'welcome-text'
           });
           modal.modalJ.find('[name="cancel"]').hide();
-          termsOfServiceJ = $('<div><a id="terms-of-service-link" href="/terms-of-service.html" data-i18n="Terms of Service">' + i18next.t('Terms of Service') + '</a></div>');
-          PrivacyPolicyJ = $('<div><a id="privacy-policy-link" href="/privacy-policy.html" data-i18n="Privacy Policy">' + i18next.t('Privacy Policy') + '</a></div>');
+          mailJ = $('<div>' + i18next.t('Contact us at') + ' <a href="mailto:idlv.contact@gmail.com">idlv.contact@gmail.com</a></div>');
           modal.addCustomContent({
-            divJ: termsOfServiceJ
-          });
-          modal.addCustomContent({
-            divJ: PrivacyPolicyJ
+            divJ: mailJ
           });
           modal.show();
         });

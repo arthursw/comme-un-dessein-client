@@ -31,7 +31,7 @@
 
       PathTool.emitSocket = false;
 
-      PathTool.maxDraftSize = 400;
+      PathTool.maxDraftSize = 500;
 
       PathTool.computeDraftBounds = function(paths) {
         var ref;

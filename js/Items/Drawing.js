@@ -204,6 +204,7 @@
         doc.documentElement.removeAttribute('visibility');
         doc.documentElement.removeAttribute('xmlns');
         doc.documentElement.removeAttribute('stroke');
+        doc.documentElement.removeAttribute('stroke-width');
         if (this.status === 'draft') {
           doc.documentElement.setAttribute('id', 'draftDrawing');
         }

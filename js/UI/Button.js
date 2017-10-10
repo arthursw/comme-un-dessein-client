@@ -50,6 +50,9 @@
         if ((classes != null) && classes.length > 0) {
           this.btnJ.addClass(classes);
         }
+        if (parameters.disableHover && this.deviceHasTouch()) {
+          this.btnJ.addClass('no-hover');
+        }
         if ((iconURL != null) && iconURL !== '') {
           if (iconURL.indexOf('glyphicon') === 0) {
             this.btnJ.append('<span class="glyphicon ' + iconURL + '" alt="' + name + '-icon">');
@@ -116,6 +119,13 @@
         }
         return;
       }
+
+      Button.prototype.deviceHasTouch = function() {
+        var isIPad, isIPod;
+        isIPad = navigator.userAgent.match(/iPad/i) !== null;
+        isIPod = navigator.platform.match(/i(Phone|Pod)/i);
+        return (document.documentElement.ontouchstart != null) || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0 || isIPod || isIPad;
+      };
 
       Button.prototype.click = function() {
         this.btnJ.click();

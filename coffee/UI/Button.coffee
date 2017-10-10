@@ -46,7 +46,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 			
 			if classes? and classes.length > 0
 				@btnJ.addClass(classes)
-
+			
+			if parameters.disableHover and @deviceHasTouch()
+				@btnJ.addClass('no-hover')
+						
 			if iconURL? and iconURL != '' 															# set icon if url is provided
 				if iconURL.indexOf('glyphicon') == 0
 					@btnJ.append('<span class="glyphicon ' + iconURL + '" alt="' + name + '-icon">')
@@ -104,7 +107,13 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 
 			if parameters.preload
 				@onClickWhenNotLoaded()
+
 			return
+
+		deviceHasTouch: ()->
+			isIPad = navigator.userAgent.match(/iPad/i) != null
+			isIPod = navigator.platform.match(/i(Phone|Pod)/i)
+			return document.documentElement.ontouchstart? or navigator.maxTouchPoints > 0 or navigator.msMaxTouchPoints > 0 or isIPod or isIPad
 
 		click: ()->
 			@btnJ.click()

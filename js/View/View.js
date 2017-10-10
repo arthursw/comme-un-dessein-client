@@ -306,18 +306,23 @@
         this.rejectedLayer.name = 'rejectedLayer';
         this.rejectedLayer.visible = false;
         this.rejectedLayer.strokeColor = Path.colorMap['rejected'];
+        this.rejectedLayer.strokeWidth = Path.strokeWidth;
         this.pendingLayer = new P.Layer();
         this.pendingLayer.name = 'pendingLayer';
         this.pendingLayer.strokeColor = Path.colorMap['pending'];
+        this.pendingLayer.strokeWidth = Path.strokeWidth;
         this.drawingLayer = new P.Layer();
         this.drawingLayer.name = 'drawingLayer';
         this.drawingLayer.strokeColor = Path.colorMap['drawing'];
+        this.drawingLayer.strokeWidth = Path.strokeWidth;
         this.drawnLayer = new P.Layer();
         this.drawnLayer.name = 'drawnLayer';
         this.drawnLayer.strokeColor = Path.colorMap['drawn'];
+        this.drawnLayer.strokeWidth = Path.strokeWidth;
         this.draftLayer = new P.Layer();
         this.draftLayer.name = 'draftLayer';
         this.draftLayer.strokeColor = Path.colorMap['draft'];
+        this.draftLayer.strokeWidth = Path.strokeWidth;
         this.flaggedLayer = new P.Layer();
         this.flaggedLayer.name = 'flaggedLayer';
         if (!R.administrator) {

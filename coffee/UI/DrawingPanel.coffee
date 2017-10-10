@@ -28,7 +28,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			@startDiscussionBtnJ = @contentJ.find('button.start-discussion')
 
-			@startDiscussionBtnJ.click @startDiscussion
+			@startDiscussionBtnJ.click ()=> @startDiscussion()
 
 			@contentJ.find('.share-buttons button').popover()
 
@@ -1106,6 +1106,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 						if @currentDrawing == drawing
 							@contentJ.find('#comment-'+data.commentPk).remove()
+				
+				when 'adminMessage'
+
+					if R.administrator
+						@notify(data.title, data.description)
+
 			return
 
 		### votes ###
@@ -1266,7 +1272,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				return
 
 			draft = Item.Drawing.getDraft()
-			if draft.paths.length > 0
+			if draft? and draft.paths?.length > 0
 				R.alertManager.alert "You must submit your draft before cancelling a drawing", "error"
 				return
 

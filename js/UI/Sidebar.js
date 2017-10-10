@@ -74,6 +74,9 @@
         } else {
           btnJ.addClass("selected");
           cloneJ = btnJ.clone();
+          if (btnJ.hasClass('no-hover')) {
+            cloneJ.addClass('no-hover');
+          }
           this.favoriteToolsJ.append(cloneJ);
           cloneJ.click(function() {
             return btnJ.click();

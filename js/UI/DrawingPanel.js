@@ -50,7 +50,11 @@
         this.contentJ.find('.share-facebook').click(this.shareOnFacebook);
         this.contentJ.find('button.share-twitter').click(this.shareOnTwitter);
         this.startDiscussionBtnJ = this.contentJ.find('button.start-discussion');
-        this.startDiscussionBtnJ.click(this.startDiscussion);
+        this.startDiscussionBtnJ.click((function(_this) {
+          return function() {
+            return _this.startDiscussion();
+          };
+        })(this));
         this.contentJ.find('.share-buttons button').popover();
         this.beginDrawingBtnJ = $('button.begin-drawing');
         this.beginDrawingBtnJ.click(this.beginDrawingClicked);
@@ -1147,6 +1151,11 @@
                 this.contentJ.find('#comment-' + data.commentPk).remove();
               }
             }
+            break;
+          case 'adminMessage':
+            if (R.administrator) {
+              this.notify(data.title, data.description);
+            }
         }
       };
 
@@ -1307,7 +1316,7 @@
       };
 
       DrawingPanel.prototype.cancelDrawing = function() {
-        var draft;
+        var draft, ref;
         if (this.currentDrawing == null) {
           this.close();
           return;
@@ -1325,7 +1334,7 @@
           return;
         }
         draft = Item.Drawing.getDraft();
-        if (draft.paths.length > 0) {
+        if ((draft != null) && ((ref = draft.paths) != null ? ref.length : void 0) > 0) {
           R.alertManager.alert("You must submit your draft before cancelling a drawing", "error");
           return;
         }

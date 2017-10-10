@@ -261,18 +261,23 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@rejectedLayer.name  = 'rejectedLayer'
 			@rejectedLayer.visible = false
 			@rejectedLayer.strokeColor = Path.colorMap['rejected']
+			@rejectedLayer.strokeWidth = Path.strokeWidth
 			@pendingLayer = new P.Layer()
 			@pendingLayer.name  = 'pendingLayer'
 			@pendingLayer.strokeColor = Path.colorMap['pending']
+			@pendingLayer.strokeWidth = Path.strokeWidth
 			@drawingLayer = new P.Layer()
 			@drawingLayer.name  = 'drawingLayer'
 			@drawingLayer.strokeColor = Path.colorMap['drawing']
+			@drawingLayer.strokeWidth = Path.strokeWidth
 			@drawnLayer = new P.Layer()
 			@drawnLayer.name  = 'drawnLayer'
 			@drawnLayer.strokeColor = Path.colorMap['drawn']
+			@drawnLayer.strokeWidth = Path.strokeWidth
 			@draftLayer = new P.Layer()
 			@draftLayer.name  = 'draftLayer'
 			@draftLayer.strokeColor = Path.colorMap['draft']
+			@draftLayer.strokeWidth = Path.strokeWidth
 			@flaggedLayer = new P.Layer()
 			@flaggedLayer.name  = 'flaggedLayer'
 			

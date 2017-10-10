@@ -188,6 +188,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			doc.documentElement.removeAttribute('visibility')
 			doc.documentElement.removeAttribute('xmlns')
 			doc.documentElement.removeAttribute('stroke')
+			doc.documentElement.removeAttribute('stroke-width')
 			if @status == 'draft'
 				doc.documentElement.setAttribute('id', 'draftDrawing')
 			@svg = layer.appendChild(doc.documentElement)

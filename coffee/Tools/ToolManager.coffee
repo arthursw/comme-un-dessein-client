@@ -282,6 +282,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				favorite: true
 				category: null
 				# description: 'Zoom +'
+				disableHover: true
 				popover: true
 				order: 1
 			)
@@ -295,6 +296,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				iconURL: if R.style == 'line' then 'icones_icon_zoomout.png' else if R.style == 'hand' then 'a-zoomOut.png' else 'glyphicon-zoom-out'
 				favorite: true
 				category: null
+				disableHover: true
 				# description: 'Zoom -'
 				popover: true
 				order: 2
@@ -313,6 +315,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				iconURL: if R.style == 'line' then 'icones_icon_back_02.png' else if R.style == 'hand' then 'a-undo.png' else 'glyphicon-share-alt'
 				favorite: true
 				category: null
+				disableHover: true
 				# description: 'Undo'
 				popover: true
 				order: null
@@ -328,6 +331,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				iconURL: if R.style == 'line' then 'icones_icon_forward_02.png' else if R.style == 'hand' then 'a-redo.png' else 'glyphicon-share-alt'
 				favorite: true
 				category: null
+				disableHover: true
 				# description: 'Redo'
 				popover: true
 				order: null
@@ -392,11 +396,13 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				# 	layersParentJ.append($('#RItems'))
 				# 	return
 
-				termsOfServiceJ = $('<div><a id="terms-of-service-link" href="/terms-of-service.html" data-i18n="Terms of Service">'+i18next.t('Terms of Service')+'</a></div>')
-				PrivacyPolicyJ = $('<div><a id="privacy-policy-link" href="/privacy-policy.html" data-i18n="Privacy Policy">'+i18next.t('Privacy Policy')+'</a></div>')
+				# termsOfServiceJ = $('<div><a id="terms-of-service-link" href="/terms-of-service.html" data-i18n="Terms of Service">'+i18next.t('Terms of Service')+'</a></div>')
+				# PrivacyPolicyJ = $('<div><a id="privacy-policy-link" href="/privacy-policy.html" data-i18n="Privacy Policy">'+i18next.t('Privacy Policy')+'</a></div>')
                 
-				modal.addCustomContent(divJ: termsOfServiceJ)
-				modal.addCustomContent(divJ: PrivacyPolicyJ)
+				# modal.addCustomContent(divJ: termsOfServiceJ)
+				# modal.addCustomContent(divJ: PrivacyPolicyJ)
+				mailJ = $('<div>'+i18next.t('Contact us at')+' <a href="mailto:idlv.contact@gmail.com">idlv.contact@gmail.com</a></div>')
+				modal.addCustomContent(divJ: mailJ)
 
 				modal.show()
 				return

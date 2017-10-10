@@ -67,6 +67,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/ModuleLoader', 'jqueryUi'
 			else
 				btnJ.addClass("selected")
 				cloneJ = btnJ.clone()
+				if btnJ.hasClass('no-hover')
+					cloneJ.addClass('no-hover')
 				@favoriteToolsJ.append(cloneJ)
 				cloneJ.click(()->btnJ.click())
 				for attr in ['placement', 'container', 'trigger', 'delay', 'content', 'title']

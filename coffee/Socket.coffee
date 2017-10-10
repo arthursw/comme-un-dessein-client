@@ -252,12 +252,12 @@ define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, i
 			@chatMessageJ.val('')
 
 			# if I am the one talking: scroll both sidebar and chat box to bottom
-			if from == R.me
-				$("#chatMessagesScroll").mCustomScrollbar("scrollTo","bottom")
-				# $(".sidebar-scrollbar.chatMessagesScroll").mCustomScrollbar("scrollTo","bottom")
-			# else if anything in the chat is active: scroll the chat box to bottom
-			else if $(document.activeElement).parents("#Chat").length>0
-				$("#chatMessagesScroll").mCustomScrollbar("scrollTo","bottom")
+			# if from == R.me
+			# 	$("#chatMessagesScroll").mCustomScrollbar("scrollTo","bottom")
+			# 	# $(".sidebar-scrollbar.chatMessagesScroll").mCustomScrollbar("scrollTo","bottom")
+			# # else if anything in the chat is active: scroll the chat box to bottom
+			# else if $(document.activeElement).parents("#Chat").length>0
+			# 	$("#chatMessagesScroll").mCustomScrollbar("scrollTo","bottom")
 			return
 
 		onKeyPress: (event) =>
