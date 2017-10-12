@@ -581,7 +581,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 		resizeGeneralInformation: ()=>
 			if @status == 'information'
-				height = @drawingPanelJ.innerHeight() - 300
+				height = @drawingPanelJ.innerHeight() - 350
 				@contentJ.find('#drawing-panel-no-selection').show().siblings().hide()
 				@contentJ.find('#drawing-panel-no-selection #RItems').height(height)
 				# @contentJ.find('#drawing-panel-no-selection #RItems .cd-tree').height(height-200)

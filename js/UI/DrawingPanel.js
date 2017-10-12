@@ -663,7 +663,7 @@
       DrawingPanel.prototype.resizeGeneralInformation = function() {
         var height;
         if (this.status === 'information') {
-          height = this.drawingPanelJ.innerHeight() - 300;
+          height = this.drawingPanelJ.innerHeight() - 350;
           this.contentJ.find('#drawing-panel-no-selection').show().siblings().hide();
           this.contentJ.find('#drawing-panel-no-selection #RItems').height(height);
         }
