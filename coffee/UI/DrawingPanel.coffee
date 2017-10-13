@@ -1204,27 +1204,36 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 				if not @currentDrawing.pathListchecked
 					R.alertManager.alert 'Check the drawing', 'info'
+				
+					for drawing in R.drawings
+						if drawing != @currentDrawing
+							drawing.remove()
+		
+					draft = R.Drawing.getDraft()
 
 					args = 
 						pk: @currentDrawing.pk
 						loadPathList: true
-					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done (results)=>
-						if not R.loader.checkError(results) then return
 
+					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { 'function': 'loadDrawing', args: args } ).done( (results)=> 
 						drawing = JSON.parse(results.drawing)
+
+						if draft?
+							draft.removePaths()
+
+						draft = new R.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
+
+						draft.addPathsFromPathList(drawing.pathList, true, true)
+						draft.status = 'pending'
 
 						R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true)
 
-						@currentDrawing.addPathsFromPathList(drawing.pathList, true, true)
-						$(@currentDrawing.svg).show().siblings().hide()
-						$(@currentDrawing.svg).parent().siblings().hide()
-
-						@currentDrawing.pathListchecked = true
 						return
+					)
+
 					return
 				else
-					$(@currentDrawing.svg).show().siblings().show()
-					$(@currentDrawing.svg).parent().siblings().show()
+					window.location = window.location.origin
 
 
 			args =

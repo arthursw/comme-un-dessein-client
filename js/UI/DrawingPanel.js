@@ -1237,7 +1237,7 @@
       };
 
       DrawingPanel.prototype.vote = function(positive) {
-        var args;
+        var args, draft, drawing, i, len, ref;
         if (this.currentDrawing.owner === R.me) {
           R.alertManager.alert('You cannot vote for your own drawing', 'error');
           return;
@@ -1253,6 +1253,14 @@
         if (R.administrator) {
           if (!this.currentDrawing.pathListchecked) {
             R.alertManager.alert('Check the drawing', 'info');
+            ref = R.drawings;
+            for (i = 0, len = ref.length; i < len; i++) {
+              drawing = ref[i];
+              if (drawing !== this.currentDrawing) {
+                drawing.remove();
+              }
+            }
+            draft = R.Drawing.getDraft();
             args = {
               pk: this.currentDrawing.pk,
               loadPathList: true
@@ -1262,28 +1270,25 @@
               url: "ajaxCall/",
               data: {
                 data: JSON.stringify({
-                  "function": 'loadDrawing',
+                  'function': 'loadDrawing',
                   args: args
                 })
               }
             }).done((function(_this) {
               return function(results) {
-                var drawing;
-                if (!R.loader.checkError(results)) {
-                  return;
-                }
                 drawing = JSON.parse(results.drawing);
+                if (draft != null) {
+                  draft.removePaths();
+                }
+                draft = new R.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft');
+                draft.addPathsFromPathList(drawing.pathList, true, true);
+                draft.status = 'pending';
                 R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true);
-                _this.currentDrawing.addPathsFromPathList(drawing.pathList, true, true);
-                $(_this.currentDrawing.svg).show().siblings().hide();
-                $(_this.currentDrawing.svg).parent().siblings().hide();
-                _this.currentDrawing.pathListchecked = true;
               };
             })(this));
             return;
           } else {
-            $(this.currentDrawing.svg).show().siblings().show();
-            $(this.currentDrawing.svg).parent().siblings().show();
+            window.location = window.location.origin;
           }
         }
         args = {
