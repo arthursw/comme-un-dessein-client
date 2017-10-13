@@ -190,9 +190,53 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 
 		loadAll: ()->
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadAll', args: { city: R.city } } ).done((results)=> 
-				@loadCallback(results, null, false)
-				# setTimeout((()=>R.rasterizer.refresh()), 1000)
+				if not R.loader.checkError(results) then return
+
+				R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true)
+				
+				for drawing in R.drawings
+					drawing.remove()
+
+				draft = R.Drawing.getDraft()
+				if not draft?
+					draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
+
+				i=0
+				# R.svgJ.hide()
+				showDrawing = ()=>
+					item = results.items[i++]
+					if not item? then return
+					
+					draft.removePaths()
+
+					draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
+
+					drawing = JSON.parse(item)
+					console.log(drawing.pathList)
+					# args = 
+					# 	pk: item._id.$oid
+					# 	loadPathList: true
+
+					# $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done (results)=>
+					# if not R.loader.checkError(results) then return
+
+					# drawing = JSON.parse(results.drawing)
+					# layer = draft.group.parent
+					# layer.removeChildren()
+					# layer.addChild(draft.group)
+					
+					# $(@currentDrawing.svg).parent().parent().hide()
+					
+
+					draft.addPathsFromPathList(drawing.pathList, true, true)
+
+					setTimeout(showDrawing, 200)
+					return
+
+				showDrawing()
+				
 				return)
+
 			return
 
 		loadSVG: ()->

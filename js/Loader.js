@@ -229,7 +229,35 @@
           }
         }).done((function(_this) {
           return function(results) {
-            _this.loadCallback(results, null, false);
+            var draft, drawing, i, k, len, ref, showDrawing;
+            if (!R.loader.checkError(results)) {
+              return;
+            }
+            R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true);
+            ref = R.drawings;
+            for (k = 0, len = ref.length; k < len; k++) {
+              drawing = ref[k];
+              drawing.remove();
+            }
+            draft = R.Drawing.getDraft();
+            if (draft == null) {
+              draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft');
+            }
+            i = 0;
+            showDrawing = function() {
+              var item;
+              item = results.items[i++];
+              if (item == null) {
+                return;
+              }
+              draft.removePaths();
+              draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft');
+              drawing = JSON.parse(item);
+              console.log(drawing.pathList);
+              draft.addPathsFromPathList(drawing.pathList, true, true);
+              setTimeout(showDrawing, 200);
+            };
+            showDrawing();
           };
         })(this));
       };
