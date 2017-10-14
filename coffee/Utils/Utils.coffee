@@ -835,6 +835,77 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 			return
 		return
 
+	R.checkDrawing = ()->
+
+		for drawing in R.drawings
+			if drawing != R.s
+				drawing.remove()
+
+		draft = R.Drawing.getDraft()
+
+		args = 
+			pk: R.s.pk
+			loadPathList: true
+
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { 'function': 'loadDrawing', args: args } ).done( (results)=> 
+			drawing = JSON.parse(results.drawing)
+
+			if draft?
+				draft.removePaths()
+
+			draft = new R.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
+
+			R.drawingToCheck = drawing
+			R.currentPathToCheck = drawing.pathList.length
+			return
+		)
+
+		$(window).keyup ( event) =>
+			draft = R.Drawing.getDraft()
+
+			if event.key == 'a'
+				R.currentPathToCheck--
+
+				if R.currentPathToCheck >= 0
+
+					draft.addPathsFromPathList([R.drawingToCheck.pathList[R.currentPathToCheck]], true, true)
+				else
+					R.currentPathToCheck = 0
+				console.log(R.currentPathToCheck, R.drawingToCheck.pathList.length)
+			if event.key == 'z'
+				R.currentPathToCheck++
+				if R.currentPathToCheck < R.drawingToCheck.pathList.length
+					draft.paths[draft.paths.length-1].remove()
+				else
+					R.currentPathToCheck = R.drawingToCheck.pathList.length
+				console.log(R.currentPathToCheck, R.drawingToCheck.pathList.length)
+			if event.key == 'p'
+
+				args = {
+					city: R.city
+					clientId: draft.id
+					date: Date.now()
+					# pathPks: @pathPks
+					title: 'TEST'
+					description: ''
+					points: null
+				}
+				draft.group = new P.Group()
+				for path in draft.paths
+					draft.addPathToSave(path)
+				draft.computeRectangle()
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'saveDrawing', args: args } ).done (results)=>
+					if not R.loader.checkError(results) then return
+					draft.saveCallback(results)
+					R.drawingPanel.submitDrawingClicked()
+					return
+
+			
+
+			return
+
+		return
+
 	R.updateDrawingSVGs = ()->
 		R.Drawing.addPaths()
 		for drawing in R.drawings

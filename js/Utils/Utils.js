@@ -962,6 +962,98 @@
         };
       })(this));
     };
+    R.checkDrawing = function() {
+      var args, draft, drawing, j, len, ref;
+      ref = R.drawings;
+      for (j = 0, len = ref.length; j < len; j++) {
+        drawing = ref[j];
+        if (drawing !== R.s) {
+          drawing.remove();
+        }
+      }
+      draft = R.Drawing.getDraft();
+      args = {
+        pk: R.s.pk,
+        loadPathList: true
+      };
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            'function': 'loadDrawing',
+            args: args
+          })
+        }
+      }).done((function(_this) {
+        return function(results) {
+          drawing = JSON.parse(results.drawing);
+          if (draft != null) {
+            draft.removePaths();
+          }
+          draft = new R.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft');
+          R.drawingToCheck = drawing;
+          R.currentPathToCheck = drawing.pathList.length;
+        };
+      })(this));
+      $(window).keyup((function(_this) {
+        return function(event) {
+          var k, len1, path, ref1;
+          draft = R.Drawing.getDraft();
+          if (event.key === 'a') {
+            R.currentPathToCheck--;
+            if (R.currentPathToCheck >= 0) {
+              draft.addPathsFromPathList([R.drawingToCheck.pathList[R.currentPathToCheck]], true, true);
+            } else {
+              R.currentPathToCheck = 0;
+            }
+            console.log(R.currentPathToCheck, R.drawingToCheck.pathList.length);
+          }
+          if (event.key === 'z') {
+            R.currentPathToCheck++;
+            if (R.currentPathToCheck < R.drawingToCheck.pathList.length) {
+              draft.paths[draft.paths.length - 1].remove();
+            } else {
+              R.currentPathToCheck = R.drawingToCheck.pathList.length;
+            }
+            console.log(R.currentPathToCheck, R.drawingToCheck.pathList.length);
+          }
+          if (event.key === 'p') {
+            args = {
+              city: R.city,
+              clientId: draft.id,
+              date: Date.now(),
+              title: 'TEST',
+              description: '',
+              points: null
+            };
+            draft.group = new P.Group();
+            ref1 = draft.paths;
+            for (k = 0, len1 = ref1.length; k < len1; k++) {
+              path = ref1[k];
+              draft.addPathToSave(path);
+            }
+            draft.computeRectangle();
+            $.ajax({
+              method: "POST",
+              url: "ajaxCall/",
+              data: {
+                data: JSON.stringify({
+                  "function": 'saveDrawing',
+                  args: args
+                })
+              }
+            }).done(function(results) {
+              if (!R.loader.checkError(results)) {
+                return;
+              }
+              draft.saveCallback(results);
+              R.drawingPanel.submitDrawingClicked();
+            });
+          }
+        };
+      })(this));
+    };
     R.updateDrawingSVGs = function() {
       var args, drawing, id, item, j, len, ref, ref1;
       R.Drawing.addPaths();

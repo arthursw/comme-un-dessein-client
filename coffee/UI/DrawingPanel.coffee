@@ -1224,7 +1224,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 						draft = new R.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
 
 						draft.addPathsFromPathList(drawing.pathList, true, true)
-						draft.status = 'pending'
+
+						@currentDrawing.pathListchecked = true
 
 						R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true)
 
