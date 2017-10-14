@@ -247,14 +247,24 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			if not @checkError(results) then return
 			if results.user?
 				@setMe(results.user)
+			R.nRejectedDrawings = 0
 			for itemString in results.items
 				item = JSON.parse(itemString)
+				
+				if item.status == 'rejected'
+					R.rejectedDrawings ?= []
+					R.rejectedDrawings.push(item)
+					R.nRejectedDrawings++
+					continue
+
 				if R.pkToDrawing?[item._id.$oid]?
 					continue
 				# bounds = null
 				bounds = if item.bounds? then JSON.parse(item.bounds) else null
 				drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg, bounds)
 			# setTimeout((()=>R.rasterizer.refresh()), 1000)
+			if R.view.rejectedListJ?
+				R.view.rejectedListJ.find(".n-items").html(R.nRejectedDrawings)
 			@endLoading()
 			R.toolManager.updateButtonsVisibility()
 			if @focusOnDrawing?

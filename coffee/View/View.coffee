@@ -283,7 +283,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@flaggedLayer = new P.Layer()
 			@flaggedLayer.name  = 'flaggedLayer'
 			@flaggedLayer.strokeWidth = Path.strokeWidth
-			
+
 			if not R.administrator
 				@rejectedLayer.visible = false
 			else
@@ -297,6 +297,20 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@rejectedListJ = @createLayerListItem('Rejected', @rejectedLayer)
 			@flaggedListJ = @createLayerListItem('Flagged', @flaggedLayer)
 			
+			@rejectedListJ.find(".show-btn").click (event)=>
+				if R.rejectedDrawingsLoaded then return
+				R.rejectedDrawingsLoaded = true
+
+				for item in R.rejectedDrawings
+					if R.pkToDrawing?[item._id.$oid]?
+						continue
+					bounds = if item.bounds? then JSON.parse(item.bounds) else null
+					drawing = new R.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg, bounds)
+
+				event.preventDefault()
+				event.stopPropagation()
+				return -1
+
 			if not R.administrator
 				@flaggedListJ.hide()
 

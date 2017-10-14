@@ -340,6 +340,27 @@
         this.drawnListJ = this.createLayerListItem('Drawn', this.drawnLayer);
         this.rejectedListJ = this.createLayerListItem('Rejected', this.rejectedLayer);
         this.flaggedListJ = this.createLayerListItem('Flagged', this.flaggedLayer);
+        this.rejectedListJ.find(".show-btn").click((function(_this) {
+          return function(event) {
+            var bounds, drawing, i, item, len, ref, ref1;
+            if (R.rejectedDrawingsLoaded) {
+              return;
+            }
+            R.rejectedDrawingsLoaded = true;
+            ref = R.rejectedDrawings;
+            for (i = 0, len = ref.length; i < len; i++) {
+              item = ref[i];
+              if (((ref1 = R.pkToDrawing) != null ? ref1[item._id.$oid] : void 0) != null) {
+                continue;
+              }
+              bounds = item.bounds != null ? JSON.parse(item.bounds) : null;
+              drawing = new R.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg, bounds);
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            return -1;
+          };
+        })(this));
         if (!R.administrator) {
           this.flaggedListJ.hide();
         }

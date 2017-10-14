@@ -285,15 +285,27 @@
         if (results.user != null) {
           this.setMe(results.user);
         }
+        R.nRejectedDrawings = 0;
         ref = results.items;
         for (k = 0, len = ref.length; k < len; k++) {
           itemString = ref[k];
           item = JSON.parse(itemString);
+          if (item.status === 'rejected') {
+            if (R.rejectedDrawings == null) {
+              R.rejectedDrawings = [];
+            }
+            R.rejectedDrawings.push(item);
+            R.nRejectedDrawings++;
+            continue;
+          }
           if (((ref1 = R.pkToDrawing) != null ? ref1[item._id.$oid] : void 0) != null) {
             continue;
           }
           bounds = item.bounds != null ? JSON.parse(item.bounds) : null;
           drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg, bounds);
+        }
+        if (R.view.rejectedListJ != null) {
+          R.view.rejectedListJ.find(".n-items").html(R.nRejectedDrawings);
         }
         this.endLoading();
         R.toolManager.updateButtonsVisibility();
