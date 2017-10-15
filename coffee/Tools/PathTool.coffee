@@ -100,6 +100,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		# Select: add the mouse move listener on the tool (userful when creating a path in polygon mode)
 		# todo: move this to main, have a global onMouseMove handler like other handlers
 		select: (deselectItems=true, updateParameters=true, forceSelect=false, fromMiddleMouseButton=false)->
+			R.alertManager.alert "L'installation Comme un Dessein est terminée, vous ne pouvez plus dessiner.", 'info'
+			return
+
 			if not R.userAuthenticated and not forceSelect
 				R.alertManager.alert 'Log in before drawing', 'info'
 				return

@@ -123,6 +123,8 @@
         if (fromMiddleMouseButton == null) {
           fromMiddleMouseButton = false;
         }
+        R.alertManager.alert("L'installation Comme un Dessein est terminée, vous ne pouvez plus dessiner.", 'info');
+        return;
         if (!R.userAuthenticated && !forceSelect) {
           R.alertManager.alert('Log in before drawing', 'info');
           return;

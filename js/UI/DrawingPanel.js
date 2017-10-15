@@ -1238,6 +1238,8 @@
 
       DrawingPanel.prototype.vote = function(positive) {
         var args, draft, drawing, i, len, ref;
+        R.alertManager.alert("L'installation Comme un Dessein est terminée, vous ne pouvez plus voter.", 'info');
+        return;
         if (this.currentDrawing.owner === R.me) {
           R.alertManager.alert('You cannot vote for your own drawing', 'error');
           return;
