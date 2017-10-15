@@ -30,6 +30,16 @@ define [
 
 		R.administrator = canvasJ.attr('data-is-admin') == 'True'
 		
+		endTextJ = $('#end-text')
+
+		modal = Modal.createModal( 
+			title: 'Comme un Dessein is over', 
+			postSubmit: 'hide')
+
+		modal.addCustomContent(divJ: endTextJ, name: 'end-text')
+		modal.modalJ.find('[name="cancel"]').hide()
+		modal.show()
+
 		# chooseRandomMode = false
 
 		# if window.location.pathname == '/' || window.location.pathname == '/debug'

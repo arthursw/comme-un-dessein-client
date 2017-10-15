@@ -2,9 +2,20 @@
 (function() {
   define(['R', 'Utils/Utils', 'Loader', 'Socket', 'City', 'Rasterizers/RasterizerManager', 'UI/Sidebar', 'UI/Toolbar', 'UI/DrawingPanel', 'UI/Modal', 'UI/Button', 'UI/AlertManager', 'Commands/CommandManager', 'View/View', 'Tools/ToolManager', 'RasterizerBot', 'i18next', 'i18nextXHRBackendID', 'i18nextBrowserLanguageDetectorID', 'jqueryI18next', 'moment'], function(R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) {
     $(document).ready(function() {
-      var canvasJ, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
+      var canvasJ, endTextJ, isPM, meridiem, modal, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
       canvasJ = $('#canvas');
       R.administrator = canvasJ.attr('data-is-admin') === 'True';
+      endTextJ = $('#end-text');
+      modal = Modal.createModal({
+        title: 'Comme un Dessein is over',
+        postSubmit: 'hide'
+      });
+      modal.addCustomContent({
+        divJ: endTextJ,
+        name: 'end-text'
+      });
+      modal.modalJ.find('[name="cancel"]').hide();
+      modal.show();
       updateContent = function() {
         $("body").localize();
       };
@@ -173,7 +184,7 @@
         return R.loader.loadSVG();
       });
       $('#about-link').click(function(event) {
-        var divJ, modal;
+        var divJ;
         modal = Modal.createModal({
           title: 'About Comme Un Dessein',
           postSubmit: 'hide',
