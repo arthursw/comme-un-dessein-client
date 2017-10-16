@@ -328,6 +328,8 @@
         this.flaggedLayer = new P.Layer();
         this.flaggedLayer.name = 'flaggedLayer';
         this.flaggedLayer.strokeWidth = Path.strokeWidth;
+        this.pendingLayer.visible = false;
+        this.flaggedLayer.visible = false;
         if (!R.administrator) {
           this.rejectedLayer.visible = false;
         } else {

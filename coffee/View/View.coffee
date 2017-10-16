@@ -284,6 +284,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@flaggedLayer.name  = 'flaggedLayer'
 			@flaggedLayer.strokeWidth = Path.strokeWidth
 
+			@pendingLayer.visible = false
+			@flaggedLayer.visible = false
+			
 			if not R.administrator
 				@rejectedLayer.visible = false
 			else
