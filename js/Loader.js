@@ -278,7 +278,7 @@
       };
 
       Loader.prototype.loadSVGCallback = function(results) {
-        var bounds, drawing, drawingPk, item, itemString, k, len, len1, m, ref, ref1, ref2;
+        var bounds, date, drawing, drawingPk, item, itemString, k, len, len1, m, ref, ref1, ref2, ref3;
         if (!this.checkError(results)) {
           return;
         }
@@ -302,7 +302,8 @@
             continue;
           }
           bounds = item.bounds != null ? JSON.parse(item.bounds) : null;
-          drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg, bounds);
+          date = (ref2 = item.date) != null ? ref2.$date : void 0;
+          drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, date, item.title, null, item.status, item.pathList, item.svg, bounds);
         }
         if (R.view.rejectedListJ != null) {
           R.view.rejectedListJ.find(".n-items").html(R.nRejectedDrawings);
@@ -311,9 +312,9 @@
         R.toolManager.updateButtonsVisibility();
         if (this.focusOnDrawing != null) {
           drawingPk = this.focusOnDrawing;
-          ref2 = R.drawings;
-          for (m = 0, len1 = ref2.length; m < len1; m++) {
-            drawing = ref2[m];
+          ref3 = R.drawings;
+          for (m = 0, len1 = ref3.length; m < len1; m++) {
+            drawing = ref3[m];
             if (drawing.pk === drawingPk) {
               bounds = drawing.getBounds();
               if (bounds != null) {

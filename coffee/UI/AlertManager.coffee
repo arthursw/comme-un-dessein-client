@@ -96,6 +96,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			R.sidebar.sidebarJ.addClass('r-alert')
 			suffix = if R.alertManager.alertsContainer.hasClass('top') then '-top' else ''
 			R.drawingPanel.drawingPanelJ.addClass('r-alert' + suffix)
+			$('#timeline').addClass('r-alert' + suffix)
 			$('#submit-drawing-button').addClass('r-alert' + suffix)
 			@openning = true
 			setTimeout((()=> @openning = null), 500)
@@ -144,6 +145,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			R.sidebar.sidebarJ.removeClass('r-alert')
 			suffix = if R.alertManager.alertsContainer.hasClass('top') then '-top' else ''
 			R.drawingPanel.drawingPanelJ.removeClass('r-alert' + suffix)
+			$('#timeline').removeClass('r-alert' + suffix)
 			$('#submit-drawing-button').removeClass('r-alert' + suffix)
 			return
 

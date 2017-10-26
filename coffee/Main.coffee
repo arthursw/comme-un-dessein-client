@@ -14,6 +14,7 @@ define [
 	# 'UI/Controllers/ControllerManager'
 	'Commands/CommandManager'
 	'View/View'
+	'View/Timelapse'
 	'Tools/ToolManager'
 	'RasterizerBot'
 	'i18next'
@@ -21,7 +22,7 @@ define [
 	'i18nextBrowserLanguageDetectorID'
 	'jqueryI18next'
 	'moment'
-], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, CommandManager, View, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
+], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, CommandManager, View, Timelapse, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
 
 	# Initialize CommeUnDessein and handlers
 	$(document).ready () ->
@@ -31,13 +32,21 @@ define [
 		R.administrator = canvasJ.attr('data-is-admin') == 'True'
 		
 		endTextJ = $('#end-text')
+		
 
 		modal = Modal.createModal( 
 			title: 'Comme un Dessein is over', 
+			submit: ( ()=> 
+				R.timelapse.activate()
+				return),
+			submitButtonText: 'Watch timelapse', 
+			submitButtonIcon: 'glyphicon-film',
+			cancelButtonText: 'Just visit', 
+			cancelButtonIcon: 'glyphicon-sunglasses',
 			postSubmit: 'hide')
 
 		modal.addCustomContent(divJ: endTextJ, name: 'end-text')
-		modal.modalJ.find('[name="cancel"]').hide()
+		# modal.modalJ.find('[name="cancel"]').hide()
 		modal.show()
 
 		# chooseRandomMode = false
@@ -235,18 +244,20 @@ define [
 		R.alertManager = new AlertManager()
 		R.toolbar = new Toolbar()
 		
-		userWhoClosedLastTime = localStorage.getItem('showWelcomMessage')
-		if (not R.me) or userWhoClosedLastTime != R.me
-			setTimeout (()=>
-				R.alertManager.alert 'Welcome to Comme un Dessein', 'info'
-				return), 1000
+		if R.CommeUnDesseinIsNotOver
+			userWhoClosedLastTime = localStorage.getItem('showWelcomMessage')
+			
+			if (not R.me) or userWhoClosedLastTime != R.me
+				setTimeout (()=>
+					R.alertManager.alert 'Welcome to Comme un Dessein', 'info'
+					return), 1000
 
-			setTimeout (()=>
-				if R.ignoreNextAlert 
-					R.ignoreNextAlert = null
-					return
-				R.alertManager.alert 'You can discuss about drawings', 'info', null, {html: 'Venez discuter sur <a style="color: #2196f3;text-decoration: underline;" href="http://discussion.commeundessein.co/">http://discussion.commeundessein.co/</a> pour que l\'on crée ensemble une oeuvre collective !'}
-				return), 4000
+				setTimeout (()=>
+					if R.ignoreNextAlert 
+						R.ignoreNextAlert = null
+						return
+					R.alertManager.alert 'You can discuss about drawings', 'info', null, {html: 'Venez discuter sur <a style="color: #2196f3;text-decoration: underline;" href="http://discussion.commeundessein.co/">http://discussion.commeundessein.co/</a> pour que l\'on crée ensemble une oeuvre collective !'}
+					return), 4000
 
 		# if document?		
 		# 	# R.controllerManager = new ControllerManager()
@@ -268,6 +279,7 @@ define [
 		R.toolManager.createDeleteButton()
 		R.toolManager.createSubmitButton()
 		
+		R.timelapse = new Timelapse()
 		
 		# if not R.userAuthenticated
 			
@@ -310,7 +322,7 @@ define [
 		# rect.attr("fill", "#f00")
 
 		if not R.initialZoom?
-			R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true)
+			R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true)
 
 		require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> R.loader.loadSVG() )
 

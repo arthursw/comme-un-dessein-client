@@ -50,7 +50,7 @@
         return this.draft;
       };
 
-      function Drawing(rectangle1, data1, id1, pk1, owner, date, title1, description, status, pathList, svg, bounds) {
+      function Drawing(rectangle1, data1, id1, pk1, owner, date, title1, description, status1, pathList, svg, bounds) {
         var jqxhr;
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
@@ -60,7 +60,7 @@
         this.date = date;
         this.title = title1;
         this.description = description;
-        this.status = status != null ? status : 'pending';
+        this.status = status1 != null ? status1 : 'pending';
         if (pathList == null) {
           pathList = [];
         }
@@ -991,6 +991,9 @@
 
       Drawing.prototype.updateStatus = function(status) {
         var i, layer, layerName, len, path, ref;
+        if (this.status === status) {
+          return;
+        }
         this.status = status;
         this.removeFromListItem();
         this.addToListItem(this.getListItem());
@@ -1097,6 +1100,32 @@
           this.highlightRectangle.fillColor = color;
           this.highlightRectangle.strokeColor = color;
           this.highlightRectangle.dashArray = [];
+        }
+      };
+
+      Drawing.prototype.hide = function(SVGonly) {
+        var ref;
+        if (SVGonly == null) {
+          SVGonly = true;
+        }
+        if (this.svg != null) {
+          this.svg.setAttribute('visibility', 'hidden');
+        }
+        if ((ref = this.group) != null) {
+          ref.visible = false;
+        }
+      };
+
+      Drawing.prototype.show = function(SVGonly) {
+        var ref;
+        if (SVGonly == null) {
+          SVGonly = true;
+        }
+        if (this.svg != null) {
+          this.svg.setAttribute('visibility', 'show');
+        }
+        if ((ref = this.group) != null) {
+          ref.visible = true;
         }
       };
 

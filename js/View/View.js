@@ -344,20 +344,7 @@
         this.flaggedListJ = this.createLayerListItem('Flagged', this.flaggedLayer);
         this.rejectedListJ.find(".show-btn").click((function(_this) {
           return function(event) {
-            var bounds, drawing, i, item, len, ref, ref1;
-            if (R.rejectedDrawingsLoaded) {
-              return;
-            }
-            R.rejectedDrawingsLoaded = true;
-            ref = R.rejectedDrawings;
-            for (i = 0, len = ref.length; i < len; i++) {
-              item = ref[i];
-              if (((ref1 = R.pkToDrawing) != null ? ref1[item._id.$oid] : void 0) != null) {
-                continue;
-              }
-              bounds = item.bounds != null ? JSON.parse(item.bounds) : null;
-              drawing = new R.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg, bounds);
-            }
+            _this.loadRejectedDrawings();
             event.preventDefault();
             event.stopPropagation();
             return -1;
@@ -368,16 +355,34 @@
         }
       };
 
+      View.prototype.loadRejectedDrawings = function() {
+        var bounds, date, drawing, i, item, len, ref, ref1, ref2;
+        if (R.rejectedDrawingsLoaded) {
+          return;
+        }
+        R.rejectedDrawingsLoaded = true;
+        ref = R.rejectedDrawings;
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          if (((ref1 = R.pkToDrawing) != null ? ref1[item._id.$oid] : void 0) != null) {
+            continue;
+          }
+          bounds = item.bounds != null ? JSON.parse(item.bounds) : null;
+          date = (ref2 = item.date) != null ? ref2.$date : void 0;
+          drawing = new R.Drawing(null, null, item.clientId, item._id.$oid, item.owner, date, item.title, null, item.status, item.pathList, item.svg, bounds);
+        }
+      };
+
       View.prototype.getViewBounds = function(considerPanels) {
         var bottomRight, drawingPanelWidth, sidebarWidth, topLeft;
-        if (window.innerWidth < 600) {
+        if (R.stageJ.innerWidth() < 600) {
           considerPanels = false;
         }
         if (considerPanels) {
           sidebarWidth = R.sidebar.isOpened() ? R.sidebar.sidebarJ.outerWidth() : 0;
           drawingPanelWidth = R.drawingPanel.isOpened() ? R.drawingPanel.drawingPanelJ.outerWidth() : 0;
-          topLeft = P.view.viewToProject(new P.Point(sidebarWidth, 0));
-          bottomRight = P.view.viewToProject(new P.Point(window.innerWidth - drawingPanelWidth, window.innerHeight - 50));
+          topLeft = P.view.viewToProject(new P.Point(sidebarWidth, R.stageJ.offset().top));
+          bottomRight = P.view.viewToProject(new P.Point(R.stageJ.innerWidth() - drawingPanelWidth, R.stageJ.innerHeight() - R.stageJ.offset().top));
           return new P.Rectangle(topLeft, bottomRight);
         }
         return P.view.bounds;
@@ -482,8 +487,8 @@
         if (updateHash == null) {
           updateHash = true;
         }
-        windowSize = new P.Size(window.innerWidth, window.innerHeight);
-        if (window.innerWidth < 600) {
+        windowSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight());
+        if (windowSize.width < 600) {
           considerPanels = false;
         }
         sidebarWidth = considerPanels && R.sidebar.isOpened() ? R.sidebar.sidebarJ.outerWidth() : 0;
@@ -501,8 +506,8 @@
           P.view.zoom = zoom;
         }
         if (considerPanels) {
-          windowCenterInView = P.view.viewToProject(new P.Point(window.innerWidth / 2, window.innerHeight / 2));
-          visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + windowSize.width / 2, window.innerHeight / 2));
+          windowCenterInView = P.view.viewToProject(new P.Point(windowSize.width / 2, windowSize.height / 2));
+          visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + windowSize.width / 2, windowSize.height / 2));
           offset = visibleViewCenterInView.subtract(windowCenterInView);
           this.moveTo(rectangle.center.subtract(offset), null, true, false, updateHash);
         } else {
@@ -802,6 +807,7 @@
       };
 
       View.prototype.onWindowResize = function(event) {
+        var ref;
         this.grid.update();
         this.moveBy(new P.Point());
         P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight());
@@ -809,6 +815,9 @@
         R.svgJ.attr('height', R.stageJ.innerHeight());
         R.toolbar.updateArrowsVisibility();
         R.drawingPanel.onWindowResize();
+        if ((ref = R.timelapse) != null) {
+          ref.onWindowResize();
+        }
       };
 
       View.prototype.mousedown = function(event) {

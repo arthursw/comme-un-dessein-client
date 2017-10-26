@@ -812,7 +812,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			)
 			return
 
-		updateStatus: (@status)->
+		updateStatus: (status)->
+			if @status == status then return
+			@status = status
 			# we could just move liJ but we would have to update the number of items anyway
 			@removeFromListItem()
 			@addToListItem(@getListItem())
@@ -895,6 +897,22 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				@highlightRectangle.fillColor = color
 				@highlightRectangle.strokeColor = color
 				@highlightRectangle.dashArray = []
+			return
+
+		hide: (SVGonly=true)->
+			if @svg?
+				@svg.setAttribute('visibility', 'hidden')
+
+			@group?.visible = false
+
+			return
+
+		show: (SVGonly=true)->
+			if @svg?
+				@svg.setAttribute('visibility', 'show')
+
+			@group?.visible = true
+			
 			return
 
 		# drawChildren: ()->

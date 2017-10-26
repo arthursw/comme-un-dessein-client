@@ -286,7 +286,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			@pendingLayer.visible = false
 			@flaggedLayer.visible = false
-			
+
 			if not R.administrator
 				@rejectedLayer.visible = false
 			else
@@ -301,15 +301,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@flaggedListJ = @createLayerListItem('Flagged', @flaggedLayer)
 			
 			@rejectedListJ.find(".show-btn").click (event)=>
-				if R.rejectedDrawingsLoaded then return
-				R.rejectedDrawingsLoaded = true
-
-				for item in R.rejectedDrawings
-					if R.pkToDrawing?[item._id.$oid]?
-						continue
-					bounds = if item.bounds? then JSON.parse(item.bounds) else null
-					drawing = new R.Drawing(null, null, item.clientId, item._id.$oid, item.owner, null, item.title, null, item.status, item.pathList, item.svg, bounds)
-
+				@loadRejectedDrawings()
 				event.preventDefault()
 				event.stopPropagation()
 				return -1
@@ -319,15 +311,29 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			return
 
+		loadRejectedDrawings: ()->
+
+			if R.rejectedDrawingsLoaded then return
+			R.rejectedDrawingsLoaded = true
+
+			for item in R.rejectedDrawings
+				if R.pkToDrawing?[item._id.$oid]?
+					continue
+				bounds = if item.bounds? then JSON.parse(item.bounds) else null
+				date = item.date?.$date
+				drawing = new R.Drawing(null, null, item.clientId, item._id.$oid, item.owner, date, item.title, null, item.status, item.pathList, item.svg, bounds)
+
+			return
+
 		getViewBounds: (considerPanels)->
-			if window.innerWidth < 600
+			if R.stageJ.innerWidth() < 600
 				considerPanels = false
 			if considerPanels
 				sidebarWidth = if R.sidebar.isOpened() then R.sidebar.sidebarJ.outerWidth() else 0
 				drawingPanelWidth = if R.drawingPanel.isOpened() then R.drawingPanel.drawingPanelJ.outerWidth() else 0
 
-				topLeft = P.view.viewToProject(new P.Point(sidebarWidth, 0))
-				bottomRight = P.view.viewToProject(new P.Point(window.innerWidth - drawingPanelWidth, window.innerHeight-50))
+				topLeft = P.view.viewToProject(new P.Point(sidebarWidth, R.stageJ.offset().top))
+				bottomRight = P.view.viewToProject(new P.Point(R.stageJ.innerWidth() - drawingPanelWidth, R.stageJ.innerHeight() - R.stageJ.offset().top))
 
 				return new P.Rectangle(topLeft, bottomRight)
 			return P.view.bounds
@@ -457,10 +463,11 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 
 		fitRectangle: (rectangle, considerPanels=false, zoom=null, updateHash=true)->
-			windowSize = new P.Size(window.innerWidth, window.innerHeight)
+
+			windowSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight())
 			
 			# WARNING: on small screen, the drawing panel takes the whole width, that would make window.width negative
-			if window.innerWidth < 600
+			if windowSize.width < 600
 				considerPanels = false
 
 			sidebarWidth = if considerPanels and R.sidebar.isOpened() then R.sidebar.sidebarJ.outerWidth() else 0
@@ -481,8 +488,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# R.toolManager.enableDrawingButton(P.view.zoom >= 1)
 
 			if considerPanels
-				windowCenterInView = P.view.viewToProject(new P.Point(window.innerWidth / 2, window.innerHeight / 2))
-				visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + windowSize.width / 2, window.innerHeight / 2))
+				windowCenterInView = P.view.viewToProject(new P.Point(windowSize.width / 2, windowSize.height / 2))
+				visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + windowSize.width / 2, windowSize.height / 2))
 				offset = visibleViewCenterInView.subtract(windowCenterInView)
 				@moveTo(rectangle.center.subtract(offset), null, true, false, updateHash)
 			else
@@ -749,7 +756,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			return
 
 		onKeyDown: (event) =>
-
+			
 			# if the focus is on anything in the sidebar or is a textarea or in parameters bar: ignore the event
 			if not @focusIsOnCanvas() then return
 
@@ -832,6 +839,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			R.toolbar.updateArrowsVisibility()
 			R.drawingPanel.onWindowResize()
+			R.timelapse?.onWindowResize()
 			return
 
 		# mousedown event listener
@@ -946,6 +954,5 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		# hash format: [repo-owner=repo-owner-name&commit-hash=commit-hash][&city-owner=city-owner&city-name=city-name][&location=location-x,location-y]
 		# default values: repo=arthursw:main&city-owner=CommeUnDesseinOrg&city-name=CommeUnDessein&location=0.0,0.0
 		# examples: repo-owner=arthursw:247c64eae291e6551646f8785fd19d92333969de&city-owner=John&city-name=Paris&location=100.0,-9850.0
-
 
 	return View
