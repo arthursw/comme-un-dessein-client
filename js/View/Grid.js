@@ -4,21 +4,35 @@
     var Grid;
     Grid = (function() {
       function Grid() {
-        var child, frameRectangle, frameSize, i, l1, l2, l3, l4, len, limitCDRectangle, ref, size;
         this.layer = new P.Layer();
+        this.layer.name = "grid";
         this.grid = new P.Group();
         this.grid.name = 'grid group';
         this.layer.addChild(this.grid);
-        size = new P.Size(Utils.CS.mmToPixel(4000), Utils.CS.mmToPixel(3000));
-        frameSize = size.multiply(1000);
-        frameRectangle = new P.Rectangle(frameSize.multiply(-0.5), frameSize);
-        limitCDRectangle = new P.Rectangle(size.multiply(-0.5), size);
+        this.size = new P.Size(Utils.CS.mmToPixel(4000), Utils.CS.mmToPixel(3000));
+        this.frameSize = this.size.multiply(1000);
+        this.frameRectangle = new P.Rectangle(this.frameSize.multiply(-0.5), this.frameSize);
+        this.limitCDRectangle = new P.Rectangle(this.size.multiply(-0.5), this.size);
+        if (R.city.name !== 'world') {
+          this.createFrame();
+        }
+        this.limitCD = new P.Path.Rectangle(this.limitCDRectangle);
+        this.limitCD.strokeColor = '#33383e';
+        this.limitCD.strokeWidth = 1;
+        this.layer.addChild(this.limitCD);
+        this.layer.sendToBack();
+        this.update();
+        return;
+      }
+
+      Grid.prototype.createFrame = function() {
+        var child, i, l1, l2, l3, l4, len, ref;
         this.frame = new P.Group();
         this.frame.fillColor = '#252525';
-        l1 = new P.Path.Rectangle(frameRectangle.topLeft, new P.Point(frameRectangle.right, limitCDRectangle.top));
-        l2 = new P.Path.Rectangle(new P.Point(frameRectangle.left, limitCDRectangle.top), new P.Point(limitCDRectangle.left, limitCDRectangle.bottom));
-        l3 = new P.Path.Rectangle(new P.Point(limitCDRectangle.right, limitCDRectangle.top), new P.Point(frameRectangle.right, limitCDRectangle.bottom));
-        l4 = new P.Path.Rectangle(new P.Point(frameRectangle.left, limitCDRectangle.bottom), frameRectangle.bottomRight);
+        l1 = new P.Path.Rectangle(this.frameRectangle.topLeft, new P.Point(this.frameRectangle.right, this.limitCDRectangle.top));
+        l2 = new P.Path.Rectangle(new P.Point(this.frameRectangle.left, this.limitCDRectangle.top), new P.Point(this.limitCDRectangle.left, this.limitCDRectangle.bottom));
+        l3 = new P.Path.Rectangle(new P.Point(this.limitCDRectangle.right, this.limitCDRectangle.top), new P.Point(this.frameRectangle.right, this.limitCDRectangle.bottom));
+        l4 = new P.Path.Rectangle(new P.Point(this.frameRectangle.left, this.limitCDRectangle.bottom), this.frameRectangle.bottomRight);
         this.frame.addChild(l1);
         this.frame.addChild(l2);
         this.frame.addChild(l3);
@@ -29,14 +43,7 @@
           child.fillColor = '#252525';
         }
         this.layer.addChild(this.frame);
-        this.limitCD = new P.Path.Rectangle(limitCDRectangle);
-        this.limitCD.strokeColor = '#33383e';
-        this.limitCD.strokeWidth = 1;
-        this.layer.addChild(this.limitCD);
-        this.layer.sendToBack();
-        this.update();
-        return;
-      }
+      };
 
       Grid.prototype.rectangleOverlapsTwoPlanets = function(rectangle, tolerance) {
         if (tolerance == null) {

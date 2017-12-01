@@ -1237,9 +1237,11 @@
       };
 
       DrawingPanel.prototype.vote = function(positive) {
-        var args, draft, drawing, i, len, ref;
-        R.alertManager.alert("L'installation Comme un Dessein est terminée, vous ne pouvez plus voter.", 'info');
-        return;
+        var args, draft, drawing, i, len, ref, ref1;
+        if (((ref = R.city) != null ? ref.name : void 0) === 'Maintenant') {
+          R.alertManager.alert("L'installation Comme un Dessein est terminée, vous ne pouvez plus voter.", 'info');
+          return;
+        }
         if (this.currentDrawing.owner === R.me) {
           R.alertManager.alert('You cannot vote for your own drawing', 'error');
           return;
@@ -1255,9 +1257,9 @@
         if (R.administrator) {
           if (!this.currentDrawing.pathListchecked) {
             R.alertManager.alert('Check the drawing', 'info');
-            ref = R.drawings;
-            for (i = 0, len = ref.length; i < len; i++) {
-              drawing = ref[i];
+            ref1 = R.drawings;
+            for (i = 0, len = ref1.length; i < len; i++) {
+              drawing = ref1[i];
               if (drawing !== this.currentDrawing) {
                 drawing.remove();
               }

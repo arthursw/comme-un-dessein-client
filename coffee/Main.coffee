@@ -24,13 +24,8 @@ define [
 	'moment'
 ], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, CommandManager, View, Timelapse, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
 
-	# Initialize CommeUnDessein and handlers
-	$(document).ready () ->
-		
-		canvasJ = $('#canvas')
+	showEndModal = ()->
 
-		R.administrator = canvasJ.attr('data-is-admin') == 'True'
-		
 		endTextJ = $('#end-text')
 		
 
@@ -48,6 +43,52 @@ define [
 		modal.addCustomContent(divJ: endTextJ, name: 'end-text')
 		# modal.modalJ.find('[name="cancel"]').hide()
 		modal.show()
+		return
+
+	# loadCity = (cityName)->
+	# 	R.city.name = cityName
+
+	# 	R.loader.showLoadingBar()
+	# 	R.tools.select.btn.cloneJ.show()
+	# 	$('[data-name="Precise path"]').show()
+	# 	$('#timeline').show()
+	# 	$('#drawingPanel').show()
+	# 	R.view.loadCity(cityName)
+
+	# 	require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> R.loader.loadSVG() )
+
+	# 	return
+
+	# loadCitySVGs = ()->
+	# 	cities = ['Maintenant', 'EcosystemeUrbain']
+	# 	layer = document.getElementById('html-view')
+	# 	for city in cities
+	# 		doc = $('<img href="http://localhost:8000/static/images/' + city + '.png" x="0" y="0" width="1024px" height="768px"/>')
+	# 		svgElement = layer.appendChild(doc.get(0))
+		
+	# 		svgElement.addEventListener("click",  ((event) => 
+	# 			loadCity(city)
+	# 			event.stopPropagation()
+	# 			return -1
+	# 		))
+	# 	return
+
+	# Initialize CommeUnDessein and handlers
+	$(document).ready () ->
+		
+		canvasJ = $('#canvas')
+
+		R.administrator = canvasJ.attr('data-is-admin') == 'True'
+		
+		R.city = 
+			owner: null
+			# name: 'EcosystemeUrbain'
+			site: null
+			finished: false
+
+		if window.location.pathname == '/festival-maintenant' || window.location.pathname == '/debug-festival-maintenant'
+			R.city.name = 'Maintenant'
+			R.city.finished = true
 
 		# chooseRandomMode = false
 
@@ -96,11 +137,6 @@ define [
 		# just set some content and react to language changes
 		updateContent = ()->
 			$("body").localize()
-			# console.log('i18n tests:')
-			# console.log(i18next.t('Simple'))
-			# console.log(i18next.t('You are logged as username', {username: 'username'}))
-			# console.log(i18next.t('key', { what: 'i18next', how: 'great' }))
-			# console.log(i18next.t('You successfully voted, the drawing will be rejected', {duration: ' 10 seconds'}))
 			return
 
 		i18next
@@ -221,6 +257,7 @@ define [
 		R.paths = new Object() 					# a map of RPath.id -> RPath. RPath are added with their id
 												# (as soon as server saved it and responds)
 		R.items = new Object() 					# map Item.id -> Item, all loaded RItems. The key is Item.id 
+		R.drawings = []
 		R.locks = [] 							# array of loaded Locks
 		R.divs = [] 							# array of loaded RDivs
 		R.sortedPaths = []						# an array where paths are sorted by index (z-index)
@@ -279,7 +316,19 @@ define [
 		R.toolManager.createDeleteButton()
 		R.toolManager.createSubmitButton()
 		
-		R.timelapse = new Timelapse()
+		if R.city.name == 'world'
+			R.loader.hideLoadingBar()
+			R.tools.select.btn.cloneJ.hide()
+			$('[data-name="Precise path"]').hide()
+			$('#timeline').hide()
+			$('#drawingPanel').hide()
+
+		# R.tools['Precise Path'].btn.cloneJ.hide()
+
+		if R.city.finished
+			R.timelapse = new Timelapse()
+		else
+			$('#timeline').hide()
 		
 		# if not R.userAuthenticated
 			
@@ -324,7 +373,8 @@ define [
 		if not R.initialZoom?
 			R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true)
 
-		require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> R.loader.loadSVG() )
+		if R.city.name != 'world'
+			require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> R.loader.loadSVG() )
 
 		# Improve about links
 
@@ -389,6 +439,8 @@ define [
 		# svg = P.project.exportSVG()
 		# $('#stage').append(svg)
 
+		if R.city.name == 'world'
+			loadCitySVGs()
 
 		return
 

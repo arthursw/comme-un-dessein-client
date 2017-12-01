@@ -110,7 +110,7 @@
       };
 
       PathTool.prototype.select = function(deselectItems, updateParameters, forceSelect, fromMiddleMouseButton) {
-        var bounds, draft;
+        var bounds, draft, ref;
         if (deselectItems == null) {
           deselectItems = true;
         }
@@ -123,8 +123,10 @@
         if (fromMiddleMouseButton == null) {
           fromMiddleMouseButton = false;
         }
-        R.alertManager.alert("L'installation Comme un Dessein est terminée, vous ne pouvez plus dessiner.", 'info');
-        return;
+        if (((ref = R.city) != null ? ref.name : void 0) === 'Maintenant') {
+          R.alertManager.alert("L'installation Comme un Dessein est terminée, vous ne pouvez plus dessiner.", 'info');
+          return;
+        }
         if (!R.userAuthenticated && !forceSelect) {
           R.alertManager.alert('Log in before drawing', 'info');
           return;

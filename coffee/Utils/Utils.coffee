@@ -943,6 +943,28 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		document.body.removeChild(link)
 		return
 
+	R.saveSVGfromSVG = ()->
+		R.svgJ.find('#grid').hide()
+		R.svgJ.attr('width', 1000)
+		R.svgJ.attr('height', 700)
+		R.stageJ.width(1000)
+		R.stageJ.height(700)
+		R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true)
+		filename = 'CommeUnDessein.svg'
+		svgData = (new XMLSerializer()).serializeToString(R.svgJ.get(0));
+		link = document.createElement("a")
+		document.body.appendChild(link)
+		blob = new Blob([svgData], {type: 'image/svg+xml'})
+		url = URL.createObjectURL(blob)
+		# link.href = 'data:image/svg+xml;charset=utf8, ' + encodeURIComponent(svgData.replace(/></g, '>\n\r<'))
+		# link.href = 'data:image/svg+xml; charset=utf8, ' + encodeURIComponent(svgData)
+		link.href = url
+		link.download = filename
+		link.text = filename
+		link.click()
+		document.body.removeChild(link)
+		return
+
 	R.deleteAllItems = (confirm)->
 		args =
 			confirm: confirm

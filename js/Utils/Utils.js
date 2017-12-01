@@ -1126,6 +1126,28 @@
       link.click();
       document.body.removeChild(link);
     };
+    R.saveSVGfromSVG = function() {
+      var blob, filename, link, svgData, url;
+      R.svgJ.find('#grid').hide();
+      R.svgJ.attr('width', 1000);
+      R.svgJ.attr('height', 700);
+      R.stageJ.width(1000);
+      R.stageJ.height(700);
+      R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true);
+      filename = 'CommeUnDessein.svg';
+      svgData = (new XMLSerializer()).serializeToString(R.svgJ.get(0));
+      link = document.createElement("a");
+      document.body.appendChild(link);
+      blob = new Blob([svgData], {
+        type: 'image/svg+xml'
+      });
+      url = URL.createObjectURL(blob);
+      link.href = url;
+      link.download = filename;
+      link.text = filename;
+      link.click();
+      document.body.removeChild(link);
+    };
     R.deleteAllItems = function(confirm) {
       var args;
       args = {

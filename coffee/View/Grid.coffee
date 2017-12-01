@@ -4,36 +4,22 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 
 		constructor: ()->
 			@layer = new P.Layer()
+			@layer.name = "grid"
 
 			@grid = new P.Group() 					# Paper P.Layer to append all grid items
 			@grid.name = 'grid group'
 			@layer.addChild(@grid)
 			
-			size = new P.Size(Utils.CS.mmToPixel(4000), Utils.CS.mmToPixel(3000))
+			@size = new P.Size(Utils.CS.mmToPixel(4000), Utils.CS.mmToPixel(3000))
 
-			frameSize = size.multiply(1000)
-			frameRectangle = new P.Rectangle(frameSize.multiply(-0.5), frameSize)
-			limitCDRectangle = new P.Rectangle(size.multiply(-0.5), size)
+			@frameSize = @size.multiply(1000)
+			@frameRectangle = new P.Rectangle(@frameSize.multiply(-0.5), @frameSize)
+			@limitCDRectangle = new P.Rectangle(@size.multiply(-0.5), @size)
 
-			@frame = new P.Group()
-			@frame.fillColor = '#252525'
+			if R.city.name != 'world'
+				@createFrame()
 
-			l1 = new P.Path.Rectangle(frameRectangle.topLeft, new P.Point(frameRectangle.right, limitCDRectangle.top))
-			l2 = new P.Path.Rectangle(new P.Point(frameRectangle.left, limitCDRectangle.top), new P.Point(limitCDRectangle.left, limitCDRectangle.bottom))
-			l3 = new P.Path.Rectangle(new P.Point(limitCDRectangle.right, limitCDRectangle.top), new P.Point(frameRectangle.right, limitCDRectangle.bottom))
-			l4 = new P.Path.Rectangle(new P.Point(frameRectangle.left, limitCDRectangle.bottom), frameRectangle.bottomRight)
-
-			@frame.addChild(l1)
-			@frame.addChild(l2)
-			@frame.addChild(l3)
-			@frame.addChild(l4)
-
-			for child in @frame.children
-				child.fillColor = '#252525'
-
-			@layer.addChild(@frame)
-
-			@limitCD = new P.Path.Rectangle(limitCDRectangle)
+			@limitCD = new P.Path.Rectangle(@limitCDRectangle)
 			@limitCD.strokeColor = '#33383e'
 			@limitCD.strokeWidth = 1
 			# @limitCD.strokeCap = 'square'
@@ -45,6 +31,28 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 
 			@update()
 
+			return
+
+		createFrame: ()->
+
+			@frame = new P.Group()
+			@frame.fillColor = '#252525'
+
+			l1 = new P.Path.Rectangle(@frameRectangle.topLeft, new P.Point(@frameRectangle.right, @limitCDRectangle.top))
+			l2 = new P.Path.Rectangle(new P.Point(@frameRectangle.left, @limitCDRectangle.top), new P.Point(@limitCDRectangle.left, @limitCDRectangle.bottom))
+			l3 = new P.Path.Rectangle(new P.Point(@limitCDRectangle.right, @limitCDRectangle.top), new P.Point(@frameRectangle.right, @limitCDRectangle.bottom))
+			l4 = new P.Path.Rectangle(new P.Point(@frameRectangle.left, @limitCDRectangle.bottom), @frameRectangle.bottomRight)
+
+			@frame.addChild(l1)
+			@frame.addChild(l2)
+			@frame.addChild(l3)
+			@frame.addChild(l4)
+
+			for child in @frame.children
+				child.fillColor = '#252525'
+
+			@layer.addChild(@frame)
+			
 			return
 
 		## Manage limits between planets

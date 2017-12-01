@@ -55,7 +55,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			if bounds?
 				@bounds = new P.Rectangle(bounds)
 
-			R.drawings ?= []
 			R.drawings.push(@)
 
 			R.pkToDrawing ?= {}

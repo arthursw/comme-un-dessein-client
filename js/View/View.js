@@ -328,7 +328,9 @@
         this.flaggedLayer = new P.Layer();
         this.flaggedLayer.name = 'flaggedLayer';
         this.flaggedLayer.strokeWidth = Path.strokeWidth;
-        this.pendingLayer.visible = false;
+        if (R.city.finished) {
+          this.pendingLayer.visible = false;
+        }
         this.flaggedLayer.visible = false;
         if (!R.administrator) {
           this.rejectedLayer.visible = false;
@@ -594,13 +596,20 @@
         }
       };
 
+      View.prototype.loadCity = function() {
+        this.gird.createFrame();
+        this.initializePosition();
+      };
+
       View.prototype.initializePosition = function() {
         var boxRectangle, br, controller, defsJ, folder, folderName, i, len, patternRejectsJ, patternValidateJ, planet, pos, ref, ref1, site, siteString, svg, tl;
         if (R.city == null) {
           R.city = {};
         }
         R.city.city = R.canvasJ.attr("data-city") !== '' ? R.canvasJ.attr("data-city") : void 0;
-        this.restrictedArea = this.grid.limitCD.bounds.expand(100);
+        if (R.city.name !== 'world') {
+          this.restrictedArea = this.grid.limitCD.bounds.expand(100);
+        }
         P.view.zoom = 0.5;
         P.view.scrollBy(1, 1);
         svg = P.project.exportSVG();

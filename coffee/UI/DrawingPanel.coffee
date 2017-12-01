@@ -1188,8 +1188,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return
 
 		vote: (positive)=>
-			R.alertManager.alert "L'installation Comme un Dessein est terminée, vous ne pouvez plus voter.", 'info'
-			return
+			if R.city?.name == 'Maintenant'
+				R.alertManager.alert "L'installation Comme un Dessein est terminée, vous ne pouvez plus voter.", 'info'
+				return
 
 			if @currentDrawing.owner == R.me
 				R.alertManager.alert 'You cannot vote for your own drawing', 'error'

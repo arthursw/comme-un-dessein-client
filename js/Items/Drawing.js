@@ -84,9 +84,6 @@
         if (bounds != null) {
           this.bounds = new P.Rectangle(bounds);
         }
-        if (R.drawings == null) {
-          R.drawings = [];
-        }
         R.drawings.push(this);
         if (R.pkToDrawing == null) {
           R.pkToDrawing = {};

@@ -284,7 +284,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@flaggedLayer.name  = 'flaggedLayer'
 			@flaggedLayer.strokeWidth = Path.strokeWidth
 
-			@pendingLayer.visible = false
+			if R.city.finished
+				@pendingLayer.visible = false
+			
 			@flaggedLayer.visible = false
 
 			if not R.administrator
@@ -595,6 +597,12 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				window.location.reload()
 			return
 
+		# User has choosen a city from world: display @grid.frame (gray background) and update @restrictedArea
+		loadCity: ()->
+			@gird.createFrame()
+			@initializePosition()
+			return
+
 		## Init position
 		# initialize the view position according to the 'data-box' of the canvas (when loading a website or video game)
 		# update @entireArea and @restrictedArea according to site settings
@@ -610,7 +618,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# 	city: if R.canvasJ.attr("data-city") != '' then R.canvasJ.attr("data-city") else undefined
 			# 	site: if R.canvasJ.attr("data-site") != '' then R.canvasJ.attr("data-site") else undefined
 
-			@restrictedArea = @grid.limitCD.bounds.expand(100)
+			if R.city.name != 'world'
+				@restrictedArea = @grid.limitCD.bounds.expand(100)
 
 			# add arbitrary transform to generate the transform svg element
 			P.view.zoom = 0.5
