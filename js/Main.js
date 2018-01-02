@@ -37,6 +37,7 @@
         R.city.name = 'CommeUnDessein';
         R.city.finished = true;
       }
+      showEndModal();
       updateContent = function() {
         $("body").localize();
       };

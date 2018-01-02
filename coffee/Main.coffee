@@ -90,6 +90,8 @@ define [
 			R.city.name = 'CommeUnDessein'
 			R.city.finished = true
 
+		showEndModal()
+
 		# chooseRandomMode = false
 
 		# if window.location.pathname == '/' || window.location.pathname == '/debug'
