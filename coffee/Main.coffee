@@ -84,10 +84,10 @@ define [
 			owner: null
 			# name: 'EcosystemeUrbain'
 			site: null
-			finished: false
+			finished: true
 
 		if window.location.pathname == '/festival-maintenant' || window.location.pathname == '/debug-festival-maintenant'
-			R.city.name = 'Maintenant'
+			R.city.name = 'CommeUnDessein'
 			R.city.finished = true
 
 		# chooseRandomMode = false
