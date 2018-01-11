@@ -84,13 +84,14 @@ define [
 			owner: null
 			# name: 'EcosystemeUrbain'
 			site: null
-			finished: true
+			finished: false
 
 		if window.location.pathname == '/festival-maintenant' || window.location.pathname == '/debug-festival-maintenant'
-			R.city.name = 'CommeUnDessein'
+			R.city.name = 'Maintenant'
 			R.city.finished = true
 
-		showEndModal()
+		if R.city?.finished
+			showEndModal()
 
 		# chooseRandomMode = false
 

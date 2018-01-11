@@ -25,19 +25,21 @@
       modal.show();
     };
     $(document).ready(function() {
-      var canvasJ, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
+      var canvasJ, isPM, meridiem, ordinal, ref, updateContent, userAuthenticated, userWhoClosedLastTime, username;
       canvasJ = $('#canvas');
       R.administrator = canvasJ.attr('data-is-admin') === 'True';
       R.city = {
         owner: null,
         site: null,
-        finished: true
+        finished: false
       };
       if (window.location.pathname === '/festival-maintenant' || window.location.pathname === '/debug-festival-maintenant') {
-        R.city.name = 'CommeUnDessein';
+        R.city.name = 'Maintenant';
         R.city.finished = true;
       }
-      showEndModal();
+      if ((ref = R.city) != null ? ref.finished : void 0) {
+        showEndModal();
+      }
       updateContent = function() {
         $("body").localize();
       };
