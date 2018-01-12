@@ -2,9 +2,8 @@
 (function() {
   define(['R', 'Utils/Utils', 'Loader', 'Socket', 'City', 'Rasterizers/RasterizerManager', 'UI/Sidebar', 'UI/Toolbar', 'UI/DrawingPanel', 'UI/Modal', 'UI/Button', 'UI/AlertManager', 'Commands/CommandManager', 'View/View', 'View/Timelapse', 'Tools/ToolManager', 'RasterizerBot', 'i18next', 'i18nextXHRBackendID', 'i18nextBrowserLanguageDetectorID', 'jqueryI18next', 'moment'], function(R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, CommandManager, View, Timelapse, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) {
     var showEndModal;
-    showEndModal = function() {
-      var endTextJ, modal;
-      endTextJ = $('#end-text');
+    showEndModal = function(message) {
+      var modal;
       modal = Modal.createModal({
         title: 'Comme un Dessein is over',
         submit: ((function(_this) {
@@ -19,13 +18,13 @@
         postSubmit: 'hide'
       });
       modal.addCustomContent({
-        divJ: endTextJ,
+        divJ: $(message),
         name: 'end-text'
       });
       modal.show();
     };
     $(document).ready(function() {
-      var canvasJ, isPM, meridiem, ordinal, ref, updateContent, userAuthenticated, userWhoClosedLastTime, username;
+      var canvasJ, cityFinished, cityMessage, cityName, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
       canvasJ = $('#canvas');
       R.administrator = canvasJ.attr('data-is-admin') === 'True';
       R.city = {
@@ -33,12 +32,15 @@
         site: null,
         finished: false
       };
-      if (window.location.pathname === '/festival-maintenant' || window.location.pathname === '/debug-festival-maintenant') {
-        R.city.name = 'Maintenant';
-        R.city.finished = true;
+      cityName = canvasJ.attr('data-city');
+      cityFinished = canvasJ.attr('data-city-finished');
+      cityMessage = canvasJ.attr('data-city-message');
+      if (cityName.length > 0) {
+        R.city.name = cityName;
       }
-      if ((ref = R.city) != null ? ref.finished : void 0) {
-        showEndModal();
+      R.city.finished = cityFinished === 'True';
+      if (R.city.finished) {
+        showEndModal(cityMessage);
       }
       updateContent = function() {
         $("body").localize();

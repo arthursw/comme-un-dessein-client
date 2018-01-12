@@ -24,9 +24,9 @@ define [
 	'moment'
 ], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, CommandManager, View, Timelapse, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
 
-	showEndModal = ()->
+	showEndModal = (message)->
 
-		endTextJ = $('#end-text')
+		# endTextJ = $('#end-text')
 		
 
 		modal = Modal.createModal( 
@@ -40,7 +40,7 @@ define [
 			cancelButtonIcon: 'glyphicon-sunglasses',
 			postSubmit: 'hide')
 
-		modal.addCustomContent(divJ: endTextJ, name: 'end-text')
+		modal.addCustomContent(divJ: $(message), name: 'end-text')
 		# modal.modalJ.find('[name="cancel"]').hide()
 		modal.show()
 		return
@@ -86,12 +86,17 @@ define [
 			site: null
 			finished: false
 
-		if window.location.pathname == '/festival-maintenant' || window.location.pathname == '/debug-festival-maintenant'
-			R.city.name = 'Maintenant'
-			R.city.finished = true
+		cityName = canvasJ.attr('data-city')
+		cityFinished = canvasJ.attr('data-city-finished')
+		cityMessage = canvasJ.attr('data-city-message')
 
-		if R.city?.finished
-			showEndModal()
+		if cityName.length > 0
+			R.city.name = cityName
+
+		R.city.finished = cityFinished == 'True'
+			
+		if R.city.finished
+			showEndModal(cityMessage)
 
 		# chooseRandomMode = false
 

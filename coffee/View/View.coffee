@@ -584,9 +584,16 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# 	R.cityManager.loadCity(parameters['city-name'], parameters['city-owner'], p)
 			# 	return
 			
-			drawingPrefix = if location.pathname.indexOf('/drawing-') == 0 then '/drawing-' else if location.pathname.indexOf('/debug-drawing-') == 0 then '/debug-drawing-' else null
-			if drawingPrefix?
-				drawingPk = location.pathname.substring(drawingPrefix.length)
+			drawingPrefixIndex = location.pathname.indexOf('/drawing-')
+			if drawingPrefixIndex >= 0 
+				drawingPrefixIndex = drawingPrefixIndex + '/drawing-'.length
+			else
+				drawingPrefixIndex = location.pathname.indexOf('/debug-drawing-')
+				if drawingPrefixIndex >= 0
+					drawingPrefixIndex = drawingPrefixIndex + '/debug-drawing-'.length
+
+			if drawingPrefixIndex >= 0
+				drawingPk = location.pathname.substring(drawingPrefixIndex)
 				R.loader.focusOnDrawing = drawingPk
 			
 			@moveTo(p, null, !@firstHashChange, @firstHashChange, false)

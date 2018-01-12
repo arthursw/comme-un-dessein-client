@@ -400,7 +400,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return
 
 		getDrawingLink: (drawing=@currentDrawing)->
-			return location.origin + '/drawing-' + drawing.pk
+			cityName = if R.city?.name? then '/' + R.city.name else ''
+			return location.origin + cityName + '/drawing-' + drawing.pk
 
 		shareOnFacebook: (event, drawing=@currentDrawing)=>
 			# FB.init({

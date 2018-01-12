@@ -497,10 +497,12 @@
       };
 
       DrawingPanel.prototype.getDrawingLink = function(drawing) {
+        var cityName, ref;
         if (drawing == null) {
           drawing = this.currentDrawing;
         }
-        return location.origin + '/drawing-' + drawing.pk;
+        cityName = ((ref = R.city) != null ? ref.name : void 0) != null ? '/' + R.city.name : '';
+        return location.origin + cityName + '/drawing-' + drawing.pk;
       };
 
       DrawingPanel.prototype.shareOnFacebook = function(event, drawing) {

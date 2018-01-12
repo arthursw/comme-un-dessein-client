@@ -555,7 +555,7 @@
       };
 
       View.prototype.onHashChange = function(event, reloadIfNecessary) {
-        var drawingPk, drawingPrefix, mustReload, p, parameters, zoom;
+        var drawingPk, drawingPrefixIndex, mustReload, p, parameters, zoom;
         if (reloadIfNecessary == null) {
           reloadIfNecessary = true;
         }
@@ -584,9 +584,17 @@
         if (parameters['administrator'] != null) {
           R.administrator = parameters['administrator'];
         }
-        drawingPrefix = location.pathname.indexOf('/drawing-') === 0 ? '/drawing-' : location.pathname.indexOf('/debug-drawing-') === 0 ? '/debug-drawing-' : null;
-        if (drawingPrefix != null) {
-          drawingPk = location.pathname.substring(drawingPrefix.length);
+        drawingPrefixIndex = location.pathname.indexOf('/drawing-');
+        if (drawingPrefixIndex >= 0) {
+          drawingPrefixIndex = drawingPrefixIndex + '/drawing-'.length;
+        } else {
+          drawingPrefixIndex = location.pathname.indexOf('/debug-drawing-');
+          if (drawingPrefixIndex >= 0) {
+            drawingPrefixIndex = drawingPrefixIndex + '/debug-drawing-'.length;
+          }
+        }
+        if (drawingPrefixIndex >= 0) {
+          drawingPk = location.pathname.substring(drawingPrefixIndex);
           R.loader.focusOnDrawing = drawingPk;
         }
         this.moveTo(p, null, !this.firstHashChange, this.firstHashChange, false);
