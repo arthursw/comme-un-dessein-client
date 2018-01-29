@@ -177,17 +177,6 @@
               R.alertManager.alert('Welcome to Comme un Dessein', 'info');
             };
           })(this)), 1000);
-          setTimeout(((function(_this) {
-            return function() {
-              if (R.ignoreNextAlert) {
-                R.ignoreNextAlert = null;
-                return;
-              }
-              R.alertManager.alert('You can discuss about drawings', 'info', null, {
-                html: 'Venez discuter sur <a style="color: #2196f3;text-decoration: underline;" href="http://discussion.commeundessein.co/">http://discussion.commeundessein.co/</a> pour que l\'on crée ensemble une oeuvre collective !'
-              });
-            };
-          })(this)), 4000);
         }
       }
       R.rasterizerManager = new RasterizerManager();
