@@ -9,7 +9,7 @@
         this.grid = new P.Group();
         this.grid.name = 'grid group';
         this.layer.addChild(this.grid);
-        this.size = new P.Size(Utils.CS.mmToPixel(4000), Utils.CS.mmToPixel(3000));
+        this.size = new P.Size(Utils.CS.mmToPixel(R.cityWidth || 4000), Utils.CS.mmToPixel(R.cityHeight || 3000));
         this.frameSize = this.size.multiply(1000);
         this.frameRectangle = new P.Rectangle(this.frameSize.multiply(-0.5), this.frameSize);
         this.limitCDRectangle = new P.Rectangle(this.size.multiply(-0.5), this.size);

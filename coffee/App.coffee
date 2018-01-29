@@ -131,6 +131,23 @@ requirejs.config
 requirejs [ 'R' ], (R) ->
 
 	R.defaultColors = []
+	R.strokeWidth = $('#canvas').attr('data-city-stroke-width')
+	if _.isString(R.strokeWidth)
+		R.strokeWidth = parseFloat(R.strokeWidth)
+	else
+		R.strokeWidth = null
+
+	R.cityWidth = $('#canvas').attr('data-city-width')
+	if _.isString(R.cityWidth)
+		R.cityWidth = parseFloat(R.cityWidth)
+	else
+		R.cityWidth = null
+	
+	R.cityHeight = $('#canvas').attr('data-city-height')
+	if _.isString(R.cityHeight)
+		R.cityHeight = parseFloat(R.cityHeight)
+	else
+		R.cityHeight = null
 
 	R.polygonMode = false					# whether to draw in polygon mode or not (in polygon mode: each time the user clicks a point
 											# will be created, in default mode: each time the user moves the mouse a point will be created)

@@ -63,7 +63,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			flagged: '#EE2233'
 		}
 
-		@strokeWidth = Utils.CS.mmToPixel(7)
+		@strokeWidth = R.strokeWidth or Utils.CS.mmToPixel(7)
 		@strokeColor = 'black'
 
 		# parameters are defined as in {RTool}

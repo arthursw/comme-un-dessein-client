@@ -77,6 +77,24 @@
 
   requirejs(['R'], function(R) {
     R.defaultColors = [];
+    R.strokeWidth = $('#canvas').attr('data-city-stroke-width');
+    if (_.isString(R.strokeWidth)) {
+      R.strokeWidth = parseFloat(R.strokeWidth);
+    } else {
+      R.strokeWidth = null;
+    }
+    R.cityWidth = $('#canvas').attr('data-city-width');
+    if (_.isString(R.cityWidth)) {
+      R.cityWidth = parseFloat(R.cityWidth);
+    } else {
+      R.cityWidth = null;
+    }
+    R.cityHeight = $('#canvas').attr('data-city-height');
+    if (_.isString(R.cityHeight)) {
+      R.cityHeight = parseFloat(R.cityHeight);
+    } else {
+      R.cityHeight = null;
+    }
     R.polygonMode = false;
     R.selectionBlue = '#2fa1d6';
     R.parameters = {};

@@ -10,7 +10,7 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			@grid.name = 'grid group'
 			@layer.addChild(@grid)
 			
-			@size = new P.Size(Utils.CS.mmToPixel(4000), Utils.CS.mmToPixel(3000))
+			@size = new P.Size(Utils.CS.mmToPixel(R.cityWidth or 4000), Utils.CS.mmToPixel(R.cityHeight or 3000))
 
 			@frameSize = @size.multiply(1000)
 			@frameRectangle = new P.Rectangle(@frameSize.multiply(-0.5), @frameSize)
