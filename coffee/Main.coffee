@@ -289,7 +289,7 @@ define [
 		R.alertManager = new AlertManager()
 		R.toolbar = new Toolbar()
 		
-		if R.CommeUnDesseinIsNotOver
+		if not R.city.finished
 			userWhoClosedLastTime = localStorage.getItem('showWelcomMessage')
 			
 			if (not R.me) or userWhoClosedLastTime != R.me

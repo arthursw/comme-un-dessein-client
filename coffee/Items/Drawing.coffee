@@ -641,17 +641,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				# cancelButtonIcon: 'glyphicon-sunglasses' 
 				)
 			modal.addButton( type: 'info', name: 'Tweet', submit: (()=> R.drawingPanel.shareOnTwitter(null, @)) )
-			modal.addButton( type: 'success', name: 'See discussion page', submit: (()=> 
+			
+			# To enable discussion, uncomment following content (and the following text later on):
+			# modal.addButton( type: 'success', name: 'See discussion page', submit: (()=> 
 				
-				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getDrawingDiscussionId', args: {pk: @pk} } ).done( (results)=>
-					if not R.loader.checkError(results) then return
-					drawing = JSON.parse(results.drawing)
-					if drawing.discussionId?
-						R.drawingPanel.startDiscussion(results.discussionId)
-					else
-						R.alertManager.alert "The discussion page is not created yet", "error"
-					return)
-				return) )
+			# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getDrawingDiscussionId', args: {pk: @pk} } ).done( (results)=>
+			# 		if not R.loader.checkError(results) then return
+			# 		drawing = JSON.parse(results.drawing)
+			# 		if drawing.discussionId?
+			# 			R.drawingPanel.startDiscussion(results.discussionId)
+			# 		else
+			# 			R.alertManager.alert "The discussion page is not created yet", "error"
+			# 		return)
+			# 	return) )
 
 			if @status == 'emailNotConfirmed'
 				modal.addText("Drawing successfully submitted but email not confirmed", "Drawing successfully submitted but email not confirmed", false, {positiveVoteThreshold: result.positiveVoteThreshold})
@@ -660,7 +662,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			else
 				modal.addText("Drawing successfully submitted", "Drawing successfully submitted", false, {positiveVoteThreshold: result.positiveVoteThreshold})
 
-			modal.addText('A discussion page for this drawing will be created in a few seconds')
+			# To enable discussion, uncomment following content:
+			# modal.addText('A discussion page for this drawing will be created in a few seconds')
 
 			modal.addText('Would you like to share your drawing on Facebook or Twitter')
 			
