@@ -707,37 +707,6 @@
             };
           })(this))
         });
-        modal.addButton({
-          type: 'success',
-          name: 'See discussion page',
-          submit: ((function(_this) {
-            return function() {
-              $.ajax({
-                method: "POST",
-                url: "ajaxCall/",
-                data: {
-                  data: JSON.stringify({
-                    "function": 'getDrawingDiscussionId',
-                    args: {
-                      pk: _this.pk
-                    }
-                  })
-                }
-              }).done(function(results) {
-                var drawing;
-                if (!R.loader.checkError(results)) {
-                  return;
-                }
-                drawing = JSON.parse(results.drawing);
-                if (drawing.discussionId != null) {
-                  R.drawingPanel.startDiscussion(results.discussionId);
-                } else {
-                  R.alertManager.alert("The discussion page is not created yet", "error");
-                }
-              });
-            };
-          })(this))
-        });
         if (this.status === 'emailNotConfirmed') {
           modal.addText("Drawing successfully submitted but email not confirmed", "Drawing successfully submitted but email not confirmed", false, {
             positiveVoteThreshold: result.positiveVoteThreshold
@@ -751,7 +720,6 @@
             positiveVoteThreshold: result.positiveVoteThreshold
           });
         }
-        modal.addText('A discussion page for this drawing will be created in a few seconds');
         modal.addText('Would you like to share your drawing on Facebook or Twitter');
         modal.show();
       };

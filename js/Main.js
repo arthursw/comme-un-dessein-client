@@ -169,7 +169,7 @@
       R.view = new View();
       R.alertManager = new AlertManager();
       R.toolbar = new Toolbar();
-      if (R.CommeUnDesseinIsNotOver) {
+      if (!R.city.finished) {
         userWhoClosedLastTime = localStorage.getItem('showWelcomMessage');
         if ((!R.me) || userWhoClosedLastTime !== R.me) {
           setTimeout(((function(_this) {
