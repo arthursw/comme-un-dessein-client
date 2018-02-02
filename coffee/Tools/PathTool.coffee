@@ -24,7 +24,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		@drawItems = true
 
 		@emitSocket = false
-		@maxDraftSize = 300
+		@maxDraftSize = 350
 
 		@computeDraftBounds: (paths=null)->
 			bounds = R.Drawing.getDraft()?.getBounds()

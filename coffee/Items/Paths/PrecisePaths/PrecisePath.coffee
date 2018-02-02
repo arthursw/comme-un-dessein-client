@@ -696,10 +696,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 		getPoints: ()->
 			points = []
+			# Hack because the tipibot controler was made for a 4000 x 3000 mm area
+			ratio = new P.Point(4000/R.cityWidth, 3000/R.cityHeight)
 			for segment in @controlPath.segments
-				points.push(Utils.CS.projectToPosOnPlanet(segment.point))
-				points.push(Utils.CS.pointToObj(segment.handleIn))
-				points.push(Utils.CS.pointToObj(segment.handleOut))
+				points.push(Utils.CS.projectToPosOnPlanet(segment.point).multiply(ratio))
+				points.push(Utils.CS.pointToObj(segment.handleIn).multiply(ratio))
+				points.push(Utils.CS.pointToObj(segment.handleOut).multiply(ratio))
 				points.push(segment.rtype)
 			return points
 

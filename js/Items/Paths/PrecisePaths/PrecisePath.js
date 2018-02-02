@@ -685,14 +685,15 @@
       };
 
       PrecisePath.prototype.getPoints = function() {
-        var j, len, points, ref, segment;
+        var j, len, points, ratio, ref, segment;
         points = [];
+        ratio = new P.Point(4000 / R.cityWidth, 3000 / R.cityHeight);
         ref = this.controlPath.segments;
         for (j = 0, len = ref.length; j < len; j++) {
           segment = ref[j];
-          points.push(Utils.CS.projectToPosOnPlanet(segment.point));
-          points.push(Utils.CS.pointToObj(segment.handleIn));
-          points.push(Utils.CS.pointToObj(segment.handleOut));
+          points.push(Utils.CS.projectToPosOnPlanet(segment.point).multiply(ratio));
+          points.push(Utils.CS.pointToObj(segment.handleIn).multiply(ratio));
+          points.push(Utils.CS.pointToObj(segment.handleOut).multiply(ratio));
           points.push(segment.rtype);
         }
         return points;
