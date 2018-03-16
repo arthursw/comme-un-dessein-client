@@ -96,8 +96,8 @@
         this.addToListItem(this.getListItem());
         if (this.status === 'draft') {
           this.constructor.draft = this;
-        }
-        if (this.pk != null) {
+          this.addPathsFromPathList(pathList);
+        } else if (this.pk != null) {
           jqxhr = $.get(location.origin + '/static/drawings/' + this.pk + '.svg', ((function(_this) {
             return function(result) {
               _this.setSVG(result, false);
@@ -130,9 +130,6 @@
               });
             };
           })(this));
-        }
-        if (this.status === 'draft') {
-          this.addPathsFromPathList(pathList);
         }
         return;
       }
@@ -253,6 +250,7 @@
         this.addPathsFromPathList(data.pointLists, false);
         if (this.status === 'draft') {
           R.toolManager.updateButtonsVisibility(this);
+          R.tools['Precise path'].showDraftLimits();
         }
         this.updatePaths();
       };

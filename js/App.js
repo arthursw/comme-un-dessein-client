@@ -75,7 +75,7 @@
     }
   });
 
-  requirejs(['R'], function(R) {
+  requirejs(['R', 'jquery', 'underscore'], function(R) {
     R.defaultColors = [];
     R.strokeWidth = $('#canvas').attr('data-city-stroke-width');
     if (_.isString(R.strokeWidth)) {

@@ -128,7 +128,7 @@ requirejs.config
 			exports: '$'
 		
 # Load the main app module to start the app
-requirejs [ 'R' ], (R) ->
+requirejs [ 'R', 'jquery', 'underscore' ], (R) ->
 
 	R.defaultColors = []
 	R.strokeWidth = $('#canvas').attr('data-city-stroke-width')

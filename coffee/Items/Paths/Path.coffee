@@ -713,6 +713,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			if draft?
 				draft.updatePaths()
 				R.toolManager.updateButtonsVisibility(draft)
+				R.tools['Precise path'].showDraftLimits()
 			return deffered
 
 		deleteFromDatabase: ()->

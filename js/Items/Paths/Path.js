@@ -615,6 +615,7 @@
         if (draft != null) {
           draft.updatePaths();
           R.toolManager.updateButtonsVisibility(draft);
+          R.tools['Precise path'].showDraftLimits();
         }
         return deffered;
       };

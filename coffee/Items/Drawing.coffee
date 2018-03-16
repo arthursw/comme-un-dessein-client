@@ -75,8 +75,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			
 			if @status == 'draft'
 				@constructor.draft = @
-
-			if @pk?
+				@addPathsFromPathList(pathList)
+			else if @pk?
 				jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg', ((result)=>
 					# console.log( "success" )
 					# console.log( result )
@@ -105,13 +105,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				# )
 			# if svg?
 				# @setSVG(svg)
-
-			if @status == 'draft'
-				@addPathsFromPathList(pathList)
-
 			
-				# path.rasterize()
-				# R.rasterizer.rasterize(path)
+			# path.rasterize()
+			# R.rasterizer.rasterize(path)
 
 
 			# for id, path of R.paths
@@ -236,6 +232,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			if @status == 'draft'
 				R.toolManager.updateButtonsVisibility(@)
+				R.tools['Precise path'].showDraftLimits()
 
 			@updatePaths()
 			return
