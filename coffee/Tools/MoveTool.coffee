@@ -28,6 +28,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 		select: (deselectItems=false, updateParameters=true, fromMiddleMouseButton=false)->
 			super(deselectItems, updateParameters, fromMiddleMouseButton)
 			R.stageJ.addClass("moveTool")
+
 			for div in R.divs
 				div.disableInteraction()
 			return

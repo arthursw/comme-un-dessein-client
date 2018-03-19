@@ -168,6 +168,7 @@
         });
         this.importImageBtn.hide();
         rasterGroup = null;
+        R.traceGroup = rasterGroup;
         removeRaster = (function(_this) {
           return function() {
             if (rasterGroup != null) {
@@ -180,6 +181,7 @@
             var raster;
             removeRaster();
             rasterGroup = new P.Group();
+            R.traceGroup = rasterGroup;
             rasterGroup.opacity = 0.5;
             raster = new P.Raster(data.imageURL);
             raster.position = R.view.getViewBounds().center;
@@ -407,6 +409,10 @@
           ignoreFavorite: true,
           onClick: (function(_this) {
             return function() {
+              var ref;
+              if ((ref = R.traceGroup) != null) {
+                ref.visible = false;
+              }
               R.drawingPanel.submitDrawingClicked();
             };
           })(this)

@@ -120,6 +120,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 
 			@showDraftLimits()
 
+			R.traceGroup?.visible = true
+
 			super(deselectItems, updateParameters, fromMiddleMouseButton)
 
 			R.view.tool.onMouseMove = @move
@@ -394,7 +396,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			if not path? then return false		# when the path has been deleted because too big
 			
 			draftLimit = @showDraftLimits()
-			
+
 			if @circlePath?
 				R.currentPaths[from].remove()
 				delete R.currentPaths[from]

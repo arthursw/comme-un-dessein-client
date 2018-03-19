@@ -109,7 +109,7 @@
       };
 
       PathTool.prototype.select = function(deselectItems, updateParameters, forceSelect, fromMiddleMouseButton) {
-        var bounds, draft, ref;
+        var bounds, draft, ref, ref1;
         if (deselectItems == null) {
           deselectItems = true;
         }
@@ -131,6 +131,9 @@
           return;
         }
         this.showDraftLimits();
+        if ((ref1 = R.traceGroup) != null) {
+          ref1.visible = true;
+        }
         PathTool.__super__.select.call(this, deselectItems, updateParameters, fromMiddleMouseButton);
         R.view.tool.onMouseMove = this.move;
         R.toolManager.enterDrawingMode();

@@ -95,6 +95,7 @@
       };
 
       SelectTool.prototype.select = function(deselectItems, updateParameters, forceSelect, buttonClicked) {
+        var ref;
         if (deselectItems == null) {
           deselectItems = false;
         }
@@ -106,6 +107,9 @@
         }
         if (buttonClicked == null) {
           buttonClicked = false;
+        }
+        if ((ref = R.traceGroup) != null) {
+          ref.visible = false;
         }
         if (buttonClicked) {
           R.alertManager.alert('Click on a drawing to vote for it', 'info');

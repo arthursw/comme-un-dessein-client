@@ -70,6 +70,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			# R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").hide()
 			# R.rasterizer.drawItems() 		# must not draw all items here since user can just wish to use an Media
 			
+			R.traceGroup?.visible = false
+
 			if buttonClicked
 				R.alertManager.alert 'Click on a drawing to vote for it', 'info'
 

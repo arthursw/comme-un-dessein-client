@@ -357,7 +357,8 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			@importImageBtn.hide()
 
 			rasterGroup = null
-
+			R.traceGroup = rasterGroup
+			
 			removeRaster = ()=>
 				rasterGroup?.remove()
 				return
@@ -366,6 +367,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				removeRaster()
 
 				rasterGroup = new P.Group()
+				R.traceGroup = rasterGroup
 				rasterGroup.opacity = 0.5
 				raster = new P.Raster(data.imageURL)
 				raster.position = R.view.getViewBounds().center
@@ -629,6 +631,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				parentJ: $('#submit-drawing-button')
 				ignoreFavorite: true
 				onClick: ()=>
+					R.traceGroup?.visible = false
 					R.drawingPanel.submitDrawingClicked()
 					return
 			})
