@@ -894,6 +894,8 @@
 
       View.prototype.mouseup = function(event) {
         var base, paperEvent, ref, ref1, ref2, ref3;
+        R.draggingImage = false;
+        R.scalingImage = false;
         if (R.stageJ.hasClass("has-tool-box") && !$(event.target).parents('.tool-box').length > 0) {
           R.hideToolBox();
         }

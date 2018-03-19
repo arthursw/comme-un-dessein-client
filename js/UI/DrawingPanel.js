@@ -1239,7 +1239,7 @@
       };
 
       DrawingPanel.prototype.vote = function(positive) {
-        var args, draft, drawing, i, len, ref, ref1;
+        var args, ref;
         if (((ref = R.city) != null ? ref.name : void 0) === 'Maintenant') {
           R.alertManager.alert("L'installation Comme un Dessein est terminée, vous ne pouvez plus voter.", 'info');
           return;
@@ -1255,47 +1255,6 @@
         if (this.hasAlreadyVoted()) {
           R.alertManager.alert('You already voted for this drawing', 'error');
           return;
-        }
-        if (R.administrator) {
-          if (!this.currentDrawing.pathListchecked) {
-            R.alertManager.alert('Check the drawing', 'info');
-            ref1 = R.drawings;
-            for (i = 0, len = ref1.length; i < len; i++) {
-              drawing = ref1[i];
-              if (drawing !== this.currentDrawing) {
-                drawing.remove();
-              }
-            }
-            draft = R.Drawing.getDraft();
-            args = {
-              pk: this.currentDrawing.pk,
-              loadPathList: true
-            };
-            $.ajax({
-              method: "POST",
-              url: "ajaxCall/",
-              data: {
-                data: JSON.stringify({
-                  'function': 'loadDrawing',
-                  args: args
-                })
-              }
-            }).done((function(_this) {
-              return function(results) {
-                drawing = JSON.parse(results.drawing);
-                if (draft != null) {
-                  draft.removePaths();
-                }
-                draft = new R.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft');
-                draft.addPathsFromPathList(drawing.pathList, true, true);
-                _this.currentDrawing.pathListchecked = true;
-                R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true);
-              };
-            })(this));
-            return;
-          } else {
-            window.location = window.location.origin;
-          }
         }
         args = {
           pk: this.currentDrawing.pk,

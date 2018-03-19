@@ -404,7 +404,6 @@
               return;
             }
           }
-          console.log('updateCreate');
           updateDrawing = true;
           if (this.ignoreDrawingMode) {
             this.controlPath.add(point);

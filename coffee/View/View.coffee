@@ -923,6 +923,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 		# mouseup event listener
 		mouseup: (event) =>
+			R.draggingImage = false
+			R.scalingImage = false
 
 			if R.stageJ.hasClass("has-tool-box") and not $(event.target).parents('.tool-box').length>0
 				R.hideToolBox()

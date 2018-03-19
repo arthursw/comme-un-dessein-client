@@ -411,7 +411,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 					if @controlPath.lastSegment.point.getDistance(point, true) < 10
 						return
 
-				console.log 'updateCreate'
+				# console.log 'updateCreate'
 
 				updateDrawing = true
 				if @ignoreDrawingMode

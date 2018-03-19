@@ -39,7 +39,6 @@
           paths = null;
         }
         bounds = (ref = R.Drawing.getDraft()) != null ? ref.getBounds() : void 0;
-        console.log(bounds);
         return bounds;
       };
 
@@ -171,6 +170,9 @@
         if (event.event.which === 2) {
           return;
         }
+        if (R.draggingImage) {
+          return;
+        }
         if (100 * P.view.zoom < 10) {
           R.alertManager.alert("You can not draw path at a zoom smaller than 10.", "Info");
           return;
@@ -258,6 +260,7 @@
           child.fillColor = new P.Color(0, 0, 0, 0.25);
         }
         R.view.selectionLayer.addChild(this.limit);
+        this.limit.sendToBack();
         return this.draftLimit;
       };
 
@@ -344,7 +347,7 @@
       };
 
       PathTool.prototype.end = function(event, from) {
-        var circleLength, draftIsOutsideFrame, draftIsTooBig, path, ref;
+        var circleLength, draftIsOutsideFrame, draftIsTooBig, draftLimit, path, ref;
         if (from == null) {
           from = R.me;
         }
@@ -352,6 +355,7 @@
         if (path == null) {
           return false;
         }
+        draftLimit = this.showDraftLimits();
         if (this.circlePath != null) {
           R.currentPaths[from].remove();
           delete R.currentPaths[from];

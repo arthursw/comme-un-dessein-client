@@ -2,9 +2,9 @@
 (function() {
   define(['R', 'Utils/Utils', 'Loader', 'Socket', 'City', 'Rasterizers/RasterizerManager', 'UI/Sidebar', 'UI/Toolbar', 'UI/DrawingPanel', 'UI/Modal', 'UI/Button', 'UI/AlertManager', 'Commands/CommandManager', 'View/View', 'View/Timelapse', 'Tools/ToolManager', 'RasterizerBot', 'i18next', 'i18nextXHRBackendID', 'i18nextBrowserLanguageDetectorID', 'jqueryI18next', 'moment'], function(R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, CommandManager, View, Timelapse, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) {
     var showEndModal;
-    showEndModal = function(message) {
-      var modal;
-      modal = Modal.createModal({
+    showEndModal = function(message, cityName) {
+      var args, modal;
+      args = {
         title: 'Comme un Dessein is over',
         submit: ((function(_this) {
           return function() {
@@ -16,11 +16,22 @@
         cancelButtonText: 'Just visit',
         cancelButtonIcon: 'glyphicon-sunglasses',
         postSubmit: 'hide'
-      });
+      };
+      if (cityName === 'tech-inn-vitre') {
+        args.submitButtonText = 'Just visit';
+        args.submitButtonIcon = 'glyphicon-sunglasses';
+        args.submit = (function(_this) {
+          return function() {};
+        })(this);
+      }
+      modal = Modal.createModal(args);
       modal.addCustomContent({
         divJ: $(message),
         name: 'end-text'
       });
+      if (cityName === 'tech-inn-vitre') {
+        modal.modalJ.find('[name="cancel"]').hide();
+      }
       modal.show();
     };
     $(document).ready(function() {
@@ -40,7 +51,7 @@
       }
       R.city.finished = cityFinished === 'True';
       if (R.city.finished) {
-        showEndModal(cityMessage);
+        showEndModal(cityMessage, R.city.name);
       }
       updateContent = function() {
         $("body").localize();

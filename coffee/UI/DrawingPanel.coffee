@@ -1205,41 +1205,41 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				R.alertManager.alert 'You already voted for this drawing', 'error'
 				return
 
-			if R.administrator
+			# if R.administrator
 
-				if not @currentDrawing.pathListchecked
-					R.alertManager.alert 'Check the drawing', 'info'
+			# 	if not @currentDrawing.pathListchecked
+			# 		R.alertManager.alert 'Check the drawing', 'info'
 				
-					for drawing in R.drawings
-						if drawing != @currentDrawing
-							drawing.remove()
+			# 		for drawing in R.drawings
+			# 			if drawing != @currentDrawing
+			# 				drawing.remove()
 		
-					draft = R.Drawing.getDraft()
+			# 		draft = R.Drawing.getDraft()
 
-					args = 
-						pk: @currentDrawing.pk
-						loadPathList: true
+			# 		args = 
+			# 			pk: @currentDrawing.pk
+			# 			loadPathList: true
 
-					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { 'function': 'loadDrawing', args: args } ).done( (results)=> 
-						drawing = JSON.parse(results.drawing)
+			# 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { 'function': 'loadDrawing', args: args } ).done( (results)=> 
+			# 			drawing = JSON.parse(results.drawing)
 
-						if draft?
-							draft.removePaths()
+			# 			if draft?
+			# 				draft.removePaths()
 
-						draft = new R.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
+			# 			draft = new R.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
 
-						draft.addPathsFromPathList(drawing.pathList, true, true)
+			# 			draft.addPathsFromPathList(drawing.pathList, true, true)
 
-						@currentDrawing.pathListchecked = true
+			# 			@currentDrawing.pathListchecked = true
 
-						R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true)
+			# 			R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true)
 
-						return
-					)
+			# 			return
+			# 		)
 
-					return
-				else
-					window.location = window.location.origin
+			# 		return
+			# 	else
+			# 		window.location = window.location.origin
 
 
 			args =

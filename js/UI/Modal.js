@@ -165,7 +165,8 @@
           inputId = 'modal-' + name + '-' + Math.random().toString();
           inputJ.attr('id', inputId);
           divJ = $("<div id='" + id + "' class='form-group " + className + "-group'></div>");
-          labelJ = $("<label for='" + inputId + "'>" + label + "</label>");
+          labelJ = $(("<label for='" + inputId + "'>") + i18next.t(label) + "</label>");
+          labelJ.attr('data-i18n', label);
           divJ.append(labelJ);
           divJ.append(inputJ);
           inputJ = divJ;

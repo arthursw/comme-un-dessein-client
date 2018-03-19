@@ -28,7 +28,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 
 		@computeDraftBounds: (paths=null)->
 			bounds = R.Drawing.getDraft()?.getBounds()
-			console.log(bounds)
+			# console.log(bounds)
 			return bounds
 
 		@draftIsTooBig: (paths=null, tolerance=0)->
@@ -164,6 +164,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		# begin, update, and end handlers are called by onMouseDown handler (then from == R.me, data == null) and by socket.on "begin" signal (then from == author of the signal, data == Item initial data)
 		begin: (event, from=R.me, data=null) ->
 			if event.event.which == 2 then return 			# if middle mouse button (wheel) pressed: return
+			if R.draggingImage then return
 
 			if 100 * P.view.zoom < 10
 				R.alertManager.alert("You can not draw path at a zoom smaller than 10.", "Info")
@@ -253,6 +254,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 				child.fillColor = new P.Color(0,0,0,0.25)
 
 			R.view.selectionLayer.addChild(@limit)
+			@limit.sendToBack()
 
 			return @draftLimit
 		
@@ -387,8 +389,11 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		# @param [Paper event or REvent] (usually) mouse up event
 		# @param [String] author (username) of the event
 		end: (event, from=R.me) ->
+
 			path = R.currentPaths[from]
 			if not path? then return false		# when the path has been deleted because too big
+			
+			draftLimit = @showDraftLimits()
 			
 			if @circlePath?
 				R.currentPaths[from].remove()

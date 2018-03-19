@@ -24,12 +24,10 @@ define [
 	'moment'
 ], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, CommandManager, View, Timelapse, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
 
-	showEndModal = (message)->
+	showEndModal = (message, cityName)->
 
 		# endTextJ = $('#end-text')
-		
-
-		modal = Modal.createModal( 
+		args = 
 			title: 'Comme un Dessein is over', 
 			submit: ( ()=> 
 				R.timelapse.activate()
@@ -38,10 +36,21 @@ define [
 			submitButtonIcon: 'glyphicon-film',
 			cancelButtonText: 'Just visit', 
 			cancelButtonIcon: 'glyphicon-sunglasses',
-			postSubmit: 'hide')
+			postSubmit: 'hide'
+
+		if cityName == 'tech-inn-vitre'
+			args.submitButtonText = 'Just visit'
+			args.submitButtonIcon = 'glyphicon-sunglasses'
+			args.submit = ()=>
+				return
+
+		modal = Modal.createModal( args )
 
 		modal.addCustomContent(divJ: $(message), name: 'end-text')
-		# modal.modalJ.find('[name="cancel"]').hide()
+		
+		if cityName == 'tech-inn-vitre'
+			modal.modalJ.find('[name="cancel"]').hide()
+		
 		modal.show()
 		return
 
@@ -96,7 +105,7 @@ define [
 		R.city.finished = cityFinished == 'True'
 			
 		if R.city.finished
-			showEndModal(cityMessage)
+			showEndModal(cityMessage, R.city.name)
 
 		# chooseRandomMode = false
 
