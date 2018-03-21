@@ -131,8 +131,8 @@
           return;
         }
         this.showDraftLimits();
-        if ((ref1 = R.traceGroup) != null) {
-          ref1.visible = true;
+        if ((ref1 = R.tracer) != null) {
+          ref1.show();
         }
         PathTool.__super__.select.call(this, deselectItems, updateParameters, fromMiddleMouseButton);
         R.view.tool.onMouseMove = this.move;
@@ -163,7 +163,7 @@
       };
 
       PathTool.prototype.begin = function(event, from, data) {
-        var ref, ref1;
+        var ref, ref1, ref2;
         if (from == null) {
           from = R.me;
         }
@@ -173,7 +173,7 @@
         if (event.event.which === 2) {
           return;
         }
-        if (R.draggingImage) {
+        if ((ref = R.tracer) != null ? ref.draggingImage : void 0) {
           return;
         }
         if (100 * P.view.zoom < 10) {
@@ -184,13 +184,13 @@
           this.constructor.displayDraftIsTooBigError();
           return;
         }
-        if (!((R.currentPaths[from] != null) && ((ref = R.currentPaths[from].data) != null ? ref.polygonMode : void 0))) {
+        if (!((R.currentPaths[from] != null) && ((ref1 = R.currentPaths[from].data) != null ? ref1.polygonMode : void 0))) {
           R.tools.select.deselectAll(false);
           R.currentPaths[from] = new this.Path(Date.now(), data, null, null, null, null, R.me);
           if (this.circleMode()) {
             this.circlePathRadius = 0.1;
             this.circlePathCenter = event.point;
-            if (ref1 = R.drawingMode, indexOf.call(R.Path.PrecisePath.snappedModes, ref1) >= 0) {
+            if (ref2 = R.drawingMode, indexOf.call(R.Path.PrecisePath.snappedModes, ref2) >= 0) {
               this.circlePathCenter = Utils.Snap.snap2D(event.point, R.drawingMode === 'lineOrthoDiag' ? R.Path.PrecisePath.lineOrthoGridSize : R.Path.PrecisePath.orthoGridSize / 2);
             }
             this.animateCircle(0, true);

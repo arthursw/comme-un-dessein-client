@@ -1,0 +1,270 @@
+define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R, Utils, Button, Modal, i18next) ->
+
+	class Tracer
+
+		constructor: ()->
+			@tracerGroup = null
+			@tracerBtn = null
+			@createTracerButton()
+			return
+
+		createTracerButton: ()->
+
+			@tracerBtn = new Button(
+				name: 'Trace'
+				iconURL: if R.style == 'line' then 'image.png' else if R.style == 'hand' then 'image.png' else 'glyphicon-picture'
+				favorite: true
+				category: null
+				disableHover: true
+				# description: 'Undo'
+				popover: true
+				order: null
+			)
+
+			@tracerBtn.hide()
+
+			@tracerBtn.btnJ.click ()=> 
+
+				modal = Modal.createModal( 
+					id: 'import-image',
+					title: "Import image to trace", 
+					submit: @submitURL, 
+					)
+
+				modal.addTextInput({name: 'imageURL', placeholder: 'http://exemple.fr/belle-image.png', type: 'url', submitShortcut: true, label: 'Image URL', required: true, errorMessage: i18next.t( 'The URL is invalid' ) })
+
+				modal.show()
+
+				return
+			
+		removeRaster: ()=>
+			@tracerGroup?.remove()
+			return
+
+		drawMoves: (bounds, size, sign, signRotations, signOffsets)=>
+			if @moves?
+				@moves.remove()
+			@moves = new P.Group()
+			@tracerGroup.addChild(@moves)
+
+			for pos in ['topCenter', 'rightCenter', 'bottomCenter', 'leftCenter']
+				handle = new P.Group()
+				handleSize = size.clone()
+				if pos == 'topCenter' or pos == 'bottomCenter'
+					handleSize.width = bounds.width
+				else
+					handleSize.height = bounds.height
+
+				handlePos = bounds[pos].subtract(handleSize.divide(2))
+				handlePath = new P.Path.Rectangle(handlePos, handleSize)
+				handlePath.fillColor = '#42b3f4'
+				handle.addChild(handlePath)
+
+				arrow = sign.clone()
+				arrow.position = bounds[pos].add(signOffsets[pos])
+				arrow.rotation = signRotations[pos]
+				handle.addChild(arrow)
+
+				@raster.data ?= {}
+				@raster.data[pos] = handle
+				handle.applyMatrix = false
+				handle.on('mousedown', (event)=>
+					@draggingImage = true
+					return)
+				handle.on('mousedrag', (event)=>
+					if not @scalingImage
+						@tracerGroup.position = @tracerGroup.position.add(event.delta)
+						@draggingImage = true
+					return)
+
+				handle.on('mouseup', (event)=>
+					@draggingImage = false
+					return)
+				handle.on('mouseover', (event)=>
+					R.stageJ.css('cursor', move)
+					return)
+				@moves.addChild(handle)
+			return
+		
+		drawCorners: (bounds, size, sign, signRotations, signOffsets)=>
+
+			if @corners?
+				@corners.remove()
+			@corners = new P.Group()
+			@tracerGroup.addChild(@corners)
+
+			for pos in ['topLeft', 'topRight', 'bottomLeft', 'bottomRight']
+				handle = new P.Group()
+				handlePos = bounds[pos].subtract(size.divide(2))
+				handlePath = new P.Path.Rectangle(handlePos, size)
+				handlePath.fillColor = '#42b3f4'
+				handlePath.strokeColor = 'white'
+				handlePath.strokeWidth = 1
+				handlePath.strokeScaling = false
+				handle.addChild(handlePath)
+
+				box = handlePath.bounds.expand(-5 / P.view.zoom)
+
+				@raster.data ?= {}
+				@raster.data[pos] = handle
+				if pos == 'topRight'
+					
+					cross1 = new P.Path()
+					cross1.add(box.topLeft)
+					cross1.add(box.bottomRight)
+					cross1.strokeWidth = 2
+					cross1.strokeScaling = false
+					cross1.strokeColor = 'black'
+					handle.addChild(cross1)
+					cross2 = new P.Path()
+					cross2.add(box.topRight)
+					cross2.add(box.bottomLeft)
+					cross2.strokeWidth = 2
+					cross2.strokeScaling = false
+					cross2.strokeColor = 'black'
+					handle.addChild(cross2)
+					handle.on('mousedown', ()=>
+						@draggingImage = true
+						@removeRaster()
+						return)
+					handle.on('mouseover', (event)=>
+						console.log('cursor: ' + if pos == 'topLeft' or pos == 'bottomRight' then 'nwse-resize' else 'nesw-resize')
+						R.stageJ.css('cursor', if pos == 'topLeft' or pos == 'bottomRight' then 'nwse-resize' else 'nesw-resize')
+						return)
+				else
+
+					arrow = sign.clone()
+					arrow.position = bounds[pos]
+					arrow.rotation = signRotations[pos]
+					handle.addChild(arrow)
+
+					handle.on('mousedown', (event)=>
+						@draggingImage = true
+						@scalingImage = true
+						return)
+
+					handle.on('mousedrag', (event)=>
+						@draggingImage = true
+						center = bounds.center
+
+						previousLength = event.point.subtract(event.delta).getDistance(center)
+						newLength = event.point.getDistance(center)
+
+						bounds = @raster.bounds.expand(size)
+						@drawMoves(bounds, size, sign, signRotations, signOffsets)
+
+						@raster.scaling = @raster.scaling.multiply(newLength / previousLength)
+						for pos, i in ['topLeft', 'topRight', 'bottomRight', 'bottomLeft']
+							@raster.data[pos].position = bounds[pos]
+						@corners.bringToFront()
+
+						return)
+					handle.on('mouseup', (event)=>
+						@draggingImage = false
+						@scalingImage = false
+						return)
+				
+				@corners.addChild(handle)
+			return
+
+		drawHandles: ()=>
+			if not @tracerGroup? then return
+
+			size = new paper.Size(30 / P.view.zoom, 30 / P.view.zoom)
+			bounds = @raster.bounds.expand(size)
+
+			sign = new P.Path()
+			sign.add(12 / P.view.zoom, 0)
+			sign.add(0, 0)
+			sign.add(0, 12 / P.view.zoom)
+			sign.strokeWidth = 2
+			sign.strokeColor = 'black'
+			sign.strokeScaling = false
+			sign.pivot = new paper.Point(6 / P.view.zoom, 6 / P.view.zoom)
+			sign.remove()
+
+			signRotations = {
+				'topCenter': 45,
+				'rightCenter': 45+90,
+				'bottomCenter': 45+90+90,
+				'leftCenter': -45,
+				'topRight': 90,
+				'topLeft': 0,
+				'bottomLeft': -90,
+				'bottomRight': 180,
+			}
+
+			signOffsets = {
+				'topCenter': new paper.Point(0, 4 / P.view.zoom),
+				'rightCenter': new paper.Point(-4 / P.view.zoom, 0),
+				'bottomCenter': new paper.Point(0, -4 / P.view.zoom),
+				'leftCenter': new paper.Point(4 / P.view.zoom, 0),
+			}
+			@drawMoves(bounds, size, sign, signRotations, signOffsets)
+			@drawCorners(bounds, size, sign, signRotations, signOffsets)
+			return
+
+		rasterOnLoad: (event)=>
+			R.loader.hideLoadingBar()
+
+			viewBounds = R.view.getViewBounds()
+
+			@raster.position = viewBounds.center
+			if @raster.bounds.width > viewBounds.width
+				@raster.scaling = new paper.Point(viewBounds.width / (@raster.bounds.width + @raster.bounds.width * 0.25) )
+			if @raster.bounds.height > viewBounds.height
+				@raster.scaling = @raster.scaling.multiply( viewBounds.height / (@raster.bounds.height + @raster.bounds.height * 0.25) )
+
+			@tracerGroup.addChild(@raster)
+			@raster.applyMatrix = false
+
+			@drawHandles()
+			return
+
+		rasterOnError: (event)=>
+			R.loader.hideLoadingBar()
+			removeRaster()
+			R.alertManager.alert 'Could not load the image', 'error'
+			return
+
+		submitURL: (data)=>
+			@removeRaster()
+
+			@tracerGroup = new P.Group()
+			@tracerGroup.opacity = 0.5
+			@raster = new P.Raster(data.imageURL)
+			@raster.position = R.view.getViewBounds().center
+
+			R.loader.showLoadingBar()
+
+			@raster.onError = @rasterOnError
+
+			@raster.onLoad = @rasterOnLoad
+
+			R.view.selectionLayer.addChild(@tracerGroup)
+
+			return
+
+		showButton: ()->
+			@tracerBtn?.show()
+		
+		hideButton: ()->
+			@tracerBtn?.hide()
+
+		hide: ()->
+			@tracerGroup?.visible = false
+		
+		show: ()->
+			@tracerGroup?.visible = true
+
+		mouseUp: (event)->
+			@draggingImage = false
+			@scalingImage = false
+			R.selectedTool?.updateCursor()
+			return
+		
+		update: ()->
+			@drawHandles()
+			return
+
+	return Tracer

@@ -120,7 +120,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 
 			@showDraftLimits()
 
-			R.traceGroup?.visible = true
+			R.tracer?.show()
 
 			super(deselectItems, updateParameters, fromMiddleMouseButton)
 
@@ -166,7 +166,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		# begin, update, and end handlers are called by onMouseDown handler (then from == R.me, data == null) and by socket.on "begin" signal (then from == author of the signal, data == Item initial data)
 		begin: (event, from=R.me, data=null) ->
 			if event.event.which == 2 then return 			# if middle mouse button (wheel) pressed: return
-			if R.draggingImage then return
+			if R.tracer?.draggingImage then return
 
 			if 100 * P.view.zoom < 10
 				R.alertManager.alert("You can not draw path at a zoom smaller than 10.", "Info")

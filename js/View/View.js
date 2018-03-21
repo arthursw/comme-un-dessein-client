@@ -555,7 +555,7 @@
       };
 
       View.prototype.onHashChange = function(event, reloadIfNecessary) {
-        var drawingPk, drawingPrefixIndex, mustReload, p, parameters, zoom;
+        var drawingPk, drawingPrefixIndex, mustReload, p, parameters, ref, zoom;
         if (reloadIfNecessary == null) {
           reloadIfNecessary = true;
         }
@@ -575,6 +575,9 @@
           zoom = parseFloat(parameters['zoom']);
           if ((zoom != null) && Number.isFinite(zoom)) {
             P.view.zoom = Math.max(0.125, Math.min(4, zoom));
+            if ((ref = R.tracer) != null) {
+              ref.update();
+            }
           }
         }
         mustReload = false;
@@ -893,26 +896,27 @@
       };
 
       View.prototype.mouseup = function(event) {
-        var base, paperEvent, ref, ref1, ref2, ref3;
-        R.draggingImage = false;
-        R.scalingImage = false;
+        var base, paperEvent, ref, ref1, ref2, ref3, ref4;
+        if ((ref = R.tracer) != null) {
+          ref.mouseUp();
+        }
         if (R.stageJ.hasClass("has-tool-box") && !$(event.target).parents('.tool-box').length > 0) {
           R.hideToolBox();
         }
         if (!$(event.target).parents('#CommeUnDessein_alerts').length > 0) {
           R.alertManager.hideIfNoTimeout();
         }
-        if ((ref = R.codeEditor) != null) {
-          ref.onMouseUp(event);
-        }
-        if ((ref1 = R.drawingPanel) != null) {
+        if ((ref1 = R.codeEditor) != null) {
           ref1.onMouseUp(event);
         }
-        if (((ref2 = R.selectedTool) != null ? ref2.name : void 0) === 'Move') {
+        if ((ref2 = R.drawingPanel) != null) {
+          ref2.onMouseUp(event);
+        }
+        if (((ref3 = R.selectedTool) != null ? ref3.name : void 0) === 'Move') {
           R.selectedTool.endNative(event);
           if (event.which === 2) {
-            if ((ref3 = R.previousTool) != null) {
-              ref3.select(null, null, null, true);
+            if ((ref4 = R.previousTool) != null) {
+              ref4.select(null, null, null, true);
             }
           }
           return;

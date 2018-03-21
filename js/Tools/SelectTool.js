@@ -108,8 +108,8 @@
         if (buttonClicked == null) {
           buttonClicked = false;
         }
-        if ((ref = R.traceGroup) != null) {
-          ref.visible = false;
+        if ((ref = R.tracer) != null) {
+          ref.hide();
         }
         if (buttonClicked) {
           R.alertManager.alert('Click on a drawing to vote for it', 'info');

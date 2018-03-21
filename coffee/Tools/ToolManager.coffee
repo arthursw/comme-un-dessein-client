@@ -8,6 +8,7 @@ dependencies = [
 	'Tools/PathTool'
 	'Tools/EraserTool'
 	'Tools/ItemTool'
+	'Tools/Tracer'
 	'UI/Modal'
 	'i18next'
 	# 'Tools/TextTool'
@@ -18,7 +19,7 @@ dependencies = [
 	# dependencies.push('Tools/ScreenshotTool')
 	# dependencies.push('Tools/CarTool')
 
-define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Modal, i18next) -> # , TextTool, GradientTool, CarTool) ->
+define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Tracer, Modal, i18next) -> # , TextTool, GradientTool, CarTool) ->
 
 	class ToolManager
 
@@ -218,7 +219,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 
 			@createZoombuttons()
 			@createUndoRedoButtons()
-			@createImportImageButton()
+			R.tracer = new Tracer()
 			@createInfoButton()
 			
 
@@ -261,13 +262,14 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				P.view.zoom = newZoom
 			else 
 				P.view.zoom *= value
-			console.log(P.view.zoom)
+
 			
 			# @enableDrawingButton(P.view.zoom >= 1)
 			# if P.view.zoom < 1 and R.selectedTool == R.tools['Precise path']
 			# 	R.tools.move.select()
 			# 	R.alertManager.alert 'Please zoom before drawing', 'info'
-			
+			R.tracer?.update()
+
 			R.view.moveBy(new P.Point())
 			
 			return
@@ -339,217 +341,6 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			)
 			@redoBtn.hide()
 			@redoBtn.btnJ.click ()-> R.commandManager.do()
-
-			return
-
-		createImportImageButton: ()->
-
-			@importImageBtn = new Button(
-				name: 'Trace'
-				iconURL: if R.style == 'line' then 'image.png' else if R.style == 'hand' then 'image.png' else 'glyphicon-picture'
-				favorite: true
-				category: null
-				disableHover: true
-				# description: 'Undo'
-				popover: true
-				order: null
-			)
-			@importImageBtn.hide()
-
-			rasterGroup = null
-			R.traceGroup = rasterGroup
-			
-			removeRaster = ()=>
-				rasterGroup?.remove()
-				return
-
-			submitURL = (data)=>
-				removeRaster()
-
-				rasterGroup = new P.Group()
-				R.traceGroup = rasterGroup
-				rasterGroup.opacity = 0.5
-				raster = new P.Raster(data.imageURL)
-				raster.position = R.view.getViewBounds().center
-
-				R.loader.showLoadingBar()
-
-				raster.onError = (event)=>
-					R.loader.hideLoadingBar()
-					removeRaster()
-					R.alertManager.alert 'Could not load the image', 'error'
-					return
-
-				raster.onLoad = (event)=>
-					R.loader.hideLoadingBar()
-
-					viewBounds = R.view.getViewBounds()
-
-					raster.position = viewBounds.center
-					if raster.bounds.width > viewBounds.width
-						raster.scaling = new paper.Point(viewBounds.width / (raster.bounds.width + raster.bounds.width * 0.25) )
-					if raster.bounds.height > viewBounds.height
-						raster.scaling = raster.scaling.multiply( viewBounds.height / (raster.bounds.height + raster.bounds.height * 0.25) )
-
-					rasterGroup.addChild(raster)
-					raster.applyMatrix = false
-					size = new paper.Size(15, 15)
-					
-					sign = new P.Path()
-					sign.add(6, 0)
-					sign.add(0, 0)
-					sign.add(0, 6)
-					sign.strokeWidth = 2
-					sign.strokeColor = 'black'
-					sign.pivot = new paper.Point(3, 3)
-					sign.remove()
-
-					signRotations = {
-						'topCenter': 45,
-						'rightCenter': 45+90,
-						'bottomCenter': 45+90+90,
-						'leftCenter': -45,
-						'topRight': 90,
-						'topLeft': 0,
-						'bottomLeft': -90,
-						'bottomRight': 180,
-					}
-
-					signOffsets = {
-						'topCenter': new paper.Point(0, 2),
-						'rightCenter': new paper.Point(-2, 0),
-						'bottomCenter': new paper.Point(0, -2),
-						'leftCenter': new paper.Point(2, 0),
-					}
-
-					drawMoves = ()=>
-						
-						if rasterGroup.data?.moves?
-							rasterGroup.data.moves.remove()
-						moves = new P.Group()
-						rasterGroup.addChild(moves)
-						rasterGroup.data ?= {}
-						rasterGroup.data.moves = moves
-						for pos in ['topCenter', 'rightCenter', 'bottomCenter', 'leftCenter']
-							handle = new P.Group()
-							handleSize = size.clone()
-							if pos == 'topCenter' or pos == 'bottomCenter'
-								handleSize.width = raster.bounds.width - 1.25 * size.width
-							else
-								handleSize.height = raster.bounds.height - 1.25 * size.width
-
-							handlePos = raster.bounds[pos].subtract(handleSize.divide(2))
-							handlePath = new P.Path.Rectangle(handlePos, handleSize)
-							handlePath.fillColor = '#42b3f4'
-							handle.addChild(handlePath)
-
-							arrow = sign.clone()
-							arrow.position = raster.bounds[pos].add(signOffsets[pos])
-							arrow.rotation = signRotations[pos]
-							handle.addChild(arrow)
-
-							raster.data ?= {}
-							raster.data[pos] = handle
-							handle.applyMatrix = false
-							handle.on('mousedown', (event)=>
-								R.draggingImage = true
-								return)
-							handle.on('mousedrag', (event)=>
-								if not R.scalingImage
-									rasterGroup.position = rasterGroup.position.add(event.delta)
-									R.draggingImage = true
-								return)
-
-							handle.on('mouseup', (event)=>
-								R.draggingImage = false
-								return)
-							moves.addChild(handle)
-						return
-					drawMoves()
-					
-					for pos in ['topLeft', 'topRight', 'bottomLeft', 'bottomRight']
-						handle = new P.Group()
-						handlePos = raster.bounds[pos].subtract(size.divide(2))
-						handlePath = new P.Path.Rectangle(handlePos, size)
-						handlePath.fillColor = '#42b3f4'
-						handle.addChild(handlePath)
-
-						box = handlePath.bounds.expand(-5)
-
-						raster.data ?= {}
-						raster.data[pos] = handle
-						if pos == 'topRight'
-							
-							cross1 = new P.Path()
-							cross1.add(box.topLeft)
-							cross1.add(box.bottomRight)
-							cross1.strokeWidth = 2
-							cross1.strokeColor = 'black'
-							handle.addChild(cross1)
-							cross2 = new P.Path()
-							cross2.add(box.topRight)
-							cross2.add(box.bottomLeft)
-							cross2.strokeWidth = 2
-							cross2.strokeColor = 'black'
-							handle.addChild(cross2)
-							handle.on('mousedown', ()=>
-								R.draggingImage = true
-								removeRaster()
-								return)
-						else
-
-							arrow = sign.clone()
-							arrow.position = raster.bounds[pos]
-							arrow.rotation = signRotations[pos]
-							handle.addChild(arrow)
-
-							handle.on('mousedown', (event)=>
-								R.draggingImage = true
-								R.scalingImage = true
-								return)
-
-							handle.on('mousedrag', (event)=>
-								R.draggingImage = true
-								center = raster.bounds.center
-
-								previousLength = event.point.subtract(event.delta).getDistance(center)
-								newLength = event.point.getDistance(center)
-
-								raster.scaling = raster.scaling.multiply(newLength / previousLength)
-								for pos, i in ['topLeft', 'topRight', 'bottomRight', 'bottomLeft']
-									raster.data[pos].position = raster.bounds[pos]
-								
-								drawMoves()
-
-								return)
-							handle.on('mouseup', (event)=>
-								R.draggingImage = false
-								R.scalingImage = false
-								return)
-
-						rasterGroup.addChild(handle)
-
-					return
-				raster.on('mousedrag', (event)=>
-					
-					return)
-				R.view.selectionLayer.addChild(rasterGroup)
-
-				return
-
-			@importImageBtn.btnJ.click ()=> 
-
-				modal = Modal.createModal( 
-					id: 'import-image',
-					title: "Import image to trace", 
-					submit: submitURL, 
-					)
-
-				modal.addTextInput({name: 'imageURL', placeholder: 'http://exemple.fr/belle-image.png', type: 'url', submitShortcut: true, label: 'Image URL', required: true, errorMessage: i18next.t( 'The URL is invalid' ) })
-
-				modal.show()
-
-				return
 
 			return
 
@@ -631,7 +422,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				parentJ: $('#submit-drawing-button')
 				ignoreFavorite: true
 				onClick: ()=>
-					R.traceGroup?.visible = false
+					R.tracer?.hide()
 					R.drawingPanel.submitDrawingClicked()
 					return
 			})
@@ -685,14 +476,14 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				@undoBtn.show()
 				@submitButton.show()
 				@deleteButton.show()
-				@importImageBtn.show()
+				R.tracer?.showButton()
 				R.tools.eraser.btn.show()
 			else
 				@redoBtn.hide()
 				@undoBtn.hide()
 				@submitButton.hide()
 				@deleteButton.hide()
-				@importImageBtn.hide()
+				R.tracer?.hideButton()
 				R.tools.eraser.btn.hide()
 
 			draft ?= R.Drawing.getDraft()

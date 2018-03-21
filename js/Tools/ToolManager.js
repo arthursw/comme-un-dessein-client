@@ -2,9 +2,9 @@
 (function() {
   var dependencies;
 
-  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool', 'UI/Modal', 'i18next'];
+  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool', 'Tools/Tracer', 'UI/Modal', 'i18next'];
 
-  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Modal, i18next) {
+  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Tracer, Modal, i18next) {
     var ToolManager;
     ToolManager = (function() {
       function ToolManager() {
@@ -44,13 +44,13 @@
         }
         this.createZoombuttons();
         this.createUndoRedoButtons();
-        this.createImportImageButton();
+        R.tracer = new Tracer();
         this.createInfoButton();
         return;
       }
 
       ToolManager.prototype.zoom = function(value, snap) {
-        var bounds, j, k, len, len1, newZoom, v, zoomValues;
+        var bounds, i, j, len, len1, newZoom, ref, v, zoomValues;
         if (snap == null) {
           snap = true;
         }
@@ -69,8 +69,8 @@
           newZoom = 1;
           zoomValues = [0.125, 0.25, 0.5, 1, 2, 4];
           if (value < 1) {
-            for (j = 0, len = zoomValues.length; j < len; j++) {
-              v = zoomValues[j];
+            for (i = 0, len = zoomValues.length; i < len; i++) {
+              v = zoomValues[i];
               if (P.view.zoom > v) {
                 newZoom = v;
               } else {
@@ -78,8 +78,8 @@
               }
             }
           } else {
-            for (k = 0, len1 = zoomValues.length; k < len1; k++) {
-              v = zoomValues[k];
+            for (j = 0, len1 = zoomValues.length; j < len1; j++) {
+              v = zoomValues[j];
               if (P.view.zoom < v) {
                 newZoom = v;
                 break;
@@ -90,7 +90,9 @@
         } else {
           P.view.zoom *= value;
         }
-        console.log(P.view.zoom);
+        if ((ref = R.tracer) != null) {
+          ref.update();
+        }
         R.view.moveBy(new P.Point());
       };
 
@@ -155,217 +157,6 @@
         });
       };
 
-      ToolManager.prototype.createImportImageButton = function() {
-        var rasterGroup, removeRaster, submitURL;
-        this.importImageBtn = new Button({
-          name: 'Trace',
-          iconURL: R.style === 'line' ? 'image.png' : R.style === 'hand' ? 'image.png' : 'glyphicon-picture',
-          favorite: true,
-          category: null,
-          disableHover: true,
-          popover: true,
-          order: null
-        });
-        this.importImageBtn.hide();
-        rasterGroup = null;
-        R.traceGroup = rasterGroup;
-        removeRaster = (function(_this) {
-          return function() {
-            if (rasterGroup != null) {
-              rasterGroup.remove();
-            }
-          };
-        })(this);
-        submitURL = (function(_this) {
-          return function(data) {
-            var raster;
-            removeRaster();
-            rasterGroup = new P.Group();
-            R.traceGroup = rasterGroup;
-            rasterGroup.opacity = 0.5;
-            raster = new P.Raster(data.imageURL);
-            raster.position = R.view.getViewBounds().center;
-            R.loader.showLoadingBar();
-            raster.onError = function(event) {
-              R.loader.hideLoadingBar();
-              removeRaster();
-              R.alertManager.alert('Could not load the image', 'error');
-            };
-            raster.onLoad = function(event) {
-              var arrow, box, cross1, cross2, drawMoves, handle, handlePath, handlePos, j, len, pos, ref, sign, signOffsets, signRotations, size, viewBounds;
-              R.loader.hideLoadingBar();
-              viewBounds = R.view.getViewBounds();
-              raster.position = viewBounds.center;
-              if (raster.bounds.width > viewBounds.width) {
-                raster.scaling = new paper.Point(viewBounds.width / (raster.bounds.width + raster.bounds.width * 0.25));
-              }
-              if (raster.bounds.height > viewBounds.height) {
-                raster.scaling = raster.scaling.multiply(viewBounds.height / (raster.bounds.height + raster.bounds.height * 0.25));
-              }
-              rasterGroup.addChild(raster);
-              raster.applyMatrix = false;
-              size = new paper.Size(15, 15);
-              sign = new P.Path();
-              sign.add(6, 0);
-              sign.add(0, 0);
-              sign.add(0, 6);
-              sign.strokeWidth = 2;
-              sign.strokeColor = 'black';
-              sign.pivot = new paper.Point(3, 3);
-              sign.remove();
-              signRotations = {
-                'topCenter': 45,
-                'rightCenter': 45 + 90,
-                'bottomCenter': 45 + 90 + 90,
-                'leftCenter': -45,
-                'topRight': 90,
-                'topLeft': 0,
-                'bottomLeft': -90,
-                'bottomRight': 180
-              };
-              signOffsets = {
-                'topCenter': new paper.Point(0, 2),
-                'rightCenter': new paper.Point(-2, 0),
-                'bottomCenter': new paper.Point(0, -2),
-                'leftCenter': new paper.Point(2, 0)
-              };
-              drawMoves = function() {
-                var arrow, handle, handlePath, handlePos, handleSize, j, len, moves, pos, ref, ref1;
-                if (((ref = rasterGroup.data) != null ? ref.moves : void 0) != null) {
-                  rasterGroup.data.moves.remove();
-                }
-                moves = new P.Group();
-                rasterGroup.addChild(moves);
-                if (rasterGroup.data == null) {
-                  rasterGroup.data = {};
-                }
-                rasterGroup.data.moves = moves;
-                ref1 = ['topCenter', 'rightCenter', 'bottomCenter', 'leftCenter'];
-                for (j = 0, len = ref1.length; j < len; j++) {
-                  pos = ref1[j];
-                  handle = new P.Group();
-                  handleSize = size.clone();
-                  if (pos === 'topCenter' || pos === 'bottomCenter') {
-                    handleSize.width = raster.bounds.width - 1.25 * size.width;
-                  } else {
-                    handleSize.height = raster.bounds.height - 1.25 * size.width;
-                  }
-                  handlePos = raster.bounds[pos].subtract(handleSize.divide(2));
-                  handlePath = new P.Path.Rectangle(handlePos, handleSize);
-                  handlePath.fillColor = '#42b3f4';
-                  handle.addChild(handlePath);
-                  arrow = sign.clone();
-                  arrow.position = raster.bounds[pos].add(signOffsets[pos]);
-                  arrow.rotation = signRotations[pos];
-                  handle.addChild(arrow);
-                  if (raster.data == null) {
-                    raster.data = {};
-                  }
-                  raster.data[pos] = handle;
-                  handle.applyMatrix = false;
-                  handle.on('mousedown', function(event) {
-                    R.draggingImage = true;
-                  });
-                  handle.on('mousedrag', function(event) {
-                    if (!R.scalingImage) {
-                      rasterGroup.position = rasterGroup.position.add(event.delta);
-                      R.draggingImage = true;
-                    }
-                  });
-                  handle.on('mouseup', function(event) {
-                    R.draggingImage = false;
-                  });
-                  moves.addChild(handle);
-                }
-              };
-              drawMoves();
-              ref = ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'];
-              for (j = 0, len = ref.length; j < len; j++) {
-                pos = ref[j];
-                handle = new P.Group();
-                handlePos = raster.bounds[pos].subtract(size.divide(2));
-                handlePath = new P.Path.Rectangle(handlePos, size);
-                handlePath.fillColor = '#42b3f4';
-                handle.addChild(handlePath);
-                box = handlePath.bounds.expand(-5);
-                if (raster.data == null) {
-                  raster.data = {};
-                }
-                raster.data[pos] = handle;
-                if (pos === 'topRight') {
-                  cross1 = new P.Path();
-                  cross1.add(box.topLeft);
-                  cross1.add(box.bottomRight);
-                  cross1.strokeWidth = 2;
-                  cross1.strokeColor = 'black';
-                  handle.addChild(cross1);
-                  cross2 = new P.Path();
-                  cross2.add(box.topRight);
-                  cross2.add(box.bottomLeft);
-                  cross2.strokeWidth = 2;
-                  cross2.strokeColor = 'black';
-                  handle.addChild(cross2);
-                  handle.on('mousedown', function() {
-                    R.draggingImage = true;
-                    removeRaster();
-                  });
-                } else {
-                  arrow = sign.clone();
-                  arrow.position = raster.bounds[pos];
-                  arrow.rotation = signRotations[pos];
-                  handle.addChild(arrow);
-                  handle.on('mousedown', function(event) {
-                    R.draggingImage = true;
-                    R.scalingImage = true;
-                  });
-                  handle.on('mousedrag', function(event) {
-                    var center, i, k, len1, newLength, previousLength, ref1;
-                    R.draggingImage = true;
-                    center = raster.bounds.center;
-                    previousLength = event.point.subtract(event.delta).getDistance(center);
-                    newLength = event.point.getDistance(center);
-                    raster.scaling = raster.scaling.multiply(newLength / previousLength);
-                    ref1 = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft'];
-                    for (i = k = 0, len1 = ref1.length; k < len1; i = ++k) {
-                      pos = ref1[i];
-                      raster.data[pos].position = raster.bounds[pos];
-                    }
-                    drawMoves();
-                  });
-                  handle.on('mouseup', function(event) {
-                    R.draggingImage = false;
-                    R.scalingImage = false;
-                  });
-                }
-                rasterGroup.addChild(handle);
-              }
-            };
-            raster.on('mousedrag', function(event) {});
-            R.view.selectionLayer.addChild(rasterGroup);
-          };
-        })(this);
-        this.importImageBtn.btnJ.click((function(_this) {
-          return function() {
-            var modal;
-            modal = Modal.createModal({
-              id: 'import-image',
-              title: "Import image to trace",
-              submit: submitURL
-            });
-            modal.addTextInput({
-              name: 'imageURL',
-              placeholder: 'http://exemple.fr/belle-image.png',
-              type: 'url',
-              submitShortcut: true,
-              label: 'Image URL',
-              required: true,
-              errorMessage: i18next.t('The URL is invalid')
-            });
-            modal.show();
-          };
-        })(this));
-      };
-
       ToolManager.prototype.createInfoButton = function() {
         this.infoBtn = new Button({
           name: 'Help',
@@ -410,8 +201,8 @@
           onClick: (function(_this) {
             return function() {
               var ref;
-              if ((ref = R.traceGroup) != null) {
-                ref.visible = false;
+              if ((ref = R.tracer) != null) {
+                ref.hide();
               }
               R.drawingPanel.submitDrawingClicked();
             };
@@ -442,6 +233,7 @@
       };
 
       ToolManager.prototype.updateButtonsVisibility = function(draft) {
+        var ref, ref1;
         if (draft == null) {
           draft = null;
         }
@@ -450,14 +242,18 @@
           this.undoBtn.show();
           this.submitButton.show();
           this.deleteButton.show();
-          this.importImageBtn.show();
+          if ((ref = R.tracer) != null) {
+            ref.showButton();
+          }
           R.tools.eraser.btn.show();
         } else {
           this.redoBtn.hide();
           this.undoBtn.hide();
           this.submitButton.hide();
           this.deleteButton.hide();
-          this.importImageBtn.hide();
+          if ((ref1 = R.tracer) != null) {
+            ref1.hideButton();
+          }
           R.tools.eraser.btn.hide();
         }
         if (draft == null) {
