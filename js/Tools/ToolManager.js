@@ -24,6 +24,7 @@
         }
         R.tools.move = new R.Tools.Move();
         R.tools.select = new R.Tools.Select();
+        R.tracer = new Tracer();
         R.tools.eraser = new R.Tools.Eraser();
         R.tools.eraser.btn.hide();
         defaultFavoriteTools = [];
@@ -44,7 +45,6 @@
         }
         this.createZoombuttons();
         this.createUndoRedoButtons();
-        R.tracer = new Tracer();
         this.createInfoButton();
         return;
       }

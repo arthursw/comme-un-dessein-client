@@ -58,6 +58,9 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 				handlePos = bounds[pos].subtract(handleSize.divide(2))
 				handlePath = new P.Path.Rectangle(handlePos, handleSize)
 				handlePath.fillColor = '#42b3f4'
+				handlePath.strokeColor = 'white'
+				handlePath.strokeWidth = 1
+				handlePath.strokeScaling = false
 				handle.addChild(handlePath)
 
 				arrow = sign.clone()
@@ -80,8 +83,11 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 				handle.on('mouseup', (event)=>
 					@draggingImage = false
 					return)
-				handle.on('mouseover', (event)=>
-					R.stageJ.css('cursor', move)
+				handle.on('mouseenter', (event)=>
+					R.stageJ.css('cursor', 'move')
+					return)
+				handle.on('mouseleave', (event)=>
+					R.selectedTool?.updateCursor()
 					return)
 				@moves.addChild(handle)
 			return
@@ -127,9 +133,11 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 						@draggingImage = true
 						@removeRaster()
 						return)
-					handle.on('mouseover', (event)=>
-						console.log('cursor: ' + if pos == 'topLeft' or pos == 'bottomRight' then 'nwse-resize' else 'nesw-resize')
-						R.stageJ.css('cursor', if pos == 'topLeft' or pos == 'bottomRight' then 'nwse-resize' else 'nesw-resize')
+					handle.on('mouseenter', (event)=>
+						R.stageJ.css('cursor', 'default')
+						return)
+					handle.on('mouseleave', (event)=>
+						R.selectedTool?.updateCursor()
 						return)
 				else
 
@@ -162,6 +170,13 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 					handle.on('mouseup', (event)=>
 						@draggingImage = false
 						@scalingImage = false
+						return)
+					handle.on('mouseenter', (event)=>
+						vector = bounds.center.subtract(event.point)
+						R.stageJ.css('cursor', if vector.x > 0 and vector.y < 0 then 'nesw-resize' else 'nwse-resize')
+						return)
+					handle.on('mouseleave', (event)=>
+						R.selectedTool?.updateCursor()
 						return)
 				
 				@corners.addChild(handle)

@@ -47,6 +47,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			R.tools.move = new R.Tools.Move()
 			# R.tools.screenshot = new R.Tools.Screenshot()
 			R.tools.select = new R.Tools.Select()
+			R.tracer = new Tracer()
 			R.tools.eraser = new R.Tools.Eraser()
 			R.tools.eraser.btn.hide()
 
@@ -219,7 +220,6 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 
 			@createZoombuttons()
 			@createUndoRedoButtons()
-			R.tracer = new Tracer()
 			@createInfoButton()
 			
 

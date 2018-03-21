@@ -79,6 +79,9 @@
           handlePos = bounds[pos].subtract(handleSize.divide(2));
           handlePath = new P.Path.Rectangle(handlePos, handleSize);
           handlePath.fillColor = '#42b3f4';
+          handlePath.strokeColor = 'white';
+          handlePath.strokeWidth = 1;
+          handlePath.strokeScaling = false;
           handle.addChild(handlePath);
           arrow = sign.clone();
           arrow.position = bounds[pos].add(signOffsets[pos]);
@@ -107,9 +110,17 @@
               _this.draggingImage = false;
             };
           })(this));
-          handle.on('mouseover', (function(_this) {
+          handle.on('mouseenter', (function(_this) {
             return function(event) {
-              R.stageJ.css('cursor', move);
+              R.stageJ.css('cursor', 'move');
+            };
+          })(this));
+          handle.on('mouseleave', (function(_this) {
+            return function(event) {
+              var ref1;
+              if ((ref1 = R.selectedTool) != null) {
+                ref1.updateCursor();
+              }
             };
           })(this));
           this.moves.addChild(handle);
@@ -160,10 +171,17 @@
                 _this.removeRaster();
               };
             })(this));
-            handle.on('mouseover', (function(_this) {
+            handle.on('mouseenter', (function(_this) {
               return function(event) {
-                console.log('cursor: ' + (pos === 'topLeft' || pos === 'bottomRight' ? 'nwse-resize' : 'nesw-resize'));
-                R.stageJ.css('cursor', pos === 'topLeft' || pos === 'bottomRight' ? 'nwse-resize' : 'nesw-resize');
+                R.stageJ.css('cursor', 'default');
+              };
+            })(this));
+            handle.on('mouseleave', (function(_this) {
+              return function(event) {
+                var ref1;
+                if ((ref1 = R.selectedTool) != null) {
+                  ref1.updateCursor();
+                }
               };
             })(this));
           } else {
@@ -199,6 +217,21 @@
               return function(event) {
                 _this.draggingImage = false;
                 _this.scalingImage = false;
+              };
+            })(this));
+            handle.on('mouseenter', (function(_this) {
+              return function(event) {
+                var vector;
+                vector = bounds.center.subtract(event.point);
+                R.stageJ.css('cursor', vector.x > 0 && vector.y < 0 ? 'nesw-resize' : 'nwse-resize');
+              };
+            })(this));
+            handle.on('mouseleave', (function(_this) {
+              return function(event) {
+                var ref1;
+                if ((ref1 = R.selectedTool) != null) {
+                  ref1.updateCursor();
+                }
               };
             })(this));
           }
