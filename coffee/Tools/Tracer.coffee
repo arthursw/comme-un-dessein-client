@@ -238,7 +238,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 
 		rasterOnError: (event)=>
 			R.loader.hideLoadingBar()
-			removeRaster()
+			@removeRaster()
 			R.alertManager.alert 'Could not load the image', 'error'
 			return
 

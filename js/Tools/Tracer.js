@@ -293,7 +293,7 @@
 
       Tracer.prototype.rasterOnError = function(event) {
         R.loader.hideLoadingBar();
-        removeRaster();
+        this.removeRaster();
         R.alertManager.alert('Could not load the image', 'error');
       };
 

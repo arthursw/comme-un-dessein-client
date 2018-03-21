@@ -151,6 +151,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			super()
 			@finish()
 			
+			# R.tracer?.hide()
+			
 			@hideDraftLimits()
 
 			R.view.tool.onMouseMove = null
