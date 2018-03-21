@@ -152,7 +152,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			@finish()
 			
 			# R.tracer?.hide()
-			
+
 			@hideDraftLimits()
 
 			R.view.tool.onMouseMove = null
@@ -202,6 +202,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 				data = R.currentPaths[from].data
 				data.id = R.currentPaths[from].id
 				# R.socket.emit "bounce", tool: @name, function: "begin", arguments: [event, R.me, data]
+
+			@using = true
 			return
 
 		circleMode: ()->
@@ -393,6 +395,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		# @param [Paper event or REvent] (usually) mouse up event
 		# @param [String] author (username) of the event
 		end: (event, from=R.me) ->
+			@using = false
 
 			path = R.currentPaths[from]
 			if not path? then return false		# when the path has been deleted because too big

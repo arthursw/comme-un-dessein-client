@@ -180,7 +180,7 @@
       };
 
       EraserTool.prototype.begin = function(event, from, data) {
-        var draft;
+        var draft, ref;
         if (from == null) {
           from = R.me;
         }
@@ -190,6 +190,10 @@
         if (event.event.which === 2) {
           return;
         }
+        if ((ref = R.tracer) != null ? ref.draggingImage : void 0) {
+          return;
+        }
+        this.using = true;
         this.updateCircle(event.point);
         this.circleIntervalID = setInterval(this.createCircle, 20);
         draft = R.Drawing.getDraft();
@@ -197,12 +201,15 @@
       };
 
       EraserTool.prototype.update = function(event, from) {
+        var ref;
         if (from == null) {
           from = R.me;
         }
         console.log("update");
         this.circle.position = event.point;
-        this.erase();
+        if (!((ref = R.tracer) != null ? ref.draggingImage : void 0)) {
+          this.erase();
+        }
       };
 
       EraserTool.prototype.createCircle = function(point) {
@@ -221,6 +228,7 @@
         this.circle.strokeColor = '#2fa1d6';
         this.circle.strokeScaling = false;
         R.view.selectionLayer.addChild(this.circle);
+        this.circle.sendToBack();
         if (this.radius < 15) {
           this.radius += 0.5;
         }
@@ -235,17 +243,18 @@
       };
 
       EraserTool.prototype.move = function(event) {
-        console.log("move");
         R.tools.eraser.updateCircle(event.point);
       };
 
       EraserTool.prototype.end = function(event, from) {
-        var draft, modifyDrawingCommand;
+        var draft, modifyDrawingCommand, ref;
         if (from == null) {
           from = R.me;
         }
         this.circle.position = event.point;
-        this.erase();
+        if (!((ref = R.tracer) != null ? ref.draggingImage : void 0)) {
+          this.erase();
+        }
         clearInterval(this.circleIntervalID);
         this.radius = 0.1;
         draft = R.Drawing.getDraft();
@@ -257,6 +266,7 @@
           draft.updatePaths();
           R.toolManager.updateButtonsVisibility(draft);
         }
+        this.using = false;
       };
 
       EraserTool.prototype.finish = function(from) {

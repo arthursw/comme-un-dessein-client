@@ -75,6 +75,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 					@draggingImage = true
 					return)
 				handle.on('mousedrag', (event)=>
+					if not @draggingImage then return
 					if not @scalingImage
 						@tracerGroup.position = @tracerGroup.position.add(event.delta)
 						@draggingImage = true
@@ -84,7 +85,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 					@draggingImage = false
 					return)
 				handle.on('mouseenter', (event)=>
-					R.stageJ.css('cursor', 'move')
+					if not R.selectedTool?.using
+						R.stageJ.css('cursor', 'move')
 					return)
 				handle.on('mouseleave', (event)=>
 					R.selectedTool?.updateCursor()
@@ -109,7 +111,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 				handlePath.strokeScaling = false
 				handle.addChild(handlePath)
 
-				box = handlePath.bounds.expand(-5 / P.view.zoom)
+				box = handlePath.bounds.expand(-15 / P.view.zoom)
 
 				@raster.data ?= {}
 				@raster.data[pos] = handle
@@ -134,7 +136,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 						@removeRaster()
 						return)
 					handle.on('mouseenter', (event)=>
-						R.stageJ.css('cursor', 'default')
+						if not R.selectedTool?.using
+							R.stageJ.css('cursor', 'default')
 						return)
 					handle.on('mouseleave', (event)=>
 						R.selectedTool?.updateCursor()
@@ -152,7 +155,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 						return)
 
 					handle.on('mousedrag', (event)=>
-						@draggingImage = true
+						if not @draggingImage then return
+
 						center = bounds.center
 
 						previousLength = event.point.subtract(event.delta).getDistance(center)
@@ -172,8 +176,9 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 						@scalingImage = false
 						return)
 					handle.on('mouseenter', (event)=>
-						vector = bounds.center.subtract(event.point)
-						R.stageJ.css('cursor', if vector.x > 0 and vector.y < 0 then 'nesw-resize' else 'nwse-resize')
+						if not R.selectedTool?.using
+							vector = bounds.center.subtract(event.point)
+							R.stageJ.css('cursor', if vector.x > 0 and vector.y < 0 then 'nesw-resize' else 'nwse-resize')
 						return)
 					handle.on('mouseleave', (event)=>
 						R.selectedTool?.updateCursor()

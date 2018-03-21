@@ -99,6 +99,9 @@
           })(this));
           handle.on('mousedrag', (function(_this) {
             return function(event) {
+              if (!_this.draggingImage) {
+                return;
+              }
               if (!_this.scalingImage) {
                 _this.tracerGroup.position = _this.tracerGroup.position.add(event.delta);
                 _this.draggingImage = true;
@@ -112,7 +115,10 @@
           })(this));
           handle.on('mouseenter', (function(_this) {
             return function(event) {
-              R.stageJ.css('cursor', 'move');
+              var ref1;
+              if (!((ref1 = R.selectedTool) != null ? ref1.using : void 0)) {
+                R.stageJ.css('cursor', 'move');
+              }
             };
           })(this));
           handle.on('mouseleave', (function(_this) {
@@ -145,7 +151,7 @@
           handlePath.strokeWidth = 1;
           handlePath.strokeScaling = false;
           handle.addChild(handlePath);
-          box = handlePath.bounds.expand(-5 / P.view.zoom);
+          box = handlePath.bounds.expand(-15 / P.view.zoom);
           if ((base = this.raster).data == null) {
             base.data = {};
           }
@@ -173,7 +179,10 @@
             })(this));
             handle.on('mouseenter', (function(_this) {
               return function(event) {
-                R.stageJ.css('cursor', 'default');
+                var ref1;
+                if (!((ref1 = R.selectedTool) != null ? ref1.using : void 0)) {
+                  R.stageJ.css('cursor', 'default');
+                }
               };
             })(this));
             handle.on('mouseleave', (function(_this) {
@@ -198,7 +207,9 @@
             handle.on('mousedrag', (function(_this) {
               return function(event) {
                 var center, i, k, len1, newLength, previousLength, ref1;
-                _this.draggingImage = true;
+                if (!_this.draggingImage) {
+                  return;
+                }
                 center = bounds.center;
                 previousLength = event.point.subtract(event.delta).getDistance(center);
                 newLength = event.point.getDistance(center);
@@ -221,9 +232,11 @@
             })(this));
             handle.on('mouseenter', (function(_this) {
               return function(event) {
-                var vector;
-                vector = bounds.center.subtract(event.point);
-                R.stageJ.css('cursor', vector.x > 0 && vector.y < 0 ? 'nesw-resize' : 'nwse-resize');
+                var ref1, vector;
+                if (!((ref1 = R.selectedTool) != null ? ref1.using : void 0)) {
+                  vector = bounds.center.subtract(event.point);
+                  R.stageJ.css('cursor', vector.x > 0 && vector.y < 0 ? 'nesw-resize' : 'nwse-resize');
+                }
               };
             })(this));
             handle.on('mouseleave', (function(_this) {

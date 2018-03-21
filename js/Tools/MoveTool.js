@@ -40,7 +40,7 @@
       }
 
       MoveTool.prototype.select = function(deselectItems, updateParameters, fromMiddleMouseButton) {
-        var div, i, len, ref;
+        var div, i, len, ref, ref1;
         if (deselectItems == null) {
           deselectItems = false;
         }
@@ -51,10 +51,13 @@
           fromMiddleMouseButton = false;
         }
         MoveTool.__super__.select.call(this, deselectItems, updateParameters, fromMiddleMouseButton);
+        if ((ref = R.tracer) != null) {
+          ref.hide();
+        }
         R.stageJ.addClass("moveTool");
-        ref = R.divs;
-        for (i = 0, len = ref.length; i < len; i++) {
-          div = ref[i];
+        ref1 = R.divs;
+        for (i = 0, len = ref1.length; i < len; i++) {
+          div = ref1[i];
           div.disableInteraction();
         }
       };

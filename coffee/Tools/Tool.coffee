@@ -145,6 +145,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 
 		# Begin tool action (usually called on mouse down event)
 		begin: (event) ->
+			@using = true
 			return
 
 		# Update tool action (usually called on mouse drag event)
@@ -157,6 +158,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 
 		# End tool action (usually called on mouse up event)
 		end: (event) ->
+			@using = false
 			return
 
 		keyUp: (event)->

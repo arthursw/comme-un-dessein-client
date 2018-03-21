@@ -150,13 +150,17 @@
         }
       };
 
-      Tool.prototype.begin = function(event) {};
+      Tool.prototype.begin = function(event) {
+        this.using = true;
+      };
 
       Tool.prototype.update = function(event) {};
 
       Tool.prototype.move = function(event) {};
 
-      Tool.prototype.end = function(event) {};
+      Tool.prototype.end = function(event) {
+        this.using = false;
+      };
 
       Tool.prototype.keyUp = function(event) {};
 

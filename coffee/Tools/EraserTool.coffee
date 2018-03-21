@@ -194,7 +194,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		# begin, update, and end handlers are called by onMouseDown handler (then from == R.me, data == null) and by socket.on "begin" signal (then from == author of the signal, data == Item initial data)
 		begin: (event, from=R.me, data=null) ->
 			if event.event.which == 2 then return 			# if middle mouse button (wheel) pressed: return
+			if R.tracer?.draggingImage then return
 
+			@using = true
 			@updateCircle(event.point)
 
 			@circleIntervalID = setInterval(@createCircle, 20)
@@ -225,7 +227,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 			@circle.position = event.point
 
-			@erase()
+			if not R.tracer?.draggingImage
+				@erase()
 
 			# R.currentPaths[from].group.visible = true
 			# if R.me? and from==R.me then R.socket.emit( "update", R.me, R.eventToObject(event), @name)
@@ -241,6 +244,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			@circle.strokeColor = '#2fa1d6'
 			@circle.strokeScaling = false
 			R.view.selectionLayer.addChild(@circle)
+			@circle.sendToBack()
 			if @radius < 15
 				@radius += 0.5
 			return
@@ -256,7 +260,6 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		# Update path action (usually from a mouse move event, necessary for the polygon mode):
 		# @param [Paper event or REvent] (usually) mouse move event
 		move: (event) ->
-			console.log("move")
 			R.tools.eraser.updateCircle(event.point)
 			return
 
@@ -267,7 +270,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		# @param [String] author (username) of the event
 		end: (event, from=R.me) ->
 			@circle.position = event.point
-			@erase()
+			
+			if not R.tracer?.draggingImage
+				@erase()
 
 			clearInterval(@circleIntervalID)
 			@radius = 0.1
@@ -320,6 +325,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 			# R.rasterizer.enableRasterization(false)
 
+			@using = false
 			return
 
 		# Finish path action (necessary in polygon mode):

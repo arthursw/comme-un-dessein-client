@@ -202,6 +202,7 @@
           data = R.currentPaths[from].data;
           data.id = R.currentPaths[from].id;
         }
+        this.using = true;
       };
 
       PathTool.prototype.circleMode = function() {
@@ -354,6 +355,7 @@
         if (from == null) {
           from = R.me;
         }
+        this.using = false;
         path = R.currentPaths[from];
         if (path == null) {
           return false;
