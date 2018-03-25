@@ -440,7 +440,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 			if not @loaded
 				R.loader.showLoadingBar()
 
-				jqxhr = $.get( location.origin + '/static/timelapse/timelapse.json', ((results)=>
+				jqxhr = $.get( location.origin + '/static/timelapses/' + R.city.name + '-timelapse.json', ((results)=>
 					if results?
 						@handleTimelapseData(results)
 					else
