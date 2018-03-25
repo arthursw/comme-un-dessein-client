@@ -555,7 +555,7 @@
         }
         if (!this.loaded) {
           R.loader.showLoadingBar();
-          jqxhr = $.get(location.origin + '/static/timelapse/timelapse.json', ((function(_this) {
+          jqxhr = $.get(location.origin + '/static/timelapses/' + R.city.name + '-timelapse.json', ((function(_this) {
             return function(results) {
               if (results != null) {
                 _this.handleTimelapseData(results);
