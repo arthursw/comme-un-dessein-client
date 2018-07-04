@@ -189,6 +189,9 @@
         }
         layerName = this.getLayerName();
         layer = document.getElementById(layerName);
+        if (!layer) {
+          return;
+        }
         if (parse) {
           parser = new DOMParser();
           doc = parser.parseFromString(svg, "image/svg+xml");
@@ -278,6 +281,9 @@
             break;
           case 'flagged':
             itemListJ = R.view.flaggedListJ;
+            break;
+          case 'test':
+            itemListJ = R.view.testListJ;
             break;
           default:
             R.alertManager.alert("Error: drawing status is invalid", "error");

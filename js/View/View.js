@@ -335,6 +335,10 @@
         if (!R.administrator) {
           this.rejectedLayer.visible = false;
         } else {
+          this.testLayer = new P.Layer();
+          this.testLayer.name = 'testLayer';
+          this.testLayer.strokeColor = Path.colorMap['test'];
+          this.testLayer.strokeWidth = Path.strokeWidth;
           this.flaggedLayer.strokeColor = Path.colorMap['flagged'];
         }
         this.draftListJ = this.createLayerListItem('Draft', this.draftLayer, true);
@@ -344,6 +348,9 @@
         this.drawnListJ = this.createLayerListItem('Drawn', this.drawnLayer);
         this.rejectedListJ = this.createLayerListItem('Rejected', this.rejectedLayer);
         this.flaggedListJ = this.createLayerListItem('Flagged', this.flaggedLayer);
+        if (R.administrator) {
+          this.testListJ = this.createLayerListItem('Test', this.testLayer);
+        }
         this.rejectedListJ.find(".show-btn").click((function(_this) {
           return function(event) {
             _this.loadRejectedDrawings();

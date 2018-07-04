@@ -22,6 +22,7 @@
         notConfirmed: '#E91E63',
         drawing: '#11a74f',
         drawn: 'black',
+        test: 'purple',
         rejected: '#EB5A46',
         flagged: '#EE2233'
       };

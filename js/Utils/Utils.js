@@ -738,13 +738,22 @@
         }
       }).done(checkError);
     };
-    R.setDrawingStatus = function(drawingPk, status) {
+    R.setDrawingStatus = function(status, drawingPk) {
       var args;
       if (!R.administrator) {
         return false;
       }
+      if (!status) {
+        console.log("setDrawingStatus(status, drawingPk=R.s.pk)");
+        return;
+      }
       if (!drawingPk) {
-        console.log("setDrawingStatus(drawingPk, status)");
+        if (!R.s || !R.s.pk) {
+          console.log("setDrawingStatus(status, drawingPk=R.s.pk)");
+          console.log("please select a drawing first");
+          return;
+        }
+        drawingPk = R.s.pk;
       }
       args = {
         pk: drawingPk,
@@ -834,9 +843,6 @@
       }).done(checkError);
     };
     R.setVoteParameters = function(negativeVoteThreshold, positiveVoteThreshold, voteValidationDelayInSeconds, voteMinDurationInSeconds) {
-      if (negativeVoteThreshold == null) {
-        negativeVoteThreshold = 2;
-      }
       if (positiveVoteThreshold == null) {
         positiveVoteThreshold = 2;
       }
@@ -848,6 +854,10 @@
       }
       if (!R.administrator) {
         return false;
+      }
+      if (!negativeVoteThreshold) {
+        console.log("setVoteParameters(negativeVoteThreshold, positiveVoteThreshold=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5)");
+        return;
       }
       R.setNegativeVoteThreshold(negativeVoteThreshold);
       R.setPositiveVoteThreshold(positiveVoteThreshold);

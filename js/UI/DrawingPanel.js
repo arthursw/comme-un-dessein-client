@@ -1248,7 +1248,7 @@
           R.alertManager.alert('You cannot vote for your own drawing', 'error');
           return;
         }
-        if (this.currentDrawing.status !== 'pending' && this.currentDrawing.status !== 'emailNotConfirmed' && this.currentDrawing.status !== 'notConfirmed') {
+        if (this.currentDrawing.status !== 'pending' && this.currentDrawing.status !== 'emailNotConfirmed' && this.currentDrawing.status !== 'notConfirmed' && this.currentDrawing.status !== 'test') {
           R.alertManager.alert('The drawing is already validated', 'error');
           return;
         }

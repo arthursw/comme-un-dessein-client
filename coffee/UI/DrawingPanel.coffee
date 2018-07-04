@@ -1197,7 +1197,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				R.alertManager.alert 'You cannot vote for your own drawing', 'error'
 				return
 			
-			if @currentDrawing.status != 'pending' and @currentDrawing.status != 'emailNotConfirmed' and @currentDrawing.status != 'notConfirmed'
+			if @currentDrawing.status != 'pending' and @currentDrawing.status != 'emailNotConfirmed' and @currentDrawing.status != 'notConfirmed' and @currentDrawing.status != 'test'
 				R.alertManager.alert 'The drawing is already validated', 'error'
 				return
 			

@@ -174,6 +174,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		setSVG: (svg, parse=true)->
 			layerName = @getLayerName()
 			layer = document.getElementById(layerName)
+			if not layer then return
 			# layer.insertAdjacentHTML('afterbegin', svg)
 			if parse
 				parser = new DOMParser()
@@ -259,6 +260,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				when 'flagged'
 					# R.view.mainLayer.addChild(@group)
 					itemListJ = R.view.flaggedListJ
+				when 'test'
+					# R.view.mainLayer.addChild(@group)
+					itemListJ = R.view.testListJ
 				else
 					R.alertManager.alert "Error: drawing status is invalid", "error"
 

@@ -761,10 +761,17 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingMode', args: mode: mode } ).done(checkError)
 		return
 
-	R.setDrawingStatus = (drawingPk, status)->
+	R.setDrawingStatus = (status, drawingPk)->
 		if not R.administrator then return false
+		if not status
+			console.log("setDrawingStatus(status, drawingPk=R.s.pk)")
+			return
 		if not drawingPk
-			console.log("setDrawingStatus(drawingPk, status)")
+			if not R.s or not R.s.pk
+				console.log("setDrawingStatus(status, drawingPk=R.s.pk)")
+				console.log("please select a drawing first")
+				return
+			drawingPk = R.s.pk
 		args = 
 			pk: drawingPk
 			status: status
@@ -791,8 +798,11 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteMinDuration', args: { hours: hours, minutes: minutes, seconds: seconds } } ).done(checkError)
 		return
 
-	R.setVoteParameters = (negativeVoteThreshold=2, positiveVoteThreshold=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5)->
+	R.setVoteParameters = (negativeVoteThreshold, positiveVoteThreshold=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5)->
 		if not R.administrator then return false
+		if not negativeVoteThreshold
+			console.log("setVoteParameters(negativeVoteThreshold, positiveVoteThreshold=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5)")
+			return
 		R.setNegativeVoteThreshold(negativeVoteThreshold)
 		R.setPositiveVoteThreshold(positiveVoteThreshold)
 		R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds)

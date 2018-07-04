@@ -292,6 +292,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if not R.administrator
 				@rejectedLayer.visible = false
 			else
+				@testLayer = new P.Layer()
+				@testLayer.name  = 'testLayer'
+				@testLayer.strokeColor = Path.colorMap['test']
+				@testLayer.strokeWidth = Path.strokeWidth
 				@flaggedLayer.strokeColor = Path.colorMap['flagged']
 
 			@draftListJ = @createLayerListItem('Draft', @draftLayer, true)
@@ -302,6 +306,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@rejectedListJ = @createLayerListItem('Rejected', @rejectedLayer)
 			@flaggedListJ = @createLayerListItem('Flagged', @flaggedLayer)
 			
+			if R.administrator
+				@testListJ = @createLayerListItem('Test', @testLayer)
+
 			@rejectedListJ.find(".show-btn").click (event)=>
 				@loadRejectedDrawings()
 				event.preventDefault()
