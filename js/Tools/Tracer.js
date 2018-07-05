@@ -16,6 +16,7 @@
         this.tracerGroup = null;
         this.tracerBtn = null;
         this.createTracerButton();
+        this.nSubmits = 0;
         return;
       }
 
@@ -53,9 +54,12 @@
       };
 
       Tracer.prototype.removeRaster = function() {
-        var ref;
+        var ref, ref1;
         if ((ref = this.tracerGroup) != null) {
           ref.remove();
+        }
+        if ((ref1 = this.raster) != null) {
+          ref1.remove();
         }
       };
 
@@ -290,6 +294,7 @@
 
       Tracer.prototype.rasterOnLoad = function(event) {
         var viewBounds;
+        console.log("rasterOnLoad");
         R.loader.hideLoadingBar();
         viewBounds = R.view.getViewBounds();
         this.raster.position = viewBounds.center;
@@ -299,7 +304,6 @@
         if (this.raster.bounds.height > viewBounds.height) {
           this.raster.scaling = this.raster.scaling.multiply(viewBounds.height / (this.raster.bounds.height + this.raster.bounds.height * 0.25));
         }
-        this.tracerGroup.addChild(this.raster);
         this.raster.applyMatrix = false;
         this.drawHandles();
       };
@@ -311,15 +315,25 @@
       };
 
       Tracer.prototype.submitURL = function(data) {
+        this.nSubmits++;
         this.removeRaster();
         this.tracerGroup = new P.Group();
         this.tracerGroup.opacity = 0.5;
         this.raster = new P.Raster(data.imageURL);
+        this.tracerGroup.addChild(this.raster);
         this.raster.position = R.view.getViewBounds().center;
         R.loader.showLoadingBar();
+        R.view.selectionLayer.addChild(this.tracerGroup);
         this.raster.onError = this.rasterOnError;
         this.raster.onLoad = this.rasterOnLoad;
-        R.view.selectionLayer.addChild(this.tracerGroup);
+        if (this.nSubmits === 2) {
+          setTimeout(((function(_this) {
+            return function() {
+              return _this.submitURL(data);
+            };
+          })(this)), 200);
+          return;
+        }
       };
 
       Tracer.prototype.showButton = function() {
