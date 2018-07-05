@@ -24,7 +24,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 			@tracerBtn.hide()
 
 			@tracerBtn.btnJ.click ()=> 
-
+				@removeRaster()
 				modal = Modal.createModal( 
 					id: 'import-image',
 					title: "Import image to trace", 
@@ -38,17 +38,22 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 				return
 			
 		removeRaster: ()=>
+			if @moves?
+				@moves.remove()
+			if @corners?
+				@corners.remove()
+			@raster?.remove()
 			@tracerGroup?.remove()
 			return
 
 		drawMoves: (bounds, size, sign, signRotations, signOffsets)=>
-			if @moves?
-				@moves.remove()
+			
 			@moves = new P.Group()
 			@tracerGroup.addChild(@moves)
 
 			for pos in ['topCenter', 'rightCenter', 'bottomCenter', 'leftCenter']
 				handle = new P.Group()
+				handle.name = 'handle-move-' + pos
 				handleSize = size.clone()
 				if pos == 'topCenter' or pos == 'bottomCenter'
 					handleSize.width = bounds.width
@@ -96,13 +101,12 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 		
 		drawCorners: (bounds, size, sign, signRotations, signOffsets)=>
 
-			if @corners?
-				@corners.remove()
 			@corners = new P.Group()
 			@tracerGroup.addChild(@corners)
 
 			for pos in ['topLeft', 'topRight', 'bottomLeft', 'bottomRight']
 				handle = new P.Group()
+				handle.name = 'handle-corner-' + pos
 				handlePos = bounds[pos].subtract(size.divide(2))
 				handlePath = new P.Path.Rectangle(handlePos, size)
 				handlePath.fillColor = '#42b3f4'
@@ -148,6 +152,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 					arrow.position = bounds[pos]
 					arrow.rotation = signRotations[pos]
 					handle.addChild(arrow)
+					
+					
 
 					handle.on('mousedown', (event)=>
 						@draggingImage = true
@@ -235,7 +241,6 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 			if @raster.bounds.height > viewBounds.height
 				@raster.scaling = @raster.scaling.multiply( viewBounds.height / (@raster.bounds.height + @raster.bounds.height * 0.25) )
 
-			@tracerGroup.addChild(@raster)
 			@raster.applyMatrix = false
 
 			@drawHandles()
@@ -248,20 +253,23 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 			return
 
 		submitURL: (data)=>
+			
 			@removeRaster()
 
 			@tracerGroup = new P.Group()
 			@tracerGroup.opacity = 0.5
 			@raster = new P.Raster(data.imageURL)
+			@tracerGroup.addChild(@raster)
 			@raster.position = R.view.getViewBounds().center
-
 			R.loader.showLoadingBar()
+
+			# @raster.source = data.imageURL
+			R.view.selectionLayer.addChild(@tracerGroup)
 
 			@raster.onError = @rasterOnError
 
 			@raster.onLoad = @rasterOnLoad
 
-			R.view.selectionLayer.addChild(@tracerGroup)
 
 			return
 

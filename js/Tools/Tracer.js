@@ -16,7 +16,6 @@
         this.tracerGroup = null;
         this.tracerBtn = null;
         this.createTracerButton();
-        this.nSubmits = 0;
         return;
       }
 
@@ -34,6 +33,7 @@
         return this.tracerBtn.btnJ.click((function(_this) {
           return function() {
             var modal;
+            _this.removeRaster();
             modal = Modal.createModal({
               id: 'import-image',
               title: "Import image to trace",
@@ -55,25 +55,29 @@
 
       Tracer.prototype.removeRaster = function() {
         var ref, ref1;
-        if ((ref = this.tracerGroup) != null) {
+        if (this.moves != null) {
+          this.moves.remove();
+        }
+        if (this.corners != null) {
+          this.corners.remove();
+        }
+        if ((ref = this.raster) != null) {
           ref.remove();
         }
-        if ((ref1 = this.raster) != null) {
+        if ((ref1 = this.tracerGroup) != null) {
           ref1.remove();
         }
       };
 
       Tracer.prototype.drawMoves = function(bounds, size, sign, signRotations, signOffsets) {
         var arrow, base, handle, handlePath, handlePos, handleSize, j, len, pos, ref;
-        if (this.moves != null) {
-          this.moves.remove();
-        }
         this.moves = new P.Group();
         this.tracerGroup.addChild(this.moves);
         ref = ['topCenter', 'rightCenter', 'bottomCenter', 'leftCenter'];
         for (j = 0, len = ref.length; j < len; j++) {
           pos = ref[j];
           handle = new P.Group();
+          handle.name = 'handle-move-' + pos;
           handleSize = size.clone();
           if (pos === 'topCenter' || pos === 'bottomCenter') {
             handleSize.width = bounds.width;
@@ -139,15 +143,13 @@
 
       Tracer.prototype.drawCorners = function(bounds, size, sign, signRotations, signOffsets) {
         var arrow, base, box, cross1, cross2, handle, handlePath, handlePos, j, len, pos, ref;
-        if (this.corners != null) {
-          this.corners.remove();
-        }
         this.corners = new P.Group();
         this.tracerGroup.addChild(this.corners);
         ref = ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'];
         for (j = 0, len = ref.length; j < len; j++) {
           pos = ref[j];
           handle = new P.Group();
+          handle.name = 'handle-corner-' + pos;
           handlePos = bounds[pos].subtract(size.divide(2));
           handlePath = new P.Path.Rectangle(handlePos, size);
           handlePath.fillColor = '#42b3f4';
@@ -294,7 +296,6 @@
 
       Tracer.prototype.rasterOnLoad = function(event) {
         var viewBounds;
-        console.log("rasterOnLoad");
         R.loader.hideLoadingBar();
         viewBounds = R.view.getViewBounds();
         this.raster.position = viewBounds.center;
@@ -315,7 +316,6 @@
       };
 
       Tracer.prototype.submitURL = function(data) {
-        this.nSubmits++;
         this.removeRaster();
         this.tracerGroup = new P.Group();
         this.tracerGroup.opacity = 0.5;
@@ -326,14 +326,6 @@
         R.view.selectionLayer.addChild(this.tracerGroup);
         this.raster.onError = this.rasterOnError;
         this.raster.onLoad = this.rasterOnLoad;
-        if (this.nSubmits === 2) {
-          setTimeout(((function(_this) {
-            return function() {
-              return _this.submitURL(data);
-            };
-          })(this)), 200);
-          return;
-        }
       };
 
       Tracer.prototype.showButton = function() {
