@@ -71,6 +71,9 @@
 
       Tracer.prototype.drawMoves = function(bounds, size, sign, signRotations, signOffsets) {
         var arrow, base, handle, handlePath, handlePos, handleSize, j, len, pos, ref;
+        if (this.moves != null) {
+          this.moves.remove();
+        }
         this.moves = new P.Group();
         this.tracerGroup.addChild(this.moves);
         ref = ['topCenter', 'rightCenter', 'bottomCenter', 'leftCenter'];
@@ -143,6 +146,9 @@
 
       Tracer.prototype.drawCorners = function(bounds, size, sign, signRotations, signOffsets) {
         var arrow, base, box, cross1, cross2, handle, handlePath, handlePos, j, len, pos, ref;
+        if (this.corners != null) {
+          this.corners.remove();
+        }
         this.corners = new P.Group();
         this.tracerGroup.addChild(this.corners);
         ref = ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'];
