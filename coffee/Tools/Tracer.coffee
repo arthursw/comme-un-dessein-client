@@ -48,6 +48,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 
 		drawMoves: (bounds, size, sign, signRotations, signOffsets)=>
 			
+			if @moves?
+				@moves.remove()
 			@moves = new P.Group()
 			@tracerGroup.addChild(@moves)
 
@@ -101,6 +103,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 		
 		drawCorners: (bounds, size, sign, signRotations, signOffsets)=>
 
+			if @corners?
+				@corners.remove()
 			@corners = new P.Group()
 			@tracerGroup.addChild(@corners)
 
