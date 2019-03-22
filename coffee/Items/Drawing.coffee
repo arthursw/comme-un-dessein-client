@@ -425,6 +425,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			path.updateStrokeColor()
 			path.removeFromListItem()
 
+
 			# if path.drawn
 			# 	path.drawn = false
 			# 	path.draw()

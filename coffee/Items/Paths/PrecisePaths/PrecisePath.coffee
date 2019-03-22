@@ -287,6 +287,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				@path.segments = @controlPath.segments
 				@path.selected = false
 				@path.strokeCap = if @data.strokeCap? then @data.strokeCap else 'round'
+				@path.strokeJoin = if @data.strokeJoin? then @data.strokeJoin else 'round'
 			return
 
 		# default updateDraw function, will be redefined by children PrecisePath
@@ -407,9 +408,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		updateCreate: (point, event)->
 			if not @data.polygonMode
 
-				if R.drawingMode != 'line'
-					if @controlPath.lastSegment.point.getDistance(point, true) < 10
-						return
+				# if R.drawingMode != 'line'
+				# 	if @controlPath.lastSegment.point.getDistance(point, true) < 10
+				# 		return
 
 				# console.log 'updateCreate'
 
@@ -523,7 +524,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				# if @speeds? then @computeSpeed()
 
 				if R.drawingMode not in @constructor.drawingModes
-					@controlPath.simplify(@constructor.orthoGridSize)
+					console.log("simplifying")
+					@controlPath.simplify()
+					# if not event.event.shiftKey
+					# 	@controlPath.simplify()
+					# 	console.log("simplify= none")
+					# else
+					# 	console.log("simplify= " + @constructor.orthoGridSize)
+					# 	@controlPath.simplify(@constructor.orthoGridSize)
 
 				for segment in @controlPath.segments
 					if segment.handleIn.length>200
@@ -535,7 +543,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				# if @speeds? then @updateSpeed()
 			@finish()
 			super()
-
 			return
 
 		# finish path creation:
@@ -648,7 +655,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 			# @group.parent.addChild(@path)
 			if onSvg
+
 				@group.remove()
+				@path?.selected = true
 
 			try 	# catch errors to log them in the code editor console (if user is making a script)
 				@processDrawing(redrawing)
@@ -666,6 +675,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				@setSVG()
 			else
 				R.view.draftLayer.addChild(@path)
+
+			window.pp = @path
+
 			return
 		
 		setSVG: ()->
@@ -1154,6 +1166,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		simplifyControlPath: ()->
 			previousPointsAndPlanet = @getPointsAndPlanet()
 
+			console.log('simplifyControlPath simplify')
 			@controlPath?.simplify()
 			@draw()
 			@update()

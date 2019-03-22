@@ -6,6 +6,8 @@ Compile:
 
 `coffee --watch --compile -o js/ coffee/`
 
+WARNING: Does not compile with coffeescript v2 ; to re-install coffeescript v1 `npm uninstall coffeescript` and `npm install coffeescript@1.12`
+
 Build:
 
 Install requirejs if necessary: `npm install -g requirejs`

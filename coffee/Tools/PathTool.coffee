@@ -378,15 +378,20 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 
 
 				path.save(true)
+
 				path.rasterize()
+				
 				R.rasterizer.rasterize(path)
 
 				R.toolManager.updateButtonsVisibility()
 
+
 				# path.select(false)
 			else
 				path.endCreate(event.point, event)
+			
 			delete R.currentPaths[from]
+			
 			return
 
 		# End path action:
