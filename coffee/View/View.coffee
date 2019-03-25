@@ -424,6 +424,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			R.rasterizer.move()
 			@grid.update() 											# update grid
+			R.loader.loadRasters()
 
 			# update @entireArea (the area which must be kept loaded, in a video game or website)
 			# if the loaded entire areas contain the center of the view, it is the current entire area

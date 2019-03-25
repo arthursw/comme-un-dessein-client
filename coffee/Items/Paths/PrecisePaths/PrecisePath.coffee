@@ -287,6 +287,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				@path.segments = @controlPath.segments
 				@path.selected = false
 				@path.strokeCap = if @data.strokeCap? then @data.strokeCap else 'round'
+				@path.strokeJoin = if @data.strokeJoin? then @data.strokeJoin else 'round'
 			return
 
 		# default updateDraw function, will be redefined by children PrecisePath
@@ -407,9 +408,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		updateCreate: (point, event)->
 			if not @data.polygonMode
 
-				if R.drawingMode != 'line'
-					if @controlPath.lastSegment.point.getDistance(point, true) < 10
-						return
+				# if R.drawingMode != 'line'
+				# 	if @controlPath.lastSegment.point.getDistance(point, true) < 10
+				# 		return
 
 				# console.log 'updateCreate'
 
@@ -523,7 +524,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				# if @speeds? then @computeSpeed()
 
 				if R.drawingMode not in @constructor.drawingModes
-					@controlPath.simplify(@constructor.orthoGridSize)
+					@controlPath.simplify()
 
 				for segment in @controlPath.segments
 					if segment.handleIn.length>200

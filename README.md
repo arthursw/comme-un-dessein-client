@@ -1,10 +1,12 @@
-# CommeUnDessein-client-code
+# Wetu-client-code
 
-The client code of CommeUnDessein - a collaborative application experiment
+The client code of Wetu - a collaborative application experiment
 
 Compile: 
 
 `coffee --watch --compile -o js/ coffee/`
+
+WARNING: Does not compile with coffeescript v2 ; to re-install coffeescript v1 `npm uninstall coffeescript` and `npm install coffeescript@1.12`
 
 Build:
 

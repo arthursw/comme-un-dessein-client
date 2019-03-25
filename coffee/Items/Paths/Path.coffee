@@ -366,6 +366,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 				path.dashArray = @data.dashArray
 			if @data.strokeCap?
 				@drawing.strokeCap = @data.strokeCap
+			if @data.strokeJoin?
+				@drawing.strokeJoin = @data.strokeJoin
 			if @data.shadowOffsetY?
 				path.shadowOffset = new P.Point(@data.shadowOffsetX, @data.shadowOffsetY)
 			if @data.shadowBlur?
@@ -401,6 +403,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			@controlPath.strokeColor = R.selectionBlue
 			@controlPath.strokeColor.alpha = 0.25
 			@controlPath.strokeCap = 'round'
+			@controlPath.strokeJoin = 'round'
 			@controlPath.visible = false
 			return
 
@@ -448,6 +451,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 				@drawing.dashArray = @data.dashArray
 			if @data.strokeCap?
 				@drawing.strokeCap = @data.strokeCap
+			if @data.strokeJoin?
+				@drawing.strokeJoin = @data.strokeJoin
 			@drawing.fillColor = @data.fillColor
 			@drawing.insertBelow(@controlPath)
 			@drawing.controlPath = @controlPath

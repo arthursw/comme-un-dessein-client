@@ -20,11 +20,11 @@ repository = owner: 'arthursw', commit: null
 
 if parameters? and parameters['repository-owner']? and parameters['repository-commit']?
 	prefix = if parameters['repository-use-cdn']? then '//cdn.' else '//'
-	baseUrl = prefix + 'rawgit.com/' + parameters['repository-owner'] + '/comme-un-dessein-client/' + parameters['repository-commit'] + '/js'
+	baseUrl = prefix + 'rawgit.com/' + parameters['repository-owner'] + '/wetu-client/' + parameters['repository-commit'] + '/js'
 	repository = owner: parameters['repository-owner'], commit: parameters['repository-commit']
 	libs = location.origin + '/static/libs/'
 else
-	baseUrl = '../static/comme-un-dessein-client/js'
+	baseUrl = '../static/wetu-client/js'
 
 # Place third party dependencies in the lib folder
 #

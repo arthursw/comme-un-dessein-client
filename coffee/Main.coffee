@@ -391,7 +391,10 @@ define [
 			R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true)
 
 		if R.city.name != 'world'
-			require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> R.loader.loadSVG() )
+			require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> 
+				R.loader.loadRasters()
+				R.loader.loadSVG()
+				return)
 
 		# Improve about links
 

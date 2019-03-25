@@ -76,7 +76,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			if @status == 'draft'
 				@constructor.draft = @
 				@addPathsFromPathList(pathList)
-			else if @pk?
+
+			else if @pk? and R.SVGMode
 				jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg', ((result)=>
 					# console.log( "success" )
 					# console.log( result )
@@ -103,6 +104,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				# .always(()=>
 				# 	console.log("finished" )
 				# )
+
 			# if svg?
 				# @setSVG(svg)
 			

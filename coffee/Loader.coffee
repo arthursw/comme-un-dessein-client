@@ -281,6 +281,36 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			@loadVotes()
 			return
 
+		loadRasters: ()->
+			
+			@rasterGroup ?= new P.Group()
+
+			scaleRatio = 4
+
+			ln4 = Math.log(4)
+
+			scaleNumber = Math.floor(Math.log(1 / P.view.zoom) / ln4)
+
+			nPixelsPerTile = Math.pow(4, scaleNumber) * 1000
+
+			bounds = P.view.bounds
+			quantizedBounds =
+				t: Math.floor(bounds.top / nPixelsPerTile)
+				l: Math.floor(bounds.left / nPixelsPerTile)
+				b: Math.floor(bounds.bottom / nPixelsPerTile)
+				r: Math.floor(bounds.right / nPixelsPerTile)
+
+			@rasterGroup.removeChildren()
+
+			for n in [quantizedBounds.t .. quantizedBounds.b]
+				for m in [quantizedBounds.l .. quantizedBounds.r]
+					raster = new P.Raster(location.origin + '/static/rasters/' + scaleNumber + '/' + n + ','  + m + '.jpg')
+					raster.position.x = (n + 0.5) * nPixelsPerTile
+					raster.position.y = (m + 0.5) * nPixelsPerTile
+					@rasterGroup.addChild(raster)
+
+			return
+
 		loadVotes: ()=>
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadVotes', args: { city: R.city } } ).done(@loadVotesCallback)
 			return
