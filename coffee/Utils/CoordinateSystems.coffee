@@ -104,7 +104,8 @@ define ['paper', 'R'], (P, R) ->
 	# @return [{ points:Array<Array<2 Numbers>>, planet: Object, tl: P.Point, br: P.Point }] the resulting object
 	CS.boxFromRectangle = (rectangle)->
 		# remove margin to ignore intersections of paths which are close to the edges
-
+		if not rectangle? then return null
+		
 		planet = CS.pointToObj( CS.projectToPlanet(rectangle.topLeft) )
 
 		tlOnPlanet = CS.projectToPosOnPlanet(rectangle.topLeft, planet)

@@ -73,6 +73,9 @@
     };
     CS.boxFromRectangle = function(rectangle) {
       var brOnPlanet, planet, points, tlOnPlanet;
+      if (rectangle == null) {
+        return null;
+      }
       planet = CS.pointToObj(CS.projectToPlanet(rectangle.topLeft));
       tlOnPlanet = CS.projectToPosOnPlanet(rectangle.topLeft, planet);
       brOnPlanet = CS.projectToPosOnPlanet(rectangle.bottomRight, planet);

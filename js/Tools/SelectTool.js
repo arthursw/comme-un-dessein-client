@@ -49,7 +49,7 @@
       }
 
       SelectTool.prototype.deselectAll = function(updateOptions) {
-        var i, item, len, ref, ref1;
+        var drawing, i, item, j, len, len1, ref, ref1, ref2;
         if (updateOptions == null) {
           updateOptions = true;
         }
@@ -63,6 +63,13 @@
             ref1.remove();
           }
           this.selectionRectangle = null;
+        }
+        if (R.selectedTool === R.tools.select) {
+          ref2 = R.drawings;
+          for (j = 0, len1 = ref2.length; j < len1; j++) {
+            drawing = ref2[j];
+            drawing.showVoteFlag();
+          }
         }
         P.project.activeLayer.selected = false;
       };
@@ -95,7 +102,7 @@
       };
 
       SelectTool.prototype.select = function(deselectItems, updateParameters, forceSelect, buttonClicked) {
-        var ref;
+        var drawing, i, len, ref, ref1;
         if (deselectItems == null) {
           deselectItems = false;
         }
@@ -115,11 +122,24 @@
           R.alertManager.alert('Click on a drawing to vote for it', 'info');
         }
         R.canvasJ.addClass('select');
+        console.log('select select tool');
+        ref1 = R.drawings;
+        for (i = 0, len = ref1.length; i < len; i++) {
+          drawing = ref1[i];
+          drawing.showVoteFlag();
+        }
         SelectTool.__super__.select.call(this, false, updateParameters);
       };
 
       SelectTool.prototype.deselect = function() {
+        var drawing, i, len, ref;
         R.canvasJ.removeClass('select');
+        ref = R.drawings;
+        for (i = 0, len = ref.length; i < len; i++) {
+          drawing = ref[i];
+          drawing.hideVoteFlag();
+        }
+        console.log('deselect select tool');
         SelectTool.__super__.deselect.apply(this, arguments);
       };
 

@@ -43,8 +43,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 				# R.commandManager.add(new Command.Deselect(undefined, updateOptions), true)
 				for item in R.selectedItems.slice()
 					item.deselect(updateOptions)
+
 				@selectionRectangle?.remove()
 				@selectionRectangle = null
+
+			if R.selectedTool == R.tools.select
+				for drawing in R.drawings
+					drawing.showVoteFlag()
+
 			P.project.activeLayer.selected = false
 			return
 
@@ -76,12 +82,20 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 
 			R.canvasJ.addClass('select')
 
+			console.log('select select tool')
+			for drawing in R.drawings
+				drawing.showVoteFlag()
+
 			super(false, updateParameters)
 			return
 
 		deselect: ()->
 			R.canvasJ.removeClass('select')
 			# R.canvasJ.css({cursor: 'auto'})
+
+			for drawing in R.drawings
+				drawing.hideVoteFlag()
+			console.log('deselect select tool')
 			super
 			return
 

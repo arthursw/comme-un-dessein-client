@@ -131,8 +131,39 @@
             };
           })(this));
         }
+        if (this.status === 'pending' && this.owner !== R.me) {
+          this.drawVoteBounds();
+        }
         return;
       }
+
+      Drawing.prototype.drawVoteBounds = function() {
+        var bounds, voteGroup;
+        bounds = this.getBounds();
+        voteGroup = new P.Group();
+        this.voteFlag = new P.Raster('/static/images/icons/vote-flag-xl2.png');
+        this.voteFlag.position = bounds.center.subtract(-19, 49);
+        if (R.voteFlags == null) {
+          R.voteFlags = [];
+        }
+        R.voteFlags.push(this.voteFlag);
+        voteGroup.addChild(this.voteFlag);
+        this.group.addChild(voteGroup);
+      };
+
+      Drawing.prototype.hideVoteFlag = function() {
+        var ref;
+        if ((ref = this.voteFlag) != null) {
+          ref.visible = false;
+        }
+      };
+
+      Drawing.prototype.showVoteFlag = function() {
+        var ref;
+        if ((ref = this.voteFlag) != null) {
+          ref.visible = true;
+        }
+      };
 
       Drawing.prototype.setPK = function(pk) {
         Drawing.__super__.setPK.call(this, pk);
@@ -148,13 +179,18 @@
         ref = this.paths;
         for (i = 0, len = ref.length; i < len; i++) {
           path = ref[i];
-          pointLists.push(path.getPoints());
+          pointLists.push({
+            points: path.getPoints(),
+            data: {
+              strokeColor: path.data.strokeColor
+            }
+          });
         }
         return pointLists;
       };
 
       Drawing.prototype.addPathsFromPathList = function(pathList, parseJSON, highlight) {
-        var data, i, len, p, path, points;
+        var data, i, len, p, pJSON, path, points;
         if (parseJSON == null) {
           parseJSON = true;
         }
@@ -163,14 +199,16 @@
         }
         for (i = 0, len = pathList.length; i < len; i++) {
           p = pathList[i];
-          points = parseJSON ? JSON.parse(p) : p;
+          pJSON = parseJSON ? JSON.parse(p) : p;
+          points = pJSON.points;
           if (points == null) {
             continue;
           }
           data = {
             points: points,
             planet: new P.Point(0, 0),
-            strokeWidth: Item.Path.strokeWidth
+            strokeWidth: Item.Path.strokeWidth,
+            strokeColor: pJSON.data.strokeColor
           };
           path = new Item.Path.PrecisePath(Date.now(), data, null, null, null, null, R.me, this.id);
           path.pk = path.id;
@@ -188,7 +226,7 @@
           parse = true;
         }
         layerName = this.getLayerName();
-        layer = document.getElementById(layerName);
+        layer = document.createElement('div');
         if (!layer) {
           return;
         }
@@ -265,6 +303,7 @@
           case 'pending':
           case 'emailNotConfirmed':
           case 'notConfirmed':
+            R.view.pendingLayer.addChild(this.group);
             itemListJ = R.view.pendingListJ;
             break;
           case 'drawing':
@@ -308,24 +347,12 @@
       };
 
       Drawing.prototype.addToListItem = function(itemListJ1) {
-        var divJ, nItemsJ, ref, ref1, showBtnJ, title;
+        var divJ, nItemsJ, ref, ref1, title;
         this.itemListJ = itemListJ1;
         title = '' + this.title + ' <span data-i18n="by">' + i18next.t('by') + '</span> ' + this.owner;
         this.liJ = $("<li>");
         this.liJ.html(title);
         divJ = $("<div class='cd-row cd-end badge-container'>");
-        showBtnJ = $('<button type="button" class="btn btn-default show-btn" aria-label="Show">');
-        this.eyeIconJ = $('<span class="glyphicon eye glyphicon-eye-open" aria-hidden="true"></span>');
-        showBtnJ.append(this.eyeIconJ);
-        showBtnJ.click((function(_this) {
-          return function(event) {
-            _this.toggleVisibility();
-            event.preventDefault();
-            event.stopPropagation();
-            return -1;
-          };
-        })(this));
-        divJ.append(showBtnJ);
         this.liJ.append(divJ);
         this.liJ.attr("data-id", this.id);
         this.liJ.click(this.onLiClick);
@@ -382,7 +409,7 @@
             return this.rectangle;
           }
         }
-        if (this.group.children.length === this.paths.length && this.group.bounds.area > 0) {
+        if (this.group.children.length >= this.paths.length && this.group.bounds.area > 0) {
           this.rectangle = this.group.bounds.expand(2 * R.Path.strokeWidth);
           if ((this.rectangle != null) && this.rectangle.area > 0) {
             return this.rectangle;
@@ -568,12 +595,18 @@
           ref = this.pathsToSave;
           for (i = 0, len = ref.length; i < len; i++) {
             path = ref[i];
-            pointLists.push(path.getPoints());
+            pointLists.push({
+              points: path.getPoints(),
+              data: {
+                strokeColor: path.data.strokeColor
+              }
+            });
           }
           args = {
             clientId: this.id,
             pk: this.pk,
-            pointLists: pointLists
+            pointLists: pointLists,
+            bounds: this.getBounds()
           };
           this.pathsToSave = [];
           $.ajax({
@@ -608,6 +641,15 @@
         return this.rectangle;
       };
 
+      Drawing.prototype.getBoundsWithFlag = function() {
+        this.computeRectangle();
+        if (this.voteFlag != null) {
+          return this.rectangle.unite(this.voteFlag.bounds);
+        } else {
+          return this.rectangle;
+        }
+      };
+
       Drawing.prototype.getSVG = function(asString) {
         var i, len, path, ref;
         if (asString == null) {
@@ -632,7 +674,7 @@
         bounds = this.getBounds();
         svg = this.getSVG();
         this.svgString = svg;
-        imageURL = R.view.getThumbnail(this, 1200, 630, true, true);
+        imageURL = R.view.getThumbnail(this, bounds.width, bounds.height, true, false);
         args = {
           pk: this.pk,
           clientId: this.id,
@@ -641,7 +683,7 @@
           description: this.description,
           svg: svg,
           png: imageURL,
-          bounds: JSON.stringify(bounds)
+          bounds: bounds
         };
         $.ajax({
           method: "POST",
@@ -734,7 +776,8 @@
         args = {
           clientId: this.id,
           pk: this.pk,
-          pointLists: this.getPointLists()
+          pointLists: this.getPointLists(),
+          bounds: this.getBounds()
         };
         $.ajax({
           method: "POST",
@@ -940,7 +983,8 @@
       Drawing.prototype.updateDrawingPanel = function() {
         var args;
         args = {
-          pk: this.pk
+          pk: this.pk,
+          loadSVG: true
         };
         $.ajax({
           method: "POST",
@@ -980,7 +1024,7 @@
       };
 
       Drawing.prototype.select = function(updateOptions, showPanelAndLoad, force) {
-        var i, item, len, ref;
+        var drawing, i, item, j, len, len1, ref, ref1, ref2;
         if (updateOptions == null) {
           updateOptions = true;
         }
@@ -1004,6 +1048,13 @@
         if (showPanelAndLoad) {
           R.drawingPanel.selectionChanged();
         }
+        ref1 = R.drawings;
+        for (j = 0, len1 = ref1.length; j < len1; j++) {
+          drawing = ref1[j];
+          if (((ref2 = drawing.getBoundsWithFlag()) != null ? ref2.intersects(this.rectangle) : void 0) && drawing.isVisible()) {
+            drawing.hideVoteFlag();
+          }
+        }
         return true;
       };
 
@@ -1015,6 +1066,7 @@
           return false;
         }
         R.drawingPanel.deselectDrawing(this);
+        this.showVoteFlag();
         return true;
       };
 
@@ -1031,6 +1083,7 @@
         this.removeFromListItem();
         R.rasterizer.rasterizeRectangle(this.rectangle);
         Drawing.__super__.remove.apply(this, arguments);
+        R.drawings.splice(R.drawings.indexOf(this), 1);
       };
 
       Drawing.prototype.getRaster = function() {

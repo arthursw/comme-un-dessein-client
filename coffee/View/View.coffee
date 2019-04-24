@@ -150,7 +150,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			@thumbnailProject.view.setCenter(rectangle.center)
 			@thumbnailProject.activeLayer.name = 'mainLayer'
-			@thumbnailProject.activeLayer.strokeColor = if blackStroke then 'black' else R.Path.colorMap[drawing.status]
+			# @thumbnailProject.activeLayer.strokeColor = if blackStroke then 'black' else R.Path.colorMap[drawing.status]
 			if blackStroke
 				@thumbnailProject.activeLayer.strokeWidth = 3
 			else
@@ -309,14 +309,36 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if R.administrator
 				@testListJ = @createLayerListItem('Test', @testLayer)
 
-			@rejectedListJ.find(".show-btn").click (event)=>
-				@loadRejectedDrawings()
-				event.preventDefault()
-				event.stopPropagation()
-				return -1
+			@createLoadRejectedDrawingsButton()
+
+			# @rejectedListJ.find(".show-btn").click (event)=>
+			# 	@loadRejectedDrawings()
+			# 	event.preventDefault()
+			# 	event.stopPropagation()
+			# 	return -1
 
 			if not R.administrator
 				@flaggedListJ.hide()
+
+			return
+
+		createLoadRejectedDrawingsButton: ()->
+			loadRejectedDrawingsText = 'Display rejected drawings'
+			loadRejectedDrawingButtonJ = $('<button class="">').css( color: 'black', height: 25 ).text(loadRejectedDrawingsText)
+			loadRejectedDrawingButtonJ.attr('data-i18n', loadRejectedDrawingsText)
+			loadRejectedDrawingButtonJ.click (event)=>
+				R.loadRejectedDrawings = !R.loadRejectedDrawings
+				if R.loadRejectedDrawings
+					text = 'Hide rejected drawings'
+					loadRejectedDrawingButtonJ.text(i18next.t(text)).attr('data-i18n', text)
+					@loadRejectedDrawings()
+				else
+					loadRejectedDrawingButtonJ.text(i18next.t(loadRejectedDrawingsText)).attr('data-i18n', loadRejectedDrawingsText)
+					R.loader.clearRasters()
+					R.loader.loadRasters()
+				return
+			loadRejectedDrawingLiJ = $('<li>').css( 'justify-content': 'center' ).append(loadRejectedDrawingButtonJ)
+			@rejectedListJ.find('ul.rPath-list').append(loadRejectedDrawingLiJ)
 
 			return
 
@@ -572,7 +594,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if parameters['zoom']?
 				zoom = parseFloat(parameters['zoom'])
 				if zoom? and Number.isFinite(zoom)
-					P.view.zoom = Math.max(0.125, Math.min(4, zoom))
+					P.view.zoom = Math.max(0.0078125, Math.min(4, zoom))
 					R.tracer?.update()
 
 			mustReload = false
@@ -663,7 +685,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				
 				drawingsToSelect = []
 				for drawing in R.drawings
-					if drawing.getBounds()?.intersects(rectangle) and drawing.isVisible()
+					if drawing.getBoundsWithFlag()?.intersects(rectangle) and drawing.isVisible()
 						drawingsToSelect.push(drawing)
 
 				R.tools.select.deselectAll()
@@ -904,7 +926,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				R.selectedTool.updateNative(event)
 				return
 
-			if R.selectedTool?.name == 'Select'
+			if R.selectedTool?.name == 'Select' or R.selectedTool == R.tools.choose
 				paperEvent = Utils.Event.jEventToPaperEvent(event, @previousMousePosition, @initialMousePosition, 'mousemove')
 				R.selectedTool?.move?(paperEvent)
 

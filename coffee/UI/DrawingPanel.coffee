@@ -604,11 +604,29 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			thumbnailJ = $('<div>')
 			thumbnailJ.addClass('thumbnail drawing-thumbnail')
-			svg = R.view.getThumbnail(item)
-			svg.setAttribute('viewBox', '0 0 300 300')
-			svg.setAttribute('width', '250')
-			svg.setAttribute('height', '250')
-			thumbnailJ.append(svg)
+
+			setThumbnail = (item, thumbnailJ)=>
+				svg = R.view.getThumbnail(item)
+				svg.setAttribute('viewBox', '0 0 300 300')
+				svg.setAttribute('width', '250')
+				svg.setAttribute('height', '250')
+				thumbnailJ.append(svg)
+				return
+
+			if item.svg? or item.paths? and item.paths.length > 0
+				setThumbnail(item, thumbnailJ)
+			else
+
+				args =
+					pk: item.pk
+					svgOnly: true
+
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+					
+					drawingData = JSON.parse(result.drawing)
+					item.setSVG(drawingData.svg)
+					setThumbnail(item, thumbnailJ)
+				)
 			
 			deselectBtnJ = $('<button>')
 			deselectBtnJ.addClass('btn btn-default icon-only transparent')
@@ -920,6 +938,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			@currentDrawing.votes = drawingData.votes
 			@currentDrawing.status = latestDrawing.status
+
+			if latestDrawing.svg?
+				@currentDrawing.setSVG(latestDrawing.svg)
 
 			@submitBtnJ.hide()
 			@modifyBtnJ.hide()

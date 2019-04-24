@@ -34,6 +34,7 @@
       }
       modal.show();
     };
+    R.loadActiveDrawings = true;
     $(document).ready(function() {
       var canvasJ, cityFinished, cityMessage, cityName, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
       canvasJ = $('#canvas');

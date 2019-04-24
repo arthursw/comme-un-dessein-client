@@ -2,9 +2,9 @@
 (function() {
   var dependencies;
 
-  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool', 'Tools/Tracer', 'UI/Modal', 'i18next'];
+  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ItemTool', 'Tools/Tracer', 'Tools/ChooseTool', 'UI/Modal', 'i18next'];
 
-  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Tracer, Modal, i18next) {
+  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Tracer, ChooseTool, Modal, i18next) {
     var ToolManager;
     ToolManager = (function() {
       function ToolManager() {
@@ -24,9 +24,10 @@
         }
         R.tools.move = new R.Tools.Move();
         R.tools.select = new R.Tools.Select();
-        R.tracer = new Tracer();
+        this.createColorButtons();
         R.tools.eraser = new R.Tools.Eraser();
         R.tools.eraser.btn.hide();
+        R.tracer = new Tracer();
         defaultFavoriteTools = [];
         while (R.favoriteTools.length < 8 && defaultFavoriteTools.length > 0) {
           Utils.Array.pushIfAbsent(R.favoriteTools, defaultFavoriteTools.pop().label);
@@ -45,6 +46,7 @@
         }
         this.createZoombuttons();
         this.createUndoRedoButtons();
+        R.tools.choose = new R.Tools.Choose();
         this.createInfoButton();
         return;
       }
@@ -54,7 +56,7 @@
         if (snap == null) {
           snap = true;
         }
-        if (P.view.zoom * value < 0.125 || P.view.zoom * value > 4) {
+        if (P.view.zoom * value < 0.0078125 || P.view.zoom * value > 4) {
           return;
         }
         bounds = R.view.getViewBounds(true);
@@ -67,7 +69,7 @@
         }
         if (snap) {
           newZoom = 1;
-          zoomValues = [0.125, 0.25, 0.5, 1, 2, 4];
+          zoomValues = [0.0078125, 0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4];
           if (value < 1) {
             for (i = 0, len = zoomValues.length; i < len; i++) {
               v = zoomValues[i];
@@ -157,6 +159,66 @@
         });
       };
 
+      ToolManager.prototype.createColorButtons = function() {
+        var black, blue, brown, closeColorMenu, colors, green, red, yellow;
+        red = '#F44336';
+        blue = '#448AFF';
+        green = '#8BC34A';
+        yellow = '#FFC107';
+        brown = '#795548';
+        black = '#000000';
+        colors = [red, blue, green, yellow, brown, black];
+        R.selectedColor = green;
+        this.colorBtn = new Button({
+          name: 'Colors',
+          iconURL: 'glyphicon-tint',
+          favorite: true,
+          category: null,
+          disableHover: true,
+          popover: true,
+          order: null
+        });
+        this.colorBtn.hide();
+        closeColorMenu = function() {
+          $('#color-picker').remove();
+        };
+        this.colorBtn.cloneJ.find('.glyphicon').css({
+          color: R.selectedColor
+        });
+        this.colorBtn.btnJ.click((function(_this) {
+          return function() {
+            var color, i, len, liJ, position, ulJ;
+            position = _this.colorBtn.cloneJ.offset();
+            ulJ = $('<ul>').attr('id', 'color-picker').css({
+              position: 'absolute',
+              top: position.top + 62,
+              left: position.left
+            });
+            for (i = 0, len = colors.length; i < len; i++) {
+              color = colors[i];
+              liJ = $('<li>').attr('data-color', color).css({
+                background: color,
+                width: 62,
+                height: 62,
+                cursor: 'pointer'
+              }).mousedown(function(event) {
+                color = $(event.target).attr('data-color');
+                R.selectedColor = color;
+                if (R.selectedTool !== R.tools["Precise path"]) {
+                  R.tools["Precise path"].select();
+                }
+                _this.colorBtn.cloneJ.find('.glyphicon').css({
+                  color: R.selectedColor
+                });
+              });
+              ulJ.append(liJ);
+            }
+            _this.colorBtn.cloneJ.parent().append(ulJ);
+          };
+        })(this));
+        $(window).mouseup(closeColorMenu);
+      };
+
       ToolManager.prototype.createInfoButton = function() {
         this.infoBtn = new Button({
           name: 'Help',
@@ -238,6 +300,7 @@
           draft = null;
         }
         if (R.selectedTool === R.tools['Precise path'] || R.selectedTool === R.tools.eraser) {
+          this.colorBtn.show();
           this.redoBtn.show();
           this.undoBtn.show();
           this.submitButton.show();
@@ -247,6 +310,7 @@
           }
           R.tools.eraser.btn.show();
         } else {
+          this.colorBtn.hide();
           this.redoBtn.hide();
           this.undoBtn.hide();
           this.submitButton.hide();

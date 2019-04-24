@@ -675,7 +675,7 @@
       /* set drawing */
 
       DrawingPanel.prototype.createSelectionLi = function(selectedDrawingsJ, listJ, item) {
-        var contentJ, deselectBtnJ, deselectIconJ, liJ, svg, thumbnailJ, titleJ;
+        var args, contentJ, deselectBtnJ, deselectIconJ, liJ, setThumbnail, thumbnailJ, titleJ;
         liJ = $('<li>');
         liJ.addClass('drawing-selection cd-button');
         liJ.addClass('cd-row');
@@ -686,11 +686,41 @@
         titleJ.html(item.title);
         thumbnailJ = $('<div>');
         thumbnailJ.addClass('thumbnail drawing-thumbnail');
-        svg = R.view.getThumbnail(item);
-        svg.setAttribute('viewBox', '0 0 300 300');
-        svg.setAttribute('width', '250');
-        svg.setAttribute('height', '250');
-        thumbnailJ.append(svg);
+        setThumbnail = (function(_this) {
+          return function(item, thumbnailJ) {
+            var svg;
+            svg = R.view.getThumbnail(item);
+            svg.setAttribute('viewBox', '0 0 300 300');
+            svg.setAttribute('width', '250');
+            svg.setAttribute('height', '250');
+            thumbnailJ.append(svg);
+          };
+        })(this);
+        if ((item.svg != null) || (item.paths != null) && item.paths.length > 0) {
+          setThumbnail(item, thumbnailJ);
+        } else {
+          args = {
+            pk: item.pk,
+            svgOnly: true
+          };
+          $.ajax({
+            method: "POST",
+            url: "ajaxCall/",
+            data: {
+              data: JSON.stringify({
+                "function": 'loadDrawing',
+                args: args
+              })
+            }
+          }).done((function(_this) {
+            return function(result) {
+              var drawingData;
+              drawingData = JSON.parse(result.drawing);
+              item.setSVG(drawingData.svg);
+              return setThumbnail(item, thumbnailJ);
+            };
+          })(this));
+        }
         deselectBtnJ = $('<button>');
         deselectBtnJ.addClass('btn btn-default icon-only transparent');
         deselectIconJ = $('<span>').addClass('glyphicon glyphicon-remove');
@@ -912,6 +942,9 @@
         latestDrawing = JSON.parse(drawingData.drawing);
         this.currentDrawing.votes = drawingData.votes;
         this.currentDrawing.status = latestDrawing.status;
+        if (latestDrawing.svg != null) {
+          this.currentDrawing.setSVG(latestDrawing.svg);
+        }
         this.submitBtnJ.hide();
         this.modifyBtnJ.hide();
         this.cancelBtnJ.hide();

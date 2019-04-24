@@ -54,6 +54,8 @@ define [
 		modal.show()
 		return
 
+	R.loadActiveDrawings = true
+
 	# loadCity = (cityName)->
 	# 	R.city.name = cityName
 

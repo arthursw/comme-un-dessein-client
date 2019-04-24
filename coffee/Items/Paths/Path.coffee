@@ -152,6 +152,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			if not @drawingId?
 				@addToListItem()
 			else
+
 				if R.items[@drawingId]?
 					drawing = R.items[@drawingId]
 					drawing.addChild(@)
@@ -159,7 +160,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			@selectionHighlight = null
 
 			@data.strokeWidth = @constructor.strokeWidth
-			@data.strokeColor = @constructor.strokeColor
+			# @data.strokeColor = @constructor.strokeColor
 			@data.fillColor = null
 
 			if points?
@@ -408,14 +409,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			return
 
 		getStrokeColor: ()->
-			d = @getDrawing()
-			color = new P.Color(if d? then @constructor.colorMap[d.status] else @constructor.colorMap.draft)
+			# d = @getDrawing()
+			# color = new P.Color(if d? then @constructor.colorMap[d.status] else @constructor.colorMap.draft)
 			# if @owner != R.me
 				# color.brightness *= 0.8
-			@data.strokeColor = color
+			# @data.strokeColor = color
 			# @data.dashArray = if @owner != R.me then [1, @constructor.strokeWidth+1] else []
 			# @data.strokeCap = if @owner != R.me then 'square' else 'round'
-			return color
+			return @data.strokeColor
 
 		updateStrokeColor: ()->
 			@drawing?.strokeColor = @getStrokeColor()
@@ -439,7 +440,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 
 			@controlPath.strokeWidth = 10
 
-			@data.strokeColor = @getStrokeColor()
+			# @data.strokeColor = @getStrokeColor()
+			@data.strokeColor ?= R.selectedColor
 
 			# create drawing group and initialize it with @data
 			@drawing?.remove()
@@ -577,6 +579,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 						clientId: draft.id
 						pk: draft.pk
 						points: @getPoints()
+						data: { strokeColor: @data.strokeColor }
+						bounds: draft.getBounds()
 					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'addPathToDrawing', args: args } ).done(@saveCallback)
 			else
 				draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
@@ -590,7 +594,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			# args =
 			# 	clientId: @id
 			# 	city: R.city
-			# 	box: Utils.CS.boxFromRectangle( @getDrawingBounds() )
+			# 	bounds: @getDrawingBounds()
 			# 	points: @pathOnPlanet()
 			# 	data: @getStringifiedData()
 			# 	date: @date
@@ -628,7 +632,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 						pk: @pk
 						points: @pathOnPlanet()
 						data: @getStringifiedData()
-						box: Utils.CS.boxFromRectangle( @getDrawingBounds() )
+						bounds: @getDrawingBounds()
 			return args
 
 		# update the RPath in the database

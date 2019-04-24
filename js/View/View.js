@@ -176,7 +176,6 @@
         }
         this.thumbnailProject.view.setCenter(rectangle.center);
         this.thumbnailProject.activeLayer.name = 'mainLayer';
-        this.thumbnailProject.activeLayer.strokeColor = blackStroke ? 'black' : R.Path.colorMap[drawing.status];
         if (blackStroke) {
           this.thumbnailProject.activeLayer.strokeWidth = 3;
         } else {
@@ -351,17 +350,39 @@
         if (R.administrator) {
           this.testListJ = this.createLayerListItem('Test', this.testLayer);
         }
-        this.rejectedListJ.find(".show-btn").click((function(_this) {
-          return function(event) {
-            _this.loadRejectedDrawings();
-            event.preventDefault();
-            event.stopPropagation();
-            return -1;
-          };
-        })(this));
+        this.createLoadRejectedDrawingsButton();
         if (!R.administrator) {
           this.flaggedListJ.hide();
         }
+      };
+
+      View.prototype.createLoadRejectedDrawingsButton = function() {
+        var loadRejectedDrawingButtonJ, loadRejectedDrawingLiJ, loadRejectedDrawingsText;
+        loadRejectedDrawingsText = 'Display rejected drawings';
+        loadRejectedDrawingButtonJ = $('<button class="">').css({
+          color: 'black',
+          height: 25
+        }).text(loadRejectedDrawingsText);
+        loadRejectedDrawingButtonJ.attr('data-i18n', loadRejectedDrawingsText);
+        loadRejectedDrawingButtonJ.click((function(_this) {
+          return function(event) {
+            var text;
+            R.loadRejectedDrawings = !R.loadRejectedDrawings;
+            if (R.loadRejectedDrawings) {
+              text = 'Hide rejected drawings';
+              loadRejectedDrawingButtonJ.text(i18next.t(text)).attr('data-i18n', text);
+              _this.loadRejectedDrawings();
+            } else {
+              loadRejectedDrawingButtonJ.text(i18next.t(loadRejectedDrawingsText)).attr('data-i18n', loadRejectedDrawingsText);
+              R.loader.clearRasters();
+              R.loader.loadRasters();
+            }
+          };
+        })(this));
+        loadRejectedDrawingLiJ = $('<li>').css({
+          'justify-content': 'center'
+        }).append(loadRejectedDrawingButtonJ);
+        this.rejectedListJ.find('ul.rPath-list').append(loadRejectedDrawingLiJ);
       };
 
       View.prototype.loadRejectedDrawings = function() {
@@ -582,7 +603,7 @@
         if (parameters['zoom'] != null) {
           zoom = parseFloat(parameters['zoom']);
           if ((zoom != null) && Number.isFinite(zoom)) {
-            P.view.zoom = Math.max(0.125, Math.min(4, zoom));
+            P.view.zoom = Math.max(0.0078125, Math.min(4, zoom));
             if ((ref = R.tracer) != null) {
               ref.update();
             }
@@ -654,7 +675,7 @@
             ref = R.drawings;
             for (i = 0, len = ref.length; i < len; i++) {
               drawing = ref[i];
-              if (((ref1 = drawing.getBounds()) != null ? ref1.intersects(rectangle) : void 0) && drawing.isVisible()) {
+              if (((ref1 = drawing.getBoundsWithFlag()) != null ? ref1.intersects(rectangle) : void 0) && drawing.isVisible()) {
                 drawingsToSelect.push(drawing);
               }
             }
@@ -879,7 +900,7 @@
           R.selectedTool.updateNative(event);
           return;
         }
-        if (((ref1 = R.selectedTool) != null ? ref1.name : void 0) === 'Select') {
+        if (((ref1 = R.selectedTool) != null ? ref1.name : void 0) === 'Select' || R.selectedTool === R.tools.choose) {
           paperEvent = Utils.Event.jEventToPaperEvent(event, this.previousMousePosition, this.initialMousePosition, 'mousemove');
           if ((ref2 = R.selectedTool) != null) {
             if (typeof ref2.move === "function") {

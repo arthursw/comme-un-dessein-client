@@ -111,7 +111,6 @@
         }
         this.selectionHighlight = null;
         this.data.strokeWidth = this.constructor.strokeWidth;
-        this.data.strokeColor = this.constructor.strokeColor;
         this.data.fillColor = null;
         if (points != null) {
           this.loadPath(points);
@@ -364,11 +363,7 @@
       };
 
       Path.prototype.getStrokeColor = function() {
-        var color, d;
-        d = this.getDrawing();
-        color = new P.Color(d != null ? this.constructor.colorMap[d.status] : this.constructor.colorMap.draft);
-        this.data.strokeColor = color;
-        return color;
+        return this.data.strokeColor;
       };
 
       Path.prototype.updateStrokeColor = function() {
@@ -379,7 +374,7 @@
       };
 
       Path.prototype.initializeDrawing = function(createCanvas) {
-        var bounds, canvas, position, ref, ref1, ref2;
+        var base, bounds, canvas, position, ref, ref1, ref2;
         if (createCanvas == null) {
           createCanvas = false;
         }
@@ -388,7 +383,9 @@
         }
         this.raster = null;
         this.controlPath.strokeWidth = 10;
-        this.data.strokeColor = this.getStrokeColor();
+        if ((base = this.data).strokeColor == null) {
+          base.strokeColor = R.selectedColor;
+        }
         if ((ref1 = this.drawing) != null) {
           ref1.remove();
         }
@@ -508,7 +505,11 @@
             args = {
               clientId: draft.id,
               pk: draft.pk,
-              points: this.getPoints()
+              points: this.getPoints(),
+              data: {
+                strokeColor: this.data.strokeColor
+              },
+              bounds: draft.getBounds()
             };
             $.ajax({
               method: "POST",
@@ -562,7 +563,7 @@
               pk: this.pk,
               points: this.pathOnPlanet(),
               data: this.getStringifiedData(),
-              box: Utils.CS.boxFromRectangle(this.getDrawingBounds())
+              bounds: this.getDrawingBounds()
             };
         }
         return args;

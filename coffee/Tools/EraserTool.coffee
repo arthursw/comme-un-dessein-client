@@ -152,11 +152,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 								for p in paths
 									location = p.getLocationOf(intersection.point)
 									if location?
-										console.log('split: ' + location.point)
 										newP = p.split(location)
+										p.strokeColor = item.data.strokeColor
 										p.lastSegment.handleOut = null
 										p.lastSegment.data = split: true
 										if newP?
+											newP.strokeColor = item.data.strokeColor
 											paths.push(newP)
 											newP.firstSegment.handleIn = null
 											newP.firstSegment.data = split: true
@@ -173,6 +174,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 								else
 									data = R.Tools.Item.Item.PrecisePath.getDataFromPath(p)
 									points = R.Tools.Item.Item.Path.pathOnPlanetFromPath(p)
+									data.strokeColor = p.strokeColor.toCSS()
 									path = new R.Tools.Item.Item.PrecisePath(Date.now(), data, null, null, points, null, R.me, draft.id)
 									path.draw(false, true, false)
 									# @pathsToCreate.push(path)

@@ -9,6 +9,7 @@ dependencies = [
 	'Tools/EraserTool'
 	'Tools/ItemTool'
 	'Tools/Tracer'
+	'Tools/ChooseTool'
 	'UI/Modal'
 	'i18next'
 	# 'Tools/TextTool'
@@ -19,7 +20,7 @@ dependencies = [
 	# dependencies.push('Tools/ScreenshotTool')
 	# dependencies.push('Tools/CarTool')
 
-define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Tracer, Modal, i18next) -> # , TextTool, GradientTool, CarTool) ->
+define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Tracer, ChooseTool, Modal, i18next) -> # , TextTool, GradientTool, CarTool) ->
 
 	class ToolManager
 
@@ -47,9 +48,11 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			R.tools.move = new R.Tools.Move()
 			# R.tools.screenshot = new R.Tools.Screenshot()
 			R.tools.select = new R.Tools.Select()
-			R.tracer = new Tracer()
+			@createColorButtons()
+			
 			R.tools.eraser = new R.Tools.Eraser()
 			R.tools.eraser.btn.hide()
+			R.tracer = new Tracer()
 
 			# R.tools.text = new R.Tools.Text()
 
@@ -220,6 +223,10 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 
 			@createZoombuttons()
 			@createUndoRedoButtons()
+
+			R.tools.choose = new R.Tools.Choose()
+			# R.chooser = new Chooser()
+
 			@createInfoButton()
 			
 
@@ -236,7 +243,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			return
 
 		zoom: (value, snap=true)->
-			if P.view.zoom * value < 0.125 or P.view.zoom * value > 4
+			if P.view.zoom * value < 0.0078125 or P.view.zoom * value > 4
 				return
 			bounds = R.view.getViewBounds(true)
 			if value < 1 and bounds.contains(R.view.grid.limitCD.bounds)
@@ -247,7 +254,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			
 			if snap
 				newZoom = 1
-				zoomValues = [0.125, 0.25, 0.5, 1, 2, 4]
+				zoomValues = [0.0078125, 0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4]
 				if value < 1
 					for v in zoomValues
 						if P.view.zoom > v
@@ -263,7 +270,11 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			else 
 				P.view.zoom *= value
 
-			
+			# if R.voteFlags?
+			# 	for voteFlag in R.voteFlags
+			# 		voteFlag.scaling.x = 1 / P.view.zoom
+			# 		voteFlag.scaling.y = 1 / P.view.zoom
+
 			# @enableDrawingButton(P.view.zoom >= 1)
 			# if P.view.zoom < 1 and R.selectedTool == R.tools['Precise path']
 			# 	R.tools.move.select()
@@ -342,6 +353,64 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			@redoBtn.hide()
 			@redoBtn.btnJ.click ()-> R.commandManager.do()
 
+			return
+
+		createColorButtons: ()->
+
+			red = '#F44336'
+			blue = '#448AFF'
+			green = '#8BC34A'
+			yellow = '#FFC107'
+			brown = '#795548'
+			black = '#000000'
+			colors = [red, blue, green, yellow, brown, black]
+			
+			R.selectedColor = green
+
+			@colorBtn = new Button(
+				name: 'Colors'
+				iconURL: 'glyphicon-tint'
+				# iconURL: 'icones_icon_back.png'
+				# iconURL: if R.style == 'line' then 'colors2.png' else if R.style == 'hand' then 'colors2.png' else 'glyphicon-tint'
+				favorite: true
+				category: null
+				disableHover: true
+				# description: 'Undo'
+				popover: true
+				order: null
+				# transform: 'scaleX(-1)'
+			)
+			@colorBtn.hide()
+
+			closeColorMenu = ()->
+				$('#color-picker').remove()
+				return
+
+			# @colorBtn.cloneJ.append($('<span class="selected-color">').css( width: 42, height: 10, position: 'absolute', display: 'block' ))
+
+			@colorBtn.cloneJ.find('.glyphicon').css( color: R.selectedColor )
+
+			@colorBtn.btnJ.click ()=>
+				position = @colorBtn.cloneJ.offset()
+				ulJ = $('<ul>').attr('id', 'color-picker').css( position: 'absolute', top: position.top + 62, left: position.left )
+				for color in colors
+					liJ = $('<li>').attr('data-color', color).css( background: color, width: 62, height: 62, cursor: 'pointer' ).mousedown((event)=> 
+						color = $(event.target).attr('data-color')
+						R.selectedColor = color
+						
+						if R.selectedTool != R.tools["Precise path"]
+							R.tools["Precise path"].select()
+
+						# @colorBtn.cloneJ.find('span.selected-color').css( background: color )
+						@colorBtn.cloneJ.find('.glyphicon').css( color: R.selectedColor )
+						return)
+
+					ulJ.append(liJ)
+				
+				@colorBtn.cloneJ.parent().append(ulJ)
+				return
+			
+			$(window).mouseup( closeColorMenu )
 			return
 
 		createInfoButton: ()->
@@ -472,6 +541,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			# 		voteTool.btn.removeClass('btn-warning')
 
 			if R.selectedTool == R.tools['Precise path'] or R.selectedTool == R.tools.eraser
+				@colorBtn.show()
 				@redoBtn.show()
 				@undoBtn.show()
 				@submitButton.show()
@@ -479,6 +549,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				R.tracer?.showButton()
 				R.tools.eraser.btn.show()
 			else
+				@colorBtn.hide()
 				@redoBtn.hide()
 				@undoBtn.hide()
 				@submitButton.hide()

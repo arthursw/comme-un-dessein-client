@@ -47,7 +47,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return @draft
 
 		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @title, @description, @status='pending', pathList=[], svg=null, bounds=null) ->
+
 			super(@data, @id, @pk)
+
+			# if not @constructor.voteFlag?
+				
+			# 	@constructor.voteFlag = new P.Raster('/static/images/icons/vote-flag-xl.png')
+			# 	# @constructor.voteFlag.remove()
+
+			# 	# voteFlag = P.project.importSVG('/static/images/icons/vote-flag.svg')
+			# 	# voteFlag.onLoad = ()=>
+			# 	# 	@constructor.voteFlag ?= new P.SymbolDefinition(voteFlag)
+			# 	# 	voteFlag.remove()
+			# 	# 	return
 
 			if @pk?
 				@constructor.pkToId[@pk] = @id
@@ -143,8 +155,54 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# R.sidebar.itemListsJ.prepend(@itemListsJ)
 			# @itemListsJ = R.sidebar.itemListsJ.find(".layer:first")
 
+			if @status == 'pending' && @owner != R.me
+				@drawVoteBounds()
+
 			return
 		
+		drawVoteBounds: ()->
+			bounds = @getBounds()
+			voteGroup = new P.Group()
+			@voteFlag = new P.Raster('/static/images/icons/vote-flag-xl2.png')
+			# voteFlag = @constructor.voteFlag.clone()
+			# voteFlag = @constructor.voteFlag.place(bounds.center)
+			@voteFlag.position = bounds.center.subtract(-19, 49)
+			R.voteFlags ?= []
+			R.voteFlags.push(@voteFlag)
+			
+			# voteBounds = new P.Path.Circle(bounds.center, 128/2)
+			# voteBounds.strokeColor = 'black'
+			# voteBounds.strokeColor.alpha = 0.75
+			# voteBounds.strokeWidth = 4
+			# voteBounds.fillColor = 'white' #rgba(68, 138, 255, 0.5)'
+			# voteBounds.fillColor.alpha = 0.75
+
+			# voteGroup.addChild(voteBounds)
+			voteGroup.addChild(@voteFlag)
+
+			# voteBounds = new P.Path.Rectangle(bounds, new P.Size(5, 5))
+			# voteBounds.strokeColor = 'black'
+			# voteBounds.strokeColor.alpha = 0.5
+			# voteBounds.strokeWidth = 1
+			# # voteBounds.strokeWidth = 2
+			# # voteBounds.dashArray = [5, 3]
+			# voteGroup.addChild(voteBounds)
+			# voteText = new P.PointText(bounds.bottomLeft)
+			# voteText.justification = 'left';
+			# voteText.fillColor = 'black';
+			# voteText.content = 'Vote for ' + @title;
+			# voteGroup.addChild(voteText)
+			@group.addChild(voteGroup)
+			return
+
+		hideVoteFlag: ()->
+			@voteFlag?.visible = false
+			return
+
+		showVoteFlag: ()->
+			@voteFlag?.visible = true
+			return
+
 		setPK: (pk)->
 			super(pk)
 			R.pkToDrawing ?= {}
@@ -154,28 +212,32 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		getPointLists: ()->
 			pointLists = []
 			for path in @paths
-				pointLists.push(path.getPoints())
+				pointLists.push({ points: path.getPoints(), data: { strokeColor: path.data.strokeColor } })
 			return pointLists
 
 		addPathsFromPathList: (pathList, parseJSON=true, highlight=false)->
 			for p in pathList
-				points = if parseJSON then JSON.parse(p) else p
+				pJSON = if parseJSON then JSON.parse(p) else p
+				points = pJSON.points
 				if not points? then continue
 				data = 
 					points: points
 					planet: new P.Point(0, 0)
 					strokeWidth: Item.Path.strokeWidth
+					strokeColor: pJSON.data.strokeColor
 				path = new Item.Path.PrecisePath(Date.now(), data, null, null, null, null, R.me, @id)
 				path.pk = path.id
 				path.loadPath()
 				if highlight
 					path.data.strokeColor = 'purple'
 				path.draw()
+
 			return
 
 		setSVG: (svg, parse=true)->
 			layerName = @getLayerName()
-			layer = document.getElementById(layerName)
+			# layer = document.getElementById(layerName)
+			layer = document.createElement('div')
 			if not layer then return
 			# layer.insertAdjacentHTML('afterbegin', svg)
 			if parse
@@ -189,6 +251,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			doc.documentElement.removeAttribute('stroke-width')
 			if @status == 'draft'
 				doc.documentElement.setAttribute('id', 'draftDrawing')
+			
+			# @svg = doc.documentElement
+
 			@svg = layer.appendChild(doc.documentElement)
 			
 			@svg.addEventListener("click",  ((event) => 
@@ -245,7 +310,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			itemListJ = null
 			switch @status
 				when 'pending', 'emailNotConfirmed', 'notConfirmed'
-					# R.view.pendingLayer.addChild(@group)
+					R.view.pendingLayer.addChild(@group)
 					itemListJ = R.view.pendingListJ
 				when 'drawing'
 					# R.view.drawingLayer.addChild(@group)
@@ -291,16 +356,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@liJ.html(title)
 
 			divJ = $("<div class='cd-row cd-end badge-container'>")
-			showBtnJ = $('<button type="button" class="btn btn-default show-btn" aria-label="Show">')
-			@eyeIconJ = $('<span class="glyphicon eye glyphicon-eye-open" aria-hidden="true"></span>')
-			showBtnJ.append(@eyeIconJ)
-			showBtnJ.click (event)=>
-				@toggleVisibility()
-				event.preventDefault()
-				event.stopPropagation()
-				return -1
+			# showBtnJ = $('<button type="button" class="btn btn-default show-btn" aria-label="Show">')
+			# @eyeIconJ = $('<span class="glyphicon eye glyphicon-eye-open" aria-hidden="true"></span>')
+			# showBtnJ.append(@eyeIconJ)
+			# showBtnJ.click (event)=>
+			# 	@toggleVisibility()
+			# 	event.preventDefault()
+			# 	event.stopPropagation()
+			# 	return -1
 
-			divJ.append(showBtnJ)
+			# divJ.append(showBtnJ)
 			@liJ.append(divJ)
 
 			@liJ.attr("data-id", @id)
@@ -353,7 +418,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 					@rectangle = new P.Rectangle(@svg.getBBox())
 					return @rectangle
 			
-			if @group.children.length == @paths.length && @group.bounds.area > 0
+			if @group.children.length >= @paths.length && @group.bounds.area > 0
 				@rectangle = @group.bounds.expand(2*R.Path.strokeWidth)
 				if @rectangle? and @rectangle.area > 0
 					return @rectangle
@@ -538,11 +603,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			if @pathsToSave?
 				pointLists = []
 				for path in @pathsToSave
-					pointLists.push(path.getPoints())
+					pointLists.push({ points: path.getPoints(), data: { strokeColor: path.data.strokeColor } })
 				args = 
 					clientId: @id
 					pk: @pk
 					pointLists: pointLists
+					bounds: @getBounds()
 				@pathsToSave = []
 				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'addPathsToDrawing', args: args } ).done(R.loader.checkError)
 			super
@@ -563,6 +629,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# 	return null
 			return @rectangle
 
+		getBoundsWithFlag: ()->
+			@computeRectangle()
+			return if @voteFlag? then @rectangle.unite(@voteFlag.bounds) else @rectangle
+
 		getSVG: (asString=true) ->
 			if @paths? and @paths.length > 0
 				for path in @paths
@@ -577,7 +647,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			svg = @getSVG()
 			@svgString = svg
 
-			imageURL = R.view.getThumbnail(@, 1200, 630, true, true)
+			# imageURL = R.view.getThumbnail(@, 1200, 630, true, true)
+			imageURL = R.view.getThumbnail(@, bounds.width, bounds.height, true, false)
 
 			args = {
 				pk: @pk
@@ -587,7 +658,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				description: @description
 				svg: svg
 				png: imageURL
-				bounds: JSON.stringify(bounds)
+				bounds: bounds
 			}
 
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'submitDrawing', args: args } ).done(@submitCallback)
@@ -681,6 +752,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				clientId: @id
 				pk: @pk
 				pointLists: @getPointLists()
+				bounds: @getBounds()
 			}
 
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPathsToDrawing', args: args } ).done(R.loader.checkError)
@@ -811,6 +883,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		updateDrawingPanel: ()->
 			args =
 				pk: @pk
+				loadSVG: true
 
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
 				R.drawingPanel.setDrawing(@, result)
@@ -852,11 +925,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			if showPanelAndLoad
 				R.drawingPanel.selectionChanged()
 
+			for drawing in R.drawings
+				if drawing.getBoundsWithFlag()?.intersects(@rectangle) and drawing.isVisible()
+					drawing.hideVoteFlag()
+
 			return true
 		
 		deselect: (updateOptions=true)->
 			if not super(updateOptions) then return false
 			R.drawingPanel.deselectDrawing(@)
+			@showVoteFlag()
 			return true
 
 		# removeChildren: () ->
@@ -871,6 +949,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@removeFromListItem()
 			R.rasterizer.rasterizeRectangle(@rectangle)
 			super
+			R.drawings.splice(R.drawings.indexOf(@), 1)
 			return
 
 		getRaster: ()->

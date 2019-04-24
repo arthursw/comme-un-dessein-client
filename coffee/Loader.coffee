@@ -281,33 +281,121 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			@loadVotes()
 			return
 
+		clearRasters: ()->
+
+			@rasters.forEach (rastersOfScale, s)=>
+				rastersOfScale.forEach (rastersY, y)=>
+					rastersY.forEach (raster, x)=>
+						raster.remove()
+			return
+
 		loadRasters: ()->
-			
+
 			@rasterGroup ?= new P.Group()
+			@rasters ?= new Map()
+
+			bounds = P.view.bounds
+
+			# @rectangle ?= new P.Path.Rectangle(P.view.bounds.expand(-P.view.bounds.width / 3, -P.view.bounds.height / 3))
+			# @rectangle.position = P.view.bounds.center
+			# @rectangle.strokeColor = 'red'
+			# @rectangle.strokeWidth = 1
+
+			# if not @texts?
+			# 	@texts = []
+			# 	for n in [0 .. 3]
+			# 		text = new P.PointText(new P.Point(0, 0))
+			# 		text.justification = 'center'
+			# 		text.fillColor = 'black'
+			# 		@texts.push(text)
+
+			# margin = 10
+			# @texts[0].position.x = bounds.center.x
+			# @texts[0].position.y = bounds.top + margin
+			# @texts[1].position.x = bounds.left + margin
+			# @texts[1].position.y = bounds.center.y
+			# @texts[2].position.x = bounds.center.x
+			# @texts[2].position.y = bounds.bottom - margin
+			# @texts[3].position.x = bounds.right - margin
+			# @texts[3].position.y = bounds.center.y
 
 			scaleRatio = 4
 
 			ln4 = Math.log(4)
 
-			scaleNumber = Math.floor(Math.log(1 / P.view.zoom) / ln4)
+			scaleNumber = Math.max(0, Math.floor(Math.log(1 / P.view.zoom) / ln4))
 
-			nPixelsPerTile = Math.pow(4, scaleNumber) * 1000
+			scale = Math.pow(4, scaleNumber)
+			nPixelsPerTile = scale * 1000
 
-			bounds = P.view.bounds
 			quantizedBounds =
 				t: Math.floor(bounds.top / nPixelsPerTile)
 				l: Math.floor(bounds.left / nPixelsPerTile)
 				b: Math.floor(bounds.bottom / nPixelsPerTile)
 				r: Math.floor(bounds.right / nPixelsPerTile)
 
-			@rasterGroup.removeChildren()
+			# @texts[0].content = '' + quantizedBounds.t
+			# @texts[1].content = '' + quantizedBounds.l
+			# @texts[2].content = '' + quantizedBounds.b
+			# @texts[3].content = '' + quantizedBounds.r
+
+			rastersOfScale = @rasters.get(scaleNumber)
+			
+			if not rastersOfScale?
+				rastersOfScale = new Map()
+				@rasters.set(scaleNumber, rastersOfScale)
+
+			# Remove rasters
+			@rasters.forEach (rastersOfScale, s)=>
+
+				if s != scaleNumber 						# Remove rasters of other scales
+					rastersOfScale.forEach (rastersY, y)=>
+						rastersY.forEach (raster, x)=>
+							raster.remove()
+
+					@rasters.delete(s)
+
+				else  											# Remove rasters of current scale
+					rastersOfScale.forEach (rastersY, y)=>						
+							rastersY.forEach (raster, x)=>
+								if y < quantizedBounds.t or y > quantizedBounds.b or x < quantizedBounds.l or x > quantizedBounds.r
+									raster.remove()
+									rastersY.delete(x)
+
 
 			for n in [quantizedBounds.t .. quantizedBounds.b]
 				for m in [quantizedBounds.l .. quantizedBounds.r]
-					raster = new P.Raster(location.origin + '/static/rasters/' + scaleNumber + '/' + n + ','  + m + '.jpg')
-					raster.position.x = (n + 0.5) * nPixelsPerTile
-					raster.position.y = (m + 0.5) * nPixelsPerTile
-					@rasterGroup.addChild(raster)
+					raster = rastersOfScale?.get(n)?.get(m)
+					if not raster? or not raster.parent?
+
+						drawingsToLoad = []
+						if R.loadRejectedDrawings
+							drawingsToLoad.push('inactive')
+						if R.loadActiveDrawings
+							drawingsToLoad.push('active')
+
+						group = new P.Group()
+
+						for layerName in drawingsToLoad
+
+							raster = new P.Raster(location.origin + '/static/rasters/' + layerName + '/zoom' + scaleNumber + '/' + m + ','  + n + '.png')
+							raster.position.x = (m + 0.5) * nPixelsPerTile
+							raster.position.y = (n + 0.5) * nPixelsPerTile
+							raster.scale(scale)
+
+							# text = new P.PointText(raster.position)
+							# text.justification = 'center'
+							# text.fillColor = 'black'
+							# text.content = '' + m + ', ' + n
+
+							group.addChild(raster)
+
+						@rasterGroup.addChild(group)
+						rastersY = rastersOfScale.get(n)
+						if not rastersY?
+							rastersY = new Map()
+							rastersOfScale.set(n, rastersY)
+						rastersY.set(m, group)
 
 			return
 
