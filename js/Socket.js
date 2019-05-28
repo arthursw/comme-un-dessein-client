@@ -107,7 +107,7 @@
                 if (R.loader.drawingPaths.length === 0) {
                   if (!_this.requestedNextDrawing) {
                     args = {
-                      city: R.city
+                      cityName: R.city.name
                     };
                     $.ajax({
                       method: "POST",

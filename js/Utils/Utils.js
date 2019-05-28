@@ -484,7 +484,8 @@
         delta: delta,
         middlePoint: previousPosition.add(delta.divide(2)),
         type: type,
-        count: count
+        count: count,
+        originalEvent: event
       };
       return paperEvent;
     };
@@ -770,7 +771,22 @@
         }
       }).done(checkError);
     };
-    R.setNegativeVoteThreshold = function(voteThreshold) {
+    R.setVoteThresholds = function(negativeVoteThreshold, positiveVoteThreshold, negativeVoteThresholdTile, positiveVoteThresholdTile, cityName) {
+      if (negativeVoteThreshold == null) {
+        negativeVoteThreshold = 2;
+      }
+      if (positiveVoteThreshold == null) {
+        positiveVoteThreshold = 2;
+      }
+      if (negativeVoteThresholdTile == null) {
+        negativeVoteThresholdTile = 2;
+      }
+      if (positiveVoteThresholdTile == null) {
+        positiveVoteThresholdTile = 2;
+      }
+      if (cityName == null) {
+        cityName = R.city.name;
+      }
       if (!R.administrator) {
         return false;
       }
@@ -779,32 +795,21 @@
         url: "ajaxCall/",
         data: {
           data: JSON.stringify({
-            "function": 'setNegativeVoteThreshold',
+            "function": 'setVoteThresholds',
             args: {
-              voteThreshold: voteThreshold
+              cityName: cityName,
+              negativeVoteThreshold: negativeVoteThresholdTile,
+              positiveVoteThreshold: positiveVoteThreshold,
+              negativeVoteThresholdTile: negativeVoteThresholdTile
             }
           })
         }
       }).done(checkError);
     };
-    R.setPositiveVoteThreshold = function(voteThreshold) {
-      if (!R.administrator) {
-        return false;
+    R.setVoteValidationDelay = function(hours, minutes, seconds, cityName) {
+      if (cityName == null) {
+        cityName = R.city.name;
       }
-      $.ajax({
-        method: "POST",
-        url: "ajaxCall/",
-        data: {
-          data: JSON.stringify({
-            "function": 'setPositiveVoteThreshold',
-            args: {
-              voteThreshold: voteThreshold
-            }
-          })
-        }
-      }).done(checkError);
-    };
-    R.setVoteValidationDelay = function(hours, minutes, seconds) {
       if (!R.administrator) {
         return false;
       }
@@ -815,6 +820,7 @@
           data: JSON.stringify({
             "function": 'setVoteValidationDelay',
             args: {
+              cityName: cityName,
               hours: hours,
               minutes: minutes,
               seconds: seconds
@@ -823,7 +829,10 @@
         }
       }).done(checkError);
     };
-    R.setVoteMinDuration = function(hours, minutes, seconds) {
+    R.setVoteMinDuration = function(hours, minutes, seconds, cityName) {
+      if (cityName == null) {
+        cityName = R.city.name;
+      }
       if (!R.administrator) {
         return false;
       }
@@ -834,6 +843,7 @@
           data: JSON.stringify({
             "function": 'setVoteMinDuration',
             args: {
+              cityName: cityName,
               hours: hours,
               minutes: minutes,
               seconds: seconds
@@ -842,15 +852,27 @@
         }
       }).done(checkError);
     };
-    R.setVoteParameters = function(negativeVoteThreshold, positiveVoteThreshold, voteValidationDelayInSeconds, voteMinDurationInSeconds) {
+    R.setVoteParameters = function(negativeVoteThreshold, positiveVoteThreshold, negativeVoteThresholdTile, positiveVoteThresholdTile, voteValidationDelayInSeconds, voteMinDurationInSeconds, cityName) {
+      if (negativeVoteThreshold == null) {
+        negativeVoteThreshold = 2;
+      }
       if (positiveVoteThreshold == null) {
         positiveVoteThreshold = 2;
+      }
+      if (negativeVoteThresholdTile == null) {
+        negativeVoteThresholdTile = 2;
+      }
+      if (positiveVoteThresholdTile == null) {
+        positiveVoteThresholdTile = 2;
       }
       if (voteValidationDelayInSeconds == null) {
         voteValidationDelayInSeconds = 1;
       }
       if (voteMinDurationInSeconds == null) {
         voteMinDurationInSeconds = 5;
+      }
+      if (cityName == null) {
+        cityName = R.city.name;
       }
       if (!R.administrator) {
         return false;
@@ -859,18 +881,60 @@
         console.log("setVoteParameters(negativeVoteThreshold, positiveVoteThreshold=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5)");
         return;
       }
-      R.setNegativeVoteThreshold(negativeVoteThreshold);
-      R.setPositiveVoteThreshold(positiveVoteThreshold);
-      R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds);
-      R.setVoteMinDuration(0, 0, voteMinDurationInSeconds);
+      R.setVoteThresholds(negativeVoteThreshold, positiveVoteThreshold, negativeVoteThresholdTile, positiveVoteThresholdTile, cityName);
+      R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds, cityName);
+      R.setVoteMinDuration(0, 0, voteMinDurationInSeconds, cityName);
+    };
+    R.setCityNextEventDateAndLocation = function(date, location, cityName) {
+      if (cityName == null) {
+        cityName = R.city.name;
+      }
+      if (!R.administrator) {
+        return false;
+      }
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'setCityNextEventDateAndLocation',
+            args: {
+              cityName: cityName,
+              date: date,
+              location: location
+            }
+          })
+        }
+      }).done(checkError);
+    };
+    R.setCityDimensions = function(width, height, strokeWidth, cityName) {
+      if (cityName == null) {
+        cityName = R.city.name;
+      }
+      if (!R.administrator) {
+        return false;
+      }
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'setCityDimensions',
+            args: {
+              cityName: cityName,
+              width: width,
+              height: height,
+              strokeWidth: strokeWidth
+            }
+          })
+        }
+      }).done(checkError);
     };
     R.setSelectedDrawingsToCity = function(city) {
       var args;
       args = {
         pk: R.s.pk,
-        city: {
-          name: city
-        }
+        cityName: city
       };
       $.ajax({
         method: "POST",
@@ -925,6 +989,35 @@
             args: {
               png: imageURL,
               pk: R.s.pk
+            }
+          })
+        }
+      }).done(checkError);
+    };
+    R.bannUser = function(username, removeDrawings, removeVotes, removeComments) {
+      if (removeDrawings == null) {
+        removeDrawings = false;
+      }
+      if (removeVotes == null) {
+        removeVotes = false;
+      }
+      if (removeComments == null) {
+        removeComments = false;
+      }
+      if (!R.administrator) {
+        return false;
+      }
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'bannUser',
+            args: {
+              username: username,
+              removeDrawings: removeDrawings,
+              removeVotes: removeVotes,
+              removeComments: removeComments
             }
           })
         }
@@ -1030,7 +1123,7 @@
           }
           if (event.key === 'p') {
             args = {
-              city: R.city,
+              cityName: R.city.name,
               clientId: draft.id,
               date: Date.now(),
               title: 'TEST',

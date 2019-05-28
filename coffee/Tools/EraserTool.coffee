@@ -25,6 +25,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		@drawItems = true
 
 		@emitSocket = false
+		@buttonClasses = 'dark'
 
 		# Find or create a button for the tool in the sidebar (if the button is created, add it default or favorite tool list depending on the user settings stored in local storage, and whether the tool was just created in a newly created script)
 		# set its name and icon if an icon url is provided, or create an icon with the letters of the name otherwise
@@ -184,6 +185,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 								item.remove()
 								# @pathsToDelete.push(item)
 								# refreshRasterizer = true
+
+			# draft.computeRectangle() # only required in the end?
 
 			return
 

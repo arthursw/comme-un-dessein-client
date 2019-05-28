@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Command' ], (P, R, Utils, Tool, Item, Command) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Command', 'UI/Modal', 'i18next', 'moment' ], (P, R, Utils, Tool, Item, Command, Modal, i18next, moment) ->
 
 	class ChooseTool extends Tool
 
@@ -6,6 +6,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 		@paperWidth = 210 - @paperMargins
 		@paperHeight = 297 - @paperMargins
 		@nSheetsPerTile = 2
+		@nSecondsPerTile = 0.25
 
 		@label = 'Choose a tile'
 		@popover = false
@@ -23,11 +24,37 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 
 		constructor: () ->
 			super(true)
+
+			activeLayer = P.project.activeLayer
+			@tileRectangles = new P.Layer()
+			@tileRectangles.bringToFront()
+			@tileRectangles.visible = false
+			activeLayer.activate()
+
+			@tiles = new Map()
+			@tilePks = []
+			@idToTile = new Map()
 			return
 
-		drawGrid: ()=>
-			@lines ?= new P.Group()
+		hideOddLines: ()=>
+			@oddLines?.visible = false
+			return
 
+		showOddLines: ()=>
+			@oddLines?.visible = @lines?.visible
+			return
+
+		showGrid: ()=>
+			@tileRectangles.visible = true
+
+			if @lines?
+				@lines.visible = true
+				@oddLines.visible = Math.floor( Math.log(P.view.zoom) / Math.log(2) ) >= -3
+				return
+			else
+				@lines = new P.Group()
+				@oddLines = new P.Group()
+			
 			rectangle = R.view.grid.limitCDRectangle
 			x = rectangle.left
 			n = 0
@@ -38,10 +65,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 				line.strokeWidth = 1
 				line.strokeColor = 'black'
 				line.strokeColor.opacity = 0.75
+				line.strokeScaling = false
 				if n%@constructor.nSheetsPerTile != 0
 					line.dashArray = [2, 2]
-				line.strokeScaling = false
-				@lines.addChild(line)
+					@oddLines.addChild(line)
+				else
+					@lines.addChild(line)
 				x += @constructor.paperWidth
 				n++
 			y = rectangle.top
@@ -53,21 +82,43 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 				line.strokeWidth = 1
 				line.strokeColor = 'black'
 				line.strokeColor.opacity = 0.75
+				line.strokeScaling = false
 				if n%@constructor.nSheetsPerTile != 0
 					line.dashArray = [2, 2]
-				line.strokeScaling = false
-				@lines.addChild(line)
+					@oddLines.addChild(line)
+				else
+					@lines.addChild(line)
 				y += @constructor.paperHeight
 				n++
 			return
 
+		hideGrid: ()->
+			@lines?.visible = false
+			@oddLines?.visible = false
+			@tileRectangles.visible = false
+			return
+
 		select: (deselectItems=false, updateParameters=true, forceSelect=false, buttonClicked=false)->
+			if R.city?.finished
+				R.alertManager.alert "Cette édition est terminée, vous ne pouvez plus dessiner.", 'info'
+				return
+
+			if not R.userAuthenticated and not forceSelect
+				R.alertManager.alert 'Log in before choosing a tile', 'info'
+				return
+
+			R.tracer?.hide()
+
 			super(false, updateParameters)
-			@drawGrid()
+			R.tools.select.deselectAll()
+			@showGrid()
 			return
 
 		deselect: ()->
 			super
+			@hideGrid()
+			@deselectTile()
+			@highlight?.visible = false
 			return
 
 		begin: (event) ->
@@ -77,6 +128,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		move: (event) ->
+			if event.originalEvent?.target != document.getElementById('canvas') then return
+
+			if @ignoreMouseMoves then return
 
 			width = @constructor.paperWidth * @constructor.nSheetsPerTile
 			height = @constructor.paperHeight * @constructor.nSheetsPerTile
@@ -85,7 +139,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 				@highlight = new P.Path.Rectangle(0, 0, width, height)
 				@highlight.strokeWidth = 5
 				@highlight.strokeScaling = false
-				@highlight.strokeColor = 'rgb(139, 195, 74)'
+				@highlight.fillColor = R.selectionBlue
+				@highlight.fillColor.alpha = 0.25
 
 			left = R.view.grid.limitCDRectangle.left
 			top = R.view.grid.limitCDRectangle.top
@@ -101,7 +156,223 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 
 			return
 
+		projectToXY: (point)->
+			width = @constructor.paperWidth * @constructor.nSheetsPerTile
+			height = @constructor.paperHeight * @constructor.nSheetsPerTile
+
+			left = R.view.grid.limitCDRectangle.left
+			top = R.view.grid.limitCDRectangle.top
+
+			tileX = Math.floor( (point.x - left) / width )
+			tileY = Math.floor( (point.y - top) / height )
+			return new P.Point(tileX, tileY)
+
 		end: (event) ->
+			if not R.view.grid.limitCDRectangle.contains(event.point) then return
+
+			width = @constructor.paperWidth * @constructor.nSheetsPerTile
+			height = @constructor.paperHeight * @constructor.nSheetsPerTile
+
+			left = R.view.grid.limitCDRectangle.left
+			top = R.view.grid.limitCDRectangle.top
+			right = R.view.grid.limitCDRectangle.right
+			bottom = R.view.grid.limitCDRectangle.bottom
+
+			nTilesPerRow = Math.ceil( (right - left) / width )
+			nTilesPerColumn = Math.ceil( (bottom - top) / height )
+			console.log('num tiles: ' + (nTilesPerColumn * nTilesPerRow))
+
+			tileX = Math.floor( (event.point.x - left) / width )
+			tileY = Math.floor( (event.point.y - top) / height )
+
+			tile = @tiles.get(tileY)?.get(tileX)
+
+			tileNumber = Math.max(0, tileY - 1) * nTilesPerRow + tileX
+
+			tileLeft = left + tileX * width
+			tileTop = top + tileY * height
+
+			@currentTile = { rectangle: new P.Rectangle(tileLeft, tileTop, width, height), x: tileX, y: tileY, number: tileNumber+1 }
+
+			if tile?
+				
+				# R.drawingPanel.showSelectedTiles(tiles, @currentTile.rectangle)
+				@selectTile(tile)
+				@loadTile(tile._id.$oid)
+
+				return
+
+			nDrawingsOnTile = 0
+			for drawing in R.drawings
+				if drawing.status != 'draft' and drawing.getBounds()?.intersects(@currentTile.rectangle)
+					nDrawingsOnTile++
+
+			@createChooseTileModal(tileNumber, tileX, tileY)
+			return
+
+		createChooseTileModal: (tileNumber, tileX, tileY)=>
+
+			date = $('#canvas').attr('data-city-event-date')
+			dueTime = moment(date).add(tileNumber * @constructor.nSecondsPerTile, 'seconds')
+			# placementTime = moment(Date.now()).add(1, 'days') # dueTime.clone().subtract(5, 'days')
+
+			modal = Modal.createModal( 
+				id: 'choose-tile',
+				title: "Choose tile", 
+				submit: ( ()=> @chooseTile(tileNumber+1, tileX, tileY, @currentTile.rectangle) ),
+				)
+
+			modal.addText('Do you really want to paint this tile?', 'Do you want to paint this tile', false, { tileNumber: tileNumber + 1 })
+
+			hours = i18next.t('hours')
+			minutes = i18next.t('minutes')
+			seconds = i18next.t('seconds')
+			andText = i18next.t('and')
+
+			divJ = modal.addText(i18next.t( 'This tile must be placed'))
+			divJ.text(divJ.text() + ' :')
+			divJ = modal.addText(i18next.t('on the') + dueTime.format(' dddd D MMMM'))
+			divJ.css('text-align': 'center')
+			divJ = modal.addText(i18next.t('at precisely'))
+			divJ.css( { 'text-align': 'center', 'font-weight': 900, 'font-style': 'italic' } )
+			divJ = modal.addText(dueTime.format('H [' + hours + '], m [' + minutes + ' ' + andText + '] s [' + seconds + '.]'))
+			divJ.css('text-align': 'center')
+			
+			modal.modalJ.on('hidden.bs.modal', ()=> @ignoreMouseMoves = false )
+
+			modal.show()
+
+
+			@ignoreMouseMoves = true
+
+			return
+
+		getTileColorFromStatus: (tile)->
+			return if tile.status == 'pending' then '#03a9f4' else if tile.status == 'created' then 'rgb(139, 195, 74)' else if tile.status == 'rejected' then 'red' else 'grey'
+
+		createTile: (tile)->
+			
+			tilesRow = @tiles.get(tile.y)
+			if tilesRow? and tilesRow.get(tile.x)
+				return
+
+			width = @constructor.paperWidth * @constructor.nSheetsPerTile
+			height = @constructor.paperHeight * @constructor.nSheetsPerTile
+
+			left = R.view.grid.limitCDRectangle.left
+			top = R.view.grid.limitCDRectangle.top
+
+			tileRectangle = P.Path.Rectangle(left + tile.x * width, top + tile.y * height, width, height)
+			tileRectangle.fillColor = @getTileColorFromStatus(tile)
+			tileRectangle.fillColor.alpha = 0.25
+
+			@tileRectangles.addChild(tileRectangle)
+
+			if not tilesRow?
+				tilesRow = new Map()
+				@tiles.set(tile.y, tilesRow)
+
+			tile.rectangle = tileRectangle
+
+			tilesRow.set(tile.x, tile)
+			@tilePks.push(tile._id.$oid)
+			@idToTile.set(tile.clientId, tile)
+
+			# tileList = tilesRow.get(tile.x)
+			# if not tileList?
+			# 	tilesRow.set(tile.x, [tile])
+			# else
+			# 	tileList.push(tile)
+
+			return tile
+
+		updateTileStatus: (tile, status=null)->
+			t = @tiles.get(tile.y)?.get(tile.x)
+			if t?
+				t.rectangle.fillColor = @getTileColorFromStatus(tile)
+				t.rectangle.fillColor.alpha = 0.25
+				t.status = if status? then status else tile.status
+
+			return
+
+		selectTile: (tile)->
+			if @selectedTile? and @selectedTile != tile
+				@deselectTile()
+			tile.rectangle.strokeColor = R.selectionBlue
+			tile.rectangle.strokeWidth = 4
+			tile.rectangle.strokeScaling = false
+			@selectedTile = tile
+			return
+
+		deselectTile: ()->
+			R.drawingPanel.deselectTile()
+			@selectedTile?.rectangle?.strokeWidth = null
+			@selectedTile = null
+			return
+
+		loadTile: (pk, rectangle=@currentTile.rectangle)->
+			args =
+				pk: pk
+			
+			# tile.rectangle.strokeColor = 'black'
+			# tile.rectangle.strokeWidth = 5
+			# tile.rectangle.dashArray = [5, 5]
+
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadTile', args: args } ).done((result)=>
+				R.drawingPanel.setTile(result, rectangle)
+			)
+			return
+
+		removeTile: (tileInfo, tile)->
+			tile ?= @tiles.get(tileInfo.y)?.get(tileInfo.x)
+			
+			if tile?
+				if tileInfo.clientId == tile.clientId
+					tile.rectangle.remove()
+					@tiles.get(tileInfo.y).delete(tileInfo.x)
+					@tilePks.splice(@tilePks.indexOf(tile.pk))
+					@idToTile.delete(tile.clientId)
+
+			return
+
+		removeTiles: (limits)->
+			topLeft = @projectToXY(limits.topLeft)
+			bottomRight = @projectToXY(limits.bottomRight)
+			@tiles.forEach (tileRow, y) =>
+				if y < topLeft.y or y > bottomRight.y then return
+				tileRow.forEach (tile, x) =>
+					if x < topLeft.x or x > bottomRight.x then return
+					if not tile.rectangle.bounds.intersects(limits)
+						return @removeTile(tile)
+			return
+
+		chooseTile: (number, x, y, bounds)=> 
+			@ignoreMouseMoves = false
+
+			args =
+				number: number, 
+				x: x, 
+				y: y, 
+				bounds: bounds
+				# dueDate: dueDate.unix(), 
+				# placementDate: placementDate.unix(), 
+				cityName: R.city.name
+				clientId: Utils.createId()
+			
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'submitTile', args: args } ).done(@submitCallback)
+
+			return
+
+		submitCallback: (result)=>
+			if not R.loader.checkError(result) then return
+
+			result.tile = JSON.parse(result.tile)
+			tile = @createTile(result.tile)
+			@selectTile(tile)
+			R.drawingPanel.setTile(result, @currentTile.rectangle)
+			
+
+			
 			return
 
 		doubleClick: (event) ->

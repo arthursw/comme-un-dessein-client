@@ -48,7 +48,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @title, @description, @status='pending', pathList=[], svg=null, bounds=null) ->
 
+			if @status == 'flagged_pending'
+				console.log('flagged_pending')
+				R.flaggedDrawing = @
+
 			super(@data, @id, @pk)
+
+			console.log('status: ', @status, ', parent name: ', @group.parent?.name )
 
 			# if not @constructor.voteFlag?
 				
@@ -63,14 +69,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			if @pk?
 				@constructor.pkToId[@pk] = @id
+			
 
 			if bounds?
-				@bounds = new P.Rectangle(bounds)
+				@rectangle = new P.Rectangle(bounds)
 
 			R.drawings.push(@)
 
-			R.pkToDrawing ?= {}
-			R.pkToDrawing[@pk] = @
+			@setPkToDrawing(@pk)
 
 			@paths = []
 			# @drawing = new P.Group()
@@ -83,42 +89,21 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# create special list to contains children paths
 			@sortedPaths = []
 
-			@addToListItem(@getListItem())
+			@addToListItem()
+			@addToLayer()
 			
 			if @status == 'draft'
 				@constructor.draft = @
 				@addPathsFromPathList(pathList)
+			else if svg?
+				@setSVG(svg)
+				# @rectangle = new P.Rectangle(@svg.getBBox())
 
-			else if @pk? and R.SVGMode
-				jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg', ((result)=>
-					# console.log( "success" )
-					# console.log( result )
-					@setSVG(result, false)
-					return
-				))
-				# .done(()=>
-				# 	console.log("second success" )
-				# )
-				.fail(()=>
-
-					# console.log("error" )
-					if @svg? then return
-
-					args =
-						pk: @pk
-						svgOnly: true
-					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
-						drawing = JSON.parse(result.drawing)
-						if drawing.svg?
-							@setSVG(drawing.svg)
-					)
-				)
+			# else if @pk? and R.SVGMode
+			# 	@loadSVG()
 				# .always(()=>
 				# 	console.log("finished" )
 				# )
-
-			# if svg?
-				# @setSVG(svg)
 			
 			# path.rasterize()
 			# R.rasterizer.rasterize(path)
@@ -155,15 +140,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# R.sidebar.itemListsJ.prepend(@itemListsJ)
 			# @itemListsJ = R.sidebar.itemListsJ.find(".layer:first")
 
-			if @status == 'pending' && @owner != R.me
+			if @status == 'pending' and @owner != R.me
 				@drawVoteBounds()
+
+			if @status == 'flagged_pending'
+				@drawVoteBounds(true)
 
 			return
 		
-		drawVoteBounds: ()->
+		drawVoteBounds: (flagged=false)->
 			bounds = @getBounds()
 			voteGroup = new P.Group()
-			@voteFlag = new P.Raster('/static/images/icons/vote-flag-xl2.png')
+			# @voteFlag = new P.Raster('/static/images/icons/vote-flag-xl2.png')
+			@voteFlag = new P.Raster(if not flagged then '/static/images/icons/envelope.png' else '/static/images/icons/flagged.png')
 			# voteFlag = @constructor.voteFlag.clone()
 			# voteFlag = @constructor.voteFlag.place(bounds.center)
 			@voteFlag.position = bounds.center.subtract(-19, 49)
@@ -193,6 +182,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# voteText.content = 'Vote for ' + @title;
 			# voteGroup.addChild(voteText)
 			@group.addChild(voteGroup)
+			
+			if R.selectedTool != R.tools.select
+				@hideVoteFlag()
 			return
 
 		hideVoteFlag: ()->
@@ -200,13 +192,21 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		showVoteFlag: ()->
+			flagged = @status == 'flagged_pending' or @status == 'flagged'
+			if @id? and R.loader.userVotes.get(@id)? and not flagged then return
+			if flagged
+				console.log('showVoteFlag flagged_pending')
 			@voteFlag?.visible = true
+			return
+
+		setPkToDrawing: (pk)->
+			R.pkToDrawing ?= new Map()
+			R.pkToDrawing.set(@pk, @)
 			return
 
 		setPK: (pk)->
 			super(pk)
-			R.pkToDrawing ?= {}
-			R.pkToDrawing[@pk] = @
+			@setPkToDrawing(pk)
 			return
 
 		getPointLists: ()->
@@ -232,12 +232,55 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 					path.data.strokeColor = 'purple'
 				path.draw()
 
+			@computeRectangle()
 			return
 
-		setSVG: (svg, parse=true)->
+		loadSVG: (callback)->
+			jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg', ((result)=>
+				@setSVG(result, false, callback)
+				return
+			))
+			.fail(()=>
+
+				if @svg? then return
+
+				args =
+					pk: @pk
+					svgOnly: true
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+					drawing = JSON.parse(result.drawing)
+					if drawing.svg?
+						@setSVG(drawing.svg, true, callback)
+				)
+			)
+
+			return
+
+		loadSVGToPrint: (callback)->
+			jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg', ((result)=>
+				callback(result)
+				return
+			))
+			.fail(()=>
+
+				if @svg? then return
+
+				args =
+					pk: @pk
+					svgOnly: true
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+					drawing = JSON.parse(result.drawing)
+					if drawing.svg?
+						callback(drawing.svg)
+				)
+			)
+
+			return
+
+		setSVG: (svg, parse=true, callback=null, hide=false)->
 			layerName = @getLayerName()
-			# layer = document.getElementById(layerName)
-			layer = document.createElement('div')
+			layer = document.getElementById(layerName)
+			# layer = document.createElement('div')
 			if not layer then return
 			# layer.insertAdjacentHTML('afterbegin', svg)
 			if parse
@@ -247,8 +290,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				doc = svg
 			doc.documentElement.removeAttribute('visibility')
 			doc.documentElement.removeAttribute('xmlns')
-			doc.documentElement.removeAttribute('stroke')
-			doc.documentElement.removeAttribute('stroke-width')
+			# doc.documentElement.removeAttribute('stroke')
+			# doc.documentElement.removeAttribute('stroke-width')
 			if @status == 'draft'
 				doc.documentElement.setAttribute('id', 'draftDrawing')
 			
@@ -262,6 +305,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				event.stopPropagation()
 				return -1
 			))
+
+			if hide
+				@svg.setAttribute('visibility', 'hidden')
+
+			callback?(@svg)
 
 			return
 
@@ -297,12 +345,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@removePaths()
 
 			@addPathsFromPathList(data.pointLists, false)
+			
+			@updatePaths()
 
 			if @status == 'draft'
 				R.toolManager.updateButtonsVisibility(@)
 				R.tools['Precise path'].showDraftLimits()
 
-			@updatePaths()
 			return
 
 		getListItem: ()->
@@ -310,7 +359,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			itemListJ = null
 			switch @status
 				when 'pending', 'emailNotConfirmed', 'notConfirmed'
-					R.view.pendingLayer.addChild(@group)
 					itemListJ = R.view.pendingListJ
 				when 'drawing'
 					# R.view.drawingLayer.addChild(@group)
@@ -324,7 +372,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				when 'draft'
 					# R.view.mainLayer.addChild(@group)
 					itemListJ = R.view.draftListJ
-				when 'flagged'
+				when 'flagged', 'flagged_pending'
 					# R.view.mainLayer.addChild(@group)
 					itemListJ = R.view.flaggedListJ
 				when 'test'
@@ -349,7 +397,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			return
 
-		addToListItem: (@itemListJ)->
+		addToLayer: ()->
+			@getLayer().addChild(@group)
+			return
+
+		addToListItem: (@itemListJ=@getListItem())->
 
 			title = '' + @title + ' <span data-i18n="by">' + i18next.t('by') + '</span> ' + @owner
 			@liJ = $("<li>")
@@ -385,7 +437,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			nItemsJ = @itemListJ?.find(".n-items")
 			
 			if nItemsJ? and nItemsJ.length>0
-				nItemsJ.html(@itemListJ.find('.rPath-list').children().length)
+				nChildren = @itemListJ.find('.rPath-list').children('li[data-id]').length
+				nItemsJ.html(nChildren)
 
 			return
 
@@ -393,7 +446,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@liJ.remove()
 			nItemsJ = @itemListJ?.find(".n-items")
 			if nItemsJ? and nItemsJ.length>0
-				nItemsJ.html(@itemListJ.find('.rPath-list').children().length)
+				nChildren = @itemListJ.find('.rPath-list').children('li[data-id]').length
+				nItemsJ.html(nChildren)
 			return
 
 		onLiClick: (event)=>
@@ -406,30 +460,43 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@select()
 			return
 
-		computeRectangle: ()->
+		computeRectangle: ()->	
+			console.log('computeRectangle')
 			@rectangle = null
-
-			if @bounds? 
-				@rectangle = @bounds.clone()
-				return @rectangle
-
-			if @svg?
-				if @svg.getBBox?
-					@rectangle = new P.Rectangle(@svg.getBBox())
-					return @rectangle
-			
-			if @group.children.length >= @paths.length && @group.bounds.area > 0
-				@rectangle = @group.bounds.expand(2*R.Path.strokeWidth)
-				if @rectangle? and @rectangle.area > 0
-					return @rectangle
-
 			for path in @paths
 				bounds = path.getDrawingBounds()
 				if bounds?
 					@rectangle ?= bounds.clone()
 					@rectangle = @rectangle.unite(bounds)
+			return
 
-			return @rectangle
+		# computeRectangle: ()->
+		# 	if @status == 'draft'
+		# 		console.log('computeRectangle draft')
+
+		# 	@rectangle = null
+
+		# 	if @bounds? 
+		# 		@rectangle = @bounds.clone()
+		# 		return @rectangle
+
+		# 	if @svg?
+		# 		if @svg.getBBox?
+		# 			@rectangle = new P.Rectangle(@svg.getBBox())
+		# 			return @rectangle
+			
+		# 	if @group.children.length >= @paths.length && @group.bounds.area > 0
+		# 		@rectangle = @group.bounds.expand(2*R.Path.strokeWidth)
+		# 		if @rectangle? and @rectangle.area > 0
+		# 			return @rectangle
+
+		# 	for path in @paths
+		# 		bounds = path.getDrawingBounds()
+		# 		if bounds?
+		# 			@rectangle ?= bounds.clone()
+		# 			@rectangle = @rectangle.unite(bounds)
+
+		# 	return @rectangle
 
 		getLayer: ()->
 			return R.view[@getLayerName()]
@@ -489,6 +556,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			if bounds?
 				@rectangle ?= bounds.clone()
 				@rectangle = @rectangle.unite(bounds)
+
 			path.updateStrokeColor()
 			path.removeFromListItem()
 
@@ -530,8 +598,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			# R.view.mainLayer.addChild(path.group)
 			
-			if updateRectangle
-				@computeRectangle()
+			# if updateRectangle
+			# 	@computeRectangle()
 
 			path.updateStrokeColor()
 			path.addToListItem()
@@ -566,7 +634,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# 	return
 
 			args = {
-				city: R.city
+				cityName: R.city.name
 				clientId: @id
 				date: Date.now()
 				# pathPks: @pathPks
@@ -620,17 +688,17 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		getLayerName: () ->
-			statusName = if @status == 'emailNotConfirmed' or @status == 'notConfirmed' then 'pending' else @status
+			statusName = if @status == 'emailNotConfirmed' or @status == 'notConfirmed' or @status == 'flagged_pending' or @status == 'flagged' then 'pending' else @status
 			return statusName + 'Layer'
 
 		getBounds: ()->
-			@computeRectangle()
+			# @computeRectangle()
 			# if not @svg? and @paths.length == 0
 			# 	return null
 			return @rectangle
 
 		getBoundsWithFlag: ()->
-			@computeRectangle()
+			# @computeRectangle()
 			return if @voteFlag? then @rectangle.unite(@voteFlag.bounds) else @rectangle
 
 		getSVG: (asString=true) ->
@@ -691,9 +759,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			R.toolManager.updateButtonsVisibility()
 
-			@removePaths()
+			# @removePaths()
 
-			@setSVG(@svgString)
+			# @setSVG(@svgString)
 			@svgString = null
 
 			# if @status == 'emailNotConfirmed'
@@ -707,14 +775,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			modal = Modal.createModal( 
 				id: 'share-facebook',
 				title: 'Drawing submitted', 
-				submit: ( ()=> R.drawingPanel.shareOnFacebook(null, @) ), 
+				submit: ( ()=> return ), 
 				# postSubmit: 'load', 
-				submitButtonText: 'Share on Facebook', 
+				# submitButtonText: 'Share on Facebook', 
+				submitButtonText: 'No thanks', 
 				# submitButtonIcon: 'glyphicon-user', 
-				cancelButtonText: 'No thanks', 
+				# cancelButtonText: 'No thanks', 
 				# cancelButtonIcon: 'glyphicon-sunglasses' 
 				)
 			modal.addButton( type: 'info', name: 'Tweet', submit: (()=> R.drawingPanel.shareOnTwitter(null, @)) )
+			modal.addButton( type: 'primary', name: 'Share on Facebook', submit: (()=> R.drawingPanel.shareOnFacebook(null, @) ) )
+			modal.modalJ.find('[name="cancel"]').hide()
+			modal.modalJ.find('[name="submit"]').removeClass('btn-primary').addClass('btn-default')
 			
 			# To enable discussion, uncomment following content (and the following text later on):
 			# modal.addButton( type: 'success', name: 'See discussion page', submit: (()=> 
@@ -895,7 +967,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@status = status
 			# we could just move liJ but we would have to update the number of items anyway
 			@removeFromListItem()
-			@addToListItem(@getListItem())
+			@addToListItem()
+			@addToLayer()
 			
 			if @svg?
 				@svg.remove()
@@ -946,10 +1019,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			for path in @paths.slice()
 				@removeChild(path)
 			@svg?.remove()
+			R.pkToDrawing.delete(@pk)
 			@removeFromListItem()
 			R.rasterizer.rasterizeRectangle(@rectangle)
 			super
 			R.drawings.splice(R.drawings.indexOf(@), 1)
+
 			return
 
 		getRaster: ()->

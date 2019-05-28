@@ -727,7 +727,7 @@
           filename = "image.svg";
         }
         drawing = item.clone();
-        drawing.position = new P.Point(drawing.bounds.size.multiply(0.5));
+        drawing.position = new P.Point(drawing.rectangle.size.multiply(0.5));
         svg = drawing.exportSVG({
           asString: true
         });

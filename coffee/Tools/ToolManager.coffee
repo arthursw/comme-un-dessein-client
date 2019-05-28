@@ -23,6 +23,11 @@ dependencies = [
 define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Tracer, ChooseTool, Modal, i18next) -> # , TextTool, GradientTool, CarTool) ->
 
 	class ToolManager
+		
+		@minZoomPow = -7
+		@maxZoomPow = 2
+		@minZoom = Math.pow(2, @minZoomPow)
+		@maxZoom = Math.pow(2, @maxZoomPow)
 
 		constructor: ()->
 
@@ -139,7 +144,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			# 	delay: 250
 			# $( "#sortable1, #sortable2" ).sortable( sortableArgs ).disableSelection()
 
-			R.tools.move.select() 		# select the move tool
+			
 
 			# ---  init Wacom tablet API --- #
 
@@ -240,33 +245,50 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			# 	order: null
 			# )
 
+			R.tools.move.select() 		# select the move tool
+			
 			return
 
+		clampZoom: (zoom)->
+			return Math.max(@constructor.minZoom, Math.min(@constructor.maxZoom, zoom))
+
 		zoom: (value, snap=true)->
-			if P.view.zoom * value < 0.0078125 or P.view.zoom * value > 4
+
+			zoomPow = Math.floor( Math.log(P.view.zoom) / Math.log(2) )
+			zoomPow += value
+
+			if snap
+				if zoomPow < @constructor.minZoomPow or zoomPow > @constructor.maxZoomPow
+					return
+			else if P.view.zoom * value < @constructor.minZoom or P.view.zoom * value > @constructor.maxZoom
 				return
+
+
 			bounds = R.view.getViewBounds(true)
+			
 			if value < 1 and bounds.contains(R.view.grid.limitCD.bounds)
 				return
-			if bounds.contains(R.view.grid.limitCD.bounds.scale(value))
+			
+			if bounds.contains(R.view.grid.limitCD.bounds.scale(if snap then Math.pow(value, 2) else value))
 				R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(200), true)
 				return
 			
 			if snap
-				newZoom = 1
-				zoomValues = [0.0078125, 0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4]
-				if value < 1
-					for v in zoomValues
-						if P.view.zoom > v
-							newZoom = v
-						else
-							break
-				else
-					for v in zoomValues
-						if P.view.zoom < v
-							newZoom = v
-							break
-				P.view.zoom = newZoom
+				# newZoom = 1
+				# zoomValues = Math.pow(2, n) for n in [minZoomPow .. maxZoomPow]
+				# if value < 1
+				# 	for v in zoomValues
+				# 		if P.view.zoom > v
+				# 			newZoom = v
+				# 		else
+				# 			break
+				# else
+				# 	for v in zoomValues
+				# 		if P.view.zoom < v
+				# 			newZoom = v
+				# 			break
+
+				P.view.zoom = Math.pow(2, zoomPow)
 			else 
 				P.view.zoom *= value
 
@@ -280,6 +302,11 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			# 	R.tools.move.select()
 			# 	R.alertManager.alert 'Please zoom before drawing', 'info'
 			R.tracer?.update()
+
+			if zoomPow < -3
+				R.tools.choose.hideOddLines()
+			else
+				R.tools.choose.showOddLines()
 
 			R.view.moveBy(new P.Point())
 			
@@ -301,7 +328,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				order: 1
 			)
 
-			@zoomInBtn.btnJ.click ()=> @zoom(2)
+			@zoomInBtn.btnJ.click ()=> @zoom(1)
 
 			@zoomOutBtn = new Button(
 				name: 'Zoom -'
@@ -316,7 +343,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				order: 2
 			)
 
-			@zoomOutBtn.btnJ.click ()=> @zoom(0.5)
+			@zoomOutBtn.btnJ.click ()=> @zoom(-1)
 
 			return
 
@@ -324,6 +351,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 
 			@undoBtn = new Button(
 				name: 'Undo'
+				classes: 'dark'
 				# iconURL: 'glyphicon-share-alt'
 				# iconURL: 'icones_icon_back.png'
 				iconURL: if R.style == 'line' then 'icones_icon_back_02.png' else if R.style == 'hand' then 'a-undo.png' else 'glyphicon-share-alt'
@@ -340,6 +368,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 
 			@redoBtn = new Button(
 				name: 'Redo'
+				classes: 'dark'
 				# iconURL: 'glyphicon-share-alt'
 				# iconURL: 'icones_icon_forward.png'
 				iconURL: if R.style == 'line' then 'icones_icon_forward_02.png' else if R.style == 'hand' then 'a-redo.png' else 'glyphicon-share-alt'
@@ -370,6 +399,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			@colorBtn = new Button(
 				name: 'Colors'
 				iconURL: 'glyphicon-tint'
+				classes: 'dark'
 				# iconURL: 'icones_icon_back.png'
 				# iconURL: if R.style == 'line' then 'colors2.png' else if R.style == 'hand' then 'colors2.png' else 'glyphicon-tint'
 				favorite: true

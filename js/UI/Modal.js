@@ -106,7 +106,7 @@
       }
 
       Modal.prototype.addText = function(text, textKey, escapeValue, options) {
-        var content;
+        var content, divJ;
         if (textKey == null) {
           textKey = null;
         }
@@ -127,7 +127,9 @@
         }
         options.interpolation.escapeValue = escapeValue;
         content = i18next.t(textKey, options);
-        this.modalBodyJ.append("<p data-i18n-options='" + (JSON.stringify(options)) + "' data-i18n='[html]" + textKey + "'>" + content + "</p>");
+        divJ = $("<p data-i18n-options='" + (JSON.stringify(options)) + "' data-i18n='[html]" + textKey + "'>" + content + "</p>");
+        this.modalBodyJ.append(divJ);
+        return divJ;
       };
 
       Modal.prototype.addTextInput = function(args) {

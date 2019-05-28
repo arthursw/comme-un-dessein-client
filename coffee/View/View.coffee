@@ -112,7 +112,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@previousMousePosition = null 			# the previous position of the mouse in the mousedown/move/up
 			@initialMousePosition = null 			# the initial position of the mouse in the mousedown/move/up
 
-			@firstHashChange = true
+			# @firstHashChange = true
 
 			@createThumbnailProject()
 			return
@@ -161,10 +161,58 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# drawing.group.remove()
 
 			if drawing.svg? and not toDataURL
-				$(result).find('#mainLayer').append(drawing.svg.cloneNode(true))
+				svg = drawing.svg.cloneNode(true)
+				svg.setAttribute('visibility', 'visible')
+				$(result).find('#mainLayer').append(svg)
 
 			@thumbnailProject.clear()
 			paper.projects[0].activate()
+			return result
+
+		getTileThumbnail: (tileRectangle)->
+			# activeLayer = P.project.activeLayer.clone()
+			# activeLayer.remove()
+			items = P.project.getItems(overlapping: tileRectangle, class: P.Raster )
+
+			@thumbnailProject.activate()
+			@thumbnailProject.view.viewSize = new P.Size(tileRectangle.width, tileRectangle.height)
+			@thumbnailCanvas.width = tileRectangle.width
+			@thumbnailCanvas.height = tileRectangle.height
+			rectangle = tileRectangle
+
+			if not rectangle? then return null
+
+			viewRatio = 1
+			rectangleRatio = rectangle.width / rectangle.height
+			
+			for item in items
+				if item instanceof P.Raster
+					raster = new P.Raster(item.source)
+					raster.position = item.position
+					@thumbnailProject.activeLayer.addChild(raster)
+
+			# if viewRatio < rectangleRatio
+			# 	@thumbnailProject.view.zoom = Math.min(sizeX / rectangle.width, 1)
+			# else
+			# 	@thumbnailProject.view.zoom = Math.min(sizeY / rectangle.height, 1)
+
+			@thumbnailProject.view.setCenter(rectangle.center)
+			@thumbnailProject.activeLayer.name = 'mainLayer'
+			# @thumbnailProject.activeLayer.strokeColor = if blackStroke then 'black' else R.Path.colorMap[drawing.status]
+			# if blackStroke
+			# 	@thumbnailProject.activeLayer.strokeWidth = 3
+			# else
+			# 	@thumbnailProject.activeLayer.strokeWidth = R.Path.strokeWidth
+			@thumbnailProject.view.update()
+			@thumbnailProject.view.draw()
+			result = @thumbnailCanvas.toDataURL()
+			# drawing.group.remove()
+
+			# if drawing.svg? and not toDataURL
+			# 	$(result).find('#mainLayer').append(drawing.svg.cloneNode(true))
+
+			# @thumbnailProject.clear()
+			# paper.projects[0].activate()
 			return result
 
 		createBackground: ()->
@@ -302,7 +350,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@pendingListJ = @createLayerListItem('Pending', @pendingLayer)
 			@pendingListJ.removeClass('closed')
 			@drawingListJ = @createLayerListItem('Drawing', @drawingLayer)
-			@drawnListJ = @createLayerListItem('Drawn', @drawnLayer)
+			# @drawnListJ = @createLayerListItem('Drawn', @drawnLayer)
 			@rejectedListJ = @createLayerListItem('Rejected', @rejectedLayer)
 			@flaggedListJ = @createLayerListItem('Flagged', @flaggedLayer)
 			
@@ -310,6 +358,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				@testListJ = @createLayerListItem('Test', @testLayer)
 
 			@createLoadRejectedDrawingsButton()
+			@createHideOtherDrawingsButton()
 
 			# @rejectedListJ.find(".show-btn").click (event)=>
 			# 	@loadRejectedDrawings()
@@ -323,37 +372,48 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			return
 
 		createLoadRejectedDrawingsButton: ()->
-			loadRejectedDrawingsText = 'Display rejected drawings'
+			loadRejectedDrawingsText = 'Show rejected drawings'
+			hideRejectedDrawingsText = 'Hide rejected drawings'
 			loadRejectedDrawingButtonJ = $('<button class="">').css( color: 'black', height: 25 ).text(loadRejectedDrawingsText)
 			loadRejectedDrawingButtonJ.attr('data-i18n', loadRejectedDrawingsText)
 			loadRejectedDrawingButtonJ.click (event)=>
 				R.loadRejectedDrawings = !R.loadRejectedDrawings
 				if R.loadRejectedDrawings
-					text = 'Hide rejected drawings'
-					loadRejectedDrawingButtonJ.text(i18next.t(text)).attr('data-i18n', text)
+					loadRejectedDrawingButtonJ.text(i18next.t(hideRejectedDrawingsText)).attr('data-i18n', hideRejectedDrawingsText)
 					@loadRejectedDrawings()
 				else
 					loadRejectedDrawingButtonJ.text(i18next.t(loadRejectedDrawingsText)).attr('data-i18n', loadRejectedDrawingsText)
-					R.loader.clearRasters()
-					R.loader.loadRasters()
+					R.loader.inactiveRasterGroup.visible = false
+					R.view.rejectedLayer.visible = false
 				return
 			loadRejectedDrawingLiJ = $('<li>').css( 'justify-content': 'center' ).append(loadRejectedDrawingButtonJ)
 			@rejectedListJ.find('ul.rPath-list').append(loadRejectedDrawingLiJ)
 
 			return
 
+		createHideOtherDrawingsButton: ()->
+			hideOtherDrawingsText = 'Hide other drawings'
+			showOtherDrawingsText = 'Show other drawings'
+			hideOtherDrawingsButtonJ = $('<button class="">').css( color: 'black', height: 25 ).text(hideOtherDrawingsText)
+			hideOtherDrawingsButtonJ.attr('data-i18n', hideOtherDrawingsText)
+			hideOtherDrawingsButtonJ.click (event)=>
+				R.loader.activeRasterGroup.visible = !R.loader.activeRasterGroup.visible
+				R.view.pendingLayer.visible = R.loader.activeRasterGroup.visible
+				if !R.loader.activeRasterGroup.visible
+					hideOtherDrawingsButtonJ.text(i18next.t(showOtherDrawingsText)).attr('data-i18n', showOtherDrawingsText)
+				else
+					hideOtherDrawingsButtonJ.text(i18next.t(hideOtherDrawingsText)).attr('data-i18n', hideOtherDrawingsText)
+				return
+			hideOtherDrawingsLiJ = $('<li>').css( 'justify-content': 'center' ).append(hideOtherDrawingsButtonJ)
+			@rejectedListJ.find('ul.rPath-list').append(hideOtherDrawingsLiJ)
+
+			return
+
 		loadRejectedDrawings: ()->
-
-			if R.rejectedDrawingsLoaded then return
-			R.rejectedDrawingsLoaded = true
-
-			for item in R.rejectedDrawings
-				if R.pkToDrawing?[item._id.$oid]?
-					continue
-				bounds = if item.bounds? then JSON.parse(item.bounds) else null
-				date = item.date?.$date
-				drawing = new R.Drawing(null, null, item.clientId, item._id.$oid, item.owner, date, item.title, null, item.status, item.pathList, item.svg, bounds)
-
+			R.loader.inactiveRasterGroup.visible = true
+			R.view.rejectedLayer.visible = true
+			R.loader.clearRasters()
+			R.loader.loadRasters()
 			return
 
 		getViewBounds: (considerPanels)->
@@ -594,7 +654,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if parameters['zoom']?
 				zoom = parseFloat(parameters['zoom'])
 				if zoom? and Number.isFinite(zoom)
-					P.view.zoom = Math.max(0.0078125, Math.min(4, zoom))
+					P.view.zoom = R.toolManager.clampZoom(zoom)
 					R.tracer?.update()
 
 			mustReload = false
@@ -615,30 +675,70 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# 	R.cityManager.loadCity(parameters['city-name'], parameters['city-owner'], p)
 			# 	return
 			
-			drawingPrefixIndex = location.pathname.indexOf('/drawing-')
-			if drawingPrefixIndex >= 0 
-				drawingPrefixIndex = drawingPrefixIndex + '/drawing-'.length
-			else
-				drawingPrefixIndex = location.pathname.indexOf('/debug-drawing-')
-				if drawingPrefixIndex >= 0
-					drawingPrefixIndex = drawingPrefixIndex + '/debug-drawing-'.length
-
-			if drawingPrefixIndex >= 0
-				drawingPk = location.pathname.substring(drawingPrefixIndex)
-				R.loader.focusOnDrawing = drawingPk
+			# drawingPrefixIndex = location.pathname.indexOf('/drawing-')
+			# if drawingPrefixIndex >= 0
+			# 	drawingPk = location.pathname.substring(drawingPrefixIndex  + '/drawing-'.length)
+			# 	R.loader.focusOnDrawing = drawingPk
 			
-			@moveTo(p, null, !@firstHashChange, @firstHashChange, false)
+			if p?
+				@moveTo(p, null, false, true, false)
+			else
+				loadDrawingOrTile = @initializePositionFromDrawingOrTile()
+				if not loadDrawingOrTile
+					@moveTo(new P.Point(), null, false, true, false)
 
-			@firstHashChange = true
+			# @moveTo(p, null, !@firstHashChange, @firstHashChange, false)
+			# @firstHashChange = true
 
 			if reloadIfNecessary and mustReload
 				window.location.reload()
+
 			return
+
+		initializePositionFromDrawingOrTile: ()->
+			boundsString = R.canvasJ.attr("data-bounds")
+			bounds = if boundsString? and boundsString.length > 0 then JSON.parse(boundsString) else null
+			if bounds?
+				rectangle = new P.Rectangle(bounds)
+				@fitRectangle(rectangle, true)
+				drawingPk = R.canvasJ.attr("data-drawing-pk")
+				if drawingPk?
+					args =
+						pk: drawingPk
+						loadSVG: true
+
+					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+						# R.drawingPanel.setDrawing(@, result)
+					)
+				tilePk = R.canvasJ.attr("data-tile-pk")
+				if tilePk?
+					R.tools.choose.loadTile(tilePk, rectangle)
+				
+				return true
+
+			return false
 
 		# User has choosen a city from world: display @grid.frame (gray background) and update @restrictedArea
 		loadCity: ()->
 			@gird.createFrame()
 			@initializePosition()
+			return
+
+		selectDrawings: (event)->
+			point = Utils.Event.GetPoint(event)
+			point.y -= 62 # the stage is at 62 pixel
+			point = P.view.viewToProject(point)
+			rectangle = new P.Rectangle(point, point)
+			rectangle = rectangle.expand(5)
+			
+			drawingsToSelect = []
+			for drawing in R.drawings
+				if drawing.getBoundsWithFlag()?.intersects(rectangle) and drawing.isVisible()
+					drawingsToSelect.push(drawing)
+
+			R.tools.select.deselectAll()
+			for drawing in drawingsToSelect
+				drawing.select()
 			return
 
 		## Init position
@@ -675,31 +775,15 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			defsJ.append(patternRejectsJ)
 			R.svgJ.prepend(defsJ)
 			
-			R.svgJ.click((event)=>
-				
-				point = Utils.Event.GetPoint(event)
-				point.y -= 62 # the stage is at 62 pixel
-				point = P.view.viewToProject(point)
-				rectangle = new P.Rectangle(point, point)
-				rectangle = rectangle.expand(5)
-				
-				drawingsToSelect = []
-				for drawing in R.drawings
-					if drawing.getBoundsWithFlag()?.intersects(rectangle) and drawing.isVisible()
-						drawingsToSelect.push(drawing)
-
-				R.tools.select.deselectAll()
-				for drawing in drawingsToSelect
-					drawing.select()
-
-				return
-			)
+			R.svgJ.click((event)=> @selectDrawings(event))
 
 			# check if canvas has an attribute 'data-box'
 			# boxString = R.canvasJ.attr("data-box")
 			#
 			# if not boxString or boxString.length==0
 			if not R.loadedBox?
+				if not R.initialZoom?
+					R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true)
 				window?.onhashchange(null, false)
 				return
 

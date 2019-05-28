@@ -219,13 +219,11 @@
           window.setPageFullyLoaded(true);
         }
       }
-      if (R.initialZoom == null) {
-        R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true);
-      }
       if (R.city.name !== 'world') {
         require(['Items/Paths/PrecisePaths/PrecisePath'], function() {
           R.loader.loadRasters();
-          R.loader.loadSVG();
+          R.loader.loadDraft();
+          R.loader.loadVotes();
         });
       }
       $('#about-link').click(function(event) {

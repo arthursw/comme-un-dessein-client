@@ -393,7 +393,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 					if not R.loader.checkError(result) then return
 					
 					latestDrawing = JSON.parse(result.drawing)
-					drawing = R.pkToDrawing[latestDrawing._id.$oid]
+					drawing = R.pkToDrawing.get(latestDrawing._id.$oid)
 					drawing.votes = result.votes
 					drawing.status = latestDrawing.status
 
@@ -411,7 +411,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 			
 			for result in results.results
 				
-				drawing = R.pkToDrawing[result.pk]
+				drawing = R.pkToDrawing.get(result.pk)
 				if drawing?
 					drawing.votes = result.votes
 					drawing.status = result.status

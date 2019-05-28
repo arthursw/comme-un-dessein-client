@@ -24,7 +24,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		@drawItems = true
 
 		@emitSocket = false
-		@maxDraftSize = 350
+		@maxDraftSize = 500
 
 		@computeDraftBounds: (paths=null)->
 			bounds = R.Drawing.getDraft()?.getBounds()
@@ -151,7 +151,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			super()
 			@finish()
 			
-			# R.tracer?.hide()
+			# R.tracer?.hide() 			# We need the tracer with the Eraser tool (just guessing)
 
 			@hideDraftLimits()
 

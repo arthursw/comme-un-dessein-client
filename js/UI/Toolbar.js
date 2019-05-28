@@ -129,22 +129,22 @@
           windowWidth = window.innerWidth;
         }
         if (positionX == null) {
-          positionX = this.toolListJ.offset().left;
+          positionX = Math.floor(this.toolListJ.offset().left);
         }
         if (positionX >= 0) {
           this.leftArrowJ.css({
             opacity: 0
           });
-        } else if (positionX < 0) {
+        } else {
           this.leftArrowJ.css({
             opacity: 0.8
           }).show();
         }
-        if (positionX <= -(toollistWidth - windowWidth)) {
+        if (positionX + toollistWidth <= windowWidth) {
           this.rightArrowJ.css({
             opacity: 0
           });
-        } else if (positionX > -(toollistWidth - windowWidth)) {
+        } else {
           this.rightArrowJ.css({
             opacity: 0.8
           }).show();

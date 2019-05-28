@@ -593,7 +593,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 
 			# args =
 			# 	clientId: @id
-			# 	city: R.city
+			# 	cityName: R.city.name
 			# 	bounds: @getDrawingBounds()
 			# 	points: @pathOnPlanet()
 			# 	data: @getStringifiedData()
@@ -788,7 +788,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			filename ?= "image.svg"
 			# export to svg
 			drawing = item.clone()
-			drawing.position = new P.Point(drawing.bounds.size.multiply(0.5))
+			drawing.position = new P.Point(drawing.rectangle.size.multiply(0.5))
 			svg = drawing.exportSVG( asString: true )
 			drawing.remove()
 

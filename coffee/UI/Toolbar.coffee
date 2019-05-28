@@ -91,15 +91,18 @@ define ['paper', 'R', 'Utils/Utils' ], (P, R, Utils) ->
 
 		updateArrowsVisibility: (toollistWidth=null, windowWidth=null, positionX=null)=>
 			toollistWidth ?= @toolListJ.outerWidth()
+			# windowWidth ?= @rightArrowJ.offset().left + @rightArrowJ.outerWidth()
 			windowWidth ?= window.innerWidth
-			positionX ?= @toolListJ.offset().left
+			positionX ?= Math.floor(@toolListJ.offset().left)
+			
 			if positionX >= 0
 				@leftArrowJ.css( opacity: 0 )
-			else if positionX < 0
+			else
 				@leftArrowJ.css( opacity: 0.8 ).show()
-			if positionX <= -(toollistWidth - windowWidth)
+
+			if positionX + toollistWidth <= windowWidth
 				@rightArrowJ.css( opacity: 0 )
-			else if positionX > -(toollistWidth - windowWidth)
+			else
 				@rightArrowJ.css( opacity: 0.8 ).show()
 
 			if positionX + toollistWidth < windowWidth

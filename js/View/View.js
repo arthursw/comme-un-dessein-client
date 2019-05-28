@@ -124,7 +124,6 @@
         this.mousePosition = new P.Point();
         this.previousMousePosition = null;
         this.initialMousePosition = null;
-        this.firstHashChange = true;
         this.createThumbnailProject();
         return;
       }
@@ -139,7 +138,7 @@
       };
 
       View.prototype.getThumbnail = function(drawing, sizeX, sizeY, toDataURL, blackStroke) {
-        var i, len, path, rectangle, rectangleRatio, ref, result, viewRatio;
+        var i, len, path, rectangle, rectangleRatio, ref, result, svg, viewRatio;
         if (sizeX == null) {
           sizeX = this.constructor.thumbnailSize;
         }
@@ -185,10 +184,44 @@
         this.thumbnailProject.view.draw();
         result = toDataURL ? this.thumbnailCanvas.toDataURL() : this.thumbnailProject.exportSVG();
         if ((drawing.svg != null) && !toDataURL) {
-          $(result).find('#mainLayer').append(drawing.svg.cloneNode(true));
+          svg = drawing.svg.cloneNode(true);
+          svg.setAttribute('visibility', 'visible');
+          $(result).find('#mainLayer').append(svg);
         }
         this.thumbnailProject.clear();
         paper.projects[0].activate();
+        return result;
+      };
+
+      View.prototype.getTileThumbnail = function(tileRectangle) {
+        var i, item, items, len, raster, rectangle, rectangleRatio, result, viewRatio;
+        items = P.project.getItems({
+          overlapping: tileRectangle,
+          "class": P.Raster
+        });
+        this.thumbnailProject.activate();
+        this.thumbnailProject.view.viewSize = new P.Size(tileRectangle.width, tileRectangle.height);
+        this.thumbnailCanvas.width = tileRectangle.width;
+        this.thumbnailCanvas.height = tileRectangle.height;
+        rectangle = tileRectangle;
+        if (rectangle == null) {
+          return null;
+        }
+        viewRatio = 1;
+        rectangleRatio = rectangle.width / rectangle.height;
+        for (i = 0, len = items.length; i < len; i++) {
+          item = items[i];
+          if (item instanceof P.Raster) {
+            raster = new P.Raster(item.source);
+            raster.position = item.position;
+            this.thumbnailProject.activeLayer.addChild(raster);
+          }
+        }
+        this.thumbnailProject.view.setCenter(rectangle.center);
+        this.thumbnailProject.activeLayer.name = 'mainLayer';
+        this.thumbnailProject.view.update();
+        this.thumbnailProject.view.draw();
+        result = this.thumbnailCanvas.toDataURL();
         return result;
       };
 
@@ -344,21 +377,22 @@
         this.pendingListJ = this.createLayerListItem('Pending', this.pendingLayer);
         this.pendingListJ.removeClass('closed');
         this.drawingListJ = this.createLayerListItem('Drawing', this.drawingLayer);
-        this.drawnListJ = this.createLayerListItem('Drawn', this.drawnLayer);
         this.rejectedListJ = this.createLayerListItem('Rejected', this.rejectedLayer);
         this.flaggedListJ = this.createLayerListItem('Flagged', this.flaggedLayer);
         if (R.administrator) {
           this.testListJ = this.createLayerListItem('Test', this.testLayer);
         }
         this.createLoadRejectedDrawingsButton();
+        this.createHideOtherDrawingsButton();
         if (!R.administrator) {
           this.flaggedListJ.hide();
         }
       };
 
       View.prototype.createLoadRejectedDrawingsButton = function() {
-        var loadRejectedDrawingButtonJ, loadRejectedDrawingLiJ, loadRejectedDrawingsText;
-        loadRejectedDrawingsText = 'Display rejected drawings';
+        var hideRejectedDrawingsText, loadRejectedDrawingButtonJ, loadRejectedDrawingLiJ, loadRejectedDrawingsText;
+        loadRejectedDrawingsText = 'Show rejected drawings';
+        hideRejectedDrawingsText = 'Hide rejected drawings';
         loadRejectedDrawingButtonJ = $('<button class="">').css({
           color: 'black',
           height: 25
@@ -366,16 +400,14 @@
         loadRejectedDrawingButtonJ.attr('data-i18n', loadRejectedDrawingsText);
         loadRejectedDrawingButtonJ.click((function(_this) {
           return function(event) {
-            var text;
             R.loadRejectedDrawings = !R.loadRejectedDrawings;
             if (R.loadRejectedDrawings) {
-              text = 'Hide rejected drawings';
-              loadRejectedDrawingButtonJ.text(i18next.t(text)).attr('data-i18n', text);
+              loadRejectedDrawingButtonJ.text(i18next.t(hideRejectedDrawingsText)).attr('data-i18n', hideRejectedDrawingsText);
               _this.loadRejectedDrawings();
             } else {
               loadRejectedDrawingButtonJ.text(i18next.t(loadRejectedDrawingsText)).attr('data-i18n', loadRejectedDrawingsText);
-              R.loader.clearRasters();
-              R.loader.loadRasters();
+              R.loader.inactiveRasterGroup.visible = false;
+              R.view.rejectedLayer.visible = false;
             }
           };
         })(this));
@@ -385,22 +417,37 @@
         this.rejectedListJ.find('ul.rPath-list').append(loadRejectedDrawingLiJ);
       };
 
+      View.prototype.createHideOtherDrawingsButton = function() {
+        var hideOtherDrawingsButtonJ, hideOtherDrawingsLiJ, hideOtherDrawingsText, showOtherDrawingsText;
+        hideOtherDrawingsText = 'Hide other drawings';
+        showOtherDrawingsText = 'Show other drawings';
+        hideOtherDrawingsButtonJ = $('<button class="">').css({
+          color: 'black',
+          height: 25
+        }).text(hideOtherDrawingsText);
+        hideOtherDrawingsButtonJ.attr('data-i18n', hideOtherDrawingsText);
+        hideOtherDrawingsButtonJ.click((function(_this) {
+          return function(event) {
+            R.loader.activeRasterGroup.visible = !R.loader.activeRasterGroup.visible;
+            R.view.pendingLayer.visible = R.loader.activeRasterGroup.visible;
+            if (!R.loader.activeRasterGroup.visible) {
+              hideOtherDrawingsButtonJ.text(i18next.t(showOtherDrawingsText)).attr('data-i18n', showOtherDrawingsText);
+            } else {
+              hideOtherDrawingsButtonJ.text(i18next.t(hideOtherDrawingsText)).attr('data-i18n', hideOtherDrawingsText);
+            }
+          };
+        })(this));
+        hideOtherDrawingsLiJ = $('<li>').css({
+          'justify-content': 'center'
+        }).append(hideOtherDrawingsButtonJ);
+        this.rejectedListJ.find('ul.rPath-list').append(hideOtherDrawingsLiJ);
+      };
+
       View.prototype.loadRejectedDrawings = function() {
-        var bounds, date, drawing, i, item, len, ref, ref1, ref2;
-        if (R.rejectedDrawingsLoaded) {
-          return;
-        }
-        R.rejectedDrawingsLoaded = true;
-        ref = R.rejectedDrawings;
-        for (i = 0, len = ref.length; i < len; i++) {
-          item = ref[i];
-          if (((ref1 = R.pkToDrawing) != null ? ref1[item._id.$oid] : void 0) != null) {
-            continue;
-          }
-          bounds = item.bounds != null ? JSON.parse(item.bounds) : null;
-          date = (ref2 = item.date) != null ? ref2.$date : void 0;
-          drawing = new R.Drawing(null, null, item.clientId, item._id.$oid, item.owner, date, item.title, null, item.status, item.pathList, item.svg, bounds);
-        }
+        R.loader.inactiveRasterGroup.visible = true;
+        R.view.rejectedLayer.visible = true;
+        R.loader.clearRasters();
+        R.loader.loadRasters();
       };
 
       View.prototype.getViewBounds = function(considerPanels) {
@@ -584,7 +631,7 @@
       };
 
       View.prototype.onHashChange = function(event, reloadIfNecessary) {
-        var drawingPk, drawingPrefixIndex, mustReload, p, parameters, ref, zoom;
+        var loadDrawingOrTile, mustReload, p, parameters, ref, zoom;
         if (reloadIfNecessary == null) {
           reloadIfNecessary = true;
         }
@@ -603,7 +650,7 @@
         if (parameters['zoom'] != null) {
           zoom = parseFloat(parameters['zoom']);
           if ((zoom != null) && Number.isFinite(zoom)) {
-            P.view.zoom = Math.max(0.0078125, Math.min(4, zoom));
+            P.view.zoom = R.toolManager.clampZoom(zoom);
             if ((ref = R.tracer) != null) {
               ref.update();
             }
@@ -616,29 +663,79 @@
         if (parameters['administrator'] != null) {
           R.administrator = parameters['administrator'];
         }
-        drawingPrefixIndex = location.pathname.indexOf('/drawing-');
-        if (drawingPrefixIndex >= 0) {
-          drawingPrefixIndex = drawingPrefixIndex + '/drawing-'.length;
+        if (p != null) {
+          this.moveTo(p, null, false, true, false);
         } else {
-          drawingPrefixIndex = location.pathname.indexOf('/debug-drawing-');
-          if (drawingPrefixIndex >= 0) {
-            drawingPrefixIndex = drawingPrefixIndex + '/debug-drawing-'.length;
+          loadDrawingOrTile = this.initializePositionFromDrawingOrTile();
+          if (!loadDrawingOrTile) {
+            this.moveTo(new P.Point(), null, false, true, false);
           }
         }
-        if (drawingPrefixIndex >= 0) {
-          drawingPk = location.pathname.substring(drawingPrefixIndex);
-          R.loader.focusOnDrawing = drawingPk;
-        }
-        this.moveTo(p, null, !this.firstHashChange, this.firstHashChange, false);
-        this.firstHashChange = true;
         if (reloadIfNecessary && mustReload) {
           window.location.reload();
         }
       };
 
+      View.prototype.initializePositionFromDrawingOrTile = function() {
+        var args, bounds, boundsString, drawingPk, rectangle, tilePk;
+        boundsString = R.canvasJ.attr("data-bounds");
+        bounds = (boundsString != null) && boundsString.length > 0 ? JSON.parse(boundsString) : null;
+        if (bounds != null) {
+          rectangle = new P.Rectangle(bounds);
+          this.fitRectangle(rectangle, true);
+          drawingPk = R.canvasJ.attr("data-drawing-pk");
+          if (drawingPk != null) {
+            args = {
+              pk: drawingPk,
+              loadSVG: true
+            };
+            $.ajax({
+              method: "POST",
+              url: "ajaxCall/",
+              data: {
+                data: JSON.stringify({
+                  "function": 'loadDrawing',
+                  args: args
+                })
+              }
+            }).done((function(_this) {
+              return function(result) {};
+            })(this));
+          }
+          tilePk = R.canvasJ.attr("data-tile-pk");
+          if (tilePk != null) {
+            R.tools.choose.loadTile(tilePk, rectangle);
+          }
+          return true;
+        }
+        return false;
+      };
+
       View.prototype.loadCity = function() {
         this.gird.createFrame();
         this.initializePosition();
+      };
+
+      View.prototype.selectDrawings = function(event) {
+        var drawing, drawingsToSelect, i, j, len, len1, point, rectangle, ref, ref1;
+        point = Utils.Event.GetPoint(event);
+        point.y -= 62;
+        point = P.view.viewToProject(point);
+        rectangle = new P.Rectangle(point, point);
+        rectangle = rectangle.expand(5);
+        drawingsToSelect = [];
+        ref = R.drawings;
+        for (i = 0, len = ref.length; i < len; i++) {
+          drawing = ref[i];
+          if (((ref1 = drawing.getBoundsWithFlag()) != null ? ref1.intersects(rectangle) : void 0) && drawing.isVisible()) {
+            drawingsToSelect.push(drawing);
+          }
+        }
+        R.tools.select.deselectAll();
+        for (j = 0, len1 = drawingsToSelect.length; j < len1; j++) {
+          drawing = drawingsToSelect[j];
+          drawing.select();
+        }
       };
 
       View.prototype.initializePosition = function() {
@@ -665,28 +762,13 @@
         R.svgJ.prepend(defsJ);
         R.svgJ.click((function(_this) {
           return function(event) {
-            var drawing, drawingsToSelect, i, j, len, len1, point, rectangle, ref, ref1;
-            point = Utils.Event.GetPoint(event);
-            point.y -= 62;
-            point = P.view.viewToProject(point);
-            rectangle = new P.Rectangle(point, point);
-            rectangle = rectangle.expand(5);
-            drawingsToSelect = [];
-            ref = R.drawings;
-            for (i = 0, len = ref.length; i < len; i++) {
-              drawing = ref[i];
-              if (((ref1 = drawing.getBoundsWithFlag()) != null ? ref1.intersects(rectangle) : void 0) && drawing.isVisible()) {
-                drawingsToSelect.push(drawing);
-              }
-            }
-            R.tools.select.deselectAll();
-            for (j = 0, len1 = drawingsToSelect.length; j < len1; j++) {
-              drawing = drawingsToSelect[j];
-              drawing.select();
-            }
+            return _this.selectDrawings(event);
           };
         })(this));
         if (R.loadedBox == null) {
+          if (R.initialZoom == null) {
+            R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true);
+          }
           if (typeof window !== "undefined" && window !== null) {
             window.onhashchange(null, false);
           }

@@ -33,6 +33,23 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 
 			return
 
+		projectToGeoJSON: (point)->
+			return new P.Point(360 * point.x / @size.width, 180 * point.y / @size.height)
+
+		projectToGeoJSONRectangle: (rectangle)->
+			topLeft = @projectToGeoJSON(rectangle.topLeft)
+			return new P.Rectangle(topLeft.x, topLeft.y, 360 * rectangle.width / @size.width, 180 * rectangle.height / @size.height)
+
+		geoJSONToProject: (point)->
+			return new P.Point(@size.width * point.x / 360, @size.height * point.y / 180)
+
+		boundsFromBox: (box)->
+			left = @size.width * box['coordinates'][0][0][0] / 360
+			top = @size.height * box['coordinates'][0][0][1] / 180
+			right = @size.width * box['coordinates'][0][2][0] / 360
+			bottom = @size.height * box['coordinates'][0][2][1] / 180
+			return new P.Rectangle(left, top, right-left, bottom-top)
+
 		createFrame: ()->
 
 			@frame = new P.Group()

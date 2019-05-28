@@ -194,7 +194,7 @@ define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, i
 						if R.loader.drawingPaths.length == 0
 							if not @requestedNextDrawing
 								args = 
-									city: R.city
+									cityName: R.city.name
 								$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getNextValidatedDrawing', args: args } ).done((results)=>
 									@requestedNextDrawing = false
 									if results.message == 'no path' then return

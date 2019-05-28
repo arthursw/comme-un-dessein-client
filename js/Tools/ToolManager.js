@@ -7,6 +7,14 @@
   define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ItemTool, Tracer, ChooseTool, Modal, i18next) {
     var ToolManager;
     ToolManager = (function() {
+      ToolManager.minZoomPow = -7;
+
+      ToolManager.maxZoomPow = 2;
+
+      ToolManager.minZoom = Math.pow(2, ToolManager.minZoomPow);
+
+      ToolManager.maxZoom = Math.pow(2, ToolManager.maxZoomPow);
+
       function ToolManager() {
         var defaultFavoriteTools, error;
         R.ToolsJ = $(".tool-list");
@@ -32,7 +40,6 @@
         while (R.favoriteTools.length < 8 && defaultFavoriteTools.length > 0) {
           Utils.Array.pushIfAbsent(R.favoriteTools, defaultFavoriteTools.pop().label);
         }
-        R.tools.move.select();
         R.wacomPlugin = document.getElementById('wacomPlugin');
         if (R.wacomPlugin != null) {
           R.wacomPenAPI = wacomPlugin.penAPI;
@@ -48,52 +55,48 @@
         this.createUndoRedoButtons();
         R.tools.choose = new R.Tools.Choose();
         this.createInfoButton();
+        R.tools.move.select();
         return;
       }
 
+      ToolManager.prototype.clampZoom = function(zoom) {
+        return Math.max(this.constructor.minZoom, Math.min(this.constructor.maxZoom, zoom));
+      };
+
       ToolManager.prototype.zoom = function(value, snap) {
-        var bounds, i, j, len, len1, newZoom, ref, v, zoomValues;
+        var bounds, ref, zoomPow;
         if (snap == null) {
           snap = true;
         }
-        if (P.view.zoom * value < 0.0078125 || P.view.zoom * value > 4) {
+        zoomPow = Math.floor(Math.log(P.view.zoom) / Math.log(2));
+        zoomPow += value;
+        if (snap) {
+          if (zoomPow < this.constructor.minZoomPow || zoomPow > this.constructor.maxZoomPow) {
+            return;
+          }
+        } else if (P.view.zoom * value < this.constructor.minZoom || P.view.zoom * value > this.constructor.maxZoom) {
           return;
         }
         bounds = R.view.getViewBounds(true);
         if (value < 1 && bounds.contains(R.view.grid.limitCD.bounds)) {
           return;
         }
-        if (bounds.contains(R.view.grid.limitCD.bounds.scale(value))) {
+        if (bounds.contains(R.view.grid.limitCD.bounds.scale(snap ? Math.pow(value, 2) : value))) {
           R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(200), true);
           return;
         }
         if (snap) {
-          newZoom = 1;
-          zoomValues = [0.0078125, 0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4];
-          if (value < 1) {
-            for (i = 0, len = zoomValues.length; i < len; i++) {
-              v = zoomValues[i];
-              if (P.view.zoom > v) {
-                newZoom = v;
-              } else {
-                break;
-              }
-            }
-          } else {
-            for (j = 0, len1 = zoomValues.length; j < len1; j++) {
-              v = zoomValues[j];
-              if (P.view.zoom < v) {
-                newZoom = v;
-                break;
-              }
-            }
-          }
-          P.view.zoom = newZoom;
+          P.view.zoom = Math.pow(2, zoomPow);
         } else {
           P.view.zoom *= value;
         }
         if ((ref = R.tracer) != null) {
           ref.update();
+        }
+        if (zoomPow < -3) {
+          R.tools.choose.hideOddLines();
+        } else {
+          R.tools.choose.showOddLines();
         }
         R.view.moveBy(new P.Point());
       };
@@ -110,7 +113,7 @@
         });
         this.zoomInBtn.btnJ.click((function(_this) {
           return function() {
-            return _this.zoom(2);
+            return _this.zoom(1);
           };
         })(this));
         this.zoomOutBtn = new Button({
@@ -124,7 +127,7 @@
         });
         this.zoomOutBtn.btnJ.click((function(_this) {
           return function() {
-            return _this.zoom(0.5);
+            return _this.zoom(-1);
           };
         })(this));
       };
@@ -132,6 +135,7 @@
       ToolManager.prototype.createUndoRedoButtons = function() {
         this.undoBtn = new Button({
           name: 'Undo',
+          classes: 'dark',
           iconURL: R.style === 'line' ? 'icones_icon_back_02.png' : R.style === 'hand' ? 'a-undo.png' : 'glyphicon-share-alt',
           favorite: true,
           category: null,
@@ -146,6 +150,7 @@
         });
         this.redoBtn = new Button({
           name: 'Redo',
+          classes: 'dark',
           iconURL: R.style === 'line' ? 'icones_icon_forward_02.png' : R.style === 'hand' ? 'a-redo.png' : 'glyphicon-share-alt',
           favorite: true,
           category: null,
@@ -172,6 +177,7 @@
         this.colorBtn = new Button({
           name: 'Colors',
           iconURL: 'glyphicon-tint',
+          classes: 'dark',
           favorite: true,
           category: null,
           disableHover: true,

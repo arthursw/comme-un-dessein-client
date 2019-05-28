@@ -506,6 +506,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 			middlePoint: previousPosition.add(delta.divide(2))
 			type: type
 			count: count
+			originalEvent: event
 		return paperEvent
 
 	# Test if the special key is pressed. Special key is command key on a mac, and control key on other systems.
@@ -778,41 +779,50 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingStatus', args: args } ).done(checkError)
 		return
 
-	R.setNegativeVoteThreshold = (voteThreshold)->
+	# R.setNegativeVoteThreshold = (voteThreshold, cityName=R.city.name)->
+	# 	if not R.administrator then return false
+	# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setNegativeVoteThreshold', args: { cityName: cityName, voteThreshold: voteThreshold }  } ).done(checkError)
+	# 	return
+
+	R.setVoteThresholds = (negativeVoteThreshold=2, positiveVoteThreshold=2, negativeVoteThresholdTile=2, positiveVoteThresholdTile=2, cityName=R.city.name)->
 		if not R.administrator then return false
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setNegativeVoteThreshold', args: voteThreshold: voteThreshold } ).done(checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteThresholds', args: { cityName: cityName, negativeVoteThreshold: negativeVoteThresholdTile, positiveVoteThreshold: positiveVoteThreshold, negativeVoteThresholdTile: negativeVoteThresholdTile } } ).done(checkError)
 		return
 
-	R.setPositiveVoteThreshold = (voteThreshold)->
+	R.setVoteValidationDelay = (hours, minutes, seconds, cityName=R.city.name)->
 		if not R.administrator then return false
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPositiveVoteThreshold', args: voteThreshold: voteThreshold } ).done(checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteValidationDelay', args: { cityName: cityName, hours: hours, minutes: minutes, seconds: seconds } } ).done(checkError)
 		return
 
-	R.setVoteValidationDelay = (hours, minutes, seconds)->
+	R.setVoteMinDuration = (hours, minutes, seconds, cityName=R.city.name)->
 		if not R.administrator then return false
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteValidationDelay', args: { hours: hours, minutes: minutes, seconds: seconds } } ).done(checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteMinDuration', args: { cityName: cityName, hours: hours, minutes: minutes, seconds: seconds } } ).done(checkError)
 		return
 
-	R.setVoteMinDuration = (hours, minutes, seconds)->
-		if not R.administrator then return false
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteMinDuration', args: { hours: hours, minutes: minutes, seconds: seconds } } ).done(checkError)
-		return
-
-	R.setVoteParameters = (negativeVoteThreshold, positiveVoteThreshold=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5)->
+	R.setVoteParameters = (negativeVoteThreshold=2, positiveVoteThreshold=2, negativeVoteThresholdTile=2, positiveVoteThresholdTile=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5, cityName=R.city.name)->
 		if not R.administrator then return false
 		if not negativeVoteThreshold
 			console.log("setVoteParameters(negativeVoteThreshold, positiveVoteThreshold=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5)")
 			return
-		R.setNegativeVoteThreshold(negativeVoteThreshold)
-		R.setPositiveVoteThreshold(positiveVoteThreshold)
-		R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds)
-		R.setVoteMinDuration(0, 0, voteMinDurationInSeconds)
+		R.setVoteThresholds(negativeVoteThreshold, positiveVoteThreshold, negativeVoteThresholdTile, positiveVoteThresholdTile, cityName)
+		R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds, cityName)
+		R.setVoteMinDuration(0, 0, voteMinDurationInSeconds, cityName)
+		return
+
+	R.setCityNextEventDateAndLocation = (date, location, cityName=R.city.name)->
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setCityNextEventDateAndLocation', args: { cityName: cityName, date: date, location: location } } ).done(checkError)
+		return
+
+	R.setCityDimensions = (width, height, strokeWidth, cityName=R.city.name)->
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setCityDimensions', args: { cityName: cityName, width: width, height: height, strokeWidth: strokeWidth } } ).done(checkError)
 		return
 
 	R.setSelectedDrawingsToCity = (city)->
 		args = {
 			pk: R.s.pk
-			city: name: city
+			cityName: city
 		}
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingToCity', args: args } ).done(checkError)
 		return
@@ -829,6 +839,11 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 	R.createDrawingThumbnail = ()->
 		imageURL = R.view.getThumbnail(R.s, 1200, 630, true, true)
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'createDrawingThumbnail', args: {png: imageURL, pk: R.s.pk} } ).done(checkError)
+		return
+
+	R.bannUser = (username, removeDrawings=false, removeVotes=false, removeComments=false)->
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'bannUser', args: {username: username, removeDrawings: removeDrawings, removeVotes: removeVotes, removeComments: removeComments} } ).done(checkError)
 		return
 
 	R.getEmail = (username)->
@@ -892,7 +907,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 			if event.key == 'p'
 
 				args = {
-					city: R.city
+					cityName: R.city.name
 					clientId: draft.id
 					date: Date.now()
 					# pathPks: @pathPks

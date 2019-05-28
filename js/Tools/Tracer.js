@@ -6,6 +6,8 @@
     var Tracer;
     Tracer = (function() {
       function Tracer() {
+        this.handleFiles = bind(this.handleFiles, this);
+        this.fileDropped = bind(this.fileDropped, this);
         this.submitURL = bind(this.submitURL, this);
         this.rasterOnError = bind(this.rasterOnError, this);
         this.rasterOnLoad = bind(this.rasterOnLoad, this);
@@ -23,6 +25,7 @@
         this.tracerBtn = new Button({
           name: 'Trace',
           iconURL: R.style === 'line' ? 'image.png' : R.style === 'hand' ? 'image.png' : 'glyphicon-picture',
+          classes: 'dark',
           favorite: true,
           category: null,
           disableHover: true,
@@ -32,23 +35,48 @@
         this.tracerBtn.hide();
         return this.tracerBtn.btnJ.click((function(_this) {
           return function() {
-            var modal;
+            var dropZoneJ, inputJ, orText;
             _this.removeRaster();
-            modal = Modal.createModal({
+            _this.modal = Modal.createModal({
               id: 'import-image',
               title: "Import image to trace",
               submit: _this.submitURL
             });
-            modal.addTextInput({
+            dropZoneJ = $("<div id=\"modal-dropZone\" style=\"min-height: 200px; white-space: pre; border: 3px dashed gray; text-align: center; padding-top: 85px; margin-bottom: 15px;\"\nondragenter=\"document.getElementById('modal-dropZone').textContent = ''; event.stopPropagation(); event.preventDefault();\"\nondragover=\"event.stopPropagation(); event.preventDefault();\">" + i18next.t('Drop image here') + "</div>");
+            dropZoneJ.get(0).addEventListener('drop', _this.fileDropped, false);
+            _this.modal.addCustomContent({
+              name: 'dropZone',
+              divJ: dropZoneJ
+            });
+            orText = _this.modal.addText('or');
+            orText.css({
+              'text-align': 'center',
+              'margin': 10
+            });
+            inputJ = $('<input type="file" multiple accept="image/*">');
+            _this.modal.addCustomContent({
+              name: 'tracerFileInput',
+              divJ: inputJ
+            });
+            inputJ.css({
+              margin: 'auto'
+            });
+            inputJ.get(0).addEventListener('change', _this.handleFiles, false);
+            orText = _this.modal.addText('or');
+            orText.css({
+              'text-align': 'center',
+              'margin': 10
+            });
+            _this.modal.addTextInput({
               name: 'imageURL',
               placeholder: 'http://exemple.fr/belle-image.png',
               type: 'url',
               submitShortcut: true,
-              label: 'Image URL',
+              label: 'Import image from URL',
               required: true,
               errorMessage: i18next.t('The URL is invalid')
             });
-            modal.show();
+            _this.modal.show();
           };
         })(this));
       };
@@ -332,6 +360,49 @@
         R.view.selectionLayer.addChild(this.tracerGroup);
         this.raster.onError = this.rasterOnError;
         this.raster.onLoad = this.rasterOnLoad;
+      };
+
+      Tracer.prototype.fileDropped = function(event) {
+        var file, j, len, reader, ref;
+        event.stopPropagation();
+        event.preventDefault();
+        ref = event.dataTransfer.files;
+        for (j = 0, len = ref.length; j < len; j++) {
+          file = ref[j];
+          if (file.type.match(/image.*/)) {
+            reader = new FileReader();
+            this.modal.hide();
+            reader.onload = (function(_this) {
+              return function(readerEvent) {
+                _this.submitURL({
+                  imageURL: readerEvent.target.result
+                });
+              };
+            })(this);
+            reader.readAsDataURL(file);
+          }
+        }
+      };
+
+      Tracer.prototype.handleFiles = function(event) {
+        var file, j, len, reader, ref;
+        ref = event.target.files;
+        for (j = 0, len = ref.length; j < len; j++) {
+          file = ref[j];
+          if (file.type.match(/image.*/)) {
+            reader = new FileReader();
+            this.modal.hide();
+            reader.onload = (function(_this) {
+              return function(readerEvent) {
+                _this.submitURL({
+                  imageURL: readerEvent.target.result
+                });
+              };
+            })(this);
+            reader.readAsDataURL(file);
+          }
+          return;
+        }
       };
 
       Tracer.prototype.showButton = function() {

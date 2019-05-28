@@ -15,10 +15,13 @@
         this.loadCallback = bind(this.loadCallback, this);
         this.loadVotesCallback = bind(this.loadVotesCallback, this);
         this.loadVotes = bind(this.loadVotes, this);
-        this.loadSVGCallback = bind(this.loadSVGCallback, this);
+        this.loadDrawingsAndTilesCallback = bind(this.loadDrawingsAndTilesCallback, this);
+        this.loadDraftCallback = bind(this.loadDraftCallback, this);
+        this.createDrawings = bind(this.createDrawings, this);
         this.hideLoadingBar = bind(this.hideLoadingBar, this);
         this.showLoadingBar = bind(this.showLoadingBar, this);
         this.showLoadingBarCallback = bind(this.showLoadingBarCallback, this);
+        this.loadingType = 'tiles';
         this.loadedAreas = [];
         this.debug = false;
         this.pathsToCreate = {};
@@ -26,7 +29,6 @@
         this.showLoadingBar();
         this.drawingPaths = [];
         this.drawingPk = null;
-        this.focusOnDrawing = null;
         return;
       }
 
@@ -208,7 +210,7 @@
                 rectangle: rectangle,
                 areasToLoad: areasToLoad,
                 qZoom: qZoom,
-                city: R.city
+                cityName: R.city.name
               }
             })
           }
@@ -223,7 +225,7 @@
             data: JSON.stringify({
               "function": 'loadAll',
               args: {
-                city: R.city
+                cityName: R.city.name
               }
             })
           }
@@ -262,88 +264,143 @@
         })(this));
       };
 
-      Loader.prototype.loadSVG = function() {
+      Loader.prototype.createDrawing = function(itemString, reloadUnderneathRasters) {
+        var bounds, date, drawing, item, ref, ref1;
+        if (reloadUnderneathRasters == null) {
+          reloadUnderneathRasters = false;
+        }
+        item = JSON.parse(itemString);
+        if (((ref = R.pkToDrawing) != null ? ref.get(item._id.$oid) : void 0) != null) {
+          return;
+        }
+        bounds = item.box != null ? R.view.grid.boundsFromBox(item.box) : null;
+        date = (ref1 = item.date) != null ? ref1.$date : void 0;
+        drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, date, item.title, null, item.status, item.pathList, item.svg, bounds);
+        if (reloadUnderneathRasters) {
+          this.reloadRasters(drawing.bounds);
+        }
+      };
+
+      Loader.prototype.createDrawings = function(results) {
+        var itemString, k, len, ref;
+        ref = results.items;
+        for (k = 0, len = ref.length; k < len; k++) {
+          itemString = ref[k];
+          this.createDrawing(itemString);
+        }
+      };
+
+      Loader.prototype.loadDraft = function() {
+        var args;
+        args = {
+          cityName: R.city.name
+        };
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
           data: {
             data: JSON.stringify({
-              "function": 'loadSVG',
-              args: {
-                city: R.city
-              }
+              "function": 'loadDraft',
+              args: args
             })
           }
-        }).done(this.loadSVGCallback);
+        }).done(this.loadDraftCallback);
       };
 
-      Loader.prototype.loadSVGCallback = function(results) {
-        var bounds, date, drawing, drawingPk, item, itemString, k, len, len1, o, ref, ref1, ref2, ref3;
+      Loader.prototype.loadDraftCallback = function(results) {
         if (!this.checkError(results)) {
           return;
         }
         if (results.user != null) {
           this.setMe(results.user);
         }
+        this.createDrawings(results);
+        this.endLoading();
+        R.toolManager.updateButtonsVisibility();
+      };
+
+      Loader.prototype.loadDrawingsAndTiles = function(bounds) {
+        var args, grid;
+        grid = R.view.grid;
+        args = {
+          cityName: R.city.name,
+          bounds: bounds,
+          rejected: R.loadRejectedDrawings
+        };
+        if (this.loadingType === 'screen-ignore-loaded' || this.loadingType === 'tiles-ignore-loaded') {
+          args.drawingsToIgnore = Array.from(R.pkToDrawing.keys());
+          args.tilesToIgnore = R.tools.choose.tilePks;
+        }
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'loadDrawingsAndTilesFromBounds',
+              args: args
+            })
+          }
+        }).done(this.loadDrawingsAndTilesCallback);
+      };
+
+      Loader.prototype.loadDrawingsAndTilesCallback = function(results) {
+        var k, len, tile, tiles;
+        if (!this.checkError(results)) {
+          return;
+        }
         R.nRejectedDrawings = 0;
-        ref = results.items;
-        for (k = 0, len = ref.length; k < len; k++) {
-          itemString = ref[k];
-          item = JSON.parse(itemString);
-          if (item.status === 'rejected') {
-            if (R.rejectedDrawings == null) {
-              R.rejectedDrawings = [];
-            }
-            R.rejectedDrawings.push(item);
-            R.nRejectedDrawings++;
-            continue;
-          }
-          if (((ref1 = R.pkToDrawing) != null ? ref1[item._id.$oid] : void 0) != null) {
-            continue;
-          }
-          bounds = item.bounds != null ? JSON.parse(item.bounds) : null;
-          date = (ref2 = item.date) != null ? ref2.$date : void 0;
-          drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, date, item.title, null, item.status, item.pathList, item.svg, bounds);
+        this.createDrawings(results);
+        tiles = JSON.parse(results.tiles);
+        for (k = 0, len = tiles.length; k < len; k++) {
+          tile = tiles[k];
+          R.tools.choose.createTile(tile);
         }
         if (R.view.rejectedListJ != null) {
           R.view.rejectedListJ.find(".n-items").html(R.nRejectedDrawings);
         }
-        this.endLoading();
-        R.toolManager.updateButtonsVisibility();
-        if (this.focusOnDrawing != null) {
-          drawingPk = this.focusOnDrawing;
-          ref3 = R.drawings;
-          for (o = 0, len1 = ref3.length; o < len1; o++) {
-            drawing = ref3[o];
-            if (drawing.pk === drawingPk) {
-              bounds = drawing.getBounds();
-              if (bounds != null) {
-                R.view.fitRectangle(bounds, true);
-              }
-              break;
-            }
-          }
-          this.focusOnDrawing = null;
-        }
-        this.loadVotes();
       };
 
       Loader.prototype.clearRasters = function() {
         this.rasters.forEach((function(_this) {
           return function(rastersOfScale, s) {
             return rastersOfScale.forEach(function(rastersY, y) {
-              return rastersY.forEach(function(raster, x) {
-                return raster.remove();
+              return rastersY.forEach(function(rs, x) {
+                while (rs.length > 0) {
+                  rs.pop().remove();
+                }
               });
             });
           };
         })(this));
       };
 
-      Loader.prototype.loadRasters = function() {
-        var bounds, drawingsToLoad, group, k, layerName, len, ln4, m, n, nPixelsPerTile, o, p, quantizedBounds, raster, rastersOfScale, rastersY, ref, ref1, ref2, ref3, ref4, scale, scaleNumber, scaleRatio;
-        if (this.rasterGroup == null) {
-          this.rasterGroup = new P.Group();
+      Loader.prototype.reloadRasters = function(bounds) {
+        this.rasters.forEach((function(_this) {
+          return function(rastersOfScale, s) {
+            return rastersOfScale.forEach(function(rastersY, y) {
+              return rastersY.forEach(function(rs, x) {
+                if (rs.length > 0 && rs[0].bounds.intersects(bounds)) {
+                  while (rs.length > 0) {
+                    rs.pop().remove();
+                  }
+                }
+              });
+            });
+          };
+        })(this));
+        loadRasters(false);
+      };
+
+      Loader.prototype.loadRasters = function(alsoLoadDrawingsAndTiles) {
+        var bounds, drawingsToLoad, k, layerName, len, limits, ln4, m, n, nPixelsPerTile, o, p, quantizedBounds, raster, rastersOfScale, rastersY, ref, ref1, ref2, ref3, ref4, ref5, rs, scale, scaleNumber, scaleRatio;
+        if (alsoLoadDrawingsAndTiles == null) {
+          alsoLoadDrawingsAndTiles = true;
+        }
+        if (this.activeRasterGroup == null) {
+          this.activeRasterGroup = new P.Group();
+        }
+        if (this.inactiveRasterGroup == null) {
+          this.inactiveRasterGroup = new P.Group();
         }
         if (this.rasters == null) {
           this.rasters = new Map();
@@ -365,31 +422,47 @@
           rastersOfScale = new Map();
           this.rasters.set(scaleNumber, rastersOfScale);
         }
+        limits = bounds.expand(nPixelsPerTile);
+        if ((ref = R.pkToDrawing) != null) {
+          ref.forEach((function(_this) {
+            return function(drawing, pk) {
+              bounds = drawing.getBounds();
+              if (drawing.status !== 'draft' && (bounds != null) && !bounds.intersects(limits)) {
+                return drawing.remove();
+              }
+            };
+          })(this));
+        }
+        R.tools.choose.removeTiles(limits);
         this.rasters.forEach((function(_this) {
           return function(rastersOfScale, s) {
             if (s !== scaleNumber) {
               rastersOfScale.forEach(function(rastersY, y) {
-                return rastersY.forEach(function(raster, x) {
-                  return raster.remove();
+                return rastersY.forEach(function(rs, x) {
+                  while (rs.length > 0) {
+                    rs.pop().remove();
+                  }
                 });
               });
               return _this.rasters["delete"](s);
             } else {
               return rastersOfScale.forEach(function(rastersY, y) {
-                return rastersY.forEach(function(raster, x) {
+                return rastersY.forEach(function(rs, x) {
                   if (y < quantizedBounds.t || y > quantizedBounds.b || x < quantizedBounds.l || x > quantizedBounds.r) {
-                    raster.remove();
-                    return rastersY["delete"](x);
+                    while (rs.length > 0) {
+                      rs.pop().remove();
+                    }
+                    rastersY["delete"](x);
                   }
                 });
               });
             }
           };
         })(this));
-        for (n = k = ref = quantizedBounds.t, ref1 = quantizedBounds.b; ref <= ref1 ? k <= ref1 : k >= ref1; n = ref <= ref1 ? ++k : --k) {
-          for (m = o = ref2 = quantizedBounds.l, ref3 = quantizedBounds.r; ref2 <= ref3 ? o <= ref3 : o >= ref3; m = ref2 <= ref3 ? ++o : --o) {
-            raster = rastersOfScale != null ? (ref4 = rastersOfScale.get(n)) != null ? ref4.get(m) : void 0 : void 0;
-            if ((raster == null) || (raster.parent == null)) {
+        for (n = k = ref1 = quantizedBounds.t, ref2 = quantizedBounds.b; ref1 <= ref2 ? k <= ref2 : k >= ref2; n = ref1 <= ref2 ? ++k : --k) {
+          for (m = o = ref3 = quantizedBounds.l, ref4 = quantizedBounds.r; ref3 <= ref4 ? o <= ref4 : o >= ref4; m = ref3 <= ref4 ? ++o : --o) {
+            rs = rastersOfScale != null ? (ref5 = rastersOfScale.get(n)) != null ? ref5.get(m) : void 0 : void 0;
+            if ((rs == null) || rs.length === 0) {
               drawingsToLoad = [];
               if (R.loadRejectedDrawings) {
                 drawingsToLoad.push('inactive');
@@ -397,24 +470,35 @@
               if (R.loadActiveDrawings) {
                 drawingsToLoad.push('active');
               }
-              group = new P.Group();
+              rs = [];
               for (p = 0, len = drawingsToLoad.length; p < len; p++) {
                 layerName = drawingsToLoad[p];
                 raster = new P.Raster(location.origin + '/static/rasters/' + layerName + '/zoom' + scaleNumber + '/' + m + ',' + n + '.png');
                 raster.position.x = (m + 0.5) * nPixelsPerTile;
                 raster.position.y = (n + 0.5) * nPixelsPerTile;
                 raster.scale(scale);
-                group.addChild(raster);
+                rs.push(raster);
+                if (alsoLoadDrawingsAndTiles && P.project.view.zoom >= 0.125 && (this.loadingType === 'tiles' || this.loadingType === 'tiles-ignore-loaded')) {
+                  bounds = new P.Rectangle(m * nPixelsPerTile, n * nPixelsPerTile, nPixelsPerTile, nPixelsPerTile);
+                  this.loadDrawingsAndTiles(bounds);
+                }
+                if (layerName === 'active') {
+                  this.activeRasterGroup.addChild(raster);
+                } else {
+                  this.inactiveRasterGroup.addChild(raster);
+                }
               }
-              this.rasterGroup.addChild(group);
               rastersY = rastersOfScale.get(n);
               if (rastersY == null) {
                 rastersY = new Map();
                 rastersOfScale.set(n, rastersY);
               }
-              rastersY.set(m, group);
+              rastersY.set(m, rs);
             }
           }
+        }
+        if (alsoLoadDrawingsAndTiles && this.loadingType === 'screen' || this.loadingType === 'screen-ignore-loaded') {
+          this.loadDrawingsAndTiles(P.view.bounds);
         }
       };
 
@@ -426,7 +510,7 @@
             data: JSON.stringify({
               "function": 'loadVotes',
               args: {
-                city: R.city
+                cityName: R.city.name
               }
             })
           }
@@ -440,11 +524,15 @@
             return;
           }
         }
+        if (this.userVotes == null) {
+          this.userVotes = new Map();
+        }
         if (results.votes != null) {
           ref = results.votes;
           for (k = 0, len = ref.length; k < len; k++) {
             vote = ref[k];
             if (vote.emailConfirmed) {
+              this.userVotes.set(vote.pk, vote.positive);
               if ((ref1 = R.items[vote.pk]) != null) {
                 ref1.setStrokeColorFromVote(vote.positive);
               }

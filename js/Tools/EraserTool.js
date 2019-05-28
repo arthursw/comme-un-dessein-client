@@ -25,6 +25,8 @@
 
       EraserTool.emitSocket = false;
 
+      EraserTool.buttonClasses = 'dark';
+
       function EraserTool(Path, justCreated) {
         this.Path = Path;
         if (justCreated == null) {

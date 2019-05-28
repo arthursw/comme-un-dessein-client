@@ -82,8 +82,13 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 
 			R.canvasJ.addClass('select')
 
-			console.log('select select tool')
+			selectedDrawingsBounds = null
+			for drawing in R.selectedItems
+				selectedDrawingsBounds = if selectedDrawingsBounds? then selectedDrawingsBounds.unite(drawing.rectangle) else drawing.rectangle
+
+			# console.log('select select tool')
 			for drawing in R.drawings
+				if drawing.getBoundsWithFlag()?.intersects(selectedDrawingsBounds) then continue
 				drawing.showVoteFlag()
 
 			super(false, updateParameters)

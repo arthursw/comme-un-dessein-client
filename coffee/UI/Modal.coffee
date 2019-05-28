@@ -91,9 +91,9 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			options.interpolation ?= {}
 			options.interpolation.escapeValue = escapeValue
 			content = i18next.t(textKey, options)
-			@modalBodyJ.append("<p data-i18n-options='#{JSON.stringify(options)}' data-i18n='[html]#{textKey}'>#{content}</p>")
-
-			return
+			divJ = $("<p data-i18n-options='#{JSON.stringify(options)}' data-i18n='[html]#{textKey}'>#{content}</p>")
+			@modalBodyJ.append(divJ)
+			return divJ
 
 		addTextInput: (args)->
 			name = args.name

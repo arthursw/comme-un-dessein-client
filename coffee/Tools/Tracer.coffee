@@ -13,6 +13,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 			@tracerBtn = new Button(
 				name: 'Trace'
 				iconURL: if R.style == 'line' then 'image.png' else if R.style == 'hand' then 'image.png' else 'glyphicon-picture'
+				classes: 'dark'
 				favorite: true
 				category: null
 				disableHover: true
@@ -25,15 +26,41 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 
 			@tracerBtn.btnJ.click ()=> 
 				@removeRaster()
-				modal = Modal.createModal( 
+				@modal = Modal.createModal( 
 					id: 'import-image',
 					title: "Import image to trace", 
 					submit: @submitURL, 
 					)
 
-				modal.addTextInput({name: 'imageURL', placeholder: 'http://exemple.fr/belle-image.png', type: 'url', submitShortcut: true, label: 'Image URL', required: true, errorMessage: i18next.t( 'The URL is invalid' ) })
 
-				modal.show()
+
+
+				dropZoneJ = $("""<div id="modal-dropZone" style="min-height: 200px; white-space: pre; border: 3px dashed gray; text-align: center; padding-top: 85px; margin-bottom: 15px;"
+								ondragenter="document.getElementById('modal-dropZone').textContent = ''; event.stopPropagation(); event.preventDefault();"
+								ondragover="event.stopPropagation(); event.preventDefault();">
+								""" + i18next.t( 'Drop image here' ) + """
+								</div>""")
+
+				dropZoneJ.get(0).addEventListener('drop', @fileDropped, false)
+
+				@modal.addCustomContent( { name: 'dropZone', divJ: dropZoneJ } )
+
+				orText = @modal.addText('or')
+				orText.css('text-align': 'center', 'margin': 10)
+
+				inputJ = $('<input type="file" multiple accept="image/*">')
+				@modal.addCustomContent( { name: 'tracerFileInput', divJ: inputJ } )
+				inputJ.css(margin: 'auto')
+				inputJ.get(0).addEventListener('change', @handleFiles, false)
+
+				orText = @modal.addText('or')
+				orText.css('text-align': 'center', 'margin': 10)
+
+				@modal.addTextInput({name: 'imageURL', placeholder: 'http://exemple.fr/belle-image.png', type: 'url', submitShortcut: true, label: 'Import image from URL', required: true, errorMessage: i18next.t( 'The URL is invalid' ) })
+
+
+
+				@modal.show()
 
 				return
 			
@@ -274,6 +301,35 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 
 			@raster.onLoad = @rasterOnLoad
 
+
+			return
+
+		fileDropped: (event)=>
+			event.stopPropagation()
+			event.preventDefault()
+			for file in event.dataTransfer.files
+				if file.type.match(/image.*/)
+
+					reader = new FileReader()
+					@modal.hide()
+					reader.onload = (readerEvent)=>
+						@submitURL(imageURL: readerEvent.target.result)
+						return
+					reader.readAsDataURL(file)
+			return
+
+		handleFiles: (event)=>
+			for file in event.target.files
+
+				if file.type.match(/image.*/)
+
+					reader = new FileReader()
+					@modal.hide()
+					reader.onload = (readerEvent)=>
+						@submitURL(imageURL: readerEvent.target.result)
+						return
+					reader.readAsDataURL(file)
+				return
 
 			return
 

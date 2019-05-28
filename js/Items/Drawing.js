@@ -51,7 +51,7 @@
       };
 
       function Drawing(rectangle1, data1, id1, pk1, owner, date, title1, description, status1, pathList, svg, bounds) {
-        var jqxhr;
+        var ref;
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
         this.id = id1 != null ? id1 : null;
@@ -77,71 +77,49 @@
         this.submitCallback = bind(this.submitCallback, this);
         this.saveCallback = bind(this.saveCallback, this);
         this.onLiClick = bind(this.onLiClick, this);
+        if (this.status === 'flagged_pending') {
+          console.log('flagged_pending');
+          R.flaggedDrawing = this;
+        }
         Drawing.__super__.constructor.call(this, this.data, this.id, this.pk);
+        console.log('status: ', this.status, ', parent name: ', (ref = this.group.parent) != null ? ref.name : void 0);
         if (this.pk != null) {
           this.constructor.pkToId[this.pk] = this.id;
         }
         if (bounds != null) {
-          this.bounds = new P.Rectangle(bounds);
+          this.rectangle = new P.Rectangle(bounds);
         }
         R.drawings.push(this);
-        if (R.pkToDrawing == null) {
-          R.pkToDrawing = {};
-        }
-        R.pkToDrawing[this.pk] = this;
+        this.setPkToDrawing(this.pk);
         this.paths = [];
         this.group.remove();
         this.votes = [];
         this.sortedPaths = [];
-        this.addToListItem(this.getListItem());
+        this.addToListItem();
+        this.addToLayer();
         if (this.status === 'draft') {
           this.constructor.draft = this;
           this.addPathsFromPathList(pathList);
-        } else if ((this.pk != null) && R.SVGMode) {
-          jqxhr = $.get(location.origin + '/static/drawings/' + this.pk + '.svg', ((function(_this) {
-            return function(result) {
-              _this.setSVG(result, false);
-            };
-          })(this))).fail((function(_this) {
-            return function() {
-              var args;
-              if (_this.svg != null) {
-                return;
-              }
-              args = {
-                pk: _this.pk,
-                svgOnly: true
-              };
-              return $.ajax({
-                method: "POST",
-                url: "ajaxCall/",
-                data: {
-                  data: JSON.stringify({
-                    "function": 'loadDrawing',
-                    args: args
-                  })
-                }
-              }).done(function(result) {
-                var drawing;
-                drawing = JSON.parse(result.drawing);
-                if (drawing.svg != null) {
-                  return _this.setSVG(drawing.svg);
-                }
-              });
-            };
-          })(this));
+        } else if (svg != null) {
+          this.setSVG(svg);
         }
         if (this.status === 'pending' && this.owner !== R.me) {
           this.drawVoteBounds();
         }
+        if (this.status === 'flagged_pending') {
+          this.drawVoteBounds(true);
+        }
         return;
       }
 
-      Drawing.prototype.drawVoteBounds = function() {
+      Drawing.prototype.drawVoteBounds = function(flagged) {
         var bounds, voteGroup;
+        if (flagged == null) {
+          flagged = false;
+        }
         bounds = this.getBounds();
         voteGroup = new P.Group();
-        this.voteFlag = new P.Raster('/static/images/icons/vote-flag-xl2.png');
+        this.voteFlag = new P.Raster(!flagged ? '/static/images/icons/envelope.png' : '/static/images/icons/flagged.png');
         this.voteFlag.position = bounds.center.subtract(-19, 49);
         if (R.voteFlags == null) {
           R.voteFlags = [];
@@ -149,6 +127,9 @@
         R.voteFlags.push(this.voteFlag);
         voteGroup.addChild(this.voteFlag);
         this.group.addChild(voteGroup);
+        if (R.selectedTool !== R.tools.select) {
+          this.hideVoteFlag();
+        }
       };
 
       Drawing.prototype.hideVoteFlag = function() {
@@ -159,18 +140,29 @@
       };
 
       Drawing.prototype.showVoteFlag = function() {
-        var ref;
+        var flagged, ref;
+        flagged = this.status === 'flagged_pending' || this.status === 'flagged';
+        if ((this.id != null) && (R.loader.userVotes.get(this.id) != null) && !flagged) {
+          return;
+        }
+        if (flagged) {
+          console.log('showVoteFlag flagged_pending');
+        }
         if ((ref = this.voteFlag) != null) {
           ref.visible = true;
         }
       };
 
+      Drawing.prototype.setPkToDrawing = function(pk) {
+        if (R.pkToDrawing == null) {
+          R.pkToDrawing = new Map();
+        }
+        R.pkToDrawing.set(this.pk, this);
+      };
+
       Drawing.prototype.setPK = function(pk) {
         Drawing.__super__.setPK.call(this, pk);
-        if (R.pkToDrawing == null) {
-          R.pkToDrawing = {};
-        }
-        R.pkToDrawing[this.pk] = this;
+        this.setPkToDrawing(pk);
       };
 
       Drawing.prototype.getPointLists = function() {
@@ -218,15 +210,94 @@
           }
           path.draw();
         }
+        this.computeRectangle();
       };
 
-      Drawing.prototype.setSVG = function(svg, parse) {
+      Drawing.prototype.loadSVG = function(callback) {
+        var jqxhr;
+        jqxhr = $.get(location.origin + '/static/drawings/' + this.pk + '.svg', ((function(_this) {
+          return function(result) {
+            _this.setSVG(result, false, callback);
+          };
+        })(this))).fail((function(_this) {
+          return function() {
+            var args;
+            if (_this.svg != null) {
+              return;
+            }
+            args = {
+              pk: _this.pk,
+              svgOnly: true
+            };
+            return $.ajax({
+              method: "POST",
+              url: "ajaxCall/",
+              data: {
+                data: JSON.stringify({
+                  "function": 'loadDrawing',
+                  args: args
+                })
+              }
+            }).done(function(result) {
+              var drawing;
+              drawing = JSON.parse(result.drawing);
+              if (drawing.svg != null) {
+                return _this.setSVG(drawing.svg, true, callback);
+              }
+            });
+          };
+        })(this));
+      };
+
+      Drawing.prototype.loadSVGToPrint = function(callback) {
+        var jqxhr;
+        jqxhr = $.get(location.origin + '/static/drawings/' + this.pk + '.svg', ((function(_this) {
+          return function(result) {
+            callback(result);
+          };
+        })(this))).fail((function(_this) {
+          return function() {
+            var args;
+            if (_this.svg != null) {
+              return;
+            }
+            args = {
+              pk: _this.pk,
+              svgOnly: true
+            };
+            return $.ajax({
+              method: "POST",
+              url: "ajaxCall/",
+              data: {
+                data: JSON.stringify({
+                  "function": 'loadDrawing',
+                  args: args
+                })
+              }
+            }).done(function(result) {
+              var drawing;
+              drawing = JSON.parse(result.drawing);
+              if (drawing.svg != null) {
+                return callback(drawing.svg);
+              }
+            });
+          };
+        })(this));
+      };
+
+      Drawing.prototype.setSVG = function(svg, parse, callback, hide) {
         var doc, layer, layerName, parser;
         if (parse == null) {
           parse = true;
         }
+        if (callback == null) {
+          callback = null;
+        }
+        if (hide == null) {
+          hide = false;
+        }
         layerName = this.getLayerName();
-        layer = document.createElement('div');
+        layer = document.getElementById(layerName);
         if (!layer) {
           return;
         }
@@ -238,8 +309,6 @@
         }
         doc.documentElement.removeAttribute('visibility');
         doc.documentElement.removeAttribute('xmlns');
-        doc.documentElement.removeAttribute('stroke');
-        doc.documentElement.removeAttribute('stroke-width');
         if (this.status === 'draft') {
           doc.documentElement.setAttribute('id', 'draftDrawing');
         }
@@ -252,6 +321,12 @@
             return -1;
           };
         })(this)));
+        if (hide) {
+          this.svg.setAttribute('visibility', 'hidden');
+        }
+        if (typeof callback === "function") {
+          callback(this.svg);
+        }
       };
 
       Drawing.prototype.setStrokeColorFromVote = function(positive) {
@@ -289,11 +364,11 @@
       Drawing.prototype.setData = function(data) {
         this.removePaths();
         this.addPathsFromPathList(data.pointLists, false);
+        this.updatePaths();
         if (this.status === 'draft') {
           R.toolManager.updateButtonsVisibility(this);
           R.tools['Precise path'].showDraftLimits();
         }
-        this.updatePaths();
       };
 
       Drawing.prototype.getListItem = function() {
@@ -303,7 +378,6 @@
           case 'pending':
           case 'emailNotConfirmed':
           case 'notConfirmed':
-            R.view.pendingLayer.addChild(this.group);
             itemListJ = R.view.pendingListJ;
             break;
           case 'drawing':
@@ -319,6 +393,7 @@
             itemListJ = R.view.draftListJ;
             break;
           case 'flagged':
+          case 'flagged_pending':
             itemListJ = R.view.flaggedListJ;
             break;
           case 'test':
@@ -346,9 +421,13 @@
         }
       };
 
+      Drawing.prototype.addToLayer = function() {
+        this.getLayer().addChild(this.group);
+      };
+
       Drawing.prototype.addToListItem = function(itemListJ1) {
-        var divJ, nItemsJ, ref, ref1, title;
-        this.itemListJ = itemListJ1;
+        var divJ, nChildren, nItemsJ, ref, ref1, title;
+        this.itemListJ = itemListJ1 != null ? itemListJ1 : this.getListItem();
         title = '' + this.title + ' <span data-i18n="by">' + i18next.t('by') + '</span> ' + this.owner;
         this.liJ = $("<li>");
         this.liJ.html(title);
@@ -372,16 +451,18 @@
         }
         nItemsJ = (ref1 = this.itemListJ) != null ? ref1.find(".n-items") : void 0;
         if ((nItemsJ != null) && nItemsJ.length > 0) {
-          nItemsJ.html(this.itemListJ.find('.rPath-list').children().length);
+          nChildren = this.itemListJ.find('.rPath-list').children('li[data-id]').length;
+          nItemsJ.html(nChildren);
         }
       };
 
       Drawing.prototype.removeFromListItem = function() {
-        var nItemsJ, ref;
+        var nChildren, nItemsJ, ref;
         this.liJ.remove();
         nItemsJ = (ref = this.itemListJ) != null ? ref.find(".n-items") : void 0;
         if ((nItemsJ != null) && nItemsJ.length > 0) {
-          nItemsJ.html(this.itemListJ.find('.rPath-list').children().length);
+          nChildren = this.itemListJ.find('.rPath-list').children('li[data-id]').length;
+          nItemsJ.html(nChildren);
         }
       };
 
@@ -398,23 +479,8 @@
 
       Drawing.prototype.computeRectangle = function() {
         var bounds, i, len, path, ref;
+        console.log('computeRectangle');
         this.rectangle = null;
-        if (this.bounds != null) {
-          this.rectangle = this.bounds.clone();
-          return this.rectangle;
-        }
-        if (this.svg != null) {
-          if (this.svg.getBBox != null) {
-            this.rectangle = new P.Rectangle(this.svg.getBBox());
-            return this.rectangle;
-          }
-        }
-        if (this.group.children.length >= this.paths.length && this.group.bounds.area > 0) {
-          this.rectangle = this.group.bounds.expand(2 * R.Path.strokeWidth);
-          if ((this.rectangle != null) && this.rectangle.area > 0) {
-            return this.rectangle;
-          }
-        }
         ref = this.paths;
         for (i = 0, len = ref.length; i < len; i++) {
           path = ref[i];
@@ -426,7 +492,6 @@
             this.rectangle = this.rectangle.unite(bounds);
           }
         }
-        return this.rectangle;
       };
 
       Drawing.prototype.getLayer = function() {
@@ -537,9 +602,6 @@
         if (pkIndex >= 0) {
           this.pathPks.splice(pkIndex, 1);
         }
-        if (updateRectangle) {
-          this.computeRectangle();
-        }
         path.updateStrokeColor();
         path.addToListItem();
         this.drawn = false;
@@ -555,7 +617,7 @@
           addCreateCommand = true;
         }
         args = {
-          city: R.city,
+          cityName: R.city.name,
           clientId: this.id,
           date: Date.now(),
           title: this.title || '' + Math.random(),
@@ -632,17 +694,15 @@
 
       Drawing.prototype.getLayerName = function() {
         var statusName;
-        statusName = this.status === 'emailNotConfirmed' || this.status === 'notConfirmed' ? 'pending' : this.status;
+        statusName = this.status === 'emailNotConfirmed' || this.status === 'notConfirmed' || this.status === 'flagged_pending' || this.status === 'flagged' ? 'pending' : this.status;
         return statusName + 'Layer';
       };
 
       Drawing.prototype.getBounds = function() {
-        this.computeRectangle();
         return this.rectangle;
       };
 
       Drawing.prototype.getBoundsWithFlag = function() {
-        this.computeRectangle();
         if (this.voteFlag != null) {
           return this.rectangle.unite(this.voteFlag.bounds);
         } else {
@@ -729,20 +789,15 @@
           this.constructor.draft = null;
         }
         R.toolManager.updateButtonsVisibility();
-        this.removePaths();
-        this.setSVG(this.svgString);
         this.svgString = null;
         this.status = result.status;
         modal = Modal.createModal({
           id: 'share-facebook',
           title: 'Drawing submitted',
           submit: ((function(_this) {
-            return function() {
-              return R.drawingPanel.shareOnFacebook(null, _this);
-            };
+            return function() {};
           })(this)),
-          submitButtonText: 'Share on Facebook',
-          cancelButtonText: 'No thanks'
+          submitButtonText: 'No thanks'
         });
         modal.addButton({
           type: 'info',
@@ -753,6 +808,17 @@
             };
           })(this))
         });
+        modal.addButton({
+          type: 'primary',
+          name: 'Share on Facebook',
+          submit: ((function(_this) {
+            return function() {
+              return R.drawingPanel.shareOnFacebook(null, _this);
+            };
+          })(this))
+        });
+        modal.modalJ.find('[name="cancel"]').hide();
+        modal.modalJ.find('[name="submit"]').removeClass('btn-primary').addClass('btn-default');
         if (this.status === 'emailNotConfirmed') {
           modal.addText("Drawing successfully submitted but email not confirmed", "Drawing successfully submitted but email not confirmed", false, {
             positiveVoteThreshold: result.positiveVoteThreshold
@@ -1009,7 +1075,8 @@
         }
         this.status = status;
         this.removeFromListItem();
-        this.addToListItem(this.getListItem());
+        this.addToListItem();
+        this.addToLayer();
         if (this.svg != null) {
           this.svg.remove();
           layerName = this.getLayerName();
@@ -1080,6 +1147,7 @@
         if ((ref1 = this.svg) != null) {
           ref1.remove();
         }
+        R.pkToDrawing["delete"](this.pk);
         this.removeFromListItem();
         R.rasterizer.rasterizeRectangle(this.rectangle);
         Drawing.__super__.remove.apply(this, arguments);

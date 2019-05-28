@@ -329,6 +329,7 @@ define [
 		# R.codeEditor = new CodeEditor()
 		R.drawingPanel = new DrawingPanel()
 		# R.fontManager = new FontManager()
+
 		R.view.initializePosition()
 		R.sidebar.initialize()
 
@@ -389,13 +390,13 @@ define [
 		# rect = R.raph.rect(-2000, -1500, 4000, 3000)
 		# rect.attr("fill", "#f00")
 
-		if not R.initialZoom?
-			R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true)
 
 		if R.city.name != 'world'
 			require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> 
 				R.loader.loadRasters()
-				R.loader.loadSVG()
+				# R.loader.loadSVG()
+				R.loader.loadDraft()
+				R.loader.loadVotes()
 				return)
 
 		# Improve about links

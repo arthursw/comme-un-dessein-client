@@ -488,7 +488,7 @@
                 return;
               }
               latestDrawing = JSON.parse(result.drawing);
-              drawing = R.pkToDrawing[latestDrawing._id.$oid];
+              drawing = R.pkToDrawing.get(latestDrawing._id.$oid);
               drawing.votes = result.votes;
               drawing.status = latestDrawing.status;
               nDrawingsToLoad--;
@@ -510,7 +510,7 @@
         ref = results.results;
         for (j = 0, len = ref.length; j < len; j++) {
           result = ref[j];
-          drawing = R.pkToDrawing[result.pk];
+          drawing = R.pkToDrawing.get(result.pk);
           if (drawing != null) {
             drawing.votes = result.votes;
             drawing.status = result.status;

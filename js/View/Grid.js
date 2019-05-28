@@ -25,6 +25,29 @@
         return;
       }
 
+      Grid.prototype.projectToGeoJSON = function(point) {
+        return new P.Point(360 * point.x / this.size.width, 180 * point.y / this.size.height);
+      };
+
+      Grid.prototype.projectToGeoJSONRectangle = function(rectangle) {
+        var topLeft;
+        topLeft = this.projectToGeoJSON(rectangle.topLeft);
+        return new P.Rectangle(topLeft.x, topLeft.y, 360 * rectangle.width / this.size.width, 180 * rectangle.height / this.size.height);
+      };
+
+      Grid.prototype.geoJSONToProject = function(point) {
+        return new P.Point(this.size.width * point.x / 360, this.size.height * point.y / 180);
+      };
+
+      Grid.prototype.boundsFromBox = function(box) {
+        var bottom, left, right, top;
+        left = this.size.width * box['coordinates'][0][0][0] / 360;
+        top = this.size.height * box['coordinates'][0][0][1] / 180;
+        right = this.size.width * box['coordinates'][0][2][0] / 360;
+        bottom = this.size.height * box['coordinates'][0][2][1] / 180;
+        return new P.Rectangle(left, top, right - left, bottom - top);
+      };
+
       Grid.prototype.createFrame = function() {
         var child, i, l1, l2, l3, l4, len, ref;
         this.frame = new P.Group();
