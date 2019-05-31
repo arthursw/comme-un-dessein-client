@@ -9,8 +9,11 @@
     Loader = (function() {
       Loader.maxNumPoints = 1000;
 
+      Loader.scaleRatio = 4;
+
       function Loader() {
         this.checkError = bind(this.checkError, this);
+        this.displayError = bind(this.displayError, this);
         this.loadCallbackTipibot = bind(this.loadCallbackTipibot, this);
         this.loadCallback = bind(this.loadCallback, this);
         this.loadVotesCallback = bind(this.loadVotesCallback, this);
@@ -68,12 +71,17 @@
       };
 
       Loader.prototype.showLoadingBarCallback = function() {
-        $("#loadingBar").show();
+        $("#loadingBar").show().css({
+          opacity: 1
+        });
       };
 
       Loader.prototype.showLoadingBar = function(timeout) {
         if ((timeout != null) && timeout > 0) {
           clearTimeout(this.showLoadingBarTimeoutId);
+          $("#loadingBar").show().css({
+            opacity: 0
+          });
           this.showLoadingBarTimeoutId = setTimeout(this.showLoadingBarCallback, timeout);
         } else {
           this.showLoadingBarCallback();
@@ -217,53 +225,6 @@
         }).done(this.loadCallback);
       };
 
-      Loader.prototype.loadAll = function() {
-        $.ajax({
-          method: "POST",
-          url: "ajaxCall/",
-          data: {
-            data: JSON.stringify({
-              "function": 'loadAll',
-              args: {
-                cityName: R.city.name
-              }
-            })
-          }
-        }).done((function(_this) {
-          return function(results) {
-            var draft, drawing, i, k, len, ref, showDrawing;
-            if (!R.loader.checkError(results)) {
-              return;
-            }
-            R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true);
-            ref = R.drawings;
-            for (k = 0, len = ref.length; k < len; k++) {
-              drawing = ref[k];
-              drawing.remove();
-            }
-            draft = R.Drawing.getDraft();
-            if (draft == null) {
-              draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft');
-            }
-            i = 0;
-            showDrawing = function() {
-              var item;
-              item = results.items[i++];
-              if (item == null) {
-                return;
-              }
-              draft.removePaths();
-              draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft');
-              drawing = JSON.parse(item);
-              console.log(drawing.pathList);
-              draft.addPathsFromPathList(drawing.pathList, true, true);
-              setTimeout(showDrawing, 200);
-            };
-            showDrawing();
-          };
-        })(this));
-      };
-
       Loader.prototype.createDrawing = function(itemString, reloadUnderneathRasters) {
         var bounds, date, drawing, item, ref, ref1;
         if (reloadUnderneathRasters == null) {
@@ -277,7 +238,7 @@
         date = (ref1 = item.date) != null ? ref1.$date : void 0;
         drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, date, item.title, null, item.status, item.pathList, item.svg, bounds);
         if (reloadUnderneathRasters) {
-          this.reloadRasters(drawing.bounds);
+          this.reloadRasters(drawing.rectangle);
         }
       };
 
@@ -388,11 +349,49 @@
             });
           };
         })(this));
-        loadRasters(false);
+        this.loadRasters(false);
+      };
+
+      Loader.prototype.getScaleNumber = function() {
+        var ln4;
+        ln4 = Math.log(this.constructor.scaleRatio);
+        return Math.max(0, Math.floor(Math.log(1 / P.view.zoom) / ln4));
+      };
+
+      Loader.prototype.getScale = function(scaleNumber) {
+        return Math.pow(this.constructor.scaleRatio, scaleNumber);
+      };
+
+      Loader.prototype.getQuantizedBounds = function(scaleNumber, scale) {
+        var bounds, nPixelsPerTile, quantizedBounds;
+        bounds = P.view.bounds;
+        if (scaleNumber == null) {
+          scaleNumber = this.getScaleNumber();
+        }
+        if (scale == null) {
+          scale = this.getScale(scaleNumber);
+        }
+        nPixelsPerTile = scale * 1000;
+        quantizedBounds = {
+          t: Math.floor(bounds.top / nPixelsPerTile),
+          l: Math.floor(bounds.left / nPixelsPerTile),
+          b: Math.floor(bounds.bottom / nPixelsPerTile),
+          r: Math.floor(bounds.right / nPixelsPerTile)
+        };
+        return quantizedBounds;
+      };
+
+      Loader.prototype.getLoadingBounds = function() {
+        var bounds, nPixelsPerTile, scale, scaleNumber;
+        bounds = P.view.bounds;
+        scaleNumber = this.getScaleNumber();
+        scale = this.getScale(scaleNumber);
+        nPixelsPerTile = scale * 1000;
+        return bounds.expand(nPixelsPerTile);
       };
 
       Loader.prototype.loadRasters = function(alsoLoadDrawingsAndTiles) {
-        var bounds, drawingsToLoad, k, layerName, len, limits, ln4, m, n, nPixelsPerTile, o, p, quantizedBounds, raster, rastersOfScale, rastersY, ref, ref1, ref2, ref3, ref4, ref5, rs, scale, scaleNumber, scaleRatio;
+        var bounds, drawingsToLoad, k, layerName, len, limits, m, n, nPixelsPerTile, o, p, quantizedBounds, raster, rastersOfScale, rastersY, ref, ref1, ref2, ref3, ref4, ref5, rs, scale, scaleNumber;
         if (alsoLoadDrawingsAndTiles == null) {
           alsoLoadDrawingsAndTiles = true;
         }
@@ -405,18 +404,11 @@
         if (this.rasters == null) {
           this.rasters = new Map();
         }
-        bounds = P.view.bounds;
-        scaleRatio = 4;
-        ln4 = Math.log(4);
-        scaleNumber = Math.max(0, Math.floor(Math.log(1 / P.view.zoom) / ln4));
-        scale = Math.pow(4, scaleNumber);
+        scaleNumber = this.getScaleNumber();
+        scale = this.getScale(scaleNumber);
         nPixelsPerTile = scale * 1000;
-        quantizedBounds = {
-          t: Math.floor(bounds.top / nPixelsPerTile),
-          l: Math.floor(bounds.left / nPixelsPerTile),
-          b: Math.floor(bounds.bottom / nPixelsPerTile),
-          r: Math.floor(bounds.right / nPixelsPerTile)
-        };
+        bounds = P.view.bounds;
+        quantizedBounds = this.getQuantizedBounds(scaleNumber, scale);
         rastersOfScale = this.rasters.get(scaleNumber);
         if (rastersOfScale == null) {
           rastersOfScale = new Map();
@@ -854,6 +846,14 @@
           type: 'setNextDrawing',
           drawingPk: this.drawingPk
         }));
+      };
+
+      Loader.prototype.displayError = function(error) {
+        R.alertManager.alert("An error occured, the page will reload in 2 seconds", "error");
+        this.showLoadingBar(1000);
+        setTimeout((function() {
+          return window.location.reload();
+        }), 2000);
       };
 
       Loader.prototype.checkError = function(result) {

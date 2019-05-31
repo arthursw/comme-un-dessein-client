@@ -707,6 +707,23 @@
         }
       }).done(checkError);
     };
+    R.setSimulateSlowResponsesMode = function(simulateSlowResponsesMode) {
+      if (!R.administrator) {
+        return false;
+      }
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'setSimulateSlowResponsesMode',
+            args: {
+              simulateSlowResponses: simulateSlowResponsesMode
+            }
+          })
+        }
+      }).done(checkError);
+    };
     R.removeDeadReferences = function() {
       if (!R.administrator) {
         return false;

@@ -133,13 +133,6 @@
         if (name == null) {
           name = null;
         }
-        if (this.itemListJ == null) {
-          this.itemListJ = this.getListItem();
-        }
-        if (name == null) {
-          name = this.id.substring(0, 5);
-        }
-        Path.__super__.addToListItem.call(this, this.itemListJ, name);
       };
 
       Path.prototype.getDrawing = function() {

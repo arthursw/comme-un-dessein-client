@@ -92,9 +92,11 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			alertJ = @alertsContainer.find(".alert")
 			alertJ.css('background-color': null)
 
-			R.alertManager.alertsContainer.addClass('show')
+			@alertsContainer.addClass('show')
+			setTimeout((()=> @alertsContainer.find('.show-btn-container').hide()), 250)
+
 			R.sidebar.sidebarJ.addClass('r-alert')
-			suffix = if R.alertManager.alertsContainer.hasClass('top') then '-top' else ''
+			suffix = if @alertsContainer.hasClass('top') then '-top' else ''
 			R.drawingPanel.drawingPanelJ.addClass('r-alert' + suffix)
 			$('#timeline').addClass('r-alert' + suffix)
 			$('#submit-drawing-button').addClass('r-alert' + suffix)
@@ -141,6 +143,9 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			if @alertTimeOut?
 				clearTimeout(@alertTimeOut)
 				@alertTimeOut = null
+
+			if @alertsContainer.hasClass('show')
+				@alertsContainer.find('.show-btn-container').show().css( opacity: 0 ).animate( { opacity: 1 }, 250 )
 			@alertsContainer.removeClass("show")
 			R.sidebar.sidebarJ.removeClass('r-alert')
 			suffix = if R.alertManager.alertsContainer.hasClass('top') then '-top' else ''

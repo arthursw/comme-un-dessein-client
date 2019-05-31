@@ -120,7 +120,11 @@
         onSubmitUp = (function(_this) {
           return function(event) {
             if (Utils.specialKeys[event.keyCode] === 'enter') {
-              _this.submitDrawing();
+              if (R.drawingPanel.currentItem.status === 'draft') {
+                _this.submitDrawing();
+              } else {
+                _this.modifyDrawing();
+              }
               event.preventDefault();
               event.stopPropagation();
               return -1;
@@ -189,6 +193,7 @@
         if (this.currentItem != null) {
           type = this.currentItem.itemType === 'tile' ? 'tile' : 'drawing';
           if ((this.currentItem.status === 'flagged_pending' || this.currentItem.status === 'flagged') && R.administrator) {
+            R.loader.showLoadingBar(500);
             $.ajax({
               method: "POST",
               url: "ajaxCall/",
@@ -203,6 +208,7 @@
               }
             }).done((function(_this) {
               return function(results) {
+                R.loader.hideLoadingBar();
                 if (!R.loader.checkError(results)) {
                   return;
                 }
@@ -214,6 +220,7 @@
       };
 
       DrawingPanel.prototype.reportAbuseSubmit = function(type) {
+        R.loader.showLoadingBar(500);
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -228,6 +235,7 @@
           }
         }).done((function(_this) {
           return function(results) {
+            R.loader.hideLoadingBar();
             if (!R.loader.checkError(results)) {
               return;
             }
@@ -305,11 +313,12 @@
         commentAreaJ.get(0).innerText = '';
         type = this.currentItem.itemType === 'tile' ? 'tile' : 'drawing';
         args = {
-          drawingPk: this.currentItem.pk,
+          itemPk: this.currentItem.pk,
           comment: comment,
           date: Date.now(),
           itemType: type
         };
+        R.loader.showLoadingBar(500);
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -321,7 +330,8 @@
           }
         }).done((function(_this) {
           return function(results) {
-            var c, drawingPk, lastId, modal;
+            var c, itemPk, lastId, modal;
+            R.loader.hideLoadingBar();
             if (!R.loader.checkError(results)) {
               return;
             }
@@ -336,17 +346,19 @@
               modal.addText('You received an email to activate your account');
               modal.addText('If you have troubles confirming your account, please email us');
               modal.show();
-              drawingPk = type === 'drawing' ? c.drawing.$oid : c.tile.$oid;
-              R.socket.emit("drawing change", {
-                type: 'addComment',
-                comment: comment,
-                commentPk: results.commentPk,
-                author: results.author,
-                date: c.date.$date,
-                drawingPk: drawingPk,
-                insertAfter: lastId
-              });
             }
+            itemPk = type === 'drawing' ? c.drawing.$oid : c.tile.$oid;
+            R.socket.emit("drawing change", {
+              type: 'addComment',
+              comment: comment,
+              commentPk: results.commentPk,
+              author: results.author,
+              date: c.date.$date,
+              itemPk: itemPk,
+              clientId: results.clientId,
+              insertAfter: lastId,
+              itemType: type
+            });
           };
         })(this));
       };
@@ -398,9 +410,6 @@
         textJ.get(0).innerText = comment;
         divJ.append(textJ);
         lastId = this.contentJ.find('.comments-container .comments .comment:last-child').attr('id');
-        if (!emailConfirmed) {
-          textJ.addClass('btn-danger');
-        }
         if (insertAfter != null) {
           divJ.insertAfter(this.contentJ.find('#' + insertAfter));
         } else {
@@ -428,6 +437,7 @@
 
       DrawingPanel.prototype.deleteComment = function(commentPk) {
         this.contentJ.find('.comments-container #comment-' + commentPk).remove();
+        R.loader.showLoadingBar(500);
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -440,13 +450,16 @@
             })
           }
         }).done(function(results) {
+          R.loader.hideLoadingBar();
           if (!R.loader.checkError(results)) {
             return;
           }
           R.socket.emit("drawing change", {
             type: 'deleteComment',
             commentPk: results.commentPk,
-            drawingPk: results.drawingPk
+            itemPk: results.itemPk,
+            itemType: results.itemType,
+            clientId: results.clientId
           });
         });
       };
@@ -469,6 +482,7 @@
         commentJ = this.contentJ.find('.comments-container #comment-' + commentPk);
         comment = commentJ.find('.comment-text').get(0).innerText;
         this.exitCommentEditMode(commentPk);
+        R.loader.showLoadingBar(500);
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -482,6 +496,7 @@
             })
           }
         }).done(function(results) {
+          R.loader.hideLoadingBar();
           if (!R.loader.checkError(results)) {
             return;
           }
@@ -489,7 +504,9 @@
             type: 'modifyComment',
             comment: comment,
             commentPk: results.commentPk,
-            drawingPk: results.drawingPk
+            itemPk: results.itemPk,
+            itemType: results.itemType,
+            clientId: results.clientId
           });
         });
       };
@@ -695,6 +712,7 @@
           R.tools.select.deselectAll();
         }
         R.toolManager.updateButtonsVisibility();
+        R.tools.choose.deselectTile(false);
       };
 
       DrawingPanel.prototype.setGeneralInformation = function() {
@@ -757,6 +775,9 @@
           }).done((function(_this) {
             return function(result) {
               var drawingData;
+              if (!R.loader.checkError(result)) {
+                return;
+              }
               drawingData = JSON.parse(result.drawing);
               item.setSVG(drawingData.svg, true, null, true);
               return _this.setThumbnail(item, thumbnailJ);
@@ -957,6 +978,7 @@
                   canvas.height = height;
                   canvas.getContext('2d').drawImage(image, 0, 0, width, height);
                   resizedImage = canvas.toDataURL('image/jpeg');
+                  R.loader.showLoadingBar(500);
                   $.ajax({
                     method: "POST",
                     url: "ajaxCall/",
@@ -972,7 +994,10 @@
                     }
                   }).done(function(results) {
                     var tileInfoJ;
-                    console.log(results);
+                    R.loader.hideLoadingBar();
+                    if (!R.loader.checkError(results)) {
+                      return;
+                    }
                     _this.submitPhotoJ.hide();
                     tileInfoJ = _this.contentJ.find('.tile-info');
                     tileInfoJ.find('.tile-thumbnail').show().empty().append(_this.createTilePhoto(results.photoURL));
@@ -1028,7 +1053,7 @@
         this.printSheets(false);
       };
 
-      DrawingPanel.prototype.print = function(tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight) {
+      DrawingPanel.prototype.print = function(project, tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight) {
         var createDocument, newWindow, print;
         newWindow = window.open("about:blank", "_new");
         print = (function(_this) {
@@ -1130,7 +1155,7 @@
         }
         nDrawingsToLoad = drawingsToLoad.length;
         if (nDrawingsToLoad === 0) {
-          this.print(tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight);
+          this.print(project, tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight);
         }
         for (k = 0, len2 = drawingsToLoad.length; k < len2; k++) {
           drawing = drawingsToLoad[k];
@@ -1139,7 +1164,7 @@
               _this.tileProject.importSVG(svg);
               nDrawingsToLoad--;
               if (nDrawingsToLoad <= 0) {
-                _this.print(tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight);
+                _this.print(project, tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight);
               }
             };
           })(this));
@@ -1210,16 +1235,13 @@
         this.contentJ.find('#drawing-panel-no-selection').hide().siblings().show();
         this.showContent();
         this.contentJ.find('.share-buttons').show();
-        if ((R.me == null) || !_.isString(R.me) || R.me.length === 0) {
-          this.contentJ.find('.comments-container').hide();
-        } else {
-          this.contentJ.find('.comments-container').show();
-        }
+        this.contentJ.find('.comments-container').show();
         latestDrawing = JSON.parse(drawingData.drawing);
         this.currentItem.votes = drawingData.votes;
+        this.currentItem.clientId = this.currentItem.id;
         this.currentItem.status = latestDrawing.status;
         if (latestDrawing.svg != null) {
-          this.currentItem.setSVG(latestDrawing.svg, true, null, true);
+          this.currentItem.setSVG(latestDrawing.svg, true, null, false);
         }
         this.submitBtnJ.hide();
         this.modifyBtnJ.hide();
@@ -1253,7 +1275,7 @@
             data: JSON.stringify({
               "function": 'loadComments',
               args: {
-                drawingPk: this.currentItem.pk
+                itemPk: this.currentItem.pk
               }
             })
           }
@@ -1414,8 +1436,8 @@
             data: JSON.stringify({
               "function": 'loadComments',
               args: {
-                drawingPk: tile.pk,
-                commentType: 'tile'
+                itemPk: tile.pk,
+                itemType: 'tile'
               }
             })
           }
@@ -1465,30 +1487,83 @@
         }
       };
 
+      DrawingPanel.prototype.loadDrawing = function(pk) {
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'loadDrawing',
+              args: {
+                pk: pk,
+                loadSVG: true
+              }
+            })
+          }
+        }).done(function(result) {
+          if (!R.loader.checkError(result)) {
+            return;
+          }
+          R.loader.createDrawing(result.drawing, true);
+        });
+      };
+
+      DrawingPanel.prototype.loadTile = function(pk) {
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'loadTile',
+              args: {
+                pk: pk
+              }
+            })
+          }
+        }).done((function(_this) {
+          return function(result) {
+            var tile;
+            if (!R.loader.checkError(result)) {
+              return;
+            }
+            tile = JSON.parse(result.tile);
+            R.tools.choose.createTile(tile);
+          };
+        })(this));
+      };
+
       DrawingPanel.prototype.onDrawingChange = function(data) {
-        var drawing, drawingLink, forOrAgainst, item, sameCity, tile;
+        var drawing, drawingLink, forOrAgainst, item, sameCity, tile, tileInfoJ;
         switch (data.type) {
-          case 'votes':
+          case 'vote':
+          case 'cancel_vote':
             if (data.author === R.me) {
               return;
             }
             if (R.administrator) {
               if (data.itemType === 'drawing') {
-                this.notify('New vote', 'Author' + data.author + '\n Drawing: ' + data.title + ' - ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png');
+                this.notify('New vote', 'Author' + data.author + '\n Drawing: ' + data.title + ' - ' + data.clientId, window.location.origin + '/static/images/icons/vote.png');
               } else {
-                this.notify('New vote', 'Author' + data.author + '\n Tile: ' + data.tile + ' - ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png');
+                this.notify('New vote', 'Author' + data.author + '\n Tile: ' + data.tile + ' - ' + data.clientId, window.location.origin + '/static/images/icons/vote.png');
               }
             }
-            drawing = data.itemType === 'drawing' ? R.items[data.drawingId] : R.tools.choose.idToTile.get(data.drawingId);
-            if (drawing != null) {
-              if (drawing.owner === R.me) {
+            item = data.itemType === 'drawing' ? R.items[data.clientId] : R.tools.choose.idToTile.get(data.clientId);
+            if (item != null) {
+              if (item.owner === R.me) {
                 forOrAgainst = data.positive ? 'for' : 'against';
-                R.alertManager.alert('Someone voted ' + forOrAgainst + ' your ' + data.itemType, (data.positive ? 'success' : 'warning'), null, {
-                  drawingTitle: drawing.title
-                });
+                if (data.type === 'vote') {
+                  R.alertManager.alert('Someone voted ' + forOrAgainst + ' your ' + data.itemType, (data.positive ? 'success' : 'warning'), null, {
+                    drawingTitle: item.title
+                  });
+                } else if (data.type === 'cancel_vote') {
+                  R.alertManager.alert('Someone cancelled his vote ' + forOrAgainst + ' your ' + data.itemType, 'warning', null, {
+                    drawingTitle: item.title
+                  });
+                }
               }
-              drawing.votes = data.votes;
-              if (this.currentItem.clientId === data.clientId) {
+              item.votes = data.votes;
+              this.currentItem.votes = data.votes;
+              if ((this.currentItem != null) && this.currentItem.clientId === data.clientId) {
                 this.setVotes();
               }
             }
@@ -1503,55 +1578,22 @@
               return;
             }
             if (data.itemType === 'drawing') {
-              if ((R.items[data.pk] != null) || (R.items[data.drawingId] != null)) {
+              if ((R.items[data.pk] != null) || (R.items[data.clientId] != null)) {
                 return;
               }
               R.alertManager.alert('A new drawing has been created', 'info', null, {
                 html: '<a style="color: #2196f3;text-decoration: underline;" href="' + drawingLink + '">Un nouveau dessin</a> a été créé !'
               });
-              $.ajax({
-                method: "POST",
-                url: "ajaxCall/",
-                data: {
-                  data: JSON.stringify({
-                    "function": 'loadDrawing',
-                    args: {
-                      pk: data.pk,
-                      loadSVG: true
-                    }
-                  })
-                }
-              }).done(function(results) {
-                if (!R.loader.checkError(results)) {
-                  return;
-                }
-                R.loader.createDrawing(results.drawing, true);
-              });
+              if (R.loader.getLoadingBounds().intersects(data.bounds)) {
+                this.loadDrawing(data.pk);
+              }
             } else {
               R.alertManager.alert('A new tile has been reserved', 'info', null, {
                 html: '<a style="color: #2196f3;text-decoration: underline;" href="' + drawingLink + '">Un nouvelle case</a> a été réservée !'
               });
-              $.ajax({
-                method: "POST",
-                url: "ajaxCall/",
-                data: {
-                  data: JSON.stringify({
-                    "function": 'loadTile',
-                    args: {
-                      pk: data.pk
-                    }
-                  })
-                }
-              }).done((function(_this) {
-                return function(result) {
-                  var tile;
-                  if (!R.loader.checkError(results)) {
-                    return;
-                  }
-                  tile = JSON.parse(results.tile);
-                  return R.tools.choose.createTile(tile);
-                };
-              })(this));
+              if (R.loader.getLoadingBounds().intersects(data.bounds)) {
+                this.loadTile(data.pk);
+              }
             }
             break;
           case 'description':
@@ -1559,11 +1601,11 @@
             if (R.administrator) {
               this.notify('Title modified', 'drawing url: ' + this.getItemLink(data) + ', title : ' + data.title);
             }
-            drawing = R.items[data.drawingId];
+            drawing = R.items[data.clientId];
             if (drawing != null) {
               drawing.title = data.title;
               drawing.description = data.description;
-              if (this.currentItem === drawing) {
+              if ((this.currentItem != null) && this.currentItem === drawing) {
                 this.contentJ.find('#drawing-title').val(data.title);
                 this.thumbnailFooterTitle.text(data.title);
                 this.contentJ.find('#drawing-description').val(data.description);
@@ -1575,40 +1617,72 @@
               this.notify('Status changed', 'status : ' + data.status + ', drawing url: ' + this.getItemLink(data));
             }
             if (data.itemType === 'drawing') {
-              drawing = R.items[data.drawingId];
+              drawing = R.items[data.clientId];
               if (drawing != null) {
                 if (drawing.owner === R.me) {
-                  if (drawing.status === 'drawing') {
+                  if (data.status === 'drawing') {
                     R.alertManager.alert('Your drawing has been validated', 'success', null, {
                       drawingTitle: drawing.title
                     });
                   }
-                  if (drawing.status === 'rejected') {
+                  if (data.status === 'rejected') {
                     R.alertManager.alert('Your drawing has been rejected', 'danger', null, {
                       drawingTitle: drawing.title
                     });
                   }
-                  if (drawing.status === 'drawn') {
+                  if (data.status === 'drawn') {
                     R.alertManager.alert('Your drawing has been drawn', 'success', null, {
                       drawingTitle: drawing.title
                     });
                   }
-                  if (drawing.status === 'flagged' || drawing.status === 'flagged_pending') {
+                  if (data.status === 'flagged' || data.status === 'flagged_pending') {
                     R.alertManager.alert('Your drawing has been flagged', 'danger', null, {
                       drawingTitle: drawing.title
                     });
                   }
                 }
+                if (drawing.status === 'flagged' || drawing.status === 'flagged_pending' && (data.bounds != null) && R.loader.getLoadingBounds().intersects(data.bounds)) {
+                  if (data.status !== 'flagged_pending' && data.status !== 'flagged') {
+                    R.loader.reloadRasters(data.bounds);
+                  }
+                }
                 drawing.updateStatus(data.status);
-                if (this.currentItem === drawing) {
+                if ((this.currentItem != null) && this.currentItem === drawing) {
                   this.votesJ.find('.status').attr('data-i18n', this.currentItem.status).html(i18next.t(this.currentItem.status));
+                }
+                if (data.status === 'flagged_pending' || data.status === 'flagged') {
+                  R.loader.reloadRasters(drawing.rectangle);
+                  if ((this.currentItem != null) && this.currentItem === drawing) {
+                    this.close();
+                  }
+                  if (!R.administrator || data.status === 'flagged') {
+                    drawing.remove();
+                  } else {
+                    drawing.loadSVG();
+                  }
+                }
+              } else if ((data.bounds != null) && R.loader.getLoadingBounds().intersects(data.bounds)) {
+                if (data.status !== 'flagged_pending' && data.status !== 'flagged' || R.administrator) {
+                  this.loadDrawing(data.pk);
                 }
               }
             } else if (data.itemType === 'tile') {
-              tile = R.tools.choose.idToTile.get(data.drawingId);
-              R.tools.choose.updateTileStatus(tile, data.status);
-              if (this.currentItem.clientId === data.drawingId) {
-                tileInfoJ.find('.status').attr('data-i18n', tile.status).text(i18next.t(tile.status));
+              tile = R.tools.choose.idToTile.get(data.clientId);
+              if (tile != null) {
+                R.tools.choose.updateTileStatus(tile, data.status);
+                if ((this.currentItem != null) && this.currentItem.clientId === data.clientId) {
+                  tileInfoJ = this.contentJ.find('.tile-info');
+                  tileInfoJ.find('.status').attr('data-i18n', tile.status).text(i18next.t(tile.status));
+                  if (tile.status === 'created' && (data.photoURL != null)) {
+                    tileInfoJ.find('.tile-thumbnail').show().empty().append(this.createTilePhoto(data.photoURL));
+                    this.setVotes();
+                    this.contentJ.find('.share-buttons').show();
+                  }
+                }
+              } else if ((data.bounds != null) && R.loader.getLoadingBounds().intersects(data.bounds)) {
+                if (data.status !== 'flagged_pending' && data.status !== 'flagged' || R.administrator) {
+                  this.loadTile(data.pk);
+                }
               }
             }
             break;
@@ -1617,39 +1691,52 @@
               this.notify(data.itemType + ' cancelled', data.itemType + ' url: ' + this.getItemLink(data));
             }
             if (data.itemType === 'drawing') {
-              drawing = R.items[data.drawingId];
+              drawing = R.items[data.clientId];
               if ((drawing != null) && drawing.owner !== R.me) {
+                R.loader.reloadRasters(drawing.rectangle);
+                if ((this.currentItem != null) && this.currentItem === drawing) {
+                  this.close();
+                }
                 drawing.remove();
               }
             } else {
-              tile = R.tools.choose.idToTile.get(data.drawingId);
-              R.tools.choose.removeTile(tile, tile);
+              tile = R.tools.choose.idToTile.get(data.clientId);
+              if (tile != null) {
+                R.tools.choose.removeTile(tile, tile);
+                if ((this.currentItem != null) && this.currentItem.clientId === tile.clientId) {
+                  this.close();
+                }
+              }
             }
             break;
           case 'delete':
             if (R.administrator) {
               this.notify('Drawing deleted', 'drawing url: ' + this.getItemLink(data));
             }
-            drawing = R.items[data.drawingId];
+            drawing = R.items[data.clientId];
             if (drawing != null) {
+              R.loader.reloadRasters(drawing.rectangle);
+              if ((this.currentItem != null) && this.currentItem === drawing) {
+                this.close();
+              }
               drawing.remove();
             }
             break;
           case 'addComment':
             if (R.administrator) {
               this.notify('New comment', 'comment: ' + data.comment + ' ' + data.itemType + ' url: ' + this.getItemLink({
-                pk: data.drawingPk
+                pk: data.itemPk
               }));
             }
-            item = data.itemType === 'drawing' ? R.pkToDrawing.get(data.drawingPk) : R.tools.choose.idToTile.get(data.drawingId);
+            item = data.itemType === 'drawing' ? R.pkToDrawing.get(data.itemPk) : R.tools.choose.idToTile.get(data.clientId);
             if (item != null) {
               if (item.owner === R.me) {
                 R.alertManager.alert('Someone has commented your ' + data.itemType, 'info', null, {
                   author: data.author,
-                  drawingTitle: item.title
+                  drawingTitle: data.title
                 });
               }
-              if (this.currentItem.clientId === item.clientId) {
+              if ((this.currentItem != null) && this.currentItem.clientId === item.clientId) {
                 this.addComment(data.comment, data.commentPk, data.author, data.date, data.insertAfter);
               }
             }
@@ -1657,18 +1744,18 @@
           case 'modifyComment':
             if (R.administrator) {
               this.notify('Comment modified', 'comment: ' + data.comment + ', ' + data.itemType + ' url: ' + this.getItemLink({
-                pk: data.drawingPk
+                pk: data.itemPk
               }));
             }
-            item = data.itemType === 'drawing' ? R.pkToDrawing.get(data.drawingPk) : R.tools.choose.idToTile.get(data.drawingId);
+            item = data.itemType === 'drawing' ? R.pkToDrawing.get(data.itemPk) : R.tools.choose.idToTile.get(data.clientId);
             if (item != null) {
               if (item.owner === R.me) {
                 R.alertManager.alert('Someone has modified a comment on your ' + data.itemType, 'info', null, {
                   author: data.author,
-                  drawingTitle: item.title
+                  drawingTitle: data.title
                 });
               }
-              if (this.currentItem.clientId === item.clientId) {
+              if ((this.currentItem != null) && this.currentItem.clientId === item.clientId) {
                 this.contentJ.find('#comment-' + data.commentPk).find('.comment-text').get(0).innerText = data.comment;
               }
             }
@@ -1676,18 +1763,18 @@
           case 'deleteComment':
             if (R.administrator) {
               this.notify('Comment deleted', 'drawing url: ' + this.getItemLink({
-                pk: data.drawingPk
+                pk: data.itemPk
               }));
             }
-            drawing = R.pkToDrawing.get(data.drawingPk);
-            if (drawing != null) {
-              if (drawing.owner === R.me) {
+            item = data.itemType === 'drawing' ? R.pkToDrawing.get(data.itemPk) : R.tools.choose.idToTile.get(data.clientId);
+            if (item != null) {
+              if (item.owner === R.me) {
                 R.alertManager.alert('Someone has deleted a comment on your ' + data.itemType, 'info', null, {
                   author: data.author,
-                  drawingTitle: drawing.title
+                  drawingTitle: data.title
                 });
               }
-              if (this.currentItem.clientId === drawing.clientId) {
+              if ((this.currentItem != null) && this.currentItem.clientId === item.clientId) {
                 this.contentJ.find('#comment-' + data.commentPk).remove();
               }
             }
@@ -1716,6 +1803,7 @@
 
       DrawingPanel.prototype.voteCallback = function(result) {
         var delay, modal, suffix, type;
+        R.loader.hideLoadingBar();
         if (!R.loader.checkError(result)) {
           return;
         }
@@ -1768,7 +1856,7 @@
           R.alertManager.alert('You cannot vote for your own ' + type, 'error');
           return;
         }
-        if (this.currentItem.status !== 'pending' && this.currentItem.status !== 'emailNotConfirmed' && this.currentItem.status !== 'notConfirmed' && this.currentItem.status !== 'test') {
+        if (type === 'drawing' && this.currentItem.status !== 'pending' || type === 'tile' && this.currentItem.status !== 'created') {
           R.alertManager.alert('The ' + type + ' is already validated', 'error');
           return;
         }
@@ -1782,6 +1870,7 @@
           positive: positive,
           itemType: type
         };
+        R.loader.showLoadingBar(500);
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -1791,7 +1880,7 @@
               args: args
             })
           }
-        }).done(this.voteCallback);
+        }).error(R.loader.displayError).done(this.voteCallback);
       };
 
       DrawingPanel.prototype.voteUp = function() {
@@ -1886,6 +1975,7 @@
           R.alertManager.alert("You must be logged in to cancel a tile", "error");
           return;
         }
+        R.loader.showLoadingBar(500);
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -1897,7 +1987,7 @@
               }
             })
           }
-        }).done((function(_this) {
+        }).error(R.loader.displayError).done((function(_this) {
           return function(result) {
             return _this.cancelTileCallback(result);
           };
@@ -1907,6 +1997,7 @@
 
       DrawingPanel.prototype.cancelTileCallback = function(result) {
         var tile;
+        R.loader.hideLoadingBar();
         if (!R.loader.checkError(result)) {
           return;
         }

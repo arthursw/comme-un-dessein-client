@@ -939,9 +939,9 @@
 
       View.prototype.onWindowResize = function(event) {
         var ref;
+        P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight());
         this.grid.update();
         this.moveBy(new P.Point());
-        P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight());
         R.svgJ.attr('width', R.stageJ.innerWidth());
         R.svgJ.attr('height', R.stageJ.innerHeight());
         R.toolbar.updateArrowsVisibility();

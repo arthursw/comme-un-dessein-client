@@ -173,10 +173,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			return if drawing? then drawing.containingLayer() else @group.parent
 
 		addToListItem: (@itemListJ=null, name=null)->
-			if not @itemListJ? then @itemListJ = @getListItem()
-			if not name? then name = @id.substring(0, 5)
-			super(@itemListJ, name)
 			return
+			# if not @itemListJ? then @itemListJ = @getListItem()
+			# if not name? then name = @id.substring(0, 5)
+			# super(@itemListJ, name)
+			# return
 
 		getDrawing: ()->
 			return if @drawingId? then R.items[@drawingId] else null

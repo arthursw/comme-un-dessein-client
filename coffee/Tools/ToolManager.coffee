@@ -258,7 +258,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			zoomPow += value
 
 			if snap
-				if zoomPow < @constructor.minZoomPow or zoomPow > @constructor.maxZoomPow
+				if value < 0 and zoomPow < @constructor.minZoomPow or value > 0 and zoomPow > @constructor.maxZoomPow
 					return
 			else if P.view.zoom * value < @constructor.minZoom or P.view.zoom * value > @constructor.maxZoom
 				return
@@ -422,7 +422,8 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 
 			@colorBtn.btnJ.click ()=>
 				position = @colorBtn.cloneJ.offset()
-				ulJ = $('<ul>').attr('id', 'color-picker').css( position: 'absolute', top: position.top + 62, left: position.left )
+				height = @colorBtn.cloneJ.outerHeight()
+				ulJ = $('<ul>').attr('id', 'color-picker').css( position: 'fixed', top: position.top + height, left: position.left )
 				for color in colors
 					liJ = $('<li>').attr('data-color', color).css( background: color, width: 62, height: 62, cursor: 'pointer' ).mousedown((event)=> 
 						color = $(event.target).attr('data-color')

@@ -51,7 +51,6 @@
       };
 
       function Drawing(rectangle1, data1, id1, pk1, owner, date, title1, description, status1, pathList, svg, bounds) {
-        var ref;
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
         this.id = id1 != null ? id1 : null;
@@ -82,7 +81,6 @@
           R.flaggedDrawing = this;
         }
         Drawing.__super__.constructor.call(this, this.data, this.id, this.pk);
-        console.log('status: ', this.status, ', parent name: ', (ref = this.group.parent) != null ? ref.name : void 0);
         if (this.pk != null) {
           this.constructor.pkToId[this.pk] = this.id;
         }
@@ -98,6 +96,9 @@
         this.addToListItem();
         this.addToLayer();
         if (this.status === 'draft') {
+          if (this.constructor.draft != null) {
+            console.log('Draft duplication!');
+          }
           this.constructor.draft = this;
           this.addPathsFromPathList(pathList);
         } else if (svg != null) {
@@ -113,20 +114,18 @@
       }
 
       Drawing.prototype.drawVoteBounds = function(flagged) {
-        var bounds, voteGroup;
+        var bounds;
         if (flagged == null) {
           flagged = false;
         }
         bounds = this.getBounds();
-        voteGroup = new P.Group();
         this.voteFlag = new P.Raster(!flagged ? '/static/images/icons/envelope.png' : '/static/images/icons/flagged.png');
         this.voteFlag.position = bounds.center.subtract(-19, 49);
         if (R.voteFlags == null) {
           R.voteFlags = [];
         }
         R.voteFlags.push(this.voteFlag);
-        voteGroup.addChild(this.voteFlag);
-        this.group.addChild(voteGroup);
+        this.group.addChild(this.voteFlag);
         if (R.selectedTool !== R.tools.select) {
           this.hideVoteFlag();
         }
@@ -144,9 +143,6 @@
         flagged = this.status === 'flagged_pending' || this.status === 'flagged';
         if ((this.id != null) && (R.loader.userVotes.get(this.id) != null) && !flagged) {
           return;
-        }
-        if (flagged) {
-          console.log('showVoteFlag flagged_pending');
         }
         if ((ref = this.voteFlag) != null) {
           ref.visible = true;
@@ -295,6 +291,9 @@
         }
         if (hide == null) {
           hide = false;
+        }
+        if (this.svg) {
+          this.svg.remove();
         }
         layerName = this.getLayerName();
         layer = document.getElementById(layerName);
@@ -745,6 +744,7 @@
           png: imageURL,
           bounds: bounds
         };
+        R.loader.showLoadingBar();
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -780,15 +780,18 @@
 
       Drawing.prototype.submitCallback = function(result) {
         var modal;
+        R.loader.hideLoadingBar();
         if (!R.loader.checkError(result)) {
           return;
         }
         R.commandManager.clearHistory();
-        this.status = result.status;
+        this.updateStatus(result.status);
         if (this.constructor.draft === this) {
           this.constructor.draft = null;
         }
         R.toolManager.updateButtonsVisibility();
+        this.removePaths();
+        this.setSVG(this.svgString);
         this.svgString = null;
         this.status = result.status;
         modal = Modal.createModal({
@@ -845,6 +848,7 @@
           pointLists: this.getPointLists(),
           bounds: this.getBounds()
         };
+        R.loader.showLoadingBar(500);
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -854,7 +858,10 @@
               args: args
             })
           }
-        }).done(R.loader.checkError);
+        }).done(function() {
+          R.loader.hideLoadingBar();
+          R.loader.checkError;
+        });
       };
 
       Drawing.prototype.addUpdateFunctionAndArguments = function(args, type) {
@@ -868,6 +875,7 @@
 
       Drawing.prototype.updateCallback = function(result) {
         var contentJ;
+        R.loader.hideLoadingBar();
         if (!R.loader.checkError(result)) {
           this.title = this.previousTitle;
           this.description = this.previousDescription;
@@ -895,6 +903,7 @@
           title: this.title,
           description: this.description
         };
+        R.loader.showLoadingBar();
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -909,6 +918,7 @@
 
       Drawing.prototype.deleteFromDatabaseCallback = function() {
         var i, id, len, ref;
+        R.loader.hideLoadingBar();
         id = this.id;
         if (!R.loader.checkError()) {
           if (this.pathIdsBeforeRemove != null) {
@@ -936,6 +946,7 @@
       };
 
       Drawing.prototype.deleteFromDatabase = function() {
+        R.loader.showLoadingBar();
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -951,6 +962,7 @@
       };
 
       Drawing.prototype.cancel = function() {
+        R.loader.showLoadingBar();
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -971,6 +983,7 @@
 
       Drawing.prototype.cancelCallback = function(result) {
         var draft, i, j, len, len1, path, ref, ref1, ref2;
+        R.loader.hideLoadingBar();
         if (!R.loader.checkError(result)) {
           return;
         }
@@ -1069,7 +1082,7 @@
       };
 
       Drawing.prototype.updateStatus = function(status) {
-        var i, layer, layerName, len, path, ref;
+        var i, layer, layerName, len, path, ref, ref1, ref2, voteFlagWasVisible;
         if (this.status === status) {
           return;
         }
@@ -1087,6 +1100,19 @@
         for (i = 0, len = ref.length; i < len; i++) {
           path = ref[i];
           path.updateStrokeColor();
+        }
+        voteFlagWasVisible = (ref1 = this.voteFlag) != null ? ref1.visible : void 0;
+        if ((ref2 = this.voteFlag) != null) {
+          ref2.remove();
+        }
+        if (this.status === 'pending' && this.owner !== R.me) {
+          this.drawVoteBounds();
+        }
+        if (this.status === 'flagged_pending') {
+          this.drawVoteBounds(true);
+        }
+        if (voteFlagWasVisible) {
+          this.showVoteFlag();
         }
       };
 

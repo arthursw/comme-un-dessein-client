@@ -335,7 +335,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 		addProgressBar: ()->
 			progressJ = $(""" <div class="progress modal-progress-bar">
 				<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
-					<span class="sr-only">Loading...</span>
+					<span class="sr-only" data-i18n="Loading">Loading...</span>
 				</div>
 			</div>""")
 			@modalBodyJ.append(progressJ)

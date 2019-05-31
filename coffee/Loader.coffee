@@ -5,6 +5,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 	class Loader
 		
 		@maxNumPoints = 1000
+		@scaleRatio = 4
 
 		constructor: ()->
 			@loadingType = 'tiles'
@@ -57,13 +58,13 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			return
 
 		showLoadingBarCallback: ()=>
-			$("#loadingBar").show()
-			# @spinner.spin(document.getElementById('loadingBar'))
+			$("#loadingBar").show().css( opacity: 1 )
 			return
 
 		showLoadingBar: (timeout)=>
 			if timeout? and timeout>0
 				clearTimeout(@showLoadingBarTimeoutId)
+				$("#loadingBar").show().css( opacity: 0 )
 				@showLoadingBarTimeoutId = setTimeout(@showLoadingBarCallback, timeout)
 			else
 				@showLoadingBarCallback()
@@ -190,56 +191,56 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'load', args: { rectangle: rectangle, areasToLoad: areasToLoad, qZoom: qZoom, cityName: R.city.name } } ).done(@loadCallback)
 			return
 
-		loadAll: ()->
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadAll', args: { cityName: R.city.name } } ).done((results)=> 
-				if not R.loader.checkError(results) then return
+		# loadAll: ()->
+		# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadAll', args: { cityName: R.city.name } } ).done((results)=> 
+		# 		if not R.loader.checkError(results) then return
 
-				R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true)
+		# 		R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(400), true)
 				
-				for drawing in R.drawings
-					drawing.remove()
+		# 		for drawing in R.drawings
+		# 			drawing.remove()
 
-				draft = R.Drawing.getDraft()
-				if not draft?
-					draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
+		# 		draft = R.Drawing.getDraft()
+		# 		if not draft?
+		# 			draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
 
-				i=0
-				# R.svgJ.hide()
-				showDrawing = ()=>
-					item = results.items[i++]
-					if not item? then return
+		# 		i=0
+		# 		# R.svgJ.hide()
+		# 		showDrawing = ()=>
+		# 			item = results.items[i++]
+		# 			if not item? then return
 					
-					draft.removePaths()
+		# 			draft.removePaths()
 
-					draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
+		# 			draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
 
-					drawing = JSON.parse(item)
-					console.log(drawing.pathList)
-					# args = 
-					# 	pk: item._id.$oid
-					# 	loadPathList: true
+		# 			drawing = JSON.parse(item)
+		# 			console.log(drawing.pathList)
+		# 			# args = 
+		# 			# 	pk: item._id.$oid
+		# 			# 	loadPathList: true
 
-					# $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done (results)=>
-					# if not R.loader.checkError(results) then return
+		# 			# $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done (results)=>
+		# 			# if not R.loader.checkError(results) then return
 
-					# drawing = JSON.parse(results.drawing)
-					# layer = draft.group.parent
-					# layer.removeChildren()
-					# layer.addChild(draft.group)
+		# 			# drawing = JSON.parse(results.drawing)
+		# 			# layer = draft.group.parent
+		# 			# layer.removeChildren()
+		# 			# layer.addChild(draft.group)
 					
-					# $(@currentDrawing.svg).parent().parent().hide()
+		# 			# $(@currentDrawing.svg).parent().parent().hide()
 					
 
-					draft.addPathsFromPathList(drawing.pathList, true, true)
+		# 			draft.addPathsFromPathList(drawing.pathList, true, true)
 
-					setTimeout(showDrawing, 200)
-					return
+		# 			setTimeout(showDrawing, 200)
+		# 			return
 
-				showDrawing()
+		# 		showDrawing()
 				
-				return)
+		# 		return)
 
-			return
+		# 	return
 
 		# loadSVG: ()->
 		# 	if P.view.zoom < 0.125
@@ -261,7 +262,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			date = item.date?.$date
 			drawing = new Item.Drawing(null, null, item.clientId, item._id.$oid, item.owner, date, item.title, null, item.status, item.pathList, item.svg, bounds)
 			if reloadUnderneathRasters
-				@reloadRasters(drawing.bounds)
+				@reloadRasters(drawing.rectangle)
 			return
 
 		createDrawings: (results)=>
@@ -405,8 +406,37 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 								rs.pop().remove()
 						return
 
-			loadRasters(false)
+			@loadRasters(false)
 			return
+
+		getScaleNumber: ()->
+			ln4 = Math.log(@constructor.scaleRatio)
+			return Math.max(0, Math.floor(Math.log(1 / P.view.zoom) / ln4))
+
+		getScale: (scaleNumber)->
+			return Math.pow(@constructor.scaleRatio, scaleNumber)
+
+		getQuantizedBounds: (scaleNumber, scale)->
+			bounds = P.view.bounds
+
+			scaleNumber ?= @getScaleNumber()
+			scale ?= @getScale(scaleNumber)
+			nPixelsPerTile = scale * 1000
+
+			quantizedBounds =
+				t: Math.floor(bounds.top / nPixelsPerTile)
+				l: Math.floor(bounds.left / nPixelsPerTile)
+				b: Math.floor(bounds.bottom / nPixelsPerTile)
+				r: Math.floor(bounds.right / nPixelsPerTile)
+
+			return quantizedBounds
+
+		getLoadingBounds: ()->
+			bounds = P.view.bounds
+			scaleNumber = @getScaleNumber()
+			scale = @getScale(scaleNumber)
+			nPixelsPerTile = scale * 1000
+			return	bounds.expand(nPixelsPerTile)
 
 		loadRasters: (alsoLoadDrawingsAndTiles=true)->
 
@@ -415,7 +445,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 
 			@rasters ?= new Map()
 
-			bounds = P.view.bounds
+			
 
 			# @rectangle ?= new P.Path.Rectangle(P.view.bounds.expand(-P.view.bounds.width / 3, -P.view.bounds.height / 3))
 			# @rectangle.position = P.view.bounds.center
@@ -440,20 +470,11 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			# @texts[3].position.x = bounds.right - margin
 			# @texts[3].position.y = bounds.center.y
 
-			scaleRatio = 4
-
-			ln4 = Math.log(4)
-
-			scaleNumber = Math.max(0, Math.floor(Math.log(1 / P.view.zoom) / ln4))
-
-			scale = Math.pow(4, scaleNumber)
+			scaleNumber = @getScaleNumber()
+			scale = @getScale(scaleNumber)
 			nPixelsPerTile = scale * 1000
-
-			quantizedBounds =
-				t: Math.floor(bounds.top / nPixelsPerTile)
-				l: Math.floor(bounds.left / nPixelsPerTile)
-				b: Math.floor(bounds.bottom / nPixelsPerTile)
-				r: Math.floor(bounds.right / nPixelsPerTile)
+			bounds = P.view.bounds
+			quantizedBounds = @getQuantizedBounds(scaleNumber, scale)
 
 			# @texts[0].content = '' + quantizedBounds.t
 			# @texts[1].content = '' + quantizedBounds.l
@@ -907,6 +928,12 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 					break
 
 			R.socket.tipibotSocket.send(JSON.stringify( bounds: bounds, paths: paths, type: 'setNextDrawing', drawingPk: @drawingPk ))
+			return
+
+		displayError: (error)=>
+			R.alertManager.alert("An error occured, the page will reload in 2 seconds", "error")
+			@showLoadingBar(1000)
+			setTimeout( (()-> window.location.reload()) , 2000)
 			return
 
 		# check for any error in an ajax callback and display the appropriate error message

@@ -54,7 +54,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			super(@data, @id, @pk)
 
-			console.log('status: ', @status, ', parent name: ', @group.parent?.name )
 
 			# if not @constructor.voteFlag?
 				
@@ -93,6 +92,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@addToLayer()
 			
 			if @status == 'draft'
+				if @constructor.draft?
+					console.log('Draft duplication!')
 				@constructor.draft = @
 				@addPathsFromPathList(pathList)
 			else if svg?
@@ -150,7 +151,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		
 		drawVoteBounds: (flagged=false)->
 			bounds = @getBounds()
-			voteGroup = new P.Group()
+			# voteGroup = new P.Group()
 			# @voteFlag = new P.Raster('/static/images/icons/vote-flag-xl2.png')
 			@voteFlag = new P.Raster(if not flagged then '/static/images/icons/envelope.png' else '/static/images/icons/flagged.png')
 			# voteFlag = @constructor.voteFlag.clone()
@@ -167,7 +168,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# voteBounds.fillColor.alpha = 0.75
 
 			# voteGroup.addChild(voteBounds)
-			voteGroup.addChild(@voteFlag)
+			# voteGroup.addChild(@voteFlag)
 
 			# voteBounds = new P.Path.Rectangle(bounds, new P.Size(5, 5))
 			# voteBounds.strokeColor = 'black'
@@ -181,7 +182,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# voteText.fillColor = 'black';
 			# voteText.content = 'Vote for ' + @title;
 			# voteGroup.addChild(voteText)
-			@group.addChild(voteGroup)
+			# @group.addChild(voteGroup)
+			@group.addChild(@voteFlag)
 			
 			if R.selectedTool != R.tools.select
 				@hideVoteFlag()
@@ -194,8 +196,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		showVoteFlag: ()->
 			flagged = @status == 'flagged_pending' or @status == 'flagged'
 			if @id? and R.loader.userVotes.get(@id)? and not flagged then return
-			if flagged
-				console.log('showVoteFlag flagged_pending')
 			@voteFlag?.visible = true
 			return
 
@@ -278,6 +278,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		setSVG: (svg, parse=true, callback=null, hide=false)->
+			if @svg then @svg.remove()
 			layerName = @getLayerName()
 			layer = document.getElementById(layerName)
 			# layer = document.createElement('div')
@@ -728,7 +729,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				png: imageURL
 				bounds: bounds
 			}
-
+			R.loader.showLoadingBar()
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'submitDrawing', args: args } ).done(@submitCallback)
 
 			return
@@ -746,22 +747,22 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 		# check if the save was successful and set @pk if it is
 		submitCallback: (result)=>
-
+			R.loader.hideLoadingBar()
 			if not R.loader.checkError(result)
 				return
 
 			R.commandManager.clearHistory()
 
-			@status = result.status
+			@updateStatus(result.status)
 			
 			if @constructor.draft == @
 				@constructor.draft = null
 
 			R.toolManager.updateButtonsVisibility()
 
-			# @removePaths()
+			@removePaths()
 
-			# @setSVG(@svgString)
+			@setSVG(@svgString)
 			@svgString = null
 
 			# if @status == 'emailNotConfirmed'
@@ -827,7 +828,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				bounds: @getBounds()
 			}
 
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPathsToDrawing', args: args } ).done(R.loader.checkError)
+			R.loader.showLoadingBar(500)
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPathsToDrawing', args: args } ).done(()->
+				R.loader.hideLoadingBar()
+				R.loader.checkError
+				return)
 
 			return
 
@@ -837,6 +842,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		updateCallback: (result)=>
+			R.loader.hideLoadingBar()
 			if not R.loader.checkError(result)
 				@title = @previousTitle
 				@description = @previousDescription
@@ -866,11 +872,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				description: @description
 			}
 
+			R.loader.showLoadingBar()
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawing', args: args } ).done(@updateCallback)
 
 			return
 
 		deleteFromDatabaseCallback: ()=>
+			R.loader.hideLoadingBar()
 			id = @id
 			if not R.loader.checkError()
 				if @pathIdsBeforeRemove?
@@ -895,14 +903,17 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		# @delete() removes the item and delete it in the database
 		# @remove() just removes visually
 		deleteFromDatabase: () ->
+			R.loader.showLoadingBar()
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteDrawing', args: { 'pk': @pk } } ).done(@deleteFromDatabaseCallback())
 			return
 
 		cancel: ()->
+			R.loader.showLoadingBar()
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'cancelDrawing', args: { 'pk': @pk } } ).done( (result)=> @cancelCallback(result) )
 			return
 
 		cancelCallback: (result)->
+			R.loader.hideLoadingBar()
 			if not R.loader.checkError(result) then return
 
 			# we will add them with result.pathList
@@ -985,6 +996,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				# path.group.visible = true
 			# R.rasterizer.rasterizeRectangle(@rectangle)
 
+			voteFlagWasVisible = @voteFlag?.visible
+
+			@voteFlag?.remove()
+
+			if @status == 'pending' and @owner != R.me
+				@drawVoteBounds()
+
+			if @status == 'flagged_pending'
+				@drawVoteBounds(true)
+
+			if voteFlagWasVisible
+				@showVoteFlag()
 			return
 
 		# can not select a drawing which the user does not own

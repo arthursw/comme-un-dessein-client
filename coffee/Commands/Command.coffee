@@ -175,11 +175,13 @@ define ['paper', 'R',  'Utils/Utils'], (P, R, Utils) ->
 			for id, item of @items
 				item.addUpdateFunctionAndArguments(args, type)
 
+			R.loader.showLoadingBar()
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'multipleCalls', args: {functionsAndArguments: args} } ).done(@updateCallback)
 			# Dajaxice.draw.multipleCalls( @updateCallback, functionsAndArguments: args)
 			return
 
 		updateCallback: (results)->
+			R.loader.hideLoadingBar()
 			for result in results
 				R.loader.checkError(result)
 			return

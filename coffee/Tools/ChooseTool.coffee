@@ -136,11 +136,15 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			height = @constructor.paperHeight * @constructor.nSheetsPerTile
 
 			if not @highlight?
-				@highlight = new P.Path.Rectangle(0, 0, width, height)
+				margin = 5
+				@highlight = new P.Path.Rectangle(margin, margin, width - margin, height - margin)
 				@highlight.strokeWidth = 5
 				@highlight.strokeScaling = false
-				@highlight.fillColor = R.selectionBlue
-				@highlight.fillColor.alpha = 0.25
+				@highlight.strokeColor = R.selectionBlue
+				@highlight.dashArray = [8, 5]
+				# @highlight.fillColor = R.selectionBlue
+				# @highlight.fillColor.alpha = 0.25
+				# @highlight.strokeColor.alpha = 0.25
 
 			left = R.view.grid.limitCDRectangle.left
 			top = R.view.grid.limitCDRectangle.top
@@ -248,7 +252,16 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		getTileColorFromStatus: (tile)->
-			return if tile.status == 'pending' then '#03a9f4' else if tile.status == 'created' then 'rgb(139, 195, 74)' else if tile.status == 'rejected' then 'red' else 'grey'
+			statusToColor = {
+				'pending': 'gray',
+				'created': '#03a9f4',
+				'validated': 'rgb(139, 195, 74)',
+				'rejected': 'darkRed',
+				'flagged': 'red'
+			}
+			color = statusToColor[tile.status]
+			color ?= 'gray'
+			return color
 
 		createTile: (tile)->
 			
@@ -289,9 +302,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 		updateTileStatus: (tile, status=null)->
 			t = @tiles.get(tile.y)?.get(tile.x)
 			if t?
+				t.status = if status? then status else tile.status
 				t.rectangle.fillColor = @getTileColorFromStatus(tile)
 				t.rectangle.fillColor.alpha = 0.25
-				t.status = if status? then status else tile.status
 
 			return
 
@@ -304,8 +317,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			@selectedTile = tile
 			return
 
-		deselectTile: ()->
-			R.drawingPanel.deselectTile()
+		deselectTile: (updateDrawingPanel=true)->
+			if updateDrawingPanel
+				R.drawingPanel.deselectTile()
 			@selectedTile?.rectangle?.strokeWidth = null
 			@selectedTile = null
 			return
@@ -319,6 +333,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			# tile.rectangle.dashArray = [5, 5]
 
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadTile', args: args } ).done((result)=>
+				if not R.loader.checkError(result) then return
 				R.drawingPanel.setTile(result, rectangle)
 			)
 			return

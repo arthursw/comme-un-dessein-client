@@ -109,9 +109,14 @@
         alertJ.css({
           'background-color': null
         });
-        R.alertManager.alertsContainer.addClass('show');
+        this.alertsContainer.addClass('show');
+        setTimeout(((function(_this) {
+          return function() {
+            return _this.alertsContainer.find('.show-btn-container').hide();
+          };
+        })(this)), 250);
         R.sidebar.sidebarJ.addClass('r-alert');
-        suffix = R.alertManager.alertsContainer.hasClass('top') ? '-top' : '';
+        suffix = this.alertsContainer.hasClass('top') ? '-top' : '';
         R.drawingPanel.drawingPanelJ.addClass('r-alert' + suffix);
         $('#timeline').addClass('r-alert' + suffix);
         $('#submit-drawing-button').addClass('r-alert' + suffix);
@@ -171,6 +176,13 @@
         if (this.alertTimeOut != null) {
           clearTimeout(this.alertTimeOut);
           this.alertTimeOut = null;
+        }
+        if (this.alertsContainer.hasClass('show')) {
+          this.alertsContainer.find('.show-btn-container').show().css({
+            opacity: 0
+          }).animate({
+            opacity: 1
+          }, 250);
         }
         this.alertsContainer.removeClass("show");
         R.sidebar.sidebarJ.removeClass('r-alert');

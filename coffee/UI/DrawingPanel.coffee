@@ -121,7 +121,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			
 			onSubmitUp = (event)=>
 				if Utils.specialKeys[event.keyCode] == 'enter'
-					@submitDrawing()
+					if R.drawingPanel.currentItem.status == 'draft'
+						@submitDrawing()
+					else
+						@modifyDrawing()
 					event.preventDefault()
 					event.stopPropagation()
 					return -1
@@ -179,7 +182,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				type = if @currentItem.itemType == 'tile' then 'tile' else 'drawing'
 
 				if ( @currentItem.status == 'flagged_pending' or @currentItem.status == 'flagged' ) and R.administrator
+					R.loader.showLoadingBar(500)
 					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'cancelAbuse', args: { pk: @currentItem.pk, itemType: type } } ).done((results)=>
+						R.loader.hideLoadingBar()
 						if not R.loader.checkError(results) then return
 						R.alertManager.alert 'The report was successfully cancelled', 'success'
 						return)
@@ -187,7 +192,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return
 
 		reportAbuseSubmit: (type)->
+			R.loader.showLoadingBar(500)
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'reportAbuse', args: { pk: @currentItem.pk, itemType: type } } ).done((results)=>
+				R.loader.hideLoadingBar()
 				if not R.loader.checkError(results) then return
 				R.alertManager.alert 'Your report was taken into account', 'success'
 				return)
@@ -278,13 +285,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			type = if @currentItem.itemType == 'tile' then 'tile' else 'drawing'
 
 			args = {
-				drawingPk: @currentItem.pk
+				itemPk: @currentItem.pk
 				comment: comment
 				date: Date.now()
 				itemType: type
 			}
 
+			R.loader.showLoadingBar(500)
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'addComment', args: args } ).done((results)=>
+				R.loader.hideLoadingBar()
 				if not R.loader.checkError(results) then return
 				c = JSON.parse(results.comment)
 				lastId = @addComment(comment, results.commentPk, results.author, c.date.$date)
@@ -299,8 +308,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					modal.addText('If you have troubles confirming your account, please email us')
 					modal.show()
 					
-					drawingPk = if type == 'drawing' then c.drawing.$oid else c.tile.$oid
-					R.socket.emit "drawing change", { type: 'addComment', comment: comment, commentPk: results.commentPk, author: results.author, date: c.date.$date, drawingPk: drawingPk, insertAfter: lastId }
+				itemPk = if type == 'drawing' then c.drawing.$oid else c.tile.$oid
+				R.socket.emit "drawing change", { type: 'addComment', comment: comment, commentPk: results.commentPk, author: results.author, date: c.date.$date, itemPk: itemPk, clientId: results.clientId, insertAfter: lastId, itemType: type }
 				return)
 			return
 
@@ -345,8 +354,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			textJ.get(0).innerText = comment
 			divJ.append(textJ)
 			lastId = @contentJ.find('.comments-container .comments .comment:last-child').attr('id')
-			if not emailConfirmed
-				textJ.addClass('btn-danger')
+			# if not emailConfirmed
+			# 	textJ.addClass('btn-danger')
 			if insertAfter?
 				divJ.insertAfter(@contentJ.find('#'+insertAfter))
 			else
@@ -368,9 +377,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 		deleteComment: (commentPk)->
 			@contentJ.find('.comments-container #comment-'+commentPk).remove()
+			R.loader.showLoadingBar(500)
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteComment', args: {commentPk: commentPk} } ).done((results)->
+				R.loader.hideLoadingBar()
 				if not R.loader.checkError(results) then return
-				R.socket.emit "drawing change", { type: 'deleteComment', commentPk: results.commentPk, drawingPk: results.drawingPk }
+				R.socket.emit "drawing change", { type: 'deleteComment', commentPk: results.commentPk, itemPk: results.itemPk, itemType: results.itemType, clientId: results.clientId }
 				return)
 			return
 
@@ -388,10 +399,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			commentJ = @contentJ.find('.comments-container #comment-'+commentPk)
 			comment = commentJ.find('.comment-text').get(0).innerText
 			@exitCommentEditMode(commentPk)
-			
+			R.loader.showLoadingBar(500)
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'modifyComment', args: {commentPk: commentPk, comment: comment} } ).done((results)->
+				R.loader.hideLoadingBar()
 				if not R.loader.checkError(results) then return
-				R.socket.emit "drawing change", { type: 'modifyComment', comment: comment, commentPk: results.commentPk, drawingPk: results.drawingPk }
+				R.socket.emit "drawing change", { type: 'modifyComment', comment: comment, commentPk: results.commentPk, itemPk: results.itemPk, itemType: results.itemType, clientId: results.clientId }
 				return)
 			return
 
@@ -602,6 +614,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 
 			R.toolManager.updateButtonsVisibility()
+			R.tools.choose.deselectTile(false)
 			return
 
 		setGeneralInformation: ()=>
@@ -664,7 +677,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					svgOnly: true
 
 				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
-					
+					if not R.loader.checkError(result) then return
 					drawingData = JSON.parse(result.drawing)
 					item.setSVG(drawingData.svg, true, null, true)
 					@setThumbnail(item, thumbnailJ)
@@ -970,8 +983,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 							canvas.getContext('2d').drawImage(image, 0, 0, width, height)
 							resizedImage = canvas.toDataURL('image/jpeg')
 
+							R.loader.showLoadingBar(500)
 							$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'submitTilePhoto', args: { pk: @currentItem.pk, imageName: R.me + '_' + @currentItem.number, dataURL: resizedImage } } ).done((results)=>
-								console.log(results)
+								R.loader.hideLoadingBar()
+								if not R.loader.checkError(results) then return
 								@submitPhotoJ.hide()
 								tileInfoJ = @contentJ.find('.tile-info')
 								tileInfoJ.find('.tile-thumbnail').show().empty().append(@createTilePhoto(results.photoURL))
@@ -1037,7 +1052,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@printSheets(false)
 			return
 
-		print: (tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight)=>
+		print: (project, tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight)=>
 
 			newWindow = window.open("about:blank", "_new")
 
@@ -1154,14 +1169,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			nDrawingsToLoad = drawingsToLoad.length
 
 			if nDrawingsToLoad == 0
-				@print(tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight)
+				@print(project, tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight)
 
 			for drawing in drawingsToLoad
 				drawing.loadSVGToPrint( (svg)=> 
 					@tileProject.importSVG(svg)
 					nDrawingsToLoad--
 					if nDrawingsToLoad <= 0
-						@print(tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight)
+						@print(project, tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight)
 
 					return
 					)
@@ -1247,19 +1262,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			
 			@contentJ.find('.share-buttons').show()
 
-			if not R.me? or not _.isString(R.me) or R.me.length == 0
-				@contentJ.find('.comments-container').hide()
-			else
-				@contentJ.find('.comments-container').show()
+			# if not R.me? or not _.isString(R.me) or R.me.length == 0
+			# 	@contentJ.find('.comments-container').hide()
+			# else
+			@contentJ.find('.comments-container').show()
 
 			latestDrawing = JSON.parse(drawingData.drawing)
 
 			@currentItem.votes = drawingData.votes
-
+			@currentItem.clientId = @currentItem.id
 			@currentItem.status = latestDrawing.status
 			
 			if latestDrawing.svg?
-				@currentItem.setSVG(latestDrawing.svg, true, null, true)
+				@currentItem.setSVG(latestDrawing.svg, true, null, false)
 
 			@submitBtnJ.hide()
 			@modifyBtnJ.hide()
@@ -1302,7 +1317,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@setDrawingThumbnail()
 
 			@emptyComments()
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadComments', args: { drawingPk: @currentItem.pk } } ).done((results)=>
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadComments', args: { itemPk: @currentItem.pk } } ).done((results)=>
 				if not R.loader.checkError(results) then return
 				@addComments(results.comments)
 				return)
@@ -1475,7 +1490,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			@emptyComments()
 
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadComments', args: { drawingPk: tile.pk, commentType: 'tile' } } ).done((results)=>
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadComments', args: { itemPk: tile.pk, itemType: 'tile' } } ).done((results)=>
 				if not R.loader.checkError(results) then return
 				@addComments(results.comments)
 				return)
@@ -1509,27 +1524,46 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 						notification = new Notification(title, options)
 			return
 
+		loadDrawing: (pk)->
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: { pk: pk, loadSVG: true } } ).done((result)->
+				if not R.loader.checkError(result) then return
+				R.loader.createDrawing(result.drawing, true)
+				return)
+			return
+
+		loadTile: (pk)->
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadTile', args: { pk: pk } } ).done((result)=>
+				if not R.loader.checkError(result) then return
+				tile = JSON.parse(result.tile)
+				R.tools.choose.createTile(tile)
+				return)
+			return
+
 		onDrawingChange: (data)->
 			
 
 			switch data.type
-				when 'votes'
+				when 'vote', 'cancel_vote'
 					if data.author == R.me then return
 					
 					if R.administrator
 						if data.itemType == 'drawing'
-							@notify('New vote', 'Author' + data.author + '\n Drawing: ' + data.title + ' - ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png')
+							@notify('New vote', 'Author' + data.author + '\n Drawing: ' + data.title + ' - ' + data.clientId, window.location.origin + '/static/images/icons/vote.png')
 						else
-							@notify('New vote', 'Author' + data.author + '\n Tile: ' + data.tile + ' - ' + data.drawingId, window.location.origin + '/static/images/icons/vote.png')
+							@notify('New vote', 'Author' + data.author + '\n Tile: ' + data.tile + ' - ' + data.clientId, window.location.origin + '/static/images/icons/vote.png')
 
-					drawing = if data.itemType == 'drawing' then R.items[data.drawingId] else R.tools.choose.idToTile.get(data.drawingId)
-					if drawing?
-						if drawing.owner == R.me
+					item = if data.itemType == 'drawing' then R.items[data.clientId] else R.tools.choose.idToTile.get(data.clientId)
+					if item?
+						if item.owner == R.me
 							forOrAgainst = if data.positive then 'for' else 'against'
-							R.alertManager.alert 'Someone voted ' + forOrAgainst + ' your ' + data.itemType, (if data.positive then 'success' else 'warning'), null, { drawingTitle: drawing.title }
+							if data.type == 'vote'
+								R.alertManager.alert 'Someone voted ' + forOrAgainst + ' your ' + data.itemType, (if data.positive then 'success' else 'warning'), null, { drawingTitle: item.title }
+							else if data.type == 'cancel_vote'
+								R.alertManager.alert 'Someone cancelled his vote ' + forOrAgainst + ' your ' + data.itemType, 'warning', null, { drawingTitle: item.title }
 
-						drawing.votes = data.votes
-						if @currentItem.clientId == data.clientId
+						item.votes = data.votes
+						@currentItem.votes = data.votes
+						if @currentItem? and @currentItem.clientId == data.clientId
 							@setVotes()
 				when 'new'
 					drawingLink = @getItemLink(data)
@@ -1543,34 +1577,30 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 					if data.itemType == 'drawing'
 						# if the drawing is already loaded, no need to load it
-						if R.items[data.pk]? or R.items[data.drawingId]? then return
+						if R.items[data.pk]? or R.items[data.clientId]? then return
 
 						# R.alertManager.alert 'A new drawing has been created', 'success', null, {drawingLink: drawingLink}
 						R.alertManager.alert 'A new drawing has been created', 'info', null, {html: '<a style="color: #2196f3;text-decoration: underline;" href="'+drawingLink+'">Un nouveau dessin</a> a été créé !'}
 						# Un nouveau dessin a été créé ! Retrouvez le sur {{drawingLink}}
 
-						$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: { pk: data.pk, loadSVG: true } } ).done((results)->
-							if not R.loader.checkError(results) then return
-							R.loader.createDrawing(results.drawing, true)
-							return)
+						if R.loader.getLoadingBounds().intersects(data.bounds)
+							@loadDrawing(data.pk)
 					else
 
 						R.alertManager.alert 'A new tile has been reserved', 'info', null, {html: '<a style="color: #2196f3;text-decoration: underline;" href="'+drawingLink+'">Un nouvelle case</a> a été réservée !'}
 
-						$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadTile', args: { pk: data.pk } } ).done((result)=>
-							if not R.loader.checkError(results) then return
-							tile = JSON.parse(results.tile)
-							R.tools.choose.createTile(tile)
-						)
+						if R.loader.getLoadingBounds().intersects(data.bounds)
+							@loadTile(data.pk)
+
 				when 'description', 'title'
 					if R.administrator
 						@notify('Title modified', 'drawing url: ' + @getItemLink(data) + ', title : ' + data.title )
 
-					drawing = R.items[data.drawingId]
+					drawing = R.items[data.clientId]
 					if drawing?
 						drawing.title = data.title
 						drawing.description = data.description
-						if @currentItem == drawing
+						if @currentItem? and @currentItem == drawing
 							@contentJ.find('#drawing-title').val(data.title)
 							@thumbnailFooterTitle.text(data.title)
 							@contentJ.find('#drawing-description').val(data.description)
@@ -1579,80 +1609,115 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 						@notify('Status changed', 'status : ' + data.status + ', drawing url: ' + @getItemLink(data) )
 
 					if data.itemType == 'drawing'
-						drawing = R.items[data.drawingId]
+						drawing = R.items[data.clientId]
 						if drawing?
 							if drawing.owner == R.me
-								if drawing.status == 'drawing'
+								if data.status == 'drawing'
 									R.alertManager.alert 'Your drawing has been validated', 'success', null, { drawingTitle: drawing.title }
-								if drawing.status == 'rejected'
+								if data.status == 'rejected'
 									R.alertManager.alert 'Your drawing has been rejected', 'danger', null, { drawingTitle: drawing.title }
-								if drawing.status == 'drawn'
+								if data.status == 'drawn'
 									R.alertManager.alert 'Your drawing has been drawn', 'success', null, { drawingTitle: drawing.title }
-								if drawing.status == 'flagged' or drawing.status == 'flagged_pending'
+								if data.status == 'flagged' or data.status == 'flagged_pending'
 									R.alertManager.alert 'Your drawing has been flagged', 'danger', null, { drawingTitle: drawing.title }
+
+							if drawing.status == 'flagged' or drawing.status == 'flagged_pending' and data.bounds? and R.loader.getLoadingBounds().intersects(data.bounds)
+								if data.status != 'flagged_pending' and data.status != 'flagged'
+									R.loader.reloadRasters(data.bounds)
 
 							drawing.updateStatus(data.status)
 
-							if @currentItem == drawing
+							if @currentItem? and @currentItem == drawing
 								@votesJ.find('.status').attr('data-i18n', @currentItem.status).html(i18next.t(@currentItem.status))
+
+							if data.status == 'flagged_pending' or data.status == 'flagged'
+								R.loader.reloadRasters(drawing.rectangle)
+								if @currentItem? and @currentItem == drawing
+									@close()
+								if not R.administrator or data.status == 'flagged'
+									drawing.remove()
+								else
+									drawing.loadSVG()
+						else if data.bounds? and R.loader.getLoadingBounds().intersects(data.bounds)
+							if data.status != 'flagged_pending' and data.status != 'flagged' or R.administrator
+								@loadDrawing(data.pk)
+
 					else if data.itemType == 'tile'
-						tile = R.tools.choose.idToTile.get(data.drawingId)
-						R.tools.choose.updateTileStatus(tile, data.status)
-						
-						if @currentItem.clientId == data.drawingId
-							tileInfoJ.find('.status').attr('data-i18n', tile.status).text(i18next.t(tile.status))
+						tile = R.tools.choose.idToTile.get(data.clientId)
+						if tile?
+							R.tools.choose.updateTileStatus(tile, data.status)
+							
+							if @currentItem? and @currentItem.clientId == data.clientId
+								tileInfoJ = @contentJ.find('.tile-info')
+								tileInfoJ.find('.status').attr('data-i18n', tile.status).text(i18next.t(tile.status))
+								if tile.status == 'created' and data.photoURL?
+									tileInfoJ.find('.tile-thumbnail').show().empty().append(@createTilePhoto(data.photoURL))
+									@setVotes()
+									@contentJ.find('.share-buttons').show()
+						else if data.bounds? and R.loader.getLoadingBounds().intersects(data.bounds)
+							if data.status != 'flagged_pending' and data.status != 'flagged' or R.administrator
+								@loadTile(data.pk)
 				when 'cancel'
 					if R.administrator
 						@notify(data.itemType + ' cancelled',  data.itemType + ' url: ' + @getItemLink(data))
 
 					if data.itemType == 'drawing'
-						drawing = R.items[data.drawingId]
+						drawing = R.items[data.clientId]
 						if drawing? and drawing.owner != R.me
+							R.loader.reloadRasters(drawing.rectangle)
+							if @currentItem? and @currentItem == drawing
+								@close()
 							drawing.remove()
 					else
-						tile = R.tools.choose.idToTile.get(data.drawingId)
-						R.tools.choose.removeTile(tile, tile)
+						tile = R.tools.choose.idToTile.get(data.clientId)
+						if tile?
+							R.tools.choose.removeTile(tile, tile)
+							if @currentItem? and @currentItem.clientId == tile.clientId
+								@close()
 				when 'delete'
 					if R.administrator
 						@notify('Drawing deleted', 'drawing url: ' + @getItemLink(data))
 
-					drawing = R.items[data.drawingId]
+					drawing = R.items[data.clientId]
 					if drawing?
+						R.loader.reloadRasters(drawing.rectangle)
+						if @currentItem? and @currentItem == drawing
+							@close()
 						drawing.remove()
 				when 'addComment'
 					if R.administrator
-						@notify('New comment', 'comment: ' + data.comment +  ' ' + data.itemType + ' url: ' + @getItemLink({pk: data.drawingPk}))
+						@notify('New comment', 'comment: ' + data.comment +  ' ' + data.itemType + ' url: ' + @getItemLink({pk: data.itemPk}))
 
-					item = if data.itemType == 'drawing' then R.pkToDrawing.get(data.drawingPk) else  R.tools.choose.idToTile.get(data.drawingId)
+					item = if data.itemType == 'drawing' then R.pkToDrawing.get(data.itemPk) else R.tools.choose.idToTile.get(data.clientId)
 					if item?
 						if item.owner == R.me
-							R.alertManager.alert 'Someone has commented your ' + data.itemType, 'info', null, { author: data.author, drawingTitle: item.title }
+							R.alertManager.alert 'Someone has commented your ' + data.itemType, 'info', null, { author: data.author, drawingTitle: data.title }
 
-						if @currentItem.clientId == item.clientId
+						if @currentItem? and @currentItem.clientId == item.clientId
 							@addComment(data.comment, data.commentPk, data.author, data.date, data.insertAfter)
 				when 'modifyComment'
 					if R.administrator
-						@notify('Comment modified', 'comment: ' + data.comment + ', ' + data.itemType + ' url: ' + @getItemLink({pk: data.drawingPk}))
+						@notify('Comment modified', 'comment: ' + data.comment + ', ' + data.itemType + ' url: ' + @getItemLink({pk: data.itemPk}))
 
-					item = if data.itemType == 'drawing' then R.pkToDrawing.get(data.drawingPk) else  R.tools.choose.idToTile.get(data.drawingId)
+					item = if data.itemType == 'drawing' then R.pkToDrawing.get(data.itemPk) else  R.tools.choose.idToTile.get(data.clientId)
 					if item?
 
 						if item.owner == R.me
-							R.alertManager.alert 'Someone has modified a comment on your ' + data.itemType, 'info', null, { author: data.author, drawingTitle: item.title }
+							R.alertManager.alert 'Someone has modified a comment on your ' + data.itemType, 'info', null, { author: data.author, drawingTitle: data.title }
 
-						if @currentItem.clientId == item.clientId
+						if @currentItem? and @currentItem.clientId == item.clientId
 							@contentJ.find('#comment-'+data.commentPk).find('.comment-text').get(0).innerText = data.comment
 				when 'deleteComment'
 					if R.administrator
-						@notify('Comment deleted', 'drawing url: ' + @getItemLink({pk: data.drawingPk}))
+						@notify('Comment deleted', 'drawing url: ' + @getItemLink({pk: data.itemPk}))
 
-					drawing = R.pkToDrawing.get(data.drawingPk)
-					if drawing?
-						
-						if drawing.owner == R.me
-							R.alertManager.alert 'Someone has deleted a comment on your ' + data.itemType, 'info', null, { author: data.author, drawingTitle: drawing.title }
+					item = if data.itemType == 'drawing' then R.pkToDrawing.get(data.itemPk) else  R.tools.choose.idToTile.get(data.clientId)
+					if item?
 
-						if @currentItem.clientId == drawing.clientId
+						if item.owner == R.me
+							R.alertManager.alert 'Someone has deleted a comment on your ' + data.itemType, 'info', null, { author: data.author, drawingTitle: data.title }
+
+						if @currentItem? and @currentItem.clientId == item.clientId
 							@contentJ.find('#comment-'+data.commentPk).remove()
 				
 				when 'adminMessage'
@@ -1671,6 +1736,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return false
 
 		voteCallback: (result)=>
+			R.loader.hideLoadingBar()
 			if not R.loader.checkError(result) then return
 
 			type = if @currentItem.itemType == 'tile' then 'tile' else 'drawing'
@@ -1727,7 +1793,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				R.alertManager.alert 'You cannot vote for your own ' + type, 'error'
 				return
 			
-			if @currentItem.status != 'pending' and @currentItem.status != 'emailNotConfirmed' and @currentItem.status != 'notConfirmed' and @currentItem.status != 'test'
+			if type == 'drawing' and @currentItem.status != 'pending' or type == 'tile' and @currentItem.status != 'created'
 				R.alertManager.alert 'The ' + type + ' is already validated', 'error'
 				return
 			
@@ -1741,7 +1807,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				positive: positive
 				itemType: type
 
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'vote', args: args } ).done(@voteCallback)
+			R.loader.showLoadingBar(500)
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'vote', args: args } ).error(R.loader.displayError).done(@voteCallback)
 
 			return
 
@@ -1843,13 +1910,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				R.alertManager.alert "You must be logged in to cancel a tile", "error"
 				return
 
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'cancelTile', args: { 'pk': @currentItem.pk } } ).done( (result)=> @cancelTileCallback(result) )
+			R.loader.showLoadingBar(500)
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'cancelTile', args: { 'pk': @currentItem.pk } } ).error(R.loader.displayError).done( (result)=> @cancelTileCallback(result) )
 
 			@close()
 
 			return
 
 		cancelTileCallback: (result)->
+			R.loader.hideLoadingBar()
 			if not R.loader.checkError(result) then return
 			tile = JSON.parse(result.tile)
 			R.tools.choose.removeTile(tile)

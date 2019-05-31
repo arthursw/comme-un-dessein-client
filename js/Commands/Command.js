@@ -221,6 +221,7 @@
           item = ref[id];
           item.addUpdateFunctionAndArguments(args, type);
         }
+        R.loader.showLoadingBar();
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -237,6 +238,7 @@
 
       DeferredCommand.prototype.updateCallback = function(results) {
         var j, len, result;
+        R.loader.hideLoadingBar();
         for (j = 0, len = results.length; j < len; j++) {
           result = results[j];
           R.loader.checkError(result);

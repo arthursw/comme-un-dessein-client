@@ -950,6 +950,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			return
 
 		onWindowResize: (event)=>
+			P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight())
+			
 			# update grid and mCustomScrollbar when window is resized
 			# R.backgroundCanvas.width = window.innerWidth
 			# R.backgroundCanvas.height = window.innerHeight
@@ -961,7 +963,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			# R.canvasJ.width(window.innerWidth)
 			# R.canvasJ.height(window.innerHeight-50)
-			P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight())
+			
 			R.svgJ.attr('width', R.stageJ.innerWidth())
 			R.svgJ.attr('height', R.stageJ.innerHeight())
 			# R.selectionCanvasJ.width(window.innerWidth)

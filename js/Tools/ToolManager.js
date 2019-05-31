@@ -71,7 +71,7 @@
         zoomPow = Math.floor(Math.log(P.view.zoom) / Math.log(2));
         zoomPow += value;
         if (snap) {
-          if (zoomPow < this.constructor.minZoomPow || zoomPow > this.constructor.maxZoomPow) {
+          if (value < 0 && zoomPow < this.constructor.minZoomPow || value > 0 && zoomPow > this.constructor.maxZoomPow) {
             return;
           }
         } else if (P.view.zoom * value < this.constructor.minZoom || P.view.zoom * value > this.constructor.maxZoom) {
@@ -193,11 +193,12 @@
         });
         this.colorBtn.btnJ.click((function(_this) {
           return function() {
-            var color, i, len, liJ, position, ulJ;
+            var color, height, i, len, liJ, position, ulJ;
             position = _this.colorBtn.cloneJ.offset();
+            height = _this.colorBtn.cloneJ.outerHeight();
             ulJ = $('<ul>').attr('id', 'color-picker').css({
-              position: 'absolute',
-              top: position.top + 62,
+              position: 'fixed',
+              top: position.top + height,
               left: position.left
             });
             for (i = 0, len = colors.length; i < len; i++) {

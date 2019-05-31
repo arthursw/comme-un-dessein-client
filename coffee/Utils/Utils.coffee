@@ -752,6 +752,11 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDebugMode', args: debug: debugMode } ).done(checkError)
 		return
 
+	R.setSimulateSlowResponsesMode = (simulateSlowResponsesMode)->
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setSimulateSlowResponsesMode', args: simulateSlowResponses: simulateSlowResponsesMode } ).done(checkError)
+		return
+
 	R.removeDeadReferences = ()->
 		if not R.administrator then return false
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'removeDeadReferences', args: {} } ).done(checkError)

@@ -177,7 +177,7 @@
       ChooseTool.prototype.update = function(event) {};
 
       ChooseTool.prototype.move = function(event) {
-        var bottom, height, left, ref, right, top, width;
+        var bottom, height, left, margin, ref, right, top, width;
         if (((ref = event.originalEvent) != null ? ref.target : void 0) !== document.getElementById('canvas')) {
           return;
         }
@@ -187,11 +187,12 @@
         width = this.constructor.paperWidth * this.constructor.nSheetsPerTile;
         height = this.constructor.paperHeight * this.constructor.nSheetsPerTile;
         if (this.highlight == null) {
-          this.highlight = new P.Path.Rectangle(0, 0, width, height);
+          margin = 5;
+          this.highlight = new P.Path.Rectangle(margin, margin, width - margin, height - margin);
           this.highlight.strokeWidth = 5;
           this.highlight.strokeScaling = false;
-          this.highlight.fillColor = R.selectionBlue;
-          this.highlight.fillColor.alpha = 0.25;
+          this.highlight.strokeColor = R.selectionBlue;
+          this.highlight.dashArray = [8, 5];
         }
         left = R.view.grid.limitCDRectangle.left;
         top = R.view.grid.limitCDRectangle.top;
@@ -304,15 +305,19 @@
       };
 
       ChooseTool.prototype.getTileColorFromStatus = function(tile) {
-        if (tile.status === 'pending') {
-          return '#03a9f4';
-        } else if (tile.status === 'created') {
-          return 'rgb(139, 195, 74)';
-        } else if (tile.status === 'rejected') {
-          return 'red';
-        } else {
-          return 'grey';
+        var color, statusToColor;
+        statusToColor = {
+          'pending': 'gray',
+          'created': '#03a9f4',
+          'validated': 'rgb(139, 195, 74)',
+          'rejected': 'darkRed',
+          'flagged': 'red'
+        };
+        color = statusToColor[tile.status];
+        if (color == null) {
+          color = 'gray';
         }
+        return color;
       };
 
       ChooseTool.prototype.createTile = function(tile) {
@@ -347,9 +352,9 @@
         }
         t = (ref = this.tiles.get(tile.y)) != null ? ref.get(tile.x) : void 0;
         if (t != null) {
+          t.status = status != null ? status : tile.status;
           t.rectangle.fillColor = this.getTileColorFromStatus(tile);
           t.rectangle.fillColor.alpha = 0.25;
-          t.status = status != null ? status : tile.status;
         }
       };
 
@@ -363,9 +368,14 @@
         this.selectedTile = tile;
       };
 
-      ChooseTool.prototype.deselectTile = function() {
+      ChooseTool.prototype.deselectTile = function(updateDrawingPanel) {
         var ref, ref1;
-        R.drawingPanel.deselectTile();
+        if (updateDrawingPanel == null) {
+          updateDrawingPanel = true;
+        }
+        if (updateDrawingPanel) {
+          R.drawingPanel.deselectTile();
+        }
         if ((ref = this.selectedTile) != null) {
           if ((ref1 = ref.rectangle) != null) {
             ref1.strokeWidth = null;
@@ -393,6 +403,9 @@
           }
         }).done((function(_this) {
           return function(result) {
+            if (!R.loader.checkError(result)) {
+              return;
+            }
             return R.drawingPanel.setTile(result, rectangle);
           };
         })(this));
