@@ -20,7 +20,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			@drawingPk = null
 
 			# @focusOnDrawing = null
-
+			@rasters = new Map()
 			return
 
 		initializeLoadingBar: ()->
@@ -47,6 +47,14 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				position: 'relative'
 			target = document.getElementById('spinner')
 			# @spinner = new Spinner(opts).spin(target)
+			return
+
+		initializeGroups: (rasterLayer)->
+			@activeRasterGroup = new P.Group()
+			@inactiveRasterGroup = new P.Group()
+			
+			rasterLayer.addChild(@activeRasterGroup)
+			rasterLayer.addChild(@inactiveRasterGroup)
 			return
 
 		showDrawingBar: ()->
@@ -341,17 +349,12 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 		loadDrawingsAndTilesCallback: (results)=>
 			if not @checkError(results) then return
 
-			R.nRejectedDrawings = 0
-
 			@createDrawings(results)
 
 			tiles = JSON.parse(results.tiles)
 			
 			for tile in tiles
 				R.tools.choose.createTile(tile)
-
-			if R.view.rejectedListJ?
-				R.view.rejectedListJ.find(".n-items").html(R.nRejectedDrawings)
 
 			return
 
@@ -404,9 +407,10 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 						if rs.length > 0 and rs[0].bounds.intersects(bounds)
 							while rs.length > 0
 								rs.pop().remove()
+							# console.log('remove rasters in bounds: ', x, ', ', y, ', bounds:', bounds)
 						return
 
-			@loadRasters(false)
+			@loadRasters(bounds, false)
 			return
 
 		getScaleNumber: ()->
@@ -416,8 +420,9 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 		getScale: (scaleNumber)->
 			return Math.pow(@constructor.scaleRatio, scaleNumber)
 
-		getQuantizedBounds: (scaleNumber, scale)->
-			bounds = P.view.bounds
+		getQuantizedBounds: (bounds, scaleNumber, scale)->
+			if not (bounds instanceof P.Rectangle)
+				bounds = new P.Rectangle(bounds)
 
 			scaleNumber ?= @getScaleNumber()
 			scale ?= @getScale(scaleNumber)
@@ -426,8 +431,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			quantizedBounds =
 				t: Math.floor(bounds.top / nPixelsPerTile)
 				l: Math.floor(bounds.left / nPixelsPerTile)
-				b: Math.floor(bounds.bottom / nPixelsPerTile)
-				r: Math.floor(bounds.right / nPixelsPerTile)
+				b: Math.ceil(bounds.bottom / nPixelsPerTile)
+				r: Math.ceil(bounds.right / nPixelsPerTile)
 
 			return quantizedBounds
 
@@ -438,14 +443,16 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			nPixelsPerTile = scale * 1000
 			return	bounds.expand(nPixelsPerTile)
 
-		loadRasters: (alsoLoadDrawingsAndTiles=true)->
+		removeRaster: (rx, ry)->
+			@rasters.forEach (rastersOfScale, s)=>
+				rastersOfScale.forEach (rastersY, y)=>						
+					rastersY.forEach (rs, x)=>
+						if x == rx and y == ry
+							while rs.length > 0
+								rs.pop().remove()
+			return
 
-			@activeRasterGroup ?= new P.Group()
-			@inactiveRasterGroup ?= new P.Group()
-
-			@rasters ?= new Map()
-
-			
+		loadRasters: (bounds=P.view.bounds, alsoLoadDrawingsAndTiles=true)->
 
 			# @rectangle ?= new P.Path.Rectangle(P.view.bounds.expand(-P.view.bounds.width / 3, -P.view.bounds.height / 3))
 			# @rectangle.position = P.view.bounds.center
@@ -473,8 +480,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			scaleNumber = @getScaleNumber()
 			scale = @getScale(scaleNumber)
 			nPixelsPerTile = scale * 1000
-			bounds = P.view.bounds
-			quantizedBounds = @getQuantizedBounds(scaleNumber, scale)
+			quantizedBounds = @getQuantizedBounds(bounds, scaleNumber, scale)
+			quantizedViewBounds = @getQuantizedBounds(P.view.bounds, scaleNumber, scale)
 
 			# @texts[0].content = '' + quantizedBounds.t
 			# @texts[1].content = '' + quantizedBounds.l
@@ -488,11 +495,11 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				@rasters.set(scaleNumber, rastersOfScale)
 
 			# Remove drawings and tiles
-			limits = bounds.expand(nPixelsPerTile)
+			limits = P.view.bounds.expand(nPixelsPerTile)
 
 			R.pkToDrawing?.forEach (drawing, pk)=>
-				bounds = drawing.getBounds()
-				if drawing.status != 'draft' and bounds? and not bounds.intersects(limits)
+				drawingBounds = drawing.getBounds()
+				if drawing.status != 'draft' and drawing.status != 'flagged_pending' and drawingBounds? and not drawingBounds.intersects(limits)
 					drawing.remove()
 
 			R.tools.choose.removeTiles(limits)
@@ -503,6 +510,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				if s != scaleNumber 						# Remove rasters of other scales
 					rastersOfScale.forEach (rastersY, y)=>
 						rastersY.forEach (rs, x)=>
+							# console.log('remove other scale: ', x, ', ', y)
 							while rs.length > 0
 								rs.pop().remove()
 							return
@@ -511,12 +519,13 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 
 				else  											# Remove rasters of current scale
 					rastersOfScale.forEach (rastersY, y)=>						
-							rastersY.forEach (rs, x)=>
-								if y < quantizedBounds.t or y > quantizedBounds.b or x < quantizedBounds.l or x > quantizedBounds.r
-									while rs.length > 0
-										rs.pop().remove()
-									rastersY.delete(x)
-								return
+						rastersY.forEach (rs, x)=>
+							if y < quantizedViewBounds.t or y > quantizedViewBounds.b or x < quantizedViewBounds.l or x > quantizedViewBounds.r
+								# console.log('remove not in view bounds: ', x, ', ', y)
+								while rs.length > 0
+									rs.pop().remove()
+								rastersY.delete(x)
+							return
 
 			for n in [quantizedBounds.t .. quantizedBounds.b]
 				for m in [quantizedBounds.l .. quantizedBounds.r]
@@ -531,27 +540,41 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 
 						rs = []
 						for layerName in drawingsToLoad
+							
+							# console.log('load: ', m, ', ', n)
 
-							raster = new P.Raster(location.origin + '/static/rasters/' + layerName + '/zoom' + scaleNumber + '/' + m + ','  + n + '.png')
+							group = new P.Group()
+
+							raster = new P.Raster(location.origin + '/static/rasters/' + layerName + '/zoom' + scaleNumber + '/' + m + ','  + n + '.png' + '#' + Math.random())
 							raster.position.x = (m + 0.5) * nPixelsPerTile
 							raster.position.y = (n + 0.5) * nPixelsPerTile
-							raster.scale(scale)
+							raster.scale(scale * 1.001)
+							# raster.scale(scale)
 							rs.push(raster)
+							group.addChild(raster)
+
+							rasterBounds = new P.Rectangle(m * nPixelsPerTile, n * nPixelsPerTile, nPixelsPerTile, nPixelsPerTile)
+
+							# rectangle = new P.Path.Rectangle(rasterBounds.expand(-10))
+							# rectangle.strokeColor = 'blue'
+							# rectangle.strokeWidth = 5
+							# group.addChild(rectangle)
 
 							if alsoLoadDrawingsAndTiles and P.project.view.zoom >= 0.125 and ( @loadingType == 'tiles' or @loadingType == 'tiles-ignore-loaded' )
-								bounds = new P.Rectangle(m * nPixelsPerTile, n * nPixelsPerTile, nPixelsPerTile, nPixelsPerTile)
-								@loadDrawingsAndTiles(bounds)
-								# @loadTiles(bounds)
+								# rectangle.strokeColor = 'red'
+								@loadDrawingsAndTiles(rasterBounds)
 
 							# text = new P.PointText(raster.position)
 							# text.justification = 'center'
 							# text.fillColor = 'black'
 							# text.content = '' + m + ', ' + n
+							# group.addChild(text)
 
 							if layerName == 'active'
-								@activeRasterGroup.addChild(raster)
+								# @activeRasterGroup.addChild(raster)
+								@activeRasterGroup.addChild(group)
 							else
-								@inactiveRasterGroup.addChild(raster)
+								@inactiveRasterGroup.addChild(group)
 
 						rastersY = rastersOfScale.get(n)
 						if not rastersY?
@@ -560,7 +583,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 						rastersY.set(m, rs)
 
 			if alsoLoadDrawingsAndTiles and @loadingType == 'screen' or @loadingType == 'screen-ignore-loaded'
-				@loadDrawingsAndTiles(P.view.bounds)
+				@loadDrawingsAndTiles(bounds)
 
 			return
 

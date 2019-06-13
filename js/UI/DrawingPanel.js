@@ -120,13 +120,16 @@
         onSubmitUp = (function(_this) {
           return function(event) {
             if (Utils.specialKeys[event.keyCode] === 'enter') {
+              event.preventDefault();
+              event.stopPropagation();
+              if (R.drawingPanel.currentItem == null) {
+                return;
+              }
               if (R.drawingPanel.currentItem.status === 'draft') {
                 _this.submitDrawing();
               } else {
                 _this.modifyDrawing();
               }
-              event.preventDefault();
-              event.stopPropagation();
               return -1;
             }
           };
@@ -316,7 +319,8 @@
           itemPk: this.currentItem.pk,
           comment: comment,
           date: Date.now(),
-          itemType: type
+          itemType: type,
+          insertAfter: this.contentJ.find('.comments-container .comments .comment:last-child').attr('id')
         };
         R.loader.showLoadingBar(500);
         $.ajax({
@@ -330,7 +334,7 @@
           }
         }).done((function(_this) {
           return function(results) {
-            var c, itemPk, lastId, modal;
+            var c, lastId, modal;
             R.loader.hideLoadingBar();
             if (!R.loader.checkError(results)) {
               return;
@@ -347,18 +351,6 @@
               modal.addText('If you have troubles confirming your account, please email us');
               modal.show();
             }
-            itemPk = type === 'drawing' ? c.drawing.$oid : c.tile.$oid;
-            R.socket.emit("drawing change", {
-              type: 'addComment',
-              comment: comment,
-              commentPk: results.commentPk,
-              author: results.author,
-              date: c.date.$date,
-              itemPk: itemPk,
-              clientId: results.clientId,
-              insertAfter: lastId,
-              itemType: type
-            });
           };
         })(this));
       };
@@ -454,13 +446,6 @@
           if (!R.loader.checkError(results)) {
             return;
           }
-          R.socket.emit("drawing change", {
-            type: 'deleteComment',
-            commentPk: results.commentPk,
-            itemPk: results.itemPk,
-            itemType: results.itemType,
-            clientId: results.clientId
-          });
         });
       };
 
@@ -500,14 +485,6 @@
           if (!R.loader.checkError(results)) {
             return;
           }
-          R.socket.emit("drawing change", {
-            type: 'modifyComment',
-            comment: comment,
-            commentPk: results.commentPk,
-            itemPk: results.itemPk,
-            itemType: results.itemType,
-            clientId: results.clientId
-          });
         });
       };
 
@@ -779,7 +756,7 @@
                 return;
               }
               drawingData = JSON.parse(result.drawing);
-              item.setSVG(drawingData.svg, true, null, true);
+              item.setSVG(drawingData.svg);
               return _this.setThumbnail(item, thumbnailJ);
             };
           })(this));
@@ -912,6 +889,7 @@
         R.tools.select.deselectAll();
         R.toolManager.leaveDrawingMode(true);
         this.currentItem = draft;
+        this.currentItem.addPaths();
         this.contentJ.find('.tile-info').hide();
         this.drawingPanelTitleJ.attr('data-i18n', 'Create drawing').text(i18next.t('Create drawing'));
         this.contentJ.find('.comments-container').hide();
@@ -1011,12 +989,16 @@
             })(this);
             reader.readAsDataURL(file);
           }
+          event.target.value = null;
           return;
         }
+        event.target.value = null;
       };
 
       DrawingPanel.prototype.submitPhotoClicked = function() {
-        document.getElementById("fileInput").click();
+        var fileInputJ;
+        fileInputJ = document.getElementById("fileInput");
+        fileInputJ.click();
       };
 
       DrawingPanel.prototype.printTileClicked = function() {
@@ -1053,18 +1035,13 @@
         this.printSheets(false);
       };
 
-      DrawingPanel.prototype.print = function(project, tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight) {
+      DrawingPanel.prototype.print = function(project, rectangles, dashedFrames, paperWidth, paperHeight) {
         var createDocument, newWindow, print;
         newWindow = window.open("about:blank", "_new");
         print = (function(_this) {
-          return function(tileProjectSVG) {
+          return function() {
             newWindow.print();
-            _this.tileProject.view.viewSize.width = _this.tileRectangle.width;
-            _this.tileProject.view.viewSize.height = _this.tileRectangle.height;
-            _this.tileProject.view.scrollBy(_this.tileRectangle.center.subtract(_this.tileProject.view.center));
-            _this.tileProject.view.zoom = 1;
-            _this.tileProject.activeLayer.removeChildren();
-            _this.tileProject.importSVG(tileProjectSVG);
+            _this.createTileThumbnailCanvas(_this.tileRectangle);
             project.activate();
           };
         })(this);
@@ -1097,12 +1074,9 @@
       };
 
       DrawingPanel.prototype.printSheets = function(singleSheet) {
-        var dashedFrame, dashedFrames, drawing, drawingsToLoad, height, i, j, k, len, len1, len2, nDrawingsToLoad, nSheetsPerTile, paperHeight, paperWidth, project, r, rectangle, rectangles, ref, ref1, tileProjectSVG, width;
+        var dashedFrame, dashedFrames, drawing, drawingsToLoad, height, i, j, k, len, len1, len2, nDrawingsToLoad, nSheetsPerTile, paperHeight, paperWidth, project, r, rectangle, rectangles, ref, ref1, width;
         project = P.project;
         this.tileProject.activate();
-        tileProjectSVG = this.tileProject.exportSVG({
-          asString: true
-        });
         this.tileProject.activeLayer.removeChildren();
         nSheetsPerTile = singleSheet ? 1 : R.Tools.Choose.nSheetsPerTile;
         paperWidth = R.Tools.Choose.paperWidth;
@@ -1155,7 +1129,7 @@
         }
         nDrawingsToLoad = drawingsToLoad.length;
         if (nDrawingsToLoad === 0) {
-          this.print(project, tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight);
+          this.print(project, rectangles, dashedFrames, paperWidth, paperHeight);
         }
         for (k = 0, len2 = drawingsToLoad.length; k < len2; k++) {
           drawing = drawingsToLoad[k];
@@ -1164,7 +1138,7 @@
               _this.tileProject.importSVG(svg);
               nDrawingsToLoad--;
               if (nDrawingsToLoad <= 0) {
-                _this.print(project, tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight);
+                _this.print(project, rectangles, dashedFrames, paperWidth, paperHeight);
               }
             };
           })(this));
@@ -1241,7 +1215,7 @@
         this.currentItem.clientId = this.currentItem.id;
         this.currentItem.status = latestDrawing.status;
         if (latestDrawing.svg != null) {
-          this.currentItem.setSVG(latestDrawing.svg, true, null, false);
+          this.currentItem.setSVG(latestDrawing.svg);
         }
         this.submitBtnJ.hide();
         this.modifyBtnJ.hide();
@@ -1257,7 +1231,7 @@
             this.contentJ.find('.title-group').show();
             this.modifyBtnJ.show();
             this.cancelBtnJ.show();
-            this.cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel vote').text(i18next.t('Cancel vote'));
+            this.cancelBtnJ.find('span.text').attr('data-i18n', 'Modify drawing').text(i18next.t('Modify drawing'));
           }
           this.contentJ.find('#drawing-title').removeAttr('readonly');
           this.contentJ.find('#drawing-description').removeAttr('readonly');
@@ -1305,6 +1279,7 @@
         this.tileProject.activate();
         this.tileProject.activeLayer.removeChildren();
         this.tileProject.view.viewSize = tileRectangle.size;
+        this.tileProject.view.zoom = 1;
         scaleNumber = 0;
         scale = 1;
         nPixelsPerTile = scale * 1000;
@@ -1348,12 +1323,12 @@
       };
 
       DrawingPanel.prototype.createTileThumbnail = function(tileRectangle, thumbnailJ) {
-        this.createTileThumbnailCanvas(tileRectangle, thumbnailJ);
+        this.createTileThumbnailCanvas(tileRectangle);
         this.appendTileThumbnailCanvas(tileRectangle, thumbnailJ);
       };
 
       DrawingPanel.prototype.setTile = function(tileData, tileRectangle) {
-        var andText, dueDate, dueDateString, hours, imageURL, minutes, placementDate, placementDateString, seconds, thumbnailJ, tile, tileInfoJ;
+        var andText, dueDate, dueDateString, dueDateTitle, hours, imageURL, minutes, placementDate, placementDateString, seconds, thumbnailJ, tile, tileInfoJ, tileWasAchieved;
         tile = _.isString(tileData.tile) ? JSON.parse(tileData.tile) : tileData.tile;
         tile.pk = tile._id.$oid;
         this.currentItem = {
@@ -1381,6 +1356,9 @@
         andText = i18next.t('and');
         dueDate = moment(tile.dueDate.$date);
         dueDateString = dueDate.format(' dddd D MMMM ') + i18next.t('at') + dueDate.format(' H [' + hours + '], m [' + minutes + ' ' + andText + '] s [' + seconds + '.]');
+        tileWasAchieved = tile.status === 'created' || tile.status === 'validated' || tile.status === 'rejected';
+        dueDateTitle = tileWasAchieved ? "This tile was achieved the" : "This tile must be achieved before the";
+        tileInfoJ.find('.due-date-title').attr('data-i18n', dueDateTitle).text(i18next.t(dueDateTitle));
         tileInfoJ.find('.due-date').text(dueDateString);
         placementDate = moment(tile.placementDate.$date);
         placementDateString = placementDate.format(' dddd D MMMM ') + i18next.t('at') + placementDate.format(' H [' + hours + '], m [' + minutes + ' ' + andText + '] s [' + seconds + '.]');
@@ -1488,16 +1466,18 @@
       };
 
       DrawingPanel.prototype.loadDrawing = function(pk) {
+        var args;
+        args = {
+          pk: pk,
+          loadPathList: true
+        };
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
           data: {
             data: JSON.stringify({
               "function": 'loadDrawing',
-              args: {
-                pk: pk,
-                loadSVG: true
-              }
+              args: args
             })
           }
         }).done(function(result) {
@@ -1533,7 +1513,7 @@
       };
 
       DrawingPanel.prototype.onDrawingChange = function(data) {
-        var drawing, drawingLink, forOrAgainst, item, sameCity, tile, tileInfoJ;
+        var administratorMustSee, commentJ, drawing, drawingLink, flagDrawing, forOrAgainst, iActive, isActive, item, rejectDrawing, rejectedAndShowRejected, sameCity, tile, tileInfoJ, wasActive;
         switch (data.type) {
           case 'vote':
           case 'cancel_vote':
@@ -1562,9 +1542,11 @@
                 }
               }
               item.votes = data.votes;
-              this.currentItem.votes = data.votes;
-              if ((this.currentItem != null) && this.currentItem.clientId === data.clientId) {
-                this.setVotes();
+              if (this.currentItem != null) {
+                this.currentItem.votes = data.votes;
+                if (this.currentItem.clientId === data.clientId) {
+                  this.setVotes();
+                }
               }
             }
             break;
@@ -1641,29 +1623,37 @@
                     });
                   }
                 }
-                if (drawing.status === 'flagged' || drawing.status === 'flagged_pending' && (data.bounds != null) && R.loader.getLoadingBounds().intersects(data.bounds)) {
-                  if (data.status !== 'flagged_pending' && data.status !== 'flagged') {
-                    R.loader.reloadRasters(data.bounds);
-                  }
-                }
+                wasActive = drawing.status === 'pending' || drawing.status === 'validated' || data.status === 'drawing';
                 drawing.updateStatus(data.status);
+                iActive = drawing.status === 'pending' || drawing.status === 'validated' || data.status === 'drawing';
+                flagDrawing = data.status === 'flagged_pending' || data.status === 'flagged';
+                rejectDrawing = data.status === 'rejected';
+                if (wasActive !== isActive && (data.bounds != null) && R.loader.getLoadingBounds().intersects(data.bounds)) {
+                  R.loader.reloadRasters(data.bounds);
+                }
                 if ((this.currentItem != null) && this.currentItem === drawing) {
                   this.votesJ.find('.status').attr('data-i18n', this.currentItem.status).html(i18next.t(this.currentItem.status));
                 }
-                if (data.status === 'flagged_pending' || data.status === 'flagged') {
-                  R.loader.reloadRasters(drawing.rectangle);
+                if (flagDrawing || (rejectDrawing && !R.loadRejectedDrawings)) {
                   if ((this.currentItem != null) && this.currentItem === drawing) {
                     this.close();
+                    R.alertManager.alert('The drawing you selected has been reported as abusive', 'info');
                   }
-                  if (!R.administrator || data.status === 'flagged') {
+                  if (data.status === 'flagged' || !R.administrator) {
                     drawing.remove();
-                  } else {
+                  }
+                  if (R.administrator && data.status === 'flagged_pending') {
                     drawing.loadSVG();
                   }
                 }
               } else if ((data.bounds != null) && R.loader.getLoadingBounds().intersects(data.bounds)) {
-                if (data.status !== 'flagged_pending' && data.status !== 'flagged' || R.administrator) {
-                  this.loadDrawing(data.pk);
+                isActive = data.status === 'pending' || data.status === 'validated' || data.status === 'drawing';
+                rejectedAndShowRejected = data.status === 'rejected' && R.loadRejectedDrawings;
+                administratorMustSee = R.administrator && (data.status !== 'rejected' || R.loadRejectedDrawings);
+                if (isActive || rejectedAndShowRejected || administratorMustSee) {
+                  if (data.pk != null) {
+                    this.loadDrawing(data.pk);
+                  }
                 }
               }
             } else if (data.itemType === 'tile') {
@@ -1673,9 +1663,9 @@
                 if ((this.currentItem != null) && this.currentItem.clientId === data.clientId) {
                   tileInfoJ = this.contentJ.find('.tile-info');
                   tileInfoJ.find('.status').attr('data-i18n', tile.status).text(i18next.t(tile.status));
+                  this.setVotes();
                   if (tile.status === 'created' && (data.photoURL != null)) {
                     tileInfoJ.find('.tile-thumbnail').show().empty().append(this.createTilePhoto(data.photoURL));
-                    this.setVotes();
                     this.contentJ.find('.share-buttons').show();
                   }
                 }
@@ -1692,12 +1682,20 @@
             }
             if (data.itemType === 'drawing') {
               drawing = R.items[data.clientId];
-              if ((drawing != null) && drawing.owner !== R.me) {
-                R.loader.reloadRasters(drawing.rectangle);
-                if ((this.currentItem != null) && this.currentItem === drawing) {
-                  this.close();
+              if (drawing != null) {
+                if (drawing.owner !== R.me) {
+                  R.loader.reloadRasters(drawing.rectangle);
+                  if ((this.currentItem != null) && this.currentItem === drawing) {
+                    this.close();
+                    R.alertManager.alert('The drawing you selected was cancelled', 'info');
+                  }
+                  drawing.remove();
+                } else if (!drawing.cancelling) {
+                  R.alertManager.alert('One of your drawing was cancelled by an administrator, the page will reload', 'info');
+                  setTimeout((function() {
+                    return window.location.reload();
+                  }), 2000);
                 }
-                drawing.remove();
               }
             } else {
               tile = R.tools.choose.idToTile.get(data.clientId);
@@ -1705,6 +1703,7 @@
                 R.tools.choose.removeTile(tile, tile);
                 if ((this.currentItem != null) && this.currentItem.clientId === tile.clientId) {
                   this.close();
+                  R.alertManager.alert('The tile you selected was cancelled', 'info');
                 }
               }
             }
@@ -1718,6 +1717,7 @@
               R.loader.reloadRasters(drawing.rectangle);
               if ((this.currentItem != null) && this.currentItem === drawing) {
                 this.close();
+                R.alertManager.alert('The drawing you selected was deleted', 'info');
               }
               drawing.remove();
             }
@@ -1727,6 +1727,9 @@
               this.notify('New comment', 'comment: ' + data.comment + ' ' + data.itemType + ' url: ' + this.getItemLink({
                 pk: data.itemPk
               }));
+            }
+            if (data.author === R.me) {
+              return;
             }
             item = data.itemType === 'drawing' ? R.pkToDrawing.get(data.itemPk) : R.tools.choose.idToTile.get(data.clientId);
             if (item != null) {
@@ -1756,7 +1759,10 @@
                 });
               }
               if ((this.currentItem != null) && this.currentItem.clientId === item.clientId) {
-                this.contentJ.find('#comment-' + data.commentPk).find('.comment-text').get(0).innerText = data.comment;
+                commentJ = this.contentJ.find('#comment-' + data.commentPk);
+                if (commentJ.length > 0) {
+                  commentJ.find('.comment-text').get(0).innerText = data.comment;
+                }
               }
             }
             break;
@@ -1775,7 +1781,10 @@
                 });
               }
               if ((this.currentItem != null) && this.currentItem.clientId === item.clientId) {
-                this.contentJ.find('#comment-' + data.commentPk).remove();
+                commentJ = this.contentJ.find('#comment-' + data.commentPk);
+                if (commentJ.length > 0) {
+                  commentJ.remove();
+                }
               }
             }
             break;
@@ -1932,7 +1941,7 @@
       };
 
       DrawingPanel.prototype.cancelDrawing = function() {
-        var draft, ref;
+        var draft, modal, ref;
         if (this.currentItem.itemType === 'tile') {
           this.cancelTile();
           return;
@@ -1958,8 +1967,22 @@
           R.alertManager.alert("You must submit your draft before cancelling a drawing", "error");
           return;
         }
-        this.currentItem.cancel();
-        this.close();
+        modal = Modal.createModal({
+          id: 'modify-drawing',
+          title: 'Modify drawing',
+          submit: ((function(_this) {
+            return function() {
+              _this.currentItem.cancel();
+              _this.close();
+            };
+          })(this)),
+          submitButtonText: 'Modify drawing',
+          submitButtonIcon: 'glyphicon-ban-circle'
+        });
+        modal.addText('Are you sure you really want to modify the drawing');
+        modal.addText('This will reset the votes and comments of the drawing');
+        modal.modalJ.find('[name="submit"]').addClass('btn-danger').removeClass('btn-primary');
+        modal.show();
       };
 
       DrawingPanel.prototype.cancelTile = function() {

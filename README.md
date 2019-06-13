@@ -12,6 +12,7 @@ Build:
 
 Install requirejs if necessary: `npm install -g requirejs`
 
+`cd js/`
 `r.js -o build.js`
 
 See https://requirejs.org/docs/optimization.html for more info

@@ -47,6 +47,8 @@ define ['paper', 'R', 'Utils/Utils' ], (P, R, Utils) ->
 			return
 		
 		startDrag: (event)=>
+			# event.preventDefault()
+			# event.stopPropagation()
 			@dragging = true
 			@draggingPosition = event.pageX or event.originalEvent.touches[0].pageX
 			return
@@ -59,6 +61,8 @@ define ['paper', 'R', 'Utils/Utils' ], (P, R, Utils) ->
 
 		drag: (event)=>
 			if @dragging
+				# event.preventDefault()
+				# event.stopPropagation()
 				position = event.pageX or event.originalEvent.touches[0].pageX
 				@draggingSpeed = position - @draggingPosition
 				@moveToolbar(@draggingSpeed)
@@ -81,6 +85,9 @@ define ['paper', 'R', 'Utils/Utils' ], (P, R, Utils) ->
 			return
 		
 		stopDrag: (event)=>
+			# if @dragging
+			# 	event.preventDefault()
+			# 	event.stopPropagation()
 			if @dragTimeoutID?
 				clearTimeout(@dragTimeoutID)
 				@dragTimeoutID = null
@@ -93,9 +100,17 @@ define ['paper', 'R', 'Utils/Utils' ], (P, R, Utils) ->
 			toollistWidth ?= @toolListJ.outerWidth()
 			# windowWidth ?= @rightArrowJ.offset().left + @rightArrowJ.outerWidth()
 			windowWidth ?= window.innerWidth
-			positionX ?= Math.floor(@toolListJ.offset().left)
+
+			if windowWidth > 1300
+				@leftArrowJ.css( opacity: 0 )
+				@rightArrowJ.css( opacity: 0 )
+				return
 			
-			if positionX >= 0
+			titleWidth = $('#FavoriteTools h3.title').outerWidth(true)
+			minX = 0 #if windowWidth < 750 then 0 else titleWidth
+			positionX ?= Math.floor(@toolListJ.offset().left)
+
+			if positionX >= minX
 				@leftArrowJ.css( opacity: 0 )
 			else
 				@leftArrowJ.css( opacity: 0.8 ).show()
@@ -109,20 +124,32 @@ define ['paper', 'R', 'Utils/Utils' ], (P, R, Utils) ->
 				if toollistWidth > windowWidth
 					positionX = windowWidth - toollistWidth
 				else
-					positionX = 0
-				@toolListJ.css('left', positionX)
+					positionX = minX
+
+				@toolListJ.css('left', positionX, position: 'relative')
+
 			return
 
 		moveToolbar: (offset)=>
-			toollistWidth = @toolListJ.outerWidth()
 			windowWidth = window.innerWidth
+			
+			if windowWidth > 1300
+				return
+
+			toollistWidth = @toolListJ.outerWidth()
+			
+			minX = 0 # if windowWidth < 750 then 0 else $('#FavoriteTools h3.title').outerWidth(true)
 			positionX = @toolListJ.offset().left
+
 			positionX += offset
-			if positionX > 0
-				positionX = 0
-			if positionX < -(toollistWidth - windowWidth)
+
+			if positionX > minX
+				positionX = minX
+			if toollistWidth > windowWidth and positionX < -(toollistWidth - windowWidth)
 				positionX = -(toollistWidth - windowWidth)
-			@toolListJ.css('left', positionX)
+
+			@toolListJ.css('left': positionX, position: 'relative')
+
 			@updateArrowsVisibility(toollistWidth, windowWidth, positionX)
 			return
 

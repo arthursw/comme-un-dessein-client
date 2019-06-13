@@ -101,7 +101,7 @@
         }
       };
 
-      SelectTool.prototype.select = function(deselectItems, updateParameters, forceSelect, buttonClicked) {
+      SelectTool.prototype.select = function(deselectItems, updateParameters, forceSelect, selectedBy) {
         var drawing, i, j, len, len1, ref, ref1, ref2, ref3, selectedDrawingsBounds;
         if (deselectItems == null) {
           deselectItems = false;
@@ -112,13 +112,13 @@
         if (forceSelect == null) {
           forceSelect = false;
         }
-        if (buttonClicked == null) {
-          buttonClicked = false;
+        if (selectedBy == null) {
+          selectedBy = 'default';
         }
         if ((ref = R.tracer) != null) {
           ref.hide();
         }
-        if (buttonClicked) {
+        if (selectedBy === 'button') {
           R.alertManager.alert('Click on a drawing to vote for it', 'info');
         }
         R.canvasJ.addClass('select');
@@ -136,7 +136,7 @@
           }
           drawing.showVoteFlag();
         }
-        SelectTool.__super__.select.call(this, false, updateParameters);
+        SelectTool.__super__.select.call(this, false, updateParameters, selectedBy);
       };
 
       SelectTool.prototype.deselect = function() {
@@ -283,6 +283,10 @@
       SelectTool.prototype.begin = function(event) {
         var controller, hitResult, itemWasHit, name, path, ref, ref1, ref2;
         if (event.event.which === 2) {
+          return;
+        }
+        if (P.view.zoom < 0.125) {
+          R.alertManager.alert('Please zoom before voting', 'info');
           return;
         }
         itemWasHit = false;

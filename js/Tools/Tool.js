@@ -89,12 +89,12 @@
         });
         this.btn.btnJ.click((function(_this) {
           return function() {
-            return _this.select(null, null, null, true);
+            return _this.select();
           };
         })(this));
       };
 
-      Tool.prototype.select = function(deselectItems, updateParameters, fromMiddleMouseButton) {
+      Tool.prototype.select = function(deselectItems, updateParameters, selectedBy) {
         var ref, ref1, ref2, ref3;
         if (deselectItems == null) {
           deselectItems = true;
@@ -102,8 +102,8 @@
         if (updateParameters == null) {
           updateParameters = true;
         }
-        if (fromMiddleMouseButton == null) {
-          fromMiddleMouseButton = false;
+        if (selectedBy == null) {
+          selectedBy = 'default';
         }
         if (R.selectedTool === this) {
           return;
@@ -123,7 +123,7 @@
         if (updateParameters) {
           this.updateParameters();
         }
-        if (!fromMiddleMouseButton) {
+        if (selectedBy !== 'middleMouseButton' && selectedBy !== 'spaceKey') {
           if ((ref2 = R.toolManager) != null) {
             ref2.updateButtonsVisibility();
           }

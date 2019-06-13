@@ -36,7 +36,7 @@
     };
     R.loadActiveDrawings = true;
     $(document).ready(function() {
-      var canvasJ, cityFinished, cityMessage, cityName, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
+      var canvasJ, cityFinished, cityMessage, cityName, deleteAccountWarning, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
       canvasJ = $('#canvas');
       R.administrator = canvasJ.attr('data-is-admin') === 'True';
       R.city = {
@@ -197,10 +197,10 @@
       R.commandManager = new CommandManager();
       R.toolManager = new ToolManager();
       R.drawingPanel = new DrawingPanel();
-      R.view.initializePosition();
-      R.sidebar.initialize();
       R.toolManager.createDeleteButton();
       R.toolManager.createSubmitButton();
+      R.view.initializePosition();
+      R.sidebar.initialize();
       if (R.city.name === 'world') {
         R.loader.hideLoadingBar();
         R.tools.select.btn.cloneJ.hide();
@@ -221,7 +221,6 @@
       }
       if (R.city.name !== 'world') {
         require(['Items/Paths/PrecisePaths/PrecisePath'], function() {
-          R.loader.loadRasters();
           R.loader.loadDraft();
           R.loader.loadVotes();
         });
@@ -260,6 +259,163 @@
         modal.show();
         event.preventDefault();
         event.stopPropagation();
+        return -1;
+      });
+      $('#user-login-group').click(function(event) {
+        var modal;
+        modal = Modal.createModal({
+          title: 'Sign in / up',
+          postSubmit: 'hide'
+        });
+        modal.addText('Loading');
+        $.get("accounts/login/", (function(_this) {
+          return function(data) {
+            var doc, parser;
+            parser = new DOMParser();
+            doc = parser.parseFromString(data.html, "text/html");
+            modal.modalBodyJ.html(doc.getElementById('login_form'));
+            $('#id_login').attr('placeholder', "Nom d'utilisateur ou email");
+            $('#id_username').attr('placeholder', "Nom d'utilisateur");
+            $('label[for="id_remember"]').text('se souvenir de moi').css({
+              'margin-left': '10px'
+            }).parent().css({
+              'display': 'flex',
+              'flex-direction': 'row-reverse'
+            });
+            modal.modalJ.find(".modal-footer").hide();
+            localStorage.setItem('just-logged-in', 'true');
+            localStorage.setItem('selected-edition', location.pathname);
+          };
+        })(this));
+        modal.show();
+        event.preventDefault();
+        event.stopPropagation();
+        return -1;
+      });
+      deleteAccountWarning = (function(_this) {
+        return function(previousModal) {
+          var deleteAccount, deleteAccountCallback;
+          deleteAccountCallback = function(result) {
+            if (!R.loader.checkError(result)) {
+              return;
+            }
+            R.alertManager.alert('Your account has successfully been deleted', 'info');
+          };
+          deleteAccount = function() {
+            $.ajax({
+              method: "POST",
+              url: "ajaxCall/",
+              data: {
+                data: JSON.stringify({
+                  "function": 'deleteUser',
+                  args: args
+                })
+              }
+            }).done(deleteAccountCallback);
+          };
+          previousModal.modalJ.on('hidden.bs.modal', function() {
+            var modal;
+            modal = Modal.createModal({
+              title: 'Delete account',
+              submitButtonText: 'Delete account',
+              submitButtonIcon: 'glyphicon-trash',
+              submit: deleteAccount
+            });
+            modal.addText('Are you sure you want to delete your account?', 'Are you sure you want to delete your account');
+            modal.addText('Your drawings will not be deleted', 'Your drawings will not be deleted', false, {
+              email: 'idlv.contact@gmail.com'
+            });
+            modal.modalJ.find('[name="submit"]').removeClass('btn-primary').addClass('btn-danger');
+            return modal.show();
+          });
+        };
+      })(this);
+      $('#modify-user-profile').click(function(event) {
+        var changeUserCallback, confirmedText, emailConfirmed, emailJ, manageEmails, modal, resetPassword, submitChangeProfile, userEmail, usernameJ;
+        event.preventDefault();
+        event.stopPropagation();
+        changeUserCallback = function(result) {
+          if (!R.loader.checkError(result)) {
+            return;
+          }
+          R.alertManager.alert('Your profile has successfully been updated', 'info');
+          R.me = result.username;
+        };
+        submitChangeProfile = function() {
+          var args;
+          username = $('#modal-Username').find('input').val();
+          args = {
+            username: username
+          };
+          $.ajax({
+            method: "POST",
+            url: "ajaxCall/",
+            data: {
+              data: JSON.stringify({
+                "function": 'changeUser',
+                args: args
+              })
+            }
+          }).done(changeUserCallback);
+        };
+        modal = Modal.createModal({
+          title: 'Profile',
+          submitButtonText: 'Modify username',
+          submitButtonIcon: 'glyphicon-user',
+          submit: submitChangeProfile
+        });
+        usernameJ = modal.addTextInput({
+          name: 'Username',
+          id: 'profile-username',
+          placeholder: i18next.t('Username'),
+          className: '',
+          label: 'Username',
+          type: 'text'
+        });
+        usernameJ.find('input').val(R.me);
+        emailConfirmed = R.canvasJ.attr('data-email-confirmed');
+        confirmedText = '(' + i18next.t(emailConfirmed ? 'Confirmed' : 'Not confirmed') + ')';
+        emailJ = modal.addTextInput({
+          name: 'Email',
+          id: 'profile-email',
+          placeholder: 'Email',
+          className: '',
+          label: 'Email ' + confirmedText,
+          type: 'email'
+        });
+        userEmail = R.canvasJ.attr('data-user-email');
+        emailJ.find('input').val(userEmail).attr('disabled', 'true');
+        manageEmails = (function(_this) {
+          return function() {
+            window.location = '/accounts/email/';
+          };
+        })(this);
+        modal.addButton({
+          name: 'Manage emails',
+          icon: 'glyphicon-envelope',
+          type: 'info',
+          submit: manageEmails
+        });
+        resetPassword = (function(_this) {
+          return function() {
+            window.location = '/accounts/password/reset/';
+          };
+        })(this);
+        modal.addButton({
+          name: 'Reset password',
+          icon: 'glyphicon-lock',
+          type: 'info',
+          submit: resetPassword
+        });
+        modal.addButton({
+          name: 'Delete account',
+          icon: 'glyphicon-trash',
+          type: 'danger',
+          submit: function() {
+            return deleteAccountWarning(modal);
+          }
+        });
+        modal.show();
         return -1;
       });
       if (R.city.name === 'world') {

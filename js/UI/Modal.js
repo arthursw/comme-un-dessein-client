@@ -367,6 +367,13 @@
             };
           })(this));
         }
+        if (args.addToBody) {
+          this.addCustomContent({
+            name: args.name,
+            divJ: buttonJ
+          });
+          return buttonJ;
+        }
         submitButtonJ = this.modalJ.find('.modal-footer .btn-primary[name="submit"]');
         if (submitButtonJ.length > 0) {
           submitButtonJ.before(buttonJ);

@@ -6,6 +6,28 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 			@tracerGroup = null
 			@tracerBtn = null
 			@createTracerButton()
+			@initializeGlobalDragAndDrop()
+			return
+
+		initializeGlobalDragAndDrop: ()->
+			document.body.addEventListener('dragenter', (event)=>
+				event.stopPropagation()
+				event.preventDefault()
+				# $('#dropMessage').addClass('top')
+				# console.log('dragenter')
+				R.alertManager.alert 'Drop your image here to trace it', 'info'
+				return)
+			document.body.addEventListener('dragover', (event)=>
+				event.stopPropagation()
+				event.preventDefault()
+				return)
+			document.body.addEventListener('dragleave', (event)=>
+				event.stopPropagation()
+				event.preventDefault()
+				# $('#dropMessage').removeClass('top')
+				# console.log('dragleave')
+				return)
+			document.body.addEventListener('drop', @fileDropped, false)
 			return
 
 		createTracerButton: ()->
@@ -307,11 +329,17 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 		fileDropped: (event)=>
 			event.stopPropagation()
 			event.preventDefault()
+			if R.selectedTool != R.tools['Precise path']
+				R.tools['Precise path'].select()
+			if R.selectedTool != R.tools['Precise path'] 	# Check that the path tool is indeed selected: 
+															#  - the city is not finished and the user is connecter
+															# 	otherwise the trace image will interfere with the move tool
+				return
 			for file in event.dataTransfer.files
 				if file.type.match(/image.*/)
 
 					reader = new FileReader()
-					@modal.hide()
+					@modal?.hide()
 					reader.onload = (readerEvent)=>
 						@submitURL(imageURL: readerEvent.target.result)
 						return

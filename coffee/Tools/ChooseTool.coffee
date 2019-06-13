@@ -98,7 +98,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			@tileRectangles.visible = false
 			return
 
-		select: (deselectItems=false, updateParameters=true, forceSelect=false, buttonClicked=false)->
+		select: (deselectItems=false, updateParameters=true, forceSelect=false, selectedBy='default')->
 			if R.city?.finished
 				R.alertManager.alert "Cette édition est terminée, vous ne pouvez plus dessiner.", 'info'
 				return
@@ -109,7 +109,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 
 			R.tracer?.hide()
 
-			super(false, updateParameters)
+			super(false, updateParameters, selectedBy)
 			R.tools.select.deselectAll()
 			@showGrid()
 			return
@@ -324,7 +324,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			@selectedTile = null
 			return
 
-		loadTile: (pk, rectangle=@currentTile.rectangle)->
+		loadTile: (pk, rectangle=@currentTile.rectangle, setViewToTile=false)->
 			args =
 				pk: pk
 			
@@ -335,6 +335,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadTile', args: args } ).done((result)=>
 				if not R.loader.checkError(result) then return
 				R.drawingPanel.setTile(result, rectangle)
+				if setViewToTile
+					R.view.fitRectangle(rectangle, true)
 			)
 			return
 
@@ -363,6 +365,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 
 		chooseTile: (number, x, y, bounds)=> 
 			@ignoreMouseMoves = false
+			
+			R.loader.showLoadingBar(500)
 
 			args =
 				number: number, 
@@ -379,6 +383,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		submitCallback: (result)=>
+			R.loader.hideLoadingBar()
 			if not R.loader.checkError(result) then return
 
 			result.tile = JSON.parse(result.tile)

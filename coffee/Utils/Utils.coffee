@@ -846,9 +846,9 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'createDrawingThumbnail', args: {png: imageURL, pk: R.s.pk} } ).done(checkError)
 		return
 
-	R.bannUser = (username, removeDrawings=false, removeVotes=false, removeComments=false)->
+	R.bannUser = (username, reportDrawings=false, reportTiles=false, removeVotes=false, removeComments=false)->
 		if not R.administrator then return false
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'bannUser', args: {username: username, removeDrawings: removeDrawings, removeVotes: removeVotes, removeComments: removeComments} } ).done(checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'bannUser', args: {username: username, reportDrawings: reportDrawings, reportTiles: reportTiles, removeVotes: removeVotes, removeComments: removeComments} } ).done(checkError)
 		return
 
 	R.getEmail = (username)->
@@ -937,7 +937,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		return
 
 	R.updateDrawingSVGs = ()->
-		R.Drawing.addPaths()
+		# R.Drawing.addPaths()
 		for drawing in R.drawings
 			R.view.mainLayer.addChild(drawing.group)
 		for own id, item of R.items
@@ -1044,6 +1044,17 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 			itemsToDelete: itemsToDelete
 			confirm: confirm
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteItems', args: args } ).done(checkError)
+		return
+
+	R.countParticipants = ()->
+		nParticipants = 100
+		nMonths = 1
+		area = 0
+		while area < 10000
+			area += nParticipants
+			console.log('month: ', nMonths, ', area: ', area, ', n participants: ', nParticipants)
+			nParticipants *= 2
+			nMonths++
 		return
 
 	R.Utils = Utils

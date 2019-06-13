@@ -121,12 +121,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			
 			onSubmitUp = (event)=>
 				if Utils.specialKeys[event.keyCode] == 'enter'
+					event.preventDefault()
+					event.stopPropagation()
+					if not R.drawingPanel.currentItem? then return 		# When typing enter twice
 					if R.drawingPanel.currentItem.status == 'draft'
 						@submitDrawing()
 					else
 						@modifyDrawing()
-					event.preventDefault()
-					event.stopPropagation()
 					return -1
 				return
 
@@ -288,7 +289,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				itemPk: @currentItem.pk
 				comment: comment
 				date: Date.now()
-				itemType: type
+				itemType: type,
+				insertAfter: @contentJ.find('.comments-container .comments .comment:last-child').attr('id')
 			}
 
 			R.loader.showLoadingBar(500)
@@ -308,8 +310,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					modal.addText('If you have troubles confirming your account, please email us')
 					modal.show()
 					
-				itemPk = if type == 'drawing' then c.drawing.$oid else c.tile.$oid
-				R.socket.emit "drawing change", { type: 'addComment', comment: comment, commentPk: results.commentPk, author: results.author, date: c.date.$date, itemPk: itemPk, clientId: results.clientId, insertAfter: lastId, itemType: type }
+				# itemPk = if type == 'drawing' then c.drawing.$oid else c.tile.$oid
+				# R.socket.emit "drawing change", { type: 'addComment', comment: comment, commentPk: results.commentPk, author: results.author, date: c.date.$date, itemPk: itemPk, clientId: results.clientId, insertAfter: lastId, itemType: type }
 				return)
 			return
 
@@ -381,7 +383,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteComment', args: {commentPk: commentPk} } ).done((results)->
 				R.loader.hideLoadingBar()
 				if not R.loader.checkError(results) then return
-				R.socket.emit "drawing change", { type: 'deleteComment', commentPk: results.commentPk, itemPk: results.itemPk, itemType: results.itemType, clientId: results.clientId }
 				return)
 			return
 
@@ -403,7 +404,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'modifyComment', args: {commentPk: commentPk, comment: comment} } ).done((results)->
 				R.loader.hideLoadingBar()
 				if not R.loader.checkError(results) then return
-				R.socket.emit "drawing change", { type: 'modifyComment', comment: comment, commentPk: results.commentPk, itemPk: results.itemPk, itemType: results.itemType, clientId: results.clientId }
 				return)
 			return
 
@@ -675,11 +675,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				args =
 					pk: item.pk
 					svgOnly: true
+					# loadPathList: true
 
 				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
 					if not R.loader.checkError(result) then return
 					drawingData = JSON.parse(result.drawing)
-					item.setSVG(drawingData.svg, true, null, true)
+					item.setSVG(drawingData.svg)
+					# item.addPathsFromPathList(drawingData.pathList)
 					@setThumbnail(item, thumbnailJ)
 				)
 			
@@ -905,6 +907,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			# set currentDrawing after the two prevous functions
 			@currentItem = draft
+			@currentItem.addPaths()
 
 			@contentJ.find('.tile-info').hide()
 			
@@ -1001,23 +1004,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 						image.src = readerEvent.target.result
 						return
 					reader.readAsDataURL(file)
+
+				event.target.value = null
 				return
 
+			event.target.value = null
 			return
 
 		submitPhotoClicked: ()=>
-			document.getElementById("fileInput").click()
-
-			# modal = Modal.createModal( 
-			# 	id: 'import-image',
-			# 	title: "Import photo", 
-			# 	submit: @submitURL, 
-			# 	)
-
-			# modal.addTextInput({name: 'imageURL', placeholder: 'http://exemple.fr/belle-image.png', type: 'url', submitShortcut: true, label: 'Image URL', required: true, errorMessage: i18next.t( 'The URL is invalid' ) })
-
-			# modal.show()
-
+			fileInputJ = document.getElementById("fileInput")
+			fileInputJ.click()
 			return
 
 		printTileClicked: ()=>
@@ -1052,21 +1048,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@printSheets(false)
 			return
 
-		print: (project, tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight)=>
+		print: (project, rectangles, dashedFrames, paperWidth, paperHeight)=>
 
 			newWindow = window.open("about:blank", "_new")
 
-			print = (tileProjectSVG)=>
+			print = ()=>
 				newWindow.print()
-
-				@tileProject.view.viewSize.width = @tileRectangle.width
-				@tileProject.view.viewSize.height = @tileRectangle.height
-				@tileProject.view.scrollBy(@tileRectangle.center.subtract(@tileProject.view.center))
-				@tileProject.view.zoom = 1
-
-				@tileProject.activeLayer.removeChildren()
-				@tileProject.importSVG(tileProjectSVG)
-
+				@createTileThumbnailCanvas(@tileRectangle)
 				project.activate()
 
 				return
@@ -1107,7 +1095,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			project = P.project
 			
 			@tileProject.activate()
-			tileProjectSVG = @tileProject.exportSVG( asString: true )
 			@tileProject.activeLayer.removeChildren()
 
 			# scale = 96/2.54/10
@@ -1169,14 +1156,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			nDrawingsToLoad = drawingsToLoad.length
 
 			if nDrawingsToLoad == 0
-				@print(project, tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight)
+				@print(project, rectangles, dashedFrames, paperWidth, paperHeight)
 
 			for drawing in drawingsToLoad
 				drawing.loadSVGToPrint( (svg)=> 
 					@tileProject.importSVG(svg)
 					nDrawingsToLoad--
 					if nDrawingsToLoad <= 0
-						@print(project, tileProjectSVG, rectangles, dashedFrames, paperWidth, paperHeight)
+						@print(project, rectangles, dashedFrames, paperWidth, paperHeight)
 
 					return
 					)
@@ -1274,7 +1261,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@currentItem.status = latestDrawing.status
 			
 			if latestDrawing.svg?
-				@currentItem.setSVG(latestDrawing.svg, true, null, false)
+				# @currentItem.setSVG(latestDrawing.svg, true, null, false)
+				@currentItem.setSVG(latestDrawing.svg)
 
 			@submitBtnJ.hide()
 			@modifyBtnJ.hide()
@@ -1295,7 +1283,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					@contentJ.find('.title-group').show()
 					@modifyBtnJ.show()
 					@cancelBtnJ.show()
-					@cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel vote').text(i18next.t('Cancel vote'))
+					@cancelBtnJ.find('span.text').attr('data-i18n', 'Modify drawing').text(i18next.t('Modify drawing'))
 				@contentJ.find('#drawing-title').removeAttr('readonly')
 				@contentJ.find('#drawing-description').removeAttr('readonly')
 			else
@@ -1356,6 +1344,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@tileProject.activate()
 			@tileProject.activeLayer.removeChildren()
 			@tileProject.view.viewSize = tileRectangle.size
+			@tileProject.view.zoom = 1
 
 			scaleNumber = 0
 			scale = 1
@@ -1397,7 +1386,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return
 
 		createTileThumbnail: (tileRectangle, thumbnailJ)->
-			@createTileThumbnailCanvas(tileRectangle, thumbnailJ)
+			@createTileThumbnailCanvas(tileRectangle)
 			@appendTileThumbnailCanvas(tileRectangle, thumbnailJ)
 			return
 
@@ -1423,6 +1412,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			dueDate = moment(tile.dueDate.$date)
 			dueDateString = dueDate.format(' dddd D MMMM ') + i18next.t('at') + dueDate.format(' H [' + hours + '], m [' + minutes + ' ' + andText + '] s [' + seconds + '.]')
+
+			tileWasAchieved = tile.status == 'created' or tile.status == 'validated' or tile.status == 'rejected'
+			dueDateTitle = if tileWasAchieved then "This tile was achieved the" else "This tile must be achieved before the"
+			tileInfoJ.find('.due-date-title').attr('data-i18n', dueDateTitle).text(i18next.t(dueDateTitle))
 
 			tileInfoJ.find('.due-date').text(dueDateString)
 			
@@ -1525,7 +1518,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return
 
 		loadDrawing: (pk)->
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: { pk: pk, loadSVG: true } } ).done((result)->
+			args = 
+				pk: pk
+				loadPathList: true
+				# loadSVG: true
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)->
 				if not R.loader.checkError(result) then return
 				R.loader.createDrawing(result.drawing, true)
 				return)
@@ -1540,7 +1537,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return
 
 		onDrawingChange: (data)->
-			
 
 			switch data.type
 				when 'vote', 'cancel_vote'
@@ -1562,9 +1558,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 								R.alertManager.alert 'Someone cancelled his vote ' + forOrAgainst + ' your ' + data.itemType, 'warning', null, { drawingTitle: item.title }
 
 						item.votes = data.votes
-						@currentItem.votes = data.votes
-						if @currentItem? and @currentItem.clientId == data.clientId
-							@setVotes()
+						if @currentItem?
+							@currentItem.votes = data.votes
+							if @currentItem.clientId == data.clientId
+								@setVotes()
 				when 'new'
 					drawingLink = @getItemLink(data)
 					if R.administrator
@@ -1621,26 +1618,34 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 								if data.status == 'flagged' or data.status == 'flagged_pending'
 									R.alertManager.alert 'Your drawing has been flagged', 'danger', null, { drawingTitle: drawing.title }
 
-							if drawing.status == 'flagged' or drawing.status == 'flagged_pending' and data.bounds? and R.loader.getLoadingBounds().intersects(data.bounds)
-								if data.status != 'flagged_pending' and data.status != 'flagged'
-									R.loader.reloadRasters(data.bounds)
-
+							wasActive = drawing.status == 'pending' or drawing.status == 'validated' or data.status == 'drawing'
 							drawing.updateStatus(data.status)
+							iActive = drawing.status == 'pending' or drawing.status == 'validated' or data.status == 'drawing'
+
+							flagDrawing = data.status == 'flagged_pending' or data.status == 'flagged'
+							rejectDrawing = data.status == 'rejected'
+							
+							if wasActive != isActive and data.bounds? and R.loader.getLoadingBounds().intersects(data.bounds)
+								R.loader.reloadRasters(data.bounds)
 
 							if @currentItem? and @currentItem == drawing
 								@votesJ.find('.status').attr('data-i18n', @currentItem.status).html(i18next.t(@currentItem.status))
 
-							if data.status == 'flagged_pending' or data.status == 'flagged'
-								R.loader.reloadRasters(drawing.rectangle)
+							if flagDrawing or (rejectDrawing and !R.loadRejectedDrawings)
 								if @currentItem? and @currentItem == drawing
 									@close()
-								if not R.administrator or data.status == 'flagged'
+									R.alertManager.alert 'The drawing you selected has been reported as abusive', 'info'
+								if data.status == 'flagged' or not R.administrator
 									drawing.remove()
-								else
+								if R.administrator and data.status == 'flagged_pending'
 									drawing.loadSVG()
 						else if data.bounds? and R.loader.getLoadingBounds().intersects(data.bounds)
-							if data.status != 'flagged_pending' and data.status != 'flagged' or R.administrator
-								@loadDrawing(data.pk)
+							isActive = data.status == 'pending' or data.status == 'validated' or data.status == 'drawing'
+							rejectedAndShowRejected = data.status == 'rejected' and R.loadRejectedDrawings
+							administratorMustSee = R.administrator and ( data.status != 'rejected' or R.loadRejectedDrawings )
+							if isActive or rejectedAndShowRejected or administratorMustSee
+								if data.pk?
+									@loadDrawing(data.pk)
 
 					else if data.itemType == 'tile'
 						tile = R.tools.choose.idToTile.get(data.clientId)
@@ -1650,9 +1655,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 							if @currentItem? and @currentItem.clientId == data.clientId
 								tileInfoJ = @contentJ.find('.tile-info')
 								tileInfoJ.find('.status').attr('data-i18n', tile.status).text(i18next.t(tile.status))
+								@setVotes()
 								if tile.status == 'created' and data.photoURL?
 									tileInfoJ.find('.tile-thumbnail').show().empty().append(@createTilePhoto(data.photoURL))
-									@setVotes()
 									@contentJ.find('.share-buttons').show()
 						else if data.bounds? and R.loader.getLoadingBounds().intersects(data.bounds)
 							if data.status != 'flagged_pending' and data.status != 'flagged' or R.administrator
@@ -1663,17 +1668,23 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 					if data.itemType == 'drawing'
 						drawing = R.items[data.clientId]
-						if drawing? and drawing.owner != R.me
-							R.loader.reloadRasters(drawing.rectangle)
-							if @currentItem? and @currentItem == drawing
-								@close()
-							drawing.remove()
+						if drawing?
+							if drawing.owner != R.me
+								R.loader.reloadRasters(drawing.rectangle)
+								if @currentItem? and @currentItem == drawing
+									@close()
+									R.alertManager.alert 'The drawing you selected was cancelled', 'info'
+								drawing.remove()
+							else if !drawing.cancelling
+								R.alertManager.alert 'One of your drawing was cancelled by an administrator, the page will reload', 'info'
+								setTimeout((()->window.location.reload()), 2000)
 					else
 						tile = R.tools.choose.idToTile.get(data.clientId)
 						if tile?
 							R.tools.choose.removeTile(tile, tile)
 							if @currentItem? and @currentItem.clientId == tile.clientId
 								@close()
+								R.alertManager.alert 'The tile you selected was cancelled', 'info'
 				when 'delete'
 					if R.administrator
 						@notify('Drawing deleted', 'drawing url: ' + @getItemLink(data))
@@ -1683,10 +1694,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 						R.loader.reloadRasters(drawing.rectangle)
 						if @currentItem? and @currentItem == drawing
 							@close()
+							R.alertManager.alert 'The drawing you selected was deleted', 'info'
 						drawing.remove()
 				when 'addComment'
 					if R.administrator
 						@notify('New comment', 'comment: ' + data.comment +  ' ' + data.itemType + ' url: ' + @getItemLink({pk: data.itemPk}))
+
+					if data.author == R.me then return
 
 					item = if data.itemType == 'drawing' then R.pkToDrawing.get(data.itemPk) else R.tools.choose.idToTile.get(data.clientId)
 					if item?
@@ -1706,7 +1720,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 							R.alertManager.alert 'Someone has modified a comment on your ' + data.itemType, 'info', null, { author: data.author, drawingTitle: data.title }
 
 						if @currentItem? and @currentItem.clientId == item.clientId
-							@contentJ.find('#comment-'+data.commentPk).find('.comment-text').get(0).innerText = data.comment
+							commentJ = @contentJ.find('#comment-'+data.commentPk)
+							if commentJ.length > 0
+								commentJ.find('.comment-text').get(0).innerText = data.comment
 				when 'deleteComment'
 					if R.administrator
 						@notify('Comment deleted', 'drawing url: ' + @getItemLink({pk: data.itemPk}))
@@ -1718,7 +1734,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 							R.alertManager.alert 'Someone has deleted a comment on your ' + data.itemType, 'info', null, { author: data.author, drawingTitle: data.title }
 
 						if @currentItem? and @currentItem.clientId == item.clientId
-							@contentJ.find('#comment-'+data.commentPk).remove()
+							commentJ = @contentJ.find('#comment-'+data.commentPk)
+							if commentJ.length > 0
+								commentJ.remove()
 				
 				when 'adminMessage'
 
@@ -1892,8 +1910,24 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				R.alertManager.alert "You must submit your draft before cancelling a drawing", "error"
 				return
 
-			@currentItem.cancel()
-			@close()
+			# if @currentItem.
+			# 	return
+
+			modal = Modal.createModal( 
+				id: 'modify-drawing',
+				title: 'Modify drawing', 
+				submit: ( ()=> 
+					@currentItem.cancel()
+					@close()
+					return),
+				submitButtonText: 'Modify drawing', 
+				submitButtonIcon: 'glyphicon-ban-circle',
+				)
+		
+			modal.addText('Are you sure you really want to modify the drawing')
+			modal.addText('This will reset the votes and comments of the drawing')
+			modal.modalJ.find('[name="submit"]').addClass('btn-danger').removeClass('btn-primary')
+			modal.show()
 			return
 
 		cancelTile: ()=>

@@ -76,10 +76,6 @@
         this.submitCallback = bind(this.submitCallback, this);
         this.saveCallback = bind(this.saveCallback, this);
         this.onLiClick = bind(this.onLiClick, this);
-        if (this.status === 'flagged_pending') {
-          console.log('flagged_pending');
-          R.flaggedDrawing = this;
-        }
         Drawing.__super__.constructor.call(this, this.data, this.id, this.pk);
         if (this.pk != null) {
           this.constructor.pkToId[this.pk] = this.id;
@@ -96,31 +92,29 @@
         this.addToListItem();
         this.addToLayer();
         if (this.status === 'draft') {
-          if (this.constructor.draft != null) {
-            console.log('Draft duplication!');
-          }
           this.constructor.draft = this;
+        }
+        if ((this.status === 'draft' || this.status === 'flagged_pending' || this.status === 'flagged') && pathList) {
           this.addPathsFromPathList(pathList);
-        } else if (svg != null) {
-          this.setSVG(svg);
         }
         if (this.status === 'pending' && this.owner !== R.me) {
-          this.drawVoteBounds();
+          this.drawVoteFlag();
         }
         if (this.status === 'flagged_pending') {
-          this.drawVoteBounds(true);
+          this.drawVoteFlag(true);
         }
         return;
       }
 
-      Drawing.prototype.drawVoteBounds = function(flagged) {
+      Drawing.prototype.drawVoteFlag = function(flagged) {
         var bounds;
         if (flagged == null) {
           flagged = false;
         }
         bounds = this.getBounds();
         this.voteFlag = new P.Raster(!flagged ? '/static/images/icons/envelope.png' : '/static/images/icons/flagged.png');
-        this.voteFlag.position = bounds.center.subtract(-19, 49);
+        this.voteFlag.position = bounds.center;
+        this.voteFlag.opacity = 0.75;
         if (R.voteFlags == null) {
           R.voteFlags = [];
         }
@@ -178,7 +172,7 @@
       };
 
       Drawing.prototype.addPathsFromPathList = function(pathList, parseJSON, highlight) {
-        var data, i, len, p, pJSON, path, points;
+        var data, i, len, p, pJSON, path, points, strokeColor;
         if (parseJSON == null) {
           parseJSON = true;
         }
@@ -189,14 +183,18 @@
           p = pathList[i];
           pJSON = parseJSON ? JSON.parse(p) : p;
           points = pJSON.points;
+          strokeColor = pJSON.data != null ? pJSON.data.strokeColor : null;
           if (points == null) {
-            continue;
+            points = pJSON;
+          }
+          if (strokeColor == null) {
+            strokeColor = new P.Color('grey');
           }
           data = {
             points: points,
             planet: new P.Point(0, 0),
             strokeWidth: Item.Path.strokeWidth,
-            strokeColor: pJSON.data.strokeColor
+            strokeColor: strokeColor
           };
           path = new Item.Path.PrecisePath(Date.now(), data, null, null, null, null, R.me, this.id);
           path.pk = path.id;
@@ -204,128 +202,48 @@
           if (highlight) {
             path.data.strokeColor = 'purple';
           }
-          path.draw();
+          path.draw(null, null, false);
         }
         this.computeRectangle();
       };
 
       Drawing.prototype.loadSVG = function(callback) {
-        var jqxhr;
-        jqxhr = $.get(location.origin + '/static/drawings/' + this.pk + '.svg', ((function(_this) {
+        var args;
+        args = {
+          pk: this.pk,
+          loadPathList: true
+        };
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'loadDrawing',
+              args: args
+            })
+          }
+        }).done((function(_this) {
           return function(result) {
-            _this.setSVG(result, false, callback);
-          };
-        })(this))).fail((function(_this) {
-          return function() {
-            var args;
-            if (_this.svg != null) {
-              return;
-            }
-            args = {
-              pk: _this.pk,
-              svgOnly: true
-            };
-            return $.ajax({
-              method: "POST",
-              url: "ajaxCall/",
-              data: {
-                data: JSON.stringify({
-                  "function": 'loadDrawing',
-                  args: args
-                })
-              }
-            }).done(function(result) {
-              var drawing;
-              drawing = JSON.parse(result.drawing);
-              if (drawing.svg != null) {
-                return _this.setSVG(drawing.svg, true, callback);
-              }
-            });
+            var drawingData;
+            drawingData = JSON.parse(result.drawing);
+            return _this.addPathsFromPathList(drawingData.pathList);
           };
         })(this));
       };
 
-      Drawing.prototype.loadSVGToPrint = function(callback) {
-        var jqxhr;
-        jqxhr = $.get(location.origin + '/static/drawings/' + this.pk + '.svg', ((function(_this) {
-          return function(result) {
-            callback(result);
-          };
-        })(this))).fail((function(_this) {
-          return function() {
-            var args;
-            if (_this.svg != null) {
-              return;
-            }
-            args = {
-              pk: _this.pk,
-              svgOnly: true
-            };
-            return $.ajax({
-              method: "POST",
-              url: "ajaxCall/",
-              data: {
-                data: JSON.stringify({
-                  "function": 'loadDrawing',
-                  args: args
-                })
-              }
-            }).done(function(result) {
-              var drawing;
-              drawing = JSON.parse(result.drawing);
-              if (drawing.svg != null) {
-                return callback(drawing.svg);
-              }
-            });
-          };
-        })(this));
+      Drawing.prototype.setPathZIndex = function(path, pathIndex, zIndex) {
+        this.paths.pop();
+        this.paths.splice(pathIndex, 0, path);
+        path.path.parent.insertChild(zIndex, path.path);
       };
 
-      Drawing.prototype.setSVG = function(svg, parse, callback, hide) {
-        var doc, layer, layerName, parser;
-        if (parse == null) {
-          parse = true;
-        }
-        if (callback == null) {
-          callback = null;
-        }
-        if (hide == null) {
-          hide = false;
-        }
-        if (this.svg) {
-          this.svg.remove();
-        }
-        layerName = this.getLayerName();
-        layer = document.getElementById(layerName);
-        if (!layer) {
-          return;
-        }
-        if (parse) {
-          parser = new DOMParser();
-          doc = parser.parseFromString(svg, "image/svg+xml");
-        } else {
-          doc = svg;
-        }
+      Drawing.prototype.setSVG = function(svg) {
+        var doc, parser;
+        parser = new DOMParser();
+        doc = parser.parseFromString(svg, "image/svg+xml");
         doc.documentElement.removeAttribute('visibility');
         doc.documentElement.removeAttribute('xmlns');
-        if (this.status === 'draft') {
-          doc.documentElement.setAttribute('id', 'draftDrawing');
-        }
-        this.svg = layer.appendChild(doc.documentElement);
-        this.svg.addEventListener("click", ((function(_this) {
-          return function(event) {
-            R.tools.select.deselectAll();
-            _this.select();
-            event.stopPropagation();
-            return -1;
-          };
-        })(this)));
-        if (hide) {
-          this.svg.setAttribute('visibility', 'hidden');
-        }
-        if (typeof callback === "function") {
-          callback(this.svg);
-        }
+        this.svg = doc.documentElement;
       };
 
       Drawing.prototype.setStrokeColorFromVote = function(positive) {
@@ -380,6 +298,7 @@
             itemListJ = R.view.pendingListJ;
             break;
           case 'drawing':
+          case 'validated':
             itemListJ = R.view.drawingListJ;
             break;
           case 'drawn':
@@ -394,9 +313,6 @@
           case 'flagged':
           case 'flagged_pending':
             itemListJ = R.view.flaggedListJ;
-            break;
-          case 'test':
-            itemListJ = R.view.testListJ;
             break;
           default:
             R.alertManager.alert("Error: drawing status is invalid", "error");
@@ -502,10 +418,6 @@
         return (ref = this.getLayer()) != null ? ref.visible : void 0;
       };
 
-      Drawing.prototype.addPathToProperLayer = function(path) {
-        this.group.addChild(path.path);
-      };
-
       Drawing.prototype.convertToGroup = function() {
         var item;
         item = P.project.importSVG(this.svg, (function(_this) {
@@ -514,25 +426,6 @@
           };
         })(this));
         return item;
-      };
-
-      Drawing.prototype.addPaths = function() {
-        var i, len, path, ref;
-        ref = this.paths;
-        for (i = 0, len = ref.length; i < len; i++) {
-          path = ref[i];
-          this.group.addChild(path.path);
-          console.log(path.path);
-        }
-      };
-
-      Drawing.addPaths = function() {
-        var drawing, i, len, ref;
-        ref = R.drawings;
-        for (i = 0, len = ref.length; i < len; i++) {
-          drawing = ref[i];
-          drawing.addPaths();
-        }
       };
 
       Drawing.prototype.addChild = function(path) {
@@ -547,7 +440,6 @@
           this.pathPks = [];
         }
         this.pathPks.push(path.pk);
-        this.group.addChild(path.path);
         bounds = path.getDrawingBounds();
         if (bounds != null) {
           if (this.rectangle == null) {
@@ -621,7 +513,8 @@
           date: Date.now(),
           title: this.title || '' + Math.random(),
           description: this.description || '',
-          points: this.points
+          points: this.points,
+          data: this.pathData
         };
         $.ajax({
           method: "POST",
@@ -709,6 +602,17 @@
         }
       };
 
+      Drawing.prototype.addPaths = function() {
+        var i, len, path, ref;
+        if ((this.paths != null) && this.paths.length > 0) {
+          ref = this.paths;
+          for (i = 0, len = ref.length; i < len; i++) {
+            path = ref[i];
+            this.group.addChild(path.path);
+          }
+        }
+      };
+
       Drawing.prototype.getSVG = function(asString) {
         var i, len, path, ref;
         if (asString == null) {
@@ -784,6 +688,8 @@
         if (!R.loader.checkError(result)) {
           return;
         }
+        R.tools['Precise path'].hideDraftLimits();
+        R.loader.reloadRasters(this.rectangle);
         R.commandManager.clearHistory();
         this.updateStatus(result.status);
         if (this.constructor.draft === this) {
@@ -903,7 +809,7 @@
           title: this.title,
           description: this.description
         };
-        R.loader.showLoadingBar();
+        R.loader.showLoadingBar(500);
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -946,7 +852,7 @@
       };
 
       Drawing.prototype.deleteFromDatabase = function() {
-        R.loader.showLoadingBar();
+        R.loader.showLoadingBar(500);
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -962,7 +868,8 @@
       };
 
       Drawing.prototype.cancel = function() {
-        R.loader.showLoadingBar();
+        R.loader.showLoadingBar(500);
+        this.cancelling = true;
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -987,6 +894,11 @@
         if (!R.loader.checkError(result)) {
           return;
         }
+        if (R.administrator && this.owner !== R.me) {
+          return;
+        }
+        R.commandManager.clearHistory();
+        R.loader.reloadRasters(this.rectangle);
         ref = this.paths.slice();
         for (i = 0, len = ref.length; i < len; i++) {
           path = ref[i];
@@ -1106,10 +1018,10 @@
           ref2.remove();
         }
         if (this.status === 'pending' && this.owner !== R.me) {
-          this.drawVoteBounds();
+          this.drawVoteFlag();
         }
         if (this.status === 'flagged_pending') {
-          this.drawVoteBounds(true);
+          this.drawVoteFlag(true);
         }
         if (voteFlagWasVisible) {
           this.showVoteFlag();

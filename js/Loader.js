@@ -32,6 +32,7 @@
         this.showLoadingBar();
         this.drawingPaths = [];
         this.drawingPk = null;
+        this.rasters = new Map();
         return;
       }
 
@@ -60,6 +61,13 @@
           position: 'relative'
         };
         target = document.getElementById('spinner');
+      };
+
+      Loader.prototype.initializeGroups = function(rasterLayer) {
+        this.activeRasterGroup = new P.Group();
+        this.inactiveRasterGroup = new P.Group();
+        rasterLayer.addChild(this.activeRasterGroup);
+        rasterLayer.addChild(this.inactiveRasterGroup);
       };
 
       Loader.prototype.showDrawingBar = function() {
@@ -309,15 +317,11 @@
         if (!this.checkError(results)) {
           return;
         }
-        R.nRejectedDrawings = 0;
         this.createDrawings(results);
         tiles = JSON.parse(results.tiles);
         for (k = 0, len = tiles.length; k < len; k++) {
           tile = tiles[k];
           R.tools.choose.createTile(tile);
-        }
-        if (R.view.rejectedListJ != null) {
-          R.view.rejectedListJ.find(".n-items").html(R.nRejectedDrawings);
         }
       };
 
@@ -349,7 +353,7 @@
             });
           };
         })(this));
-        this.loadRasters(false);
+        this.loadRasters(bounds, false);
       };
 
       Loader.prototype.getScaleNumber = function() {
@@ -362,9 +366,11 @@
         return Math.pow(this.constructor.scaleRatio, scaleNumber);
       };
 
-      Loader.prototype.getQuantizedBounds = function(scaleNumber, scale) {
-        var bounds, nPixelsPerTile, quantizedBounds;
-        bounds = P.view.bounds;
+      Loader.prototype.getQuantizedBounds = function(bounds, scaleNumber, scale) {
+        var nPixelsPerTile, quantizedBounds;
+        if (!(bounds instanceof P.Rectangle)) {
+          bounds = new P.Rectangle(bounds);
+        }
         if (scaleNumber == null) {
           scaleNumber = this.getScaleNumber();
         }
@@ -375,8 +381,8 @@
         quantizedBounds = {
           t: Math.floor(bounds.top / nPixelsPerTile),
           l: Math.floor(bounds.left / nPixelsPerTile),
-          b: Math.floor(bounds.bottom / nPixelsPerTile),
-          r: Math.floor(bounds.right / nPixelsPerTile)
+          b: Math.ceil(bounds.bottom / nPixelsPerTile),
+          r: Math.ceil(bounds.right / nPixelsPerTile)
         };
         return quantizedBounds;
       };
@@ -390,36 +396,50 @@
         return bounds.expand(nPixelsPerTile);
       };
 
-      Loader.prototype.loadRasters = function(alsoLoadDrawingsAndTiles) {
-        var bounds, drawingsToLoad, k, layerName, len, limits, m, n, nPixelsPerTile, o, p, quantizedBounds, raster, rastersOfScale, rastersY, ref, ref1, ref2, ref3, ref4, ref5, rs, scale, scaleNumber;
+      Loader.prototype.removeRaster = function(rx, ry) {
+        this.rasters.forEach((function(_this) {
+          return function(rastersOfScale, s) {
+            return rastersOfScale.forEach(function(rastersY, y) {
+              return rastersY.forEach(function(rs, x) {
+                var results1;
+                if (x === rx && y === ry) {
+                  results1 = [];
+                  while (rs.length > 0) {
+                    results1.push(rs.pop().remove());
+                  }
+                  return results1;
+                }
+              });
+            });
+          };
+        })(this));
+      };
+
+      Loader.prototype.loadRasters = function(bounds, alsoLoadDrawingsAndTiles) {
+        var drawingsToLoad, group, k, layerName, len, limits, m, n, nPixelsPerTile, o, p, quantizedBounds, quantizedViewBounds, raster, rasterBounds, rastersOfScale, rastersY, ref, ref1, ref2, ref3, ref4, ref5, rs, scale, scaleNumber;
+        if (bounds == null) {
+          bounds = P.view.bounds;
+        }
         if (alsoLoadDrawingsAndTiles == null) {
           alsoLoadDrawingsAndTiles = true;
-        }
-        if (this.activeRasterGroup == null) {
-          this.activeRasterGroup = new P.Group();
-        }
-        if (this.inactiveRasterGroup == null) {
-          this.inactiveRasterGroup = new P.Group();
-        }
-        if (this.rasters == null) {
-          this.rasters = new Map();
         }
         scaleNumber = this.getScaleNumber();
         scale = this.getScale(scaleNumber);
         nPixelsPerTile = scale * 1000;
-        bounds = P.view.bounds;
-        quantizedBounds = this.getQuantizedBounds(scaleNumber, scale);
+        quantizedBounds = this.getQuantizedBounds(bounds, scaleNumber, scale);
+        quantizedViewBounds = this.getQuantizedBounds(P.view.bounds, scaleNumber, scale);
         rastersOfScale = this.rasters.get(scaleNumber);
         if (rastersOfScale == null) {
           rastersOfScale = new Map();
           this.rasters.set(scaleNumber, rastersOfScale);
         }
-        limits = bounds.expand(nPixelsPerTile);
+        limits = P.view.bounds.expand(nPixelsPerTile);
         if ((ref = R.pkToDrawing) != null) {
           ref.forEach((function(_this) {
             return function(drawing, pk) {
-              bounds = drawing.getBounds();
-              if (drawing.status !== 'draft' && (bounds != null) && !bounds.intersects(limits)) {
+              var drawingBounds;
+              drawingBounds = drawing.getBounds();
+              if (drawing.status !== 'draft' && drawing.status !== 'flagged_pending' && (drawingBounds != null) && !drawingBounds.intersects(limits)) {
                 return drawing.remove();
               }
             };
@@ -440,7 +460,7 @@
             } else {
               return rastersOfScale.forEach(function(rastersY, y) {
                 return rastersY.forEach(function(rs, x) {
-                  if (y < quantizedBounds.t || y > quantizedBounds.b || x < quantizedBounds.l || x > quantizedBounds.r) {
+                  if (y < quantizedViewBounds.t || y > quantizedViewBounds.b || x < quantizedViewBounds.l || x > quantizedViewBounds.r) {
                     while (rs.length > 0) {
                       rs.pop().remove();
                     }
@@ -465,19 +485,21 @@
               rs = [];
               for (p = 0, len = drawingsToLoad.length; p < len; p++) {
                 layerName = drawingsToLoad[p];
-                raster = new P.Raster(location.origin + '/static/rasters/' + layerName + '/zoom' + scaleNumber + '/' + m + ',' + n + '.png');
+                group = new P.Group();
+                raster = new P.Raster(location.origin + '/static/rasters/' + layerName + '/zoom' + scaleNumber + '/' + m + ',' + n + '.png' + '#' + Math.random());
                 raster.position.x = (m + 0.5) * nPixelsPerTile;
                 raster.position.y = (n + 0.5) * nPixelsPerTile;
-                raster.scale(scale);
+                raster.scale(scale * 1.001);
                 rs.push(raster);
+                group.addChild(raster);
+                rasterBounds = new P.Rectangle(m * nPixelsPerTile, n * nPixelsPerTile, nPixelsPerTile, nPixelsPerTile);
                 if (alsoLoadDrawingsAndTiles && P.project.view.zoom >= 0.125 && (this.loadingType === 'tiles' || this.loadingType === 'tiles-ignore-loaded')) {
-                  bounds = new P.Rectangle(m * nPixelsPerTile, n * nPixelsPerTile, nPixelsPerTile, nPixelsPerTile);
-                  this.loadDrawingsAndTiles(bounds);
+                  this.loadDrawingsAndTiles(rasterBounds);
                 }
                 if (layerName === 'active') {
-                  this.activeRasterGroup.addChild(raster);
+                  this.activeRasterGroup.addChild(group);
                 } else {
-                  this.inactiveRasterGroup.addChild(raster);
+                  this.inactiveRasterGroup.addChild(group);
                 }
               }
               rastersY = rastersOfScale.get(n);
@@ -490,7 +512,7 @@
           }
         }
         if (alsoLoadDrawingsAndTiles && this.loadingType === 'screen' || this.loadingType === 'screen-ignore-loaded') {
-          this.loadDrawingsAndTiles(P.view.bounds);
+          this.loadDrawingsAndTiles(bounds);
         }
       };
 

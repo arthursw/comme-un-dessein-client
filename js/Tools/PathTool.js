@@ -108,8 +108,8 @@
         this.btnJ.remove();
       };
 
-      PathTool.prototype.select = function(deselectItems, updateParameters, forceSelect, fromMiddleMouseButton) {
-        var bounds, draft, ref, ref1;
+      PathTool.prototype.select = function(deselectItems, updateParameters, forceSelect, selectedBy) {
+        var bounds, ref, ref1;
         if (deselectItems == null) {
           deselectItems = true;
         }
@@ -119,8 +119,8 @@
         if (forceSelect == null) {
           forceSelect = false;
         }
-        if (fromMiddleMouseButton == null) {
-          fromMiddleMouseButton = false;
+        if (selectedBy == null) {
+          selectedBy = 'default';
         }
         if ((ref = R.city) != null ? ref.finished : void 0) {
           R.alertManager.alert("Cette édition est terminée, vous ne pouvez plus dessiner.", 'info');
@@ -134,17 +134,14 @@
         if ((ref1 = R.tracer) != null) {
           ref1.show();
         }
-        PathTool.__super__.select.call(this, deselectItems, updateParameters, fromMiddleMouseButton);
+        PathTool.__super__.select.call(this, deselectItems, updateParameters, selectedBy);
         R.view.tool.onMouseMove = this.move;
         R.toolManager.enterDrawingMode();
-        if (!fromMiddleMouseButton) {
-          draft = R.Drawing.getDraft();
-          if (draft != null) {
-            bounds = draft.getBounds();
-            if (bounds != null) {
-              if (!P.view.bounds.expand(-75).contains(bounds.center)) {
-                R.view.fitRectangle(bounds, false, P.view.zoom < 1 ? 1 : P.view.zoom);
-              }
+        if (selectedBy !== 'middleMouseButton' && selectedBy !== 'spaceKey') {
+          if (this.draftLimit != null) {
+            if (!P.view.bounds.intersects(this.draftLimit)) {
+              bounds = R.Drawing.getDraft().getBounds();
+              R.view.fitRectangle(bounds, false, P.view.zoom < 1 ? 1 : P.view.zoom);
             }
           }
         }
@@ -163,7 +160,7 @@
       };
 
       PathTool.prototype.begin = function(event, from, data) {
-        var ref, ref1, ref2;
+        var bounds, intersection, ref, ref1, ref2, ref3;
         if (from == null) {
           from = R.me;
         }
@@ -176,21 +173,28 @@
         if ((ref = R.tracer) != null ? ref.draggingImage : void 0) {
           return;
         }
-        if (100 * P.view.zoom < 10) {
-          R.alertManager.alert("You can not draw path at a zoom smaller than 10.", "Info");
+        if (P.view.zoom < 0.125) {
+          R.alertManager.alert('Please zoom before drawing', 'info');
           return;
         }
         if ((this.draftLimit != null) && !this.draftLimit.contains(event.point)) {
           this.constructor.displayDraftIsTooBigError();
+          bounds = (ref1 = R.Drawing.getDraft()) != null ? ref1.getBounds() : void 0;
+          if (bounds != null) {
+            intersection = R.view.getViewBounds(true).intersect(bounds);
+            if (intersection.area < 10000) {
+              R.view.fitRectangle(bounds, false, P.view.zoom < 1 ? 1 : P.view.zoom);
+            }
+          }
           return;
         }
-        if (!((R.currentPaths[from] != null) && ((ref1 = R.currentPaths[from].data) != null ? ref1.polygonMode : void 0))) {
+        if (!((R.currentPaths[from] != null) && ((ref2 = R.currentPaths[from].data) != null ? ref2.polygonMode : void 0))) {
           R.tools.select.deselectAll(false);
           R.currentPaths[from] = new this.Path(Date.now(), data, null, null, null, null, R.me);
           if (this.circleMode()) {
             this.circlePathRadius = 0.1;
             this.circlePathCenter = event.point;
-            if (ref2 = R.drawingMode, indexOf.call(R.Path.PrecisePath.snappedModes, ref2) >= 0) {
+            if (ref3 = R.drawingMode, indexOf.call(R.Path.PrecisePath.snappedModes, ref3) >= 0) {
               this.circlePathCenter = Utils.Snap.snap2D(event.point, R.drawingMode === 'lineOrthoDiag' ? R.Path.PrecisePath.lineOrthoGridSize : R.Path.PrecisePath.orthoGridSize / 2);
             }
             this.animateCircle(0, true);
@@ -280,6 +284,11 @@
         if (from == null) {
           from = R.me;
         }
+        if (this.selectedSegment != null) {
+          this.selectedSegment.point = event.point;
+          R.selectedPath = this.selectedSegment.path.controller;
+          return;
+        }
         path = R.currentPaths[from];
         if (path == null) {
           return;
@@ -290,7 +299,7 @@
           clearInterval(this.animateCircleIntervalID);
         }
         draftLimit = this.showDraftLimits();
-        draftIsTooBig = (draftLimit != null) && !draftLimit.expand(-20).contains(event.point);
+        draftIsTooBig = (draftLimit != null) && !draftLimit.contains(event.point);
         draftIsOutsideFrame = !R.view.contains(event.point);
         if (draftIsTooBig || draftIsOutsideFrame) {
           if (R.drawingMode !== 'line' && R.drawingMode !== 'lineOrthoDiag') {
@@ -356,6 +365,10 @@
           from = R.me;
         }
         this.using = false;
+        if (this.selectedSegment != null) {
+          this.selectedSegment = null;
+          return;
+        }
         path = R.currentPaths[from];
         if (path == null) {
           return false;

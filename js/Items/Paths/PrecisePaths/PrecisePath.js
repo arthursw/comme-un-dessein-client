@@ -627,9 +627,6 @@
         reminder = nf - nIteration;
         offset = reminder * step / 2;
         this.drawingOffset = 0;
-        if (onSvg) {
-          this.group.remove();
-        }
         try {
           this.processDrawing(redrawing);
         } catch (error1) {
@@ -885,11 +882,6 @@
           if (update) {
             this.update('point');
           }
-          R.socket.emit("bounce", {
-            itemId: this.id,
-            "function": "addPoint",
-            "arguments": [index, point, offset, false]
-          });
         }
         return segment;
       };
@@ -934,11 +926,6 @@
           if (update) {
             this.update('point');
           }
-          R.socket.emit("bounce", {
-            itemId: this.id,
-            "function": "deletePoint",
-            "arguments": [segment.index, false]
-          });
         }
         return location;
       };
@@ -982,11 +969,6 @@
           if (update) {
             this.update('segment');
           }
-          R.socket.emit("bounce", {
-            itemId: this.id,
-            "function": "modifyPoint",
-            "arguments": [segment.index, position, handleIn, handleOut, fastDraw, false]
-          });
         }
       };
 
@@ -1092,11 +1074,6 @@
           if (update) {
             this.update('point');
           }
-          R.socket.emit("bounce", {
-            itemId: this.id,
-            "function": "modifyPointType",
-            "arguments": [segment.index, rtype, false]
-          });
         }
       };
 
@@ -1123,11 +1100,6 @@
           if (update) {
             this.update('point');
           }
-          R.socket.emit("bounce", {
-            itemId: this.id,
-            "function": "modifyControlPath",
-            "arguments": [pointsAndPlanet, false]
-          });
         }
       };
 

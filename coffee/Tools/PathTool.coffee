@@ -99,7 +99,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 
 		# Select: add the mouse move listener on the tool (userful when creating a path in polygon mode)
 		# todo: move this to main, have a global onMouseMove handler like other handlers
-		select: (deselectItems=true, updateParameters=true, forceSelect=false, fromMiddleMouseButton=false)->
+		select: (deselectItems=true, updateParameters=true, forceSelect=false, selectedBy='default')->
 			if R.city?.finished
 				R.alertManager.alert "Cette édition est terminée, vous ne pouvez plus dessiner.", 'info'
 				return
@@ -117,23 +117,23 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 
 
 			# R.rasterizer.drawItems()
+			# R.toolbar.toolListJ.addClass('long')
 
 			@showDraftLimits()
 
 			R.tracer?.show()
 
-			super(deselectItems, updateParameters, fromMiddleMouseButton)
+			super(deselectItems, updateParameters, selectedBy)
 
 			R.view.tool.onMouseMove = @move
 			R.toolManager.enterDrawingMode()
 
-			if not fromMiddleMouseButton
-				draft = R.Drawing.getDraft()
-				if draft?
-					bounds = draft.getBounds()
-					if bounds?
-						if not P.view.bounds.expand(-75).contains(bounds.center)
-							R.view.fitRectangle(bounds, false, if P.view.zoom < 1 then 1 else P.view.zoom)
+			if selectedBy != 'middleMouseButton' and selectedBy != 'spaceKey'
+
+				if @draftLimit?
+					if not P.view.bounds.intersects(@draftLimit)
+						bounds = R.Drawing.getDraft().getBounds()
+						R.view.fitRectangle(bounds, false, if P.view.zoom < 1 then 1 else P.view.zoom)
 
 			if P.view.zoom < 1
 				R.alertManager.alert 'You can zoom in to draw more easily', 'info'
@@ -145,6 +145,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 
 		# Deselect: remove the mouse move listener
 		deselect: ()->
+
+			# R.toolbar.toolListJ.removeClass('long')
 
 			# @setButtonDraw()
 
@@ -169,13 +171,18 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		begin: (event, from=R.me, data=null) ->
 			if event.event.which == 2 then return 			# if middle mouse button (wheel) pressed: return
 			if R.tracer?.draggingImage then return
-
-			if 100 * P.view.zoom < 10
-				R.alertManager.alert("You can not draw path at a zoom smaller than 10.", "Info")
-				return
 			
+			if P.view.zoom < 0.125
+				R.alertManager.alert 'Please zoom before drawing', 'info'
+				return
+
 			if @draftLimit? and not @draftLimit.contains(event.point)
 				@constructor.displayDraftIsTooBigError()
+				bounds = R.Drawing.getDraft()?.getBounds()
+				if bounds?
+					intersection = R.view.getViewBounds(true).intersect(bounds)
+					if intersection.area < 10000
+						R.view.fitRectangle(bounds, false, if P.view.zoom < 1 then 1 else P.view.zoom)
 				return
 
 			# deselect all and create new P.Path in all case except in polygonMode
@@ -191,6 +198,15 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 						@circlePathCenter = Utils.Snap.snap2D(event.point, if R.drawingMode == 'lineOrthoDiag' then R.Path.PrecisePath.lineOrthoGridSize else R.Path.PrecisePath.orthoGridSize / 2)
 					@animateCircle(0, true)
 					@animateCircleIntervalID = setInterval(@animateCircle, 150)
+
+			# if event.event.shiftKey
+			# 	draft = R.Drawing.getDraft()
+			# 	if draft?
+			# 		draft.addPaths()
+			# 		hitResult = draft.group.hitTest(event.point, { tolerance: 6, segments: true, fill: false, stroke: false, curves: false, handles: false, position: false, bounds: false, guides: false, selected: false })
+			# 		if hitResult?.segment?
+			# 			@selectedSegment = hitResult.segment
+			# 			return
 
 			R.currentPaths[from].beginCreate(event.point, event, false)
 
@@ -275,6 +291,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		# @param [Paper event or REvent] (usually) mouse drag event
 		# @param [String] author (username) of the event
 		update: (event, from=R.me) ->
+			
+			if @selectedSegment?
+				@selectedSegment.point = event.point
+				# @selectedSegment.path.controller.path.segments[@selectedSegment.index].point = @selectedSegment.point
+				R.selectedPath = @selectedSegment.path.controller
+				return
 
 			path = R.currentPaths[from]
 			
@@ -287,7 +309,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 
 			draftLimit = @showDraftLimits()
 
-			draftIsTooBig = draftLimit? and not draftLimit.expand(-20).contains(event.point)
+			draftIsTooBig = draftLimit? and not draftLimit.contains(event.point)
 			
 			draftIsOutsideFrame = not R.view.contains(event.point)
 
@@ -383,7 +405,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 
 				R.toolManager.updateButtonsVisibility()
 
-				# path.select(false)
+				# path.controlPath.selected = true
 			else
 				path.endCreate(event.point, event)
 			delete R.currentPaths[from]
@@ -396,6 +418,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		# @param [String] author (username) of the event
 		end: (event, from=R.me) ->
 			@using = false
+
+			if @selectedSegment?
+				@selectedSegment = null
+				return
 
 			path = R.currentPaths[from]
 			if not path? then return false		# when the path has been deleted because too big

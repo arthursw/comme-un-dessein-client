@@ -18,8 +18,32 @@
         this.tracerGroup = null;
         this.tracerBtn = null;
         this.createTracerButton();
+        this.initializeGlobalDragAndDrop();
         return;
       }
+
+      Tracer.prototype.initializeGlobalDragAndDrop = function() {
+        document.body.addEventListener('dragenter', (function(_this) {
+          return function(event) {
+            event.stopPropagation();
+            event.preventDefault();
+            R.alertManager.alert('Drop your image here to trace it', 'info');
+          };
+        })(this));
+        document.body.addEventListener('dragover', (function(_this) {
+          return function(event) {
+            event.stopPropagation();
+            event.preventDefault();
+          };
+        })(this));
+        document.body.addEventListener('dragleave', (function(_this) {
+          return function(event) {
+            event.stopPropagation();
+            event.preventDefault();
+          };
+        })(this));
+        document.body.addEventListener('drop', this.fileDropped, false);
+      };
 
       Tracer.prototype.createTracerButton = function() {
         this.tracerBtn = new Button({
@@ -363,15 +387,23 @@
       };
 
       Tracer.prototype.fileDropped = function(event) {
-        var file, j, len, reader, ref;
+        var file, j, len, reader, ref, ref1;
         event.stopPropagation();
         event.preventDefault();
+        if (R.selectedTool !== R.tools['Precise path']) {
+          R.tools['Precise path'].select();
+        }
+        if (R.selectedTool !== R.tools['Precise path']) {
+          return;
+        }
         ref = event.dataTransfer.files;
         for (j = 0, len = ref.length; j < len; j++) {
           file = ref[j];
           if (file.type.match(/image.*/)) {
             reader = new FileReader();
-            this.modal.hide();
+            if ((ref1 = this.modal) != null) {
+              ref1.hide();
+            }
             reader.onload = (function(_this) {
               return function(readerEvent) {
                 _this.submitURL({

@@ -72,12 +72,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 				@selectionRectangle = null
 			return
 
-		select: (deselectItems=false, updateParameters=true, forceSelect=false, buttonClicked=false)->
+		select: (deselectItems=false, updateParameters=true, forceSelect=false, selectedBy='default')->
 			# R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").hide()
 			# R.rasterizer.drawItems() 		# must not draw all items here since user can just wish to use an Media
 			R.tracer?.hide()
 
-			if buttonClicked
+			if selectedBy == 'button'
 				R.alertManager.alert 'Click on a drawing to vote for it', 'info'
 
 			R.canvasJ.addClass('select')
@@ -91,7 +91,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 				if drawing.getBoundsWithFlag()?.intersects(selectedDrawingsBounds) then continue
 				drawing.showVoteFlag()
 
-			super(false, updateParameters)
+			super(false, updateParameters, selectedBy)
 			return
 
 		deselect: ()->
@@ -254,6 +254,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 		# must be reshaped (right not impossible to add a group of RItems to the current selection group)
 		begin: (event) ->
 			if event.event.which == 2 then return 		# if the wheel button was clicked: return
+
+			if P.view.zoom < 0.125
+				R.alertManager.alert 'Please zoom before voting', 'info'
+				return
 
 			itemWasHit = false
 

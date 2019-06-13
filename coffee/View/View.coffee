@@ -1,9 +1,10 @@
 dependencies = ['paper', 'R',  'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Paths/Path', 'Items/Divs/Div' ]
 if document?
 	dependencies.push('i18next')
-	dependencies.push('hammer')
+	dependencies.push('hammerjs')
 	dependencies.push('mousewheel')
 	# dependencies.push('tween')
+	dependencies.push('jquery-hammer')
 
 define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, mousewheel) ->
 
@@ -139,9 +140,27 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			viewRatio = 1
 			rectangleRatio = rectangle.width / rectangle.height
 			
+			# jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg', ((result)=>
+			# 	@setSVG(result, false, callback)
+			# 	return
+			# ))
+			# .fail(()=>
+
+			# 	if @svg? then return
+
+			# 	args =
+			# 		pk: @pk
+			# 		svgOnly: true
+			# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+			# 		drawing = JSON.parse(result.drawing)
+			# 		if drawing.svg?
+			# 			@setSVG(drawing.svg, true, callback)
+			# 	)
+			# )
+
 			if not drawing.svg? and drawing.paths? and drawing.paths.length > 0
 				for path in drawing.paths
-					@thumbnailProject.activeLayer.addChild(path.path)
+					@thumbnailProject.activeLayer.addChild(path.path.clone())
 
 			if viewRatio < rectangleRatio
 				@thumbnailProject.view.zoom = Math.min(sizeX / rectangle.width, 1)
@@ -162,7 +181,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			if drawing.svg? and not toDataURL
 				svg = drawing.svg.cloneNode(true)
-				svg.setAttribute('visibility', 'visible')
+				# console.log("view: ", svg.getAttribute('xmlns'))
+				# svg.removeAttribute('xmlns')
+				# svg.setAttribute('visibility', 'visible')
 				$(result).find('#mainLayer').append(svg)
 
 			@thumbnailProject.clear()
@@ -307,6 +328,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 		createLayers: ()->
 
+			@rasterLayer = new P.Layer()
+			@rasterLayer.name  = 'rejectedLayer'
+			R.loader.initializeGroups(@rasterLayer)
+
 			@rejectedLayer = new P.Layer()
 			@rejectedLayer.name  = 'rejectedLayer'
 			@rejectedLayer.visible = false
@@ -331,6 +356,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@flaggedLayer = new P.Layer()
 			@flaggedLayer.name  = 'flaggedLayer'
 			@flaggedLayer.strokeWidth = Path.strokeWidth
+			@mainLayer.bringToFront()
 
 			if R.city.finished
 				@pendingLayer.visible = false
@@ -354,8 +380,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@rejectedListJ = @createLayerListItem('Rejected', @rejectedLayer)
 			@flaggedListJ = @createLayerListItem('Flagged', @flaggedLayer)
 			
-			if R.administrator
-				@testListJ = @createLayerListItem('Test', @testLayer)
+			# if R.administrator
+			# 	@testListJ = @createLayerListItem('Test', @testLayer)
 
 			@createLoadRejectedDrawingsButton()
 			@createHideOtherDrawingsButton()
@@ -385,6 +411,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 					loadRejectedDrawingButtonJ.text(i18next.t(loadRejectedDrawingsText)).attr('data-i18n', loadRejectedDrawingsText)
 					R.loader.inactiveRasterGroup.visible = false
 					R.view.rejectedLayer.visible = false
+					document.getElementById('rejectedLayer').setAttribute('visibility', 'hidden')
+					@rejectedListJ.find('.rPath-list').addClass('hide-drawings')
 				return
 			loadRejectedDrawingLiJ = $('<li>').css( 'justify-content': 'center' ).append(loadRejectedDrawingButtonJ)
 			@rejectedListJ.find('ul.rPath-list').append(loadRejectedDrawingLiJ)
@@ -397,9 +425,23 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			hideOtherDrawingsButtonJ = $('<button class="">').css( color: 'black', height: 25 ).text(hideOtherDrawingsText)
 			hideOtherDrawingsButtonJ.attr('data-i18n', hideOtherDrawingsText)
 			hideOtherDrawingsButtonJ.click (event)=>
-				R.loader.activeRasterGroup.visible = !R.loader.activeRasterGroup.visible
-				R.view.pendingLayer.visible = R.loader.activeRasterGroup.visible
-				if !R.loader.activeRasterGroup.visible
+				activeRasterGroup = R.loader.activeRasterGroup
+				activeRasterGroup.visible = !activeRasterGroup.visible
+				R.view.pendingLayer.visible = activeRasterGroup.visible
+				R.view.draftLayer.visible = activeRasterGroup.visible
+				visibility = if activeRasterGroup.visible then 'visible' else 'hidden'
+				document.getElementById('pendingLayer').setAttribute('visibility', visibility)
+				document.getElementById('drawingLayer').setAttribute('visibility', visibility)
+				document.getElementById('drawnLayer').setAttribute('visibility', visibility)
+				document.getElementById('draftLayer').setAttribute('visibility', visibility)
+				if activeRasterGroup.visible
+					@drawingListJ.find('.rPath-list').removeClass('hide-drawings')
+					@pendingListJ.find('.rPath-list').removeClass('hide-drawings')
+				else
+					@drawingListJ.find('.rPath-list').addClass('hide-drawings')
+					@pendingListJ.find('.rPath-list').addClass('hide-drawings')
+
+				if !activeRasterGroup.visible
 					hideOtherDrawingsButtonJ.text(i18next.t(showOtherDrawingsText)).attr('data-i18n', showOtherDrawingsText)
 				else
 					hideOtherDrawingsButtonJ.text(i18next.t(hideOtherDrawingsText)).attr('data-i18n', hideOtherDrawingsText)
@@ -412,6 +454,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		loadRejectedDrawings: ()->
 			R.loader.inactiveRasterGroup.visible = true
 			R.view.rejectedLayer.visible = true
+			document.getElementById('rejectedLayer').setAttribute('visibility', 'visible')
+			@rejectedListJ.find('.rPath-list').removeClass('hide-drawings')
 			R.loader.clearRasters()
 			R.loader.loadRasters()
 			return
@@ -559,7 +603,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			windowSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight())
 			
 			# WARNING: on small screen, the drawing panel takes the whole width, that would make window.width negative
-			if windowSize.width < 600
+			if windowSize.width < 870
 				considerPanels = false
 
 			sidebarWidth = if considerPanels and R.sidebar.isOpened() then R.sidebar.sidebarJ.outerWidth() else 0
@@ -580,7 +624,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# R.toolManager.enableDrawingButton(P.view.zoom >= 1)
 
 			if considerPanels
-				windowCenterInView = P.view.viewToProject(new P.Point(windowSize.width / 2, windowSize.height / 2))
+				windowCenterInView = P.view.viewToProject(new P.Point(R.stageJ.innerWidth() / 2, R.stageJ.innerHeight() / 2))
 				visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + windowSize.width / 2, windowSize.height / 2))
 				offset = visibleViewCenterInView.subtract(windowCenterInView)
 				@moveTo(rectangle.center.subtract(offset), null, true, false, updateHash)
@@ -700,19 +744,21 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			bounds = if boundsString? and boundsString.length > 0 then JSON.parse(boundsString) else null
 			if bounds?
 				rectangle = new P.Rectangle(bounds)
-				@fitRectangle(rectangle, true)
 				drawingPk = R.canvasJ.attr("data-drawing-pk")
-				if drawingPk?
-					args =
-						pk: drawingPk
-						loadSVG: true
+				if drawingPk? and drawingPk.length > 0
+					@fitRectangle(rectangle, true)
+					# args =
+					# 	pk: drawingPk
+					# 	loadPathList: true
+					# 	# loadSVG: true
 
-					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
-						# R.drawingPanel.setDrawing(@, result)
-					)
+					# $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+					# 	# R.drawingPanel.setDrawing(@, result)
+					# )
 				tilePk = R.canvasJ.attr("data-tile-pk")
-				if tilePk?
-					R.tools.choose.loadTile(tilePk, rectangle)
+				if tilePk? and tilePk.length > 0
+					R.tools.choose.select()
+					R.tools.choose.loadTile(tilePk, rectangle, true)
 				
 				return true
 
@@ -884,6 +930,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if R.currentDiv? then return
 			# event = Utils.Snap.snap(event)
 			R.selectedTool?.end(event)
+
 			return
 
 		onKeyDown: (event) =>
@@ -897,7 +944,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			# select 'Move' tool when user press space key (and reselect previous tool after)
 			if event.key == 'space' and R.selectedTool?.name != 'Move'
-				R.tools.move.select()
+				R.tools.move.select(null, null, null, 'spaceKey')
 
 			if event.key == 'z' and (event.modifiers.control or event.modifiers.meta)
 				R.commandManager.undo()
@@ -921,7 +968,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			switch event.key
 				when 'space'
-					R.previousTool?.select()
+					R.previousTool?.select(null, null, null, 'spaceKey')
 				when 'v'
 					R.tools.select.select()
 				when 't'
@@ -982,7 +1029,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			switch event.which						# switch on mouse button number (left, middle or right click)
 				when moveButton
-					R.tools.move.select(false, true, true)		# select move tool if middle mouse button
+					R.tools.move.select(false, true, null, 'middleMouseButton')		# select move tool if middle mouse button
 				when 3
 					R.selectedTool?.finish?() 	# finish current path (in polygon mode) if right click
 
@@ -1058,7 +1105,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 				# deselect move tool and select previous tool if middle mouse button
 				if event.which == 2 # middle mouse button
-					R.previousTool?.select(null, null, null, true)
+					R.previousTool?.select(null, null, null, 'middleMouseButton')
 				return
 
 

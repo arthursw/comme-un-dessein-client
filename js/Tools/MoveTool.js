@@ -39,38 +39,30 @@
         return;
       }
 
-      MoveTool.prototype.select = function(deselectItems, updateParameters, fromMiddleMouseButton) {
-        var div, i, len, ref, ref1;
+      MoveTool.prototype.select = function(deselectItems, updateParameters, forceSelect, selectedBy) {
+        var ref;
         if (deselectItems == null) {
           deselectItems = false;
         }
         if (updateParameters == null) {
           updateParameters = true;
         }
-        if (fromMiddleMouseButton == null) {
-          fromMiddleMouseButton = false;
+        if (forceSelect == null) {
+          forceSelect = false;
         }
-        MoveTool.__super__.select.call(this, deselectItems, updateParameters, fromMiddleMouseButton);
+        if (selectedBy == null) {
+          selectedBy = 'default';
+        }
+        MoveTool.__super__.select.call(this, deselectItems, updateParameters, selectedBy);
         if ((ref = R.tracer) != null) {
           ref.hide();
         }
         R.stageJ.addClass("moveTool");
-        ref1 = R.divs;
-        for (i = 0, len = ref1.length; i < len; i++) {
-          div = ref1[i];
-          div.disableInteraction();
-        }
       };
 
       MoveTool.prototype.deselect = function() {
-        var div, i, len, ref;
         MoveTool.__super__.deselect.call(this);
         R.stageJ.removeClass("moveTool");
-        ref = R.divs;
-        for (i = 0, len = ref.length; i < len; i++) {
-          div = ref[i];
-          div.enableInteraction();
-        }
       };
 
       MoveTool.prototype.begin = function(event) {};

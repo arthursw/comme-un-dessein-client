@@ -7,8 +7,9 @@
 
   if (typeof document !== "undefined" && document !== null) {
     dependencies.push('i18next');
-    dependencies.push('hammer');
+    dependencies.push('hammerjs');
     dependencies.push('mousewheel');
+    dependencies.push('jquery-hammer');
   }
 
   define('View/View', dependencies, function(P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, mousewheel) {
@@ -165,7 +166,7 @@
           ref = drawing.paths;
           for (i = 0, len = ref.length; i < len; i++) {
             path = ref[i];
-            this.thumbnailProject.activeLayer.addChild(path.path);
+            this.thumbnailProject.activeLayer.addChild(path.path.clone());
           }
         }
         if (viewRatio < rectangleRatio) {
@@ -185,7 +186,6 @@
         result = toDataURL ? this.thumbnailCanvas.toDataURL() : this.thumbnailProject.exportSVG();
         if ((drawing.svg != null) && !toDataURL) {
           svg = drawing.svg.cloneNode(true);
-          svg.setAttribute('visibility', 'visible');
           $(result).find('#mainLayer').append(svg);
         }
         this.thumbnailProject.clear();
@@ -336,6 +336,9 @@
       };
 
       View.prototype.createLayers = function() {
+        this.rasterLayer = new P.Layer();
+        this.rasterLayer.name = 'rejectedLayer';
+        R.loader.initializeGroups(this.rasterLayer);
         this.rejectedLayer = new P.Layer();
         this.rejectedLayer.name = 'rejectedLayer';
         this.rejectedLayer.visible = false;
@@ -360,6 +363,7 @@
         this.flaggedLayer = new P.Layer();
         this.flaggedLayer.name = 'flaggedLayer';
         this.flaggedLayer.strokeWidth = Path.strokeWidth;
+        this.mainLayer.bringToFront();
         if (R.city.finished) {
           this.pendingLayer.visible = false;
         }
@@ -379,9 +383,6 @@
         this.drawingListJ = this.createLayerListItem('Drawing', this.drawingLayer);
         this.rejectedListJ = this.createLayerListItem('Rejected', this.rejectedLayer);
         this.flaggedListJ = this.createLayerListItem('Flagged', this.flaggedLayer);
-        if (R.administrator) {
-          this.testListJ = this.createLayerListItem('Test', this.testLayer);
-        }
         this.createLoadRejectedDrawingsButton();
         this.createHideOtherDrawingsButton();
         if (!R.administrator) {
@@ -408,6 +409,8 @@
               loadRejectedDrawingButtonJ.text(i18next.t(loadRejectedDrawingsText)).attr('data-i18n', loadRejectedDrawingsText);
               R.loader.inactiveRasterGroup.visible = false;
               R.view.rejectedLayer.visible = false;
+              document.getElementById('rejectedLayer').setAttribute('visibility', 'hidden');
+              _this.rejectedListJ.find('.rPath-list').addClass('hide-drawings');
             }
           };
         })(this));
@@ -428,9 +431,24 @@
         hideOtherDrawingsButtonJ.attr('data-i18n', hideOtherDrawingsText);
         hideOtherDrawingsButtonJ.click((function(_this) {
           return function(event) {
-            R.loader.activeRasterGroup.visible = !R.loader.activeRasterGroup.visible;
-            R.view.pendingLayer.visible = R.loader.activeRasterGroup.visible;
-            if (!R.loader.activeRasterGroup.visible) {
+            var activeRasterGroup, visibility;
+            activeRasterGroup = R.loader.activeRasterGroup;
+            activeRasterGroup.visible = !activeRasterGroup.visible;
+            R.view.pendingLayer.visible = activeRasterGroup.visible;
+            R.view.draftLayer.visible = activeRasterGroup.visible;
+            visibility = activeRasterGroup.visible ? 'visible' : 'hidden';
+            document.getElementById('pendingLayer').setAttribute('visibility', visibility);
+            document.getElementById('drawingLayer').setAttribute('visibility', visibility);
+            document.getElementById('drawnLayer').setAttribute('visibility', visibility);
+            document.getElementById('draftLayer').setAttribute('visibility', visibility);
+            if (activeRasterGroup.visible) {
+              _this.drawingListJ.find('.rPath-list').removeClass('hide-drawings');
+              _this.pendingListJ.find('.rPath-list').removeClass('hide-drawings');
+            } else {
+              _this.drawingListJ.find('.rPath-list').addClass('hide-drawings');
+              _this.pendingListJ.find('.rPath-list').addClass('hide-drawings');
+            }
+            if (!activeRasterGroup.visible) {
               hideOtherDrawingsButtonJ.text(i18next.t(showOtherDrawingsText)).attr('data-i18n', showOtherDrawingsText);
             } else {
               hideOtherDrawingsButtonJ.text(i18next.t(hideOtherDrawingsText)).attr('data-i18n', hideOtherDrawingsText);
@@ -446,6 +464,8 @@
       View.prototype.loadRejectedDrawings = function() {
         R.loader.inactiveRasterGroup.visible = true;
         R.view.rejectedLayer.visible = true;
+        document.getElementById('rejectedLayer').setAttribute('visibility', 'visible');
+        this.rejectedListJ.find('.rPath-list').removeClass('hide-drawings');
         R.loader.clearRasters();
         R.loader.loadRasters();
       };
@@ -566,7 +586,7 @@
           updateHash = true;
         }
         windowSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight());
-        if (windowSize.width < 600) {
+        if (windowSize.width < 870) {
           considerPanels = false;
         }
         sidebarWidth = considerPanels && R.sidebar.isOpened() ? R.sidebar.sidebarJ.outerWidth() : 0;
@@ -584,7 +604,7 @@
           P.view.zoom = zoom;
         }
         if (considerPanels) {
-          windowCenterInView = P.view.viewToProject(new P.Point(windowSize.width / 2, windowSize.height / 2));
+          windowCenterInView = P.view.viewToProject(new P.Point(R.stageJ.innerWidth() / 2, R.stageJ.innerHeight() / 2));
           visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + windowSize.width / 2, windowSize.height / 2));
           offset = visibleViewCenterInView.subtract(windowCenterInView);
           this.moveTo(rectangle.center.subtract(offset), null, true, false, updateHash);
@@ -677,34 +697,19 @@
       };
 
       View.prototype.initializePositionFromDrawingOrTile = function() {
-        var args, bounds, boundsString, drawingPk, rectangle, tilePk;
+        var bounds, boundsString, drawingPk, rectangle, tilePk;
         boundsString = R.canvasJ.attr("data-bounds");
         bounds = (boundsString != null) && boundsString.length > 0 ? JSON.parse(boundsString) : null;
         if (bounds != null) {
           rectangle = new P.Rectangle(bounds);
-          this.fitRectangle(rectangle, true);
           drawingPk = R.canvasJ.attr("data-drawing-pk");
-          if (drawingPk != null) {
-            args = {
-              pk: drawingPk,
-              loadSVG: true
-            };
-            $.ajax({
-              method: "POST",
-              url: "ajaxCall/",
-              data: {
-                data: JSON.stringify({
-                  "function": 'loadDrawing',
-                  args: args
-                })
-              }
-            }).done((function(_this) {
-              return function(result) {};
-            })(this));
+          if ((drawingPk != null) && drawingPk.length > 0) {
+            this.fitRectangle(rectangle, true);
           }
           tilePk = R.canvasJ.attr("data-tile-pk");
-          if (tilePk != null) {
-            R.tools.choose.loadTile(tilePk, rectangle);
+          if ((tilePk != null) && tilePk.length > 0) {
+            R.tools.choose.select();
+            R.tools.choose.loadTile(tilePk, rectangle, true);
           }
           return true;
         }
@@ -874,7 +879,7 @@
           return false;
         }
         if (event.key === 'space' && ((ref = R.selectedTool) != null ? ref.name : void 0) !== 'Move') {
-          R.tools.move.select();
+          R.tools.move.select(null, null, null, 'spaceKey');
         }
         if (event.key === 'z' && (event.modifiers.control || event.modifiers.meta)) {
           R.commandManager.undo();
@@ -901,7 +906,7 @@
         switch (event.key) {
           case 'space':
             if ((ref1 = R.previousTool) != null) {
-              ref1.select();
+              ref1.select(null, null, null, 'spaceKey');
             }
             break;
           case 'v':
@@ -956,7 +961,7 @@
         moveButton = event instanceof MouseEvent ? 2 : ((typeof TouchEvent !== "undefined" && TouchEvent !== null) && event instanceof TouchEvent) ? 0 : 2;
         switch (event.which) {
           case moveButton:
-            R.tools.move.select(false, true, true);
+            R.tools.move.select(false, true, null, 'middleMouseButton');
             break;
           case 3:
             if ((ref = R.selectedTool) != null) {
@@ -1027,7 +1032,7 @@
           R.selectedTool.endNative(event);
           if (event.which === 2) {
             if ((ref4 = R.previousTool) != null) {
-              ref4.select(null, null, null, true);
+              ref4.select(null, null, null, 'middleMouseButton');
             }
           }
           return;

@@ -205,8 +205,8 @@
               color = colors[i];
               liJ = $('<li>').attr('data-color', color).css({
                 background: color,
-                width: 62,
-                height: 62,
+                width: 50,
+                height: 50,
                 cursor: 'pointer'
               }).mousedown(function(event) {
                 color = $(event.target).attr('data-color');

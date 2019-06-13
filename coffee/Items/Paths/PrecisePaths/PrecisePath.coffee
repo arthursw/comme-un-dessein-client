@@ -288,6 +288,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				@path.selected = false
 				@path.strokeCap = if @data.strokeCap? then @data.strokeCap else 'round'
 				@path.strokeJoin = if @data.strokeJoin? then @data.strokeJoin else 'round'
+				# @path.visible = false
+				# @controlPath.visible = true
+				# @controlPath.strokeColor = @path.strokeColor
+				# @controlPath.strokeWidth = @path.strokeWidth
+				# @controlPath.strokeCap = @path.strokeCap
+				# @controlPath.strokeJoin = @path.strokeJoin
+				# @controlPath.selected = true
 			return
 
 		# default updateDraw function, will be redefined by children PrecisePath
@@ -648,8 +655,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@drawingOffset = 0
 
 			# @group.parent.addChild(@path)
-			if onSvg
-				@group.remove()
+			# if onSvg
+			# 	@group.remove()
 
 			try 	# catch errors to log them in the code editor console (if user is making a script)
 				@processDrawing(redrawing)
@@ -668,7 +675,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			else
 				R.view.draftLayer.addChild(@path)
 			return
-		
+
 		setSVG: ()->
 			layerName = if @drawingId? then R.items[@drawingId].getLayerName() else 'mainLayer'
 			@svg = @path.exportSVG()
@@ -966,7 +973,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				@selectedSegment = segment
 				@highlightSelectedPoint()
 				if update then @update('point')
-				R.socket.emit "bounce", itemId: @id, function: "addPoint", arguments: [index, point, offset, false]
+				# R.socket.emit "bounce", itemId: @id, function: "addPoint", arguments: [index, point, offset, false]
 			return segment
 
 		deletePointCommand: ()->
@@ -992,7 +999,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			if not @socketAction
 				R.tools.select.updateSelectionRectangle()
 				if update then @update('point')
-				R.socket.emit "bounce", itemId: @id, function: "deletePoint", arguments: [segment.index, false]
+				# R.socket.emit "bounce", itemId: @id, function: "deletePoint", arguments: [segment.index, false]
 			return location
 
 		# delete the selected point (from curve) and delete curve if there are no points anymore
@@ -1026,7 +1033,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 			if not @socketAction
 				if update then @update('segment')
-				R.socket.emit "bounce", itemId: @id, function: "modifyPoint", arguments: [segment.index, position, handleIn, handleOut, fastDraw, false]
+				# R.socket.emit "bounce", itemId: @id, function: "modifyPoint", arguments: [segment.index, position, handleIn, handleOut, fastDraw, false]
 			return
 
 		updateModifyPoint: (event)->
@@ -1114,7 +1121,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@highlightSelectedPoint()
 			if not @socketAction
 				if update then @update('point')
-				R.socket.emit "bounce", itemId: @id, function: "modifyPointType", arguments: [segment.index, rtype, false]
+				# R.socket.emit "bounce", itemId: @id, function: "modifyPointType", arguments: [segment.index, rtype, false]
 			return
 
 		modifyControlPathCommand: (previousPointsAndPlanet, newPointsAndPlanet)->
@@ -1132,7 +1139,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@draw()
 			if not @socketAction
 				if update then @update('point')
-				R.socket.emit "bounce", itemId: @id, function: "modifyControlPath", arguments: [pointsAndPlanet, false]
+				# R.socket.emit "bounce", itemId: @id, function: "modifyControlPath", arguments: [pointsAndPlanet, false]
 			return
 
 		setSmooth: (smooth)->

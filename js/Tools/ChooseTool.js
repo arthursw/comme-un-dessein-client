@@ -132,7 +132,7 @@
         this.tileRectangles.visible = false;
       };
 
-      ChooseTool.prototype.select = function(deselectItems, updateParameters, forceSelect, buttonClicked) {
+      ChooseTool.prototype.select = function(deselectItems, updateParameters, forceSelect, selectedBy) {
         var ref, ref1;
         if (deselectItems == null) {
           deselectItems = false;
@@ -143,8 +143,8 @@
         if (forceSelect == null) {
           forceSelect = false;
         }
-        if (buttonClicked == null) {
-          buttonClicked = false;
+        if (selectedBy == null) {
+          selectedBy = 'default';
         }
         if ((ref = R.city) != null ? ref.finished : void 0) {
           R.alertManager.alert("Cette édition est terminée, vous ne pouvez plus dessiner.", 'info');
@@ -157,7 +157,7 @@
         if ((ref1 = R.tracer) != null) {
           ref1.hide();
         }
-        ChooseTool.__super__.select.call(this, false, updateParameters);
+        ChooseTool.__super__.select.call(this, false, updateParameters, selectedBy);
         R.tools.select.deselectAll();
         this.showGrid();
       };
@@ -384,10 +384,13 @@
         this.selectedTile = null;
       };
 
-      ChooseTool.prototype.loadTile = function(pk, rectangle) {
+      ChooseTool.prototype.loadTile = function(pk, rectangle, setViewToTile) {
         var args;
         if (rectangle == null) {
           rectangle = this.currentTile.rectangle;
+        }
+        if (setViewToTile == null) {
+          setViewToTile = false;
         }
         args = {
           pk: pk
@@ -406,7 +409,10 @@
             if (!R.loader.checkError(result)) {
               return;
             }
-            return R.drawingPanel.setTile(result, rectangle);
+            R.drawingPanel.setTile(result, rectangle);
+            if (setViewToTile) {
+              return R.view.fitRectangle(rectangle, true);
+            }
           };
         })(this));
       };
@@ -450,6 +456,7 @@
       ChooseTool.prototype.chooseTile = function(number, x, y, bounds) {
         var args;
         this.ignoreMouseMoves = false;
+        R.loader.showLoadingBar(500);
         args = {
           number: number,
           x: x,
@@ -472,6 +479,7 @@
 
       ChooseTool.prototype.submitCallback = function(result) {
         var tile;
+        R.loader.hideLoadingBar();
         if (!R.loader.checkError(result)) {
           return;
         }

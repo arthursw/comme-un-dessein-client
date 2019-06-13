@@ -330,11 +330,12 @@ define [
 		R.drawingPanel = new DrawingPanel()
 		# R.fontManager = new FontManager()
 
+		R.toolManager.createDeleteButton()
+		R.toolManager.createSubmitButton()
+		
 		R.view.initializePosition()
 		R.sidebar.initialize()
 
-		R.toolManager.createDeleteButton()
-		R.toolManager.createSubmitButton()
 		
 		if R.city.name == 'world'
 			R.loader.hideLoadingBar()
@@ -393,7 +394,7 @@ define [
 
 		if R.city.name != 'world'
 			require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> 
-				R.loader.loadRasters()
+				# R.loader.loadRasters()
 				# R.loader.loadSVG()
 				R.loader.loadDraft()
 				R.loader.loadVotes()
@@ -422,6 +423,127 @@ define [
 			event.stopPropagation()
 			return -1
 
+		# Sign in / up popup
+
+		$('#user-login-group').click (event)->
+
+			modal = Modal.createModal( 
+				title: 'Sign in / up', 
+				postSubmit: 'hide')
+
+			modal.addText('Loading')
+
+			$.get( "accounts/login/", ( data )=>
+				parser = new DOMParser()
+				doc = parser.parseFromString(data.html, "text/html")
+				modal.modalBodyJ.html( doc.getElementById('login_form') )
+				
+				$('#id_login').attr('placeholder', "Nom d'utilisateur ou email")
+				$('#id_username').attr('placeholder', "Nom d'utilisateur")
+				$('label[for="id_remember"]').text('se souvenir de moi').css({'margin-left': '10px'}).parent().css( { 'display': 'flex', 'flex-direction': 'row-reverse' } )
+				
+				modal.modalJ.find(".modal-footer").hide()
+
+				localStorage.setItem('just-logged-in', 'true')
+				localStorage.setItem('selected-edition', location.pathname)
+
+				return
+			)
+			
+
+			modal.show()
+
+			event.preventDefault()
+			event.stopPropagation()
+
+			return -1
+
+
+		deleteAccountWarning = (previousModal)=>
+
+			deleteAccountCallback = (result)->
+				if not R.loader.checkError(result) then return
+				R.alertManager.alert 'Your account has successfully been deleted', 'info'
+				return
+
+			deleteAccount = ()=>
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteUser', args: args } ).done(deleteAccountCallback)
+				return
+
+
+			previousModal.modalJ.on('hidden.bs.modal', ()-> 
+				modal = Modal.createModal( 
+					title: 'Delete account', 
+					submitButtonText: 'Delete account', 
+					submitButtonIcon: 'glyphicon-trash',
+					submit: deleteAccount)
+
+				modal.addText('Are you sure you want to delete your account?', 'Are you sure you want to delete your account')
+				modal.addText('Your drawings will not be deleted', 'Your drawings will not be deleted', false, email: 'idlv.contact@gmail.com')
+
+				modal.modalJ.find('[name="submit"]').removeClass('btn-primary').addClass('btn-danger')
+				modal.show()
+				)
+
+
+			return
+
+		$('#modify-user-profile').click (event)->
+
+			event.preventDefault()
+			event.stopPropagation()
+
+			changeUserCallback = (result)->
+				if not R.loader.checkError(result) then return
+				R.alertManager.alert 'Your profile has successfully been updated', 'info'
+				R.me = result.username
+				# R.canvasJ.attr('data-user-email', result.email)
+				return
+
+			submitChangeProfile = ()->
+				username = $('#modal-Username').find('input').val()
+				# email = $('#modal-Email').find('input').val()
+				
+				args = 
+					username: username
+					# email: email
+
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'changeUser', args: args } ).done(changeUserCallback)
+
+				return
+
+			modal = Modal.createModal( 
+				title: 'Profile', 
+				submitButtonText: 'Modify username', 
+				submitButtonIcon: 'glyphicon-user',
+				submit: submitChangeProfile)
+			
+			usernameJ = modal.addTextInput(name: 'Username', id: 'profile-username', placeholder: i18next.t('Username'), className: '', label: 'Username', type: 'text')
+			usernameJ.find('input').val(R.me)
+			
+			emailConfirmed = R.canvasJ.attr('data-email-confirmed')
+			confirmedText = '(' + i18next.t( if emailConfirmed then 'Confirmed' else 'Not confirmed') + ')'
+			emailJ = modal.addTextInput(name: 'Email', id: 'profile-email', placeholder: 'Email', className: '', label: 'Email ' + confirmedText, type: 'email')
+			userEmail = R.canvasJ.attr('data-user-email')
+			emailJ.find('input').val(userEmail).attr('disabled', 'true')
+
+			manageEmails = ()=>
+				window.location = '/accounts/email/'
+				return
+			modal.addButton(name: 'Manage emails', icon: 'glyphicon-envelope', type: 'info', submit: manageEmails)
+
+			resetPassword = ()=>
+				window.location = '/accounts/password/reset/'
+				return
+			modal.addButton(name: 'Reset password', icon: 'glyphicon-lock', type: 'info', submit: resetPassword)
+			
+
+			modal.addButton(name: 'Delete account', icon: 'glyphicon-trash', type: 'danger', submit: ()-> deleteAccountWarning(modal))
+
+			modal.show()
+
+
+			return -1
 
 		# $('#terms-of-service-link').click (event)->
 			

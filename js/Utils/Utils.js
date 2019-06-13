@@ -1011,9 +1011,12 @@
         }
       }).done(checkError);
     };
-    R.bannUser = function(username, removeDrawings, removeVotes, removeComments) {
-      if (removeDrawings == null) {
-        removeDrawings = false;
+    R.bannUser = function(username, reportDrawings, reportTiles, removeVotes, removeComments) {
+      if (reportDrawings == null) {
+        reportDrawings = false;
+      }
+      if (reportTiles == null) {
+        reportTiles = false;
       }
       if (removeVotes == null) {
         removeVotes = false;
@@ -1032,7 +1035,8 @@
             "function": 'bannUser',
             args: {
               username: username,
-              removeDrawings: removeDrawings,
+              reportDrawings: reportDrawings,
+              reportTiles: reportTiles,
               removeVotes: removeVotes,
               removeComments: removeComments
             }
@@ -1176,7 +1180,6 @@
     };
     R.updateDrawingSVGs = function() {
       var args, drawing, id, item, j, len, ref, ref1;
-      R.Drawing.addPaths();
       ref = R.drawings;
       for (j = 0, len = ref.length; j < len; j++) {
         drawing = ref[j];
@@ -1355,6 +1358,18 @@
           })
         }
       }).done(checkError);
+    };
+    R.countParticipants = function() {
+      var area, nMonths, nParticipants;
+      nParticipants = 100;
+      nMonths = 1;
+      area = 0;
+      while (area < 10000) {
+        area += nParticipants;
+        console.log('month: ', nMonths, ', area: ', area, ', n participants: ', nParticipants);
+        nParticipants *= 2;
+        nMonths++;
+      }
     };
     R.Utils = Utils;
     return Utils;

@@ -293,6 +293,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 		# args:
 		# - type: bootstrap button type / appearance
 		# - name: name
+		# - addToBody: bool (default: false)
 		# - submit: submit function
 		addButton: (args)->
 			args.type ?= 'default'
@@ -308,6 +309,10 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 					buttonJ.remove()
 					@hide()
 					return
+
+			if args.addToBody
+				@addCustomContent( { name: args.name, divJ: buttonJ } )
+				return buttonJ
 
 			submitButtonJ = @modalJ.find('.modal-footer .btn-primary[name="submit"]')
 			if submitButtonJ.length > 0

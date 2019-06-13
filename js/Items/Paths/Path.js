@@ -54,11 +54,6 @@
         copy.draw();
         if (!this.socketAction) {
           copy.save(false);
-          R.socket.emit("bounce", {
-            itemClass: this.name,
-            "function": "create",
-            "arguments": [duplicateData]
-          });
         }
         return copy;
       };
@@ -519,6 +514,9 @@
           draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft');
           R.commandManager.add(new Command.ModifyDrawing(draft));
           draft.points = this.getPoints();
+          draft.pathData = {
+            strokeColor: this.data.strokeColor
+          };
           draft.addChild(this);
           draft.save();
         }

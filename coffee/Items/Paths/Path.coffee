@@ -119,7 +119,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			copy.draw()
 			if not @socketAction
 				copy.save(false)
-				R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
+				# R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
 			return copy
 		
 		# @return [P.Point] the planet on which the path lies
@@ -399,6 +399,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 
 			@controlPath ?= new P.Path()
 			@group.addChild(@controlPath)
+
 			@controlPath.name = "controlPath"
 			@controlPath.controller = @
 			@controlPath.strokeWidth = 10
@@ -407,6 +408,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			@controlPath.strokeCap = 'round'
 			@controlPath.strokeJoin = 'round'
 			@controlPath.visible = false
+
 			return
 
 		getStrokeColor: ()->
@@ -447,6 +449,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			# create drawing group and initialize it with @data
 			@drawing?.remove()
 			@drawing = new P.Group()
+
 			@drawing.name = "drawing"
 			@drawing.strokeColor = @data.strokeColor
 			@drawing.strokeWidth = @data.strokeWidth
@@ -587,6 +590,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 				draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
 				R.commandManager.add(new Command.ModifyDrawing(draft))
 				draft.points = @getPoints()
+				draft.pathData = { strokeColor: @data.strokeColor }
 				draft.addChild(@)
 				draft.save()
 

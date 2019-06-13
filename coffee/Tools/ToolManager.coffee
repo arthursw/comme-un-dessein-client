@@ -314,7 +314,6 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 
 		createZoombuttons: ()->
 
-
 			@zoomInBtn = new Button(
 				name: 'Zoom +'
 				# iconURL: 'glyphicon-zoom-in'
@@ -425,7 +424,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				height = @colorBtn.cloneJ.outerHeight()
 				ulJ = $('<ul>').attr('id', 'color-picker').css( position: 'fixed', top: position.top + height, left: position.left )
 				for color in colors
-					liJ = $('<li>').attr('data-color', color).css( background: color, width: 62, height: 62, cursor: 'pointer' ).mousedown((event)=> 
+					liJ = $('<li>').attr('data-color', color).css( background: color, width: 50, height: 50, cursor: 'pointer' ).mousedown((event)=> 
 						color = $(event.target).attr('data-color')
 						R.selectedColor = color
 						

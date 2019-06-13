@@ -113,6 +113,7 @@
       };
 
       Toolbar.prototype.updateArrowsVisibility = function(toollistWidth, windowWidth, positionX) {
+        var minX, titleWidth;
         if (toollistWidth == null) {
           toollistWidth = null;
         }
@@ -128,10 +129,21 @@
         if (windowWidth == null) {
           windowWidth = window.innerWidth;
         }
+        if (windowWidth > 1300) {
+          this.leftArrowJ.css({
+            opacity: 0
+          });
+          this.rightArrowJ.css({
+            opacity: 0
+          });
+          return;
+        }
+        titleWidth = $('#FavoriteTools h3.title').outerWidth(true);
+        minX = 0;
         if (positionX == null) {
           positionX = Math.floor(this.toolListJ.offset().left);
         }
-        if (positionX >= 0) {
+        if (positionX >= minX) {
           this.leftArrowJ.css({
             opacity: 0
           });
@@ -153,25 +165,34 @@
           if (toollistWidth > windowWidth) {
             positionX = windowWidth - toollistWidth;
           } else {
-            positionX = 0;
+            positionX = minX;
           }
-          this.toolListJ.css('left', positionX);
+          this.toolListJ.css('left', positionX, {
+            position: 'relative'
+          });
         }
       };
 
       Toolbar.prototype.moveToolbar = function(offset) {
-        var positionX, toollistWidth, windowWidth;
-        toollistWidth = this.toolListJ.outerWidth();
+        var minX, positionX, toollistWidth, windowWidth;
         windowWidth = window.innerWidth;
+        if (windowWidth > 1300) {
+          return;
+        }
+        toollistWidth = this.toolListJ.outerWidth();
+        minX = 0;
         positionX = this.toolListJ.offset().left;
         positionX += offset;
-        if (positionX > 0) {
-          positionX = 0;
+        if (positionX > minX) {
+          positionX = minX;
         }
-        if (positionX < -(toollistWidth - windowWidth)) {
+        if (toollistWidth > windowWidth && positionX < -(toollistWidth - windowWidth)) {
           positionX = -(toollistWidth - windowWidth);
         }
-        this.toolListJ.css('left', positionX);
+        this.toolListJ.css({
+          'left': positionX,
+          position: 'relative'
+        });
         this.updateArrowsVisibility(toollistWidth, windowWidth, positionX);
       };
 
