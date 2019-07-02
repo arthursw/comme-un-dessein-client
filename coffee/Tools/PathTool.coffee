@@ -181,7 +181,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 				bounds = R.Drawing.getDraft()?.getBounds()
 				if bounds?
 					intersection = R.view.getViewBounds(true).intersect(bounds)
-					if intersection.area < 10000
+					if intersection.width < 0 || intersection.height < 0 || intersection.area < 10000
 						R.view.fitRectangle(bounds, false, if P.view.zoom < 1 then 1 else P.view.zoom)
 				return
 

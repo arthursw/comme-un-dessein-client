@@ -11,7 +11,7 @@
 
       PrecisePath.label = 'Precise path';
 
-      PrecisePath.iconURL = R.style === 'line' ? 'icones_icon_pen.png' : R.style === 'romanesco' ? 'editCurve.png' : R.style === 'hand' ? 'a-pen3.png' : 'glyphicon-pencil';
+      PrecisePath.iconURL = 'new 1/Pen.svg';
 
       PrecisePath.hitOptions = {
         segments: true,
@@ -606,8 +606,6 @@
         if (this.drawn) {
           if (!onSvg) {
             R.view.draftLayer.addChild(this.path);
-          } else {
-            this.setSVG();
           }
           return;
         }
@@ -639,19 +637,12 @@
           this.simplifiedModeOff();
         }
         this.drawn = true;
-        if (onSvg) {
-          this.setSVG();
-        } else {
+        if (!onSvg) {
           R.view.draftLayer.addChild(this.path);
         }
       };
 
-      PrecisePath.prototype.setSVG = function() {
-        var layerName;
-        layerName = this.drawingId != null ? R.items[this.drawingId].getLayerName() : 'mainLayer';
-        this.svg = this.path.exportSVG();
-        R.svgJ.find('#' + layerName).append(this.svg);
-      };
+      PrecisePath.prototype.setSVG = function() {};
 
       PrecisePath.prototype.drawOnPaper = function() {
         if (this.svg != null) {
@@ -659,13 +650,6 @@
           this.svg = null;
         }
         this.draw(false, true, false);
-      };
-
-      PrecisePath.prototype.drawOnSVG = function() {
-        this.path.remove();
-        if (this.svg == null) {
-          this.draw();
-        }
       };
 
       PrecisePath.prototype.pathOnPlanet = function() {

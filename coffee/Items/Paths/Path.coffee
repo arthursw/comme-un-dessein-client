@@ -787,32 +787,32 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			spacebrew.send("commands", "string", json)
 			return
 
-		exportToSVG: (item, filename)->
+		# exportToSVG: (item, filename)->
 
-			item ?= @drawing
-			filename ?= "image.svg"
-			# export to svg
-			drawing = item.clone()
-			drawing.position = new P.Point(drawing.rectangle.size.multiply(0.5))
-			svg = drawing.exportSVG( asString: true )
-			drawing.remove()
+		# 	item ?= @drawing
+		# 	filename ?= "image.svg"
+		# 	# export to svg
+		# 	drawing = item.clone()
+		# 	drawing.position = new P.Point(drawing.rectangle.size.multiply(0.5))
+		# 	svg = drawing.exportSVG( asString: true )
+		# 	drawing.remove()
 
-			svg = svg.replace(new RegExp('<g', 'g'), '<svg')
-			svg = svg.replace(new RegExp('</g', 'g'), '</svg')
+		# 	svg = svg.replace(new RegExp('<g', 'g'), '<svg')
+		# 	svg = svg.replace(new RegExp('</g', 'g'), '</svg')
 
-			# url = "data:image/svg+xml;utf8," + encodeURIComponent(svg)
-			blob = new Blob([svg], {type: 'image/svg+xml'})
-			url = URL.createObjectURL(blob)
+		# 	# url = "data:image/svg+xml;utf8," + encodeURIComponent(svg)
+		# 	blob = new Blob([svg], {type: 'image/svg+xml'})
+		# 	url = URL.createObjectURL(blob)
 
-			link = document.createElement("a")
-			document.body.appendChild(link)
-			link.href = url
-			link.download = filename
-			link.text = filename
-			link.click()
-			document.body.removeChild(link)
+		# 	link = document.createElement("a")
+		# 	document.body.appendChild(link)
+		# 	link.href = url
+		# 	link.download = filename
+		# 	link.text = filename
+		# 	link.click()
+		# 	document.body.removeChild(link)
 
-			return
+		# 	return
 
 	Item.Path = Path
 	R.Path = Path

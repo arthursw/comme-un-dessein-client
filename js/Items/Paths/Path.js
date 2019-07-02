@@ -709,35 +709,6 @@
         spacebrew.send("commands", "string", json);
       };
 
-      Path.prototype.exportToSVG = function(item, filename) {
-        var blob, drawing, link, svg, url;
-        if (item == null) {
-          item = this.drawing;
-        }
-        if (filename == null) {
-          filename = "image.svg";
-        }
-        drawing = item.clone();
-        drawing.position = new P.Point(drawing.rectangle.size.multiply(0.5));
-        svg = drawing.exportSVG({
-          asString: true
-        });
-        drawing.remove();
-        svg = svg.replace(new RegExp('<g', 'g'), '<svg');
-        svg = svg.replace(new RegExp('</g', 'g'), '</svg');
-        blob = new Blob([svg], {
-          type: 'image/svg+xml'
-        });
-        url = URL.createObjectURL(blob);
-        link = document.createElement("a");
-        document.body.appendChild(link);
-        link.href = url;
-        link.download = filename;
-        link.text = filename;
-        link.click();
-        document.body.removeChild(link);
-      };
-
       return Path;
 
     })(Content);

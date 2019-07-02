@@ -13,7 +13,7 @@
 
       ScreenshotTool.description = '';
 
-      ScreenshotTool.iconURL = 'screenshot.png';
+      ScreenshotTool.iconURL = 'new 1/Image.svg';
 
       ScreenshotTool.cursor = {
         position: {

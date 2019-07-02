@@ -6,6 +6,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 			@visible = true
 			name = parameters.name
 			iconURL = parameters.iconURL
+			iconSVG = parameters.iconSVG
 			favorite = parameters.favorite
 			ignoreFavorite = parameters.ignoreFavorite
 			category = parameters.category
@@ -49,8 +50,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Modal', 'i18next' ], (P, 
 			
 			if parameters.disableHover and @deviceHasTouch()
 				@btnJ.addClass('no-hover')
-						
-			if iconURL? and iconURL != '' 															# set icon if url is provided
+			
+			if iconSVG?
+				@btnJ.append(iconSVG)
+			else if iconURL? and iconURL != '' 															# set icon if url is provided
 				if iconURL.indexOf('glyphicon') == 0
 					@btnJ.append('<span class="glyphicon ' + iconURL + '" alt="' + name + '-icon">')
 					if parameters.transform?

@@ -15,7 +15,7 @@
 
       SelectTool.popover = false;
 
-      SelectTool.iconURL = R.style === 'line' ? 'icones_icon_vote.png' : R.style === 'hand' ? 'a-cursor.png' : 'cursor.png';
+      SelectTool.iconURL = 'new 1/Envelope.svg';
 
       SelectTool.buttonClasses = 'displayName';
 

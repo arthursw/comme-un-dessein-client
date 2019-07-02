@@ -13,7 +13,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 		# @description = ''
 		# @iconURL = 'glyphicon-envelope'
 		# @iconURL = 'cursor.png'
-		@iconURL = if R.style == 'line' then 'chooser3.png' else if R.style == 'hand' then 'chooser3.png' else 'chooser3.png'
+		# @iconURL = if R.style == 'line' then 'chooser3.png' else if R.style == 'hand' then 'chooser3.png' else 'chooser3.png'
+		@iconURL = 'new 1/Checkbox.svg'
 		@buttonClasses = 'displayName'
 
 		@cursor =

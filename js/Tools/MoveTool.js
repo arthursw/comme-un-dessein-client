@@ -12,7 +12,7 @@
 
       MoveTool.description = '';
 
-      MoveTool.iconURL = R.style === 'line' ? 'icones_icon_hand.png' : R.style === 'hand' ? 'a-hand1.png' : 'hand.png';
+      MoveTool.iconURL = 'new 1/Hand.svg';
 
       MoveTool.favorite = true;
 

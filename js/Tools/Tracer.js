@@ -48,7 +48,7 @@
       Tracer.prototype.createTracerButton = function() {
         this.tracerBtn = new Button({
           name: 'Trace',
-          iconURL: R.style === 'line' ? 'image.png' : R.style === 'hand' ? 'image.png' : 'glyphicon-picture',
+          iconURL: 'new 1/Image.svg',
           classes: 'dark',
           favorite: true,
           category: null,

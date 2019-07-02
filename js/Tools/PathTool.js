@@ -182,7 +182,7 @@
           bounds = (ref1 = R.Drawing.getDraft()) != null ? ref1.getBounds() : void 0;
           if (bounds != null) {
             intersection = R.view.getViewBounds(true).intersect(bounds);
-            if (intersection.area < 10000) {
+            if (intersection.width < 0 || intersection.height < 0 || intersection.area < 10000) {
               R.view.fitRectangle(bounds, false, P.view.zoom < 1 ? 1 : P.view.zoom);
             }
           }

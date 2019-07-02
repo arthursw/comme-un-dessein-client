@@ -23,7 +23,7 @@
 
       ChooseTool.popover = false;
 
-      ChooseTool.iconURL = R.style === 'line' ? 'chooser3.png' : R.style === 'hand' ? 'chooser3.png' : 'chooser3.png';
+      ChooseTool.iconURL = 'new 1/Checkbox.svg';
 
       ChooseTool.buttonClasses = 'displayName';
 

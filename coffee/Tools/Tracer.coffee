@@ -34,7 +34,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next' ], (P, R
 
 			@tracerBtn = new Button(
 				name: 'Trace'
-				iconURL: if R.style == 'line' then 'image.png' else if R.style == 'hand' then 'image.png' else 'glyphicon-picture'
+				# iconURL: if R.style == 'line' then 'image.png' else if R.style == 'hand' then 'image.png' else 'glyphicon-picture'
+				iconURL: 'new 1/Image.svg'
 				classes: 'dark'
 				favorite: true
 				category: null

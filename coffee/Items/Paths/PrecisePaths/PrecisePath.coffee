@@ -52,7 +52,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		
 		# @iconURL = 'static/images/icons/inverted/editCurve.png'
 		# @iconURL = 'glyphicon-pencil'
-		@iconURL = if R.style == 'line' then 'icones_icon_pen.png' else if R.style == 'romanesco' then 'editCurve.png' else if R.style == 'hand' then 'a-pen3.png' else 'glyphicon-pencil'
+		# @iconURL = if R.style == 'line' then 'icones_icon_pen.png' else if R.style == 'romanesco' then 'editCurve.png' else if R.style == 'hand' then 'a-pen3.png' else 'glyphicon-pencil'
+		@iconURL = 'new 1/Pen.svg'
 
 		@hitOptions =
 			segments: true
@@ -631,8 +632,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			if @drawn
 				if not onSvg
 					R.view.draftLayer.addChild(@path)
-				else
-					@setSVG()
+				# else
+				# 	@setSVG()
 				return
 
 			if not R.rasterizer.requestDraw(@, simplified, redrawing) then return
@@ -670,16 +671,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 			@drawn = true
 			
-			if onSvg
-				@setSVG()
-			else
+			# if onSvg
+			# 	@setSVG()
+			# else
+
+			if not onSvg
 				R.view.draftLayer.addChild(@path)
 			return
 
 		setSVG: ()->
-			layerName = if @drawingId? then R.items[@drawingId].getLayerName() else 'mainLayer'
-			@svg = @path.exportSVG()
-			R.svgJ.find('#'+layerName).append(@svg)
+			# layerName = if @drawingId? then R.items[@drawingId].getLayerName() else 'mainLayer'
+			# @svg = @path.exportSVG()
+			# R.svgJ.find('#'+layerName).append(@svg)
 			return
 
 		drawOnPaper: ()->
@@ -689,11 +692,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@draw(false, true, false)
 			return
 
-		drawOnSVG: ()->
-			@path.remove()
-			if not @svg?
-				@draw()
-			return
+		# drawOnSVG: ()->
+		# 	@path.remove()
+		# 	if not @svg?
+		# 		@draw()
+		# 	return
 
 		# @return [Array of Paper point] a list of point from the control path converted in the planet coordinate system
 		pathOnPlanet: ()->
