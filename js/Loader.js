@@ -486,7 +486,7 @@
               for (p = 0, len = drawingsToLoad.length; p < len; p++) {
                 layerName = drawingsToLoad[p];
                 group = new P.Group();
-                raster = new P.Raster(location.origin + '/static/rasters/' + layerName + '/zoom' + scaleNumber + '/' + m + ',' + n + '.png' + '#' + Math.random());
+                raster = new P.Raster(location.origin + '/static/rasters/' + layerName + '/zoom' + scaleNumber + '/' + m + ',' + n + '.png' + '?version=' + Math.random());
                 raster.position.x = (m + 0.5) * nPixelsPerTile;
                 raster.position.y = (n + 0.5) * nPixelsPerTile;
                 raster.scale(scale * 1.001);
