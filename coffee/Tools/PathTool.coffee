@@ -172,7 +172,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			if event.event.which == 2 then return 			# if middle mouse button (wheel) pressed: return
 			if R.tracer?.draggingImage then return
 			
-			if P.view.zoom < 0.125
+			if P.view.zoom < 0.5
 				R.alertManager.alert 'Please zoom before drawing', 'info'
 				return
 

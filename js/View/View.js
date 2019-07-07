@@ -110,6 +110,12 @@
             touchcancel: this.mouseup
           });
           $(window).resize(this.onWindowResize);
+          document.addEventListener('wheel', (function(event) {
+            R.toolManager.zoom(Math.pow(1.1, -event.deltaY), false);
+            return event.preventDefault();
+          }), {
+            passive: false
+          });
           window.onhashchange = this.onHashChange;
           hammertime = new Hammer(R.canvas);
           hammertime.get('pinch').set({

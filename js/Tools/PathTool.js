@@ -173,7 +173,7 @@
         if ((ref = R.tracer) != null ? ref.draggingImage : void 0) {
           return;
         }
-        if (P.view.zoom < 0.125) {
+        if (P.view.zoom < 0.5) {
           R.alertManager.alert('Please zoom before drawing', 'info');
           return;
         }

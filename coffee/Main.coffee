@@ -464,10 +464,11 @@ define [
 			deleteAccountCallback = (result)->
 				if not R.loader.checkError(result) then return
 				R.alertManager.alert 'Your account has successfully been deleted', 'info'
+				setTimeout( (()-> location.pathname = "/accounts/logout/"), 2500 )
 				return
 
 			deleteAccount = ()=>
-				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteUser', args: args } ).done(deleteAccountCallback)
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteUser', args: {} } ).done(deleteAccountCallback)
 				return
 
 

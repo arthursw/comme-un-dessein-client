@@ -99,6 +99,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				$(window).on( touchcancel: @mouseup )
 
 				$(window).resize(@onWindowResize)
+				document.addEventListener('wheel', ((event)-> 
+					R.toolManager.zoom(Math.pow(1.1, -event.deltaY), false)
+					event.preventDefault()), {passive: false})
 
 				window.onhashchange = @onHashChange
 

@@ -300,6 +300,9 @@
               return;
             }
             R.alertManager.alert('Your account has successfully been deleted', 'info');
+            setTimeout((function() {
+              return location.pathname = "/accounts/logout/";
+            }), 2500);
           };
           deleteAccount = function() {
             $.ajax({
@@ -308,7 +311,7 @@
               data: {
                 data: JSON.stringify({
                   "function": 'deleteUser',
-                  args: args
+                  args: {}
                 })
               }
             }).done(deleteAccountCallback);
