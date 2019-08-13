@@ -111,6 +111,7 @@
           });
           $(window).resize(this.onWindowResize);
           document.addEventListener('wheel', (function(event) {
+            console.log(event);
             R.toolManager.zoom(Math.pow(1.1, -event.deltaY), false);
             return event.preventDefault();
           }), {
