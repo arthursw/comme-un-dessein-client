@@ -43,7 +43,9 @@
         this.showOddLines = bind(this.showOddLines, this);
         this.hideOddLines = bind(this.hideOddLines, this);
         var activeLayer;
-        ChooseTool.__super__.constructor.call(this, true);
+        if (!R.isCommeUnDessein) {
+          ChooseTool.__super__.constructor.call(this, true);
+        }
         activeLayer = P.project.activeLayer;
         this.tileRectangles = new P.Layer();
         this.tileRectangles.bringToFront();
@@ -71,6 +73,9 @@
 
       ChooseTool.prototype.showGrid = function() {
         var line, n, rectangle, x, y;
+        if (R.isCommeUnDessein) {
+          return;
+        }
         this.tileRectangles.visible = true;
         if (this.lines != null) {
           this.lines.visible = true;
@@ -123,6 +128,9 @@
 
       ChooseTool.prototype.hideGrid = function() {
         var ref, ref1;
+        if (R.isCommeUnDessein) {
+          return;
+        }
         if ((ref = this.lines) != null) {
           ref.visible = false;
         }
@@ -146,6 +154,9 @@
         if (selectedBy == null) {
           selectedBy = 'default';
         }
+        if (R.isCommeUnDessein) {
+          return;
+        }
         if ((ref = R.city) != null ? ref.finished : void 0) {
           R.alertManager.alert("Cette édition est terminée, vous ne pouvez plus dessiner.", 'info');
           return;
@@ -164,6 +175,9 @@
 
       ChooseTool.prototype.deselect = function() {
         var ref;
+        if (R.isCommeUnDessein) {
+          return;
+        }
         ChooseTool.__super__.deselect.apply(this, arguments);
         this.hideGrid();
         this.deselectTile();
@@ -178,6 +192,9 @@
 
       ChooseTool.prototype.move = function(event) {
         var bottom, height, left, margin, ref, right, top, width;
+        if (R.isCommeUnDessein) {
+          return;
+        }
         if (((ref = event.originalEvent) != null ? ref.target : void 0) !== document.getElementById('canvas')) {
           return;
         }
@@ -219,6 +236,9 @@
 
       ChooseTool.prototype.end = function(event) {
         var bottom, drawing, height, i, left, len, nDrawingsOnTile, nTilesPerColumn, nTilesPerRow, ref, ref1, ref2, right, tile, tileLeft, tileNumber, tileTop, tileX, tileY, top, width;
+        if (R.isCommeUnDessein) {
+          return;
+        }
         if (!R.view.grid.limitCDRectangle.contains(event.point)) {
           return;
         }
@@ -261,6 +281,9 @@
 
       ChooseTool.prototype.createChooseTileModal = function(tileNumber, tileX, tileY) {
         var andText, date, divJ, dueTime, hours, minutes, modal, seconds;
+        if (R.isCommeUnDessein) {
+          return;
+        }
         date = $('#canvas').attr('data-city-event-date');
         dueTime = moment(date).add(tileNumber * this.constructor.nSecondsPerTile, 'seconds');
         modal = Modal.createModal({
@@ -322,6 +345,9 @@
 
       ChooseTool.prototype.createTile = function(tile) {
         var height, left, tileRectangle, tilesRow, top, width;
+        if (R.isCommeUnDessein) {
+          return;
+        }
         tilesRow = this.tiles.get(tile.y);
         if ((tilesRow != null) && tilesRow.get(tile.x)) {
           return;
@@ -359,6 +385,9 @@
       };
 
       ChooseTool.prototype.selectTile = function(tile) {
+        if (R.isCommeUnDessein) {
+          return;
+        }
         if ((this.selectedTile != null) && this.selectedTile !== tile) {
           this.deselectTile();
         }
@@ -372,6 +401,9 @@
         var ref, ref1;
         if (updateDrawingPanel == null) {
           updateDrawingPanel = true;
+        }
+        if (R.isCommeUnDessein) {
+          return;
         }
         if (updateDrawingPanel) {
           R.drawingPanel.deselectTile();
@@ -391,6 +423,9 @@
         }
         if (setViewToTile == null) {
           setViewToTile = false;
+        }
+        if (R.isCommeUnDessein) {
+          return;
         }
         args = {
           pk: pk
@@ -419,6 +454,9 @@
 
       ChooseTool.prototype.removeTile = function(tileInfo, tile) {
         var ref;
+        if (R.isCommeUnDessein) {
+          return;
+        }
         if (tile == null) {
           tile = (ref = this.tiles.get(tileInfo.y)) != null ? ref.get(tileInfo.x) : void 0;
         }
@@ -434,6 +472,9 @@
 
       ChooseTool.prototype.removeTiles = function(limits) {
         var bottomRight, topLeft;
+        if (R.isCommeUnDessein) {
+          return;
+        }
         topLeft = this.projectToXY(limits.topLeft);
         bottomRight = this.projectToXY(limits.bottomRight);
         this.tiles.forEach((function(_this) {
@@ -455,6 +496,9 @@
 
       ChooseTool.prototype.chooseTile = function(number, x, y, bounds) {
         var args;
+        if (R.isCommeUnDessein) {
+          return;
+        }
         this.ignoreMouseMoves = false;
         R.loader.showLoadingBar(500);
         args = {

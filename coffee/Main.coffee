@@ -90,7 +90,9 @@ define [
 		canvasJ = $('#canvas')
 
 		R.administrator = canvasJ.attr('data-is-admin') == 'True'
-		
+		R.application = canvasJ.attr('data-application')
+		R.isCommeUnDessein = R.application == 'COMME_UN_DESSEIN'
+
 		R.city = 
 			owner: null
 			# name: 'EcosystemeUrbain'
@@ -100,6 +102,7 @@ define [
 		cityName = canvasJ.attr('data-city')
 		cityFinished = canvasJ.attr('data-city-finished')
 		cityMessage = canvasJ.attr('data-city-message')
+		
 
 		if cityName.length > 0
 			R.city.name = cityName

@@ -235,6 +235,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			@createUndoRedoButtons()
 
 			R.tools.choose = new R.Tools.Choose()
+
 			# R.chooser = new Chooser()
 
 			@createInfoButton()
@@ -401,7 +402,11 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			brown = '#795548'
 			black = '#000000'
 			colors = [red, blue, green, yellow, brown, black]
-			
+
+			if R.isCommeUnDessein
+				R.selectedColor = black
+				return
+
 			R.selectedColor = green
 
 			@colorBtn = new Button(
@@ -598,7 +603,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			# 		voteTool.btn.removeClass('btn-warning')
 
 			if R.selectedTool == R.tools['Precise path'] or R.selectedTool == R.tools.eraser or R.selectedTool == R.tools.moveDrawing
-				@colorBtn.show()
+				@colorBtn?.show()
 				@redoBtn.show()
 				@undoBtn.show()
 				@submitButton.show()
@@ -607,7 +612,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				R.tools.eraser.btn.show()
 				R.tools.moveDrawing.btn.show()
 			else
-				@colorBtn.hide()
+				@colorBtn?.hide()
 				@redoBtn.hide()
 				@undoBtn.hide()
 				@submitButton.hide()

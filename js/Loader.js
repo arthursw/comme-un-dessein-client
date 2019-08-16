@@ -471,8 +471,8 @@
             }
           };
         })(this));
-        for (n = k = ref1 = quantizedBounds.t, ref2 = quantizedBounds.b; ref1 <= ref2 ? k <= ref2 : k >= ref2; n = ref1 <= ref2 ? ++k : --k) {
-          for (m = o = ref3 = quantizedBounds.l, ref4 = quantizedBounds.r; ref3 <= ref4 ? o <= ref4 : o >= ref4; m = ref3 <= ref4 ? ++o : --o) {
+        for (n = k = ref1 = quantizedBounds.t, ref2 = quantizedBounds.b - 1; ref1 <= ref2 ? k <= ref2 : k >= ref2; n = ref1 <= ref2 ? ++k : --k) {
+          for (m = o = ref3 = quantizedBounds.l, ref4 = quantizedBounds.r - 1; ref3 <= ref4 ? o <= ref4 : o >= ref4; m = ref3 <= ref4 ? ++o : --o) {
             rs = rastersOfScale != null ? (ref5 = rastersOfScale.get(n)) != null ? ref5.get(m) : void 0 : void 0;
             if ((rs == null) || rs.length === 0) {
               drawingsToLoad = [];
@@ -888,7 +888,7 @@
           this.hideLoadingBar();
           return false;
         }
-        if (result.state === 'error') {
+        if (result.state === 'error' || result.status === 'error') {
           if (result.message === 'invalid_url') {
             R.alertManager.alert("Your URL is invalid or does not point to an existing page", "error");
           } else {
@@ -904,7 +904,7 @@
           }
           this.hideLoadingBar();
           return false;
-        } else if (result.state === 'system_error') {
+        } else if (result.state === 'system_error' || result.status === 'system_error') {
           console.log(result.message);
           this.hideLoadingBar();
           return false;

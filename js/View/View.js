@@ -388,6 +388,9 @@
         this.pendingListJ = this.createLayerListItem('Pending', this.pendingLayer);
         this.pendingListJ.removeClass('closed');
         this.drawingListJ = this.createLayerListItem('Drawing', this.drawingLayer);
+        if (R.isCommeUnDessein) {
+          this.drawnListJ = this.createLayerListItem('Drawn', this.drawnLayer);
+        }
         this.rejectedListJ = this.createLayerListItem('Rejected', this.rejectedLayer);
         this.flaggedListJ = this.createLayerListItem('Flagged', this.flaggedLayer);
         this.createLoadRejectedDrawingsButton();

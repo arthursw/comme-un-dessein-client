@@ -39,6 +39,8 @@
       var canvasJ, cityFinished, cityMessage, cityName, deleteAccountWarning, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
       canvasJ = $('#canvas');
       R.administrator = canvasJ.attr('data-is-admin') === 'True';
+      R.application = canvasJ.attr('data-application');
+      R.isCommeUnDessein = R.application === 'COMME_UN_DESSEIN';
       R.city = {
         owner: null,
         site: null,

@@ -175,6 +175,10 @@
         brown = '#795548';
         black = '#000000';
         colors = [red, blue, green, yellow, brown, black];
+        if (R.isCommeUnDessein) {
+          R.selectedColor = black;
+          return;
+        }
         R.selectedColor = green;
         this.colorBtn = new Button({
           name: 'Colors',
@@ -304,29 +308,33 @@
       };
 
       ToolManager.prototype.updateButtonsVisibility = function(draft) {
-        var ref, ref1;
+        var ref, ref1, ref2, ref3;
         if (draft == null) {
           draft = null;
         }
         if (R.selectedTool === R.tools['Precise path'] || R.selectedTool === R.tools.eraser || R.selectedTool === R.tools.moveDrawing) {
-          this.colorBtn.show();
+          if ((ref = this.colorBtn) != null) {
+            ref.show();
+          }
           this.redoBtn.show();
           this.undoBtn.show();
           this.submitButton.show();
           this.deleteButton.show();
-          if ((ref = R.tracer) != null) {
-            ref.showButton();
+          if ((ref1 = R.tracer) != null) {
+            ref1.showButton();
           }
           R.tools.eraser.btn.show();
           R.tools.moveDrawing.btn.show();
         } else {
-          this.colorBtn.hide();
+          if ((ref2 = this.colorBtn) != null) {
+            ref2.hide();
+          }
           this.redoBtn.hide();
           this.undoBtn.hide();
           this.submitButton.hide();
           this.deleteButton.hide();
-          if ((ref1 = R.tracer) != null) {
-            ref1.hideButton();
+          if ((ref3 = R.tracer) != null) {
+            ref3.hideButton();
           }
           R.tools.eraser.btn.hide();
           R.tools.moveDrawing.btn.hide();

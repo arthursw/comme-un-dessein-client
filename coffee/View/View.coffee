@@ -380,7 +380,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@pendingListJ = @createLayerListItem('Pending', @pendingLayer)
 			@pendingListJ.removeClass('closed')
 			@drawingListJ = @createLayerListItem('Drawing', @drawingLayer)
-			# @drawnListJ = @createLayerListItem('Drawn', @drawnLayer)
+			if R.isCommeUnDessein
+				@drawnListJ = @createLayerListItem('Drawn', @drawnLayer)
 			@rejectedListJ = @createLayerListItem('Rejected', @rejectedLayer)
 			@flaggedListJ = @createLayerListItem('Flagged', @flaggedLayer)
 			

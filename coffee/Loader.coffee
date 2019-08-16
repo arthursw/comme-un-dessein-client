@@ -527,8 +527,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 								rastersY.delete(x)
 							return
 
-			for n in [quantizedBounds.t .. quantizedBounds.b]
-				for m in [quantizedBounds.l .. quantizedBounds.r]
+			for n in [quantizedBounds.t .. quantizedBounds.b - 1]
+				for m in [quantizedBounds.l .. quantizedBounds.r - 1]
 					rs = rastersOfScale?.get(n)?.get(m)
 					if not rs? or rs.length == 0
 
@@ -968,7 +968,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				R.alertManager.alert("You must be logged in to update drawings to the database", "info")
 				@hideLoadingBar()
 				return false
-			if result.state == 'error'
+			if result.state == 'error' or result.status == 'error'
 				if result.message == 'invalid_url'
 					R.alertManager.alert("Your URL is invalid or does not point to an existing page", "error")
 				else
@@ -979,7 +979,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 					R.alertManager.alert(result.message, "error", null, options)
 				@hideLoadingBar()
 				return false
-			else if result.state == 'system_error'
+			else if result.state == 'system_error' or result.status == 'system_error'
 				console.log result.message
 				@hideLoadingBar()
 				return false

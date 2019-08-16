@@ -24,7 +24,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 
 
 		constructor: () ->
-			super(true)
+			if not R.isCommeUnDessein
+				super(true)
 
 			activeLayer = P.project.activeLayer
 			@tileRectangles = new P.Layer()
@@ -46,6 +47,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		showGrid: ()=>
+			if R.isCommeUnDessein then return
+
 			@tileRectangles.visible = true
 
 			if @lines?
@@ -94,12 +97,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		hideGrid: ()->
+			if R.isCommeUnDessein then return
 			@lines?.visible = false
 			@oddLines?.visible = false
 			@tileRectangles.visible = false
 			return
 
 		select: (deselectItems=false, updateParameters=true, forceSelect=false, selectedBy='default')->
+			if R.isCommeUnDessein then return
 			if R.city?.finished
 				R.alertManager.alert "Cette édition est terminée, vous ne pouvez plus dessiner.", 'info'
 				return
@@ -116,6 +121,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		deselect: ()->
+			if R.isCommeUnDessein then return
 			super
 			@hideGrid()
 			@deselectTile()
@@ -129,6 +135,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		move: (event) ->
+			if R.isCommeUnDessein then return
 			if event.originalEvent?.target != document.getElementById('canvas') then return
 
 			if @ignoreMouseMoves then return
@@ -173,6 +180,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return new P.Point(tileX, tileY)
 
 		end: (event) ->
+			if R.isCommeUnDessein then return
 			if not R.view.grid.limitCDRectangle.contains(event.point) then return
 
 			width = @constructor.paperWidth * @constructor.nSheetsPerTile
@@ -216,6 +224,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		createChooseTileModal: (tileNumber, tileX, tileY)=>
+			if R.isCommeUnDessein then return
 
 			date = $('#canvas').attr('data-city-event-date')
 			dueTime = moment(date).add(tileNumber * @constructor.nSecondsPerTile, 'seconds')
@@ -265,7 +274,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return color
 
 		createTile: (tile)->
-			
+			if R.isCommeUnDessein then return
+
 			tilesRow = @tiles.get(tile.y)
 			if tilesRow? and tilesRow.get(tile.x)
 				return
@@ -310,6 +320,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		selectTile: (tile)->
+			if R.isCommeUnDessein then return
 			if @selectedTile? and @selectedTile != tile
 				@deselectTile()
 			tile.rectangle.strokeColor = R.selectionBlue
@@ -319,6 +330,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		deselectTile: (updateDrawingPanel=true)->
+			if R.isCommeUnDessein then return
 			if updateDrawingPanel
 				R.drawingPanel.deselectTile()
 			@selectedTile?.rectangle?.strokeWidth = null
@@ -326,6 +338,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		loadTile: (pk, rectangle=@currentTile.rectangle, setViewToTile=false)->
+			if R.isCommeUnDessein then return
 			args =
 				pk: pk
 			
@@ -342,6 +355,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		removeTile: (tileInfo, tile)->
+			if R.isCommeUnDessein then return
+
 			tile ?= @tiles.get(tileInfo.y)?.get(tileInfo.x)
 			
 			if tile?
@@ -354,6 +369,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		removeTiles: (limits)->
+			if R.isCommeUnDessein then return
+
 			topLeft = @projectToXY(limits.topLeft)
 			bottomRight = @projectToXY(limits.bottomRight)
 			@tiles.forEach (tileRow, y) =>
@@ -365,6 +382,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		chooseTile: (number, x, y, bounds)=> 
+			
+			if R.isCommeUnDessein then return
+
 			@ignoreMouseMoves = false
 			
 			R.loader.showLoadingBar(500)
