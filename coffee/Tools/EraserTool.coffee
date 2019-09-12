@@ -125,35 +125,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			@btnJ.removeClass('displayName')
 			return
 
-		deleteAllPaths: ()->
-			paths = R.Drawing.getDraft()?.paths or []
-			
-			# for id, path of R.paths
-			# 	if path.isDraft()
-			# 		paths.push(path)
-
-			R.drawingPanel.deleteGivenPaths(paths)
-			@setButtonErase()
-			return
-
 		# Select: add the mouse move listener on the tool (userful when creating a path in polygon mode)
 		# todo: move this to main, have a global onMouseMove handler like other handlers
 		select: (deselectItems=true, updateParameters=true)->
 
 			@sizeButton.show()
 
-			# if R.selectedTool != @
-			# 	@setButtonEraseAll()
-			# else
-			# 	@deleteAllPaths()
-			# 	return
-
-			# R.rasterizer.drawItems()
-
-			# draft = Drawing.getDraft()
-			# if draft?
-			# 	for path in draft.paths
-			# 		path.drawOnPaper()
 
 			$('#draftDrawing').remove()
 
@@ -205,60 +182,47 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 				return
 			
 			pathIndex = 0
-			for item in draft.paths.slice()
+			for path in draft.paths.slice()
 
-				if item.getBounds()?.intersects(@circle.bounds)
+				if path.bounds.intersects(@circle.bounds)
 
-					intersections = @circle.getCrossings(item.controlPath)
+					intersections = @circle.getCrossings(path)
 					
 					if intersections.length > 0
 
-						zIndex = item.path.index
-						paths = [item.controlPath]
+						zIndex = path.index
+						paths = [path]
 						console.log(intersections)
 						
-						# @pathsToDeleteResurectors[item.id] = data: item.getDuplicateData(), constructor: item.constructor
-
 						for intersection in intersections
 							for p in paths
 								location = p.getLocationOf(intersection.point)
 								if location?
 									newP = p.split(location)
-									p.strokeColor = item.data.strokeColor
+									p.strokeColor = path.strokeColor
 									p.lastSegment.handleOut = null
-									p.lastSegment.data = split: true
 									if newP?
-										newP.strokeColor = item.data.strokeColor
+										newP.strokeColor = path.strokeColor
 										paths.push(newP)
 										newP.firstSegment.handleIn = null
-										newP.firstSegment.data = split: true
 
 						# refreshRasterizer = true
 						
-						item.remove()
-						# @pathsToDelete.push(item)
+						draft.removeChild(path)
 
 						for p in paths
-							if @isPathInCircle(p)
-								console.log('remove a path')
-								p.remove()
-							else
-								data = R.Tools.Item.Item.PrecisePath.getDataFromPath(p)
-								points = R.Tools.Item.Item.Path.pathOnPlanetFromPath(p)
-								data.strokeColor = p.strokeColor.toCSS()
-								path = new R.Tools.Item.Item.PrecisePath(Date.now(), data, null, null, points, null, R.me, draft.id)
-								path.draw(false, true, false)
-								draft.setPathZIndex(path, pathIndex, zIndex)
-								# @pathsToCreate.push(path)
+							if not @isPathInCircle(p)
+								newPath = p.clone()
+								draft.addChild(newPath)
+								draft.setPathZIndex(newPath, pathIndex, zIndex)
+							p.remove()
+
 					else
-						if @isPathInCircle(item.controlPath)
-							# @pathsToDeleteResurectors[item.id] = data: item.getDuplicateData(), constructor: item.constructor
-							item.remove()
-							# @pathsToDelete.push(item)
-							# refreshRasterizer = true
+						if @isPathInCircle(path)
+							draft.removeChild(path)
 				pathIndex++
 
-			# draft.computeRectangle() # only required in the end?
+			draft.computeRectangle() # only required in the end?
 
 			return
 

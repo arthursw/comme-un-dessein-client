@@ -18,6 +18,8 @@
       Path.colorMap = {
         draft: '#808080',
         pending: '#005fb8',
+        pendingVotedPositive: '#009688',
+        pendingVotedNegative: '#f44336',
         emailNotConfirmed: '#005fb8',
         notConfirmed: '#E91E63',
         drawing: '#11a74f',

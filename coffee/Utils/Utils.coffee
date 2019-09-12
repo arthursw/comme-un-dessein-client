@@ -824,17 +824,23 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setCityDimensions', args: { cityName: cityName, width: width, height: height, strokeWidth: strokeWidth } } ).done(checkError)
 		return
 
-	R.setSelectedDrawingsToCity = (city)->
-		args = {
-			pk: R.s.pk
-			cityName: city
-		}
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingToCity', args: args } ).done(checkError)
+	R.updateDrawingBoxes = ()->
+		if not R.administrator then return false
+		for drawing in R.drawings
+			drawing.updateBox()
 		return
 
-	R.updateDrawings = ()->
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawings', args: {} } ).done(checkError)
-		return
+	# R.setSelectedDrawingsToCity = (city)->
+	# 	args = {
+	# 		pk: R.s.pk
+	# 		cityName: city
+	# 	}
+	# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingToCity', args: args } ).done(checkError)
+	# 	return
+
+	# R.updateDrawings = ()->
+	# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawings', args: {} } ).done(checkError)
+	# 	return
 
 	R.validateDrawing = ()->
 		if not R.s?.pk? then return

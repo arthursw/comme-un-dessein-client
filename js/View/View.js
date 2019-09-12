@@ -146,7 +146,7 @@
       };
 
       View.prototype.getThumbnail = function(drawing, sizeX, sizeY, toDataURL, blackStroke) {
-        var i, len, path, rectangle, rectangleRatio, ref, result, svg, viewRatio;
+        var clone, i, len, path, rectangle, rectangleRatio, ref, result, svg, viewRatio;
         if (sizeX == null) {
           sizeX = this.constructor.thumbnailSize;
         }
@@ -173,7 +173,8 @@
           ref = drawing.paths;
           for (i = 0, len = ref.length; i < len; i++) {
             path = ref[i];
-            this.thumbnailProject.activeLayer.addChild(path.path.clone());
+            clone = path.clone();
+            this.thumbnailProject.activeLayer.addChild(clone);
           }
         }
         if (viewRatio < rectangleRatio) {

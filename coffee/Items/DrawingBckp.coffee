@@ -28,6 +28,21 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 		@parameters = @initializeParameters()
 
+		@create: (duplicateData)->
+			copy = new @(null, duplicateData.data, duplicateData.id, null, duplicateData.owner, Date.now(), duplicateData.title, duplicateData.description)
+			for id in duplicateData.pathIds
+				if R.items[id]?
+					copy.addChild(R.items[id])
+			copy.rasterize()
+			R.rasterizer.rasterize(copy, false)
+
+			# copy.drawChildren()
+			if not @socketAction
+				copy.save(false)
+				# R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
+			return copy
+
+
 		@getDraft: ()->
 			return @draft
 
@@ -38,6 +53,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			if @pk?
 				@constructor.pkToId[@pk] = @id
 			
+
 			if bounds?
 				@rectangle = new P.Rectangle(bounds)
 
@@ -46,10 +62,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@setPkToDrawing(@pk)
 
 			@paths = []
+			# @drawing = new P.Group()
 
+			# @group.addChild(@drawing)
 			@group.remove()
 
 			@votes = [] # { positive: boolean, author: string, authorPk: pk }
+			
+			# create special list to contains children paths
+			@sortedPaths = []
 
 			@addToListItem()
 			@addToLayer()
@@ -57,10 +78,52 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			if @status == 'draft'
 				@constructor.draft = @
 
+			# else if svg?
+			# 	@setSVG(svg)
+			# 	# @rectangle = new P.Rectangle(@svg.getBBox())
+
 			if (@status == 'draft' or @status == 'flagged_pending' or @status == 'flagged') and pathList
 				@addPathsFromPathList(pathList)
-			else if @pk? and R.useSVG
-				@loadSVG()
+			# else if @pk? and R.SVGMode
+			# 	@loadSVG()
+				# .always(()=>
+				# 	console.log("finished" )
+				# )
+			
+			# path.rasterize()
+			# R.rasterizer.rasterize(path)
+
+
+			# for id, path of R.paths
+			# 	if path.drawingId? and (path.drawingId == @id or path.drawingId == @pk)
+			# 		@addChild(path)
+
+			
+			# @itemListsJ = R.templatesJ.find(".layer").clone()
+			# pkString = '' + (@pk or @id)
+			# pkString = pkString.substring(pkString.length-3)
+			# title = '' + @title + ' by ' + @owner
+			# # if @owner then title += " of " + @owner
+			# titleJ = @itemListsJ.find(".title")
+			# titleJ.text(title)
+			# titleJ.click (event)=>
+			# 	@itemListsJ.toggleClass('closed')
+			# 	if not event.shiftKey
+			# 		R.tools.select.deselectAll()
+			# 	@select()
+			# 	return
+
+			# @itemListsJ.find('.rPath-list').sortable( stop: Item.zIndexSortStop, delay: 250 )
+
+			# @itemListsJ.mouseover (event)=>
+			# 	@highlight()
+			# 	return
+			# @itemListsJ.mouseout (event)=>
+			# 	@unhighlight()
+			# 	return
+
+			# R.sidebar.itemListsJ.prepend(@itemListsJ)
+			# @itemListsJ = R.sidebar.itemListsJ.find(".layer:first")
 
 			if @status == 'pending' and @owner != R.me
 				@drawVoteFlag()
@@ -71,17 +134,40 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 		
 		drawVoteFlag: (flagged=false)->
-			if R.useSVG then return
-
 			bounds = @getBounds()
-
+			# voteGroup = new P.Group()
+			# @voteFlag = new P.Raster('/static/images/icons/vote-flag-xl2.png')
 			@voteFlag = new P.Raster(if not flagged then '/static/images/icons/envelope.png' else '/static/images/icons/flagged.png')
-
+			# voteFlag = @constructor.voteFlag.clone()
+			# voteFlag = @constructor.voteFlag.place(bounds.center)
 			@voteFlag.position = bounds.center
 			@voteFlag.opacity = 0.75
 			R.voteFlags ?= []
 			R.voteFlags.push(@voteFlag)
 			
+			# voteBounds = new P.Path.Circle(bounds.center, 128/2)
+			# voteBounds.strokeColor = 'black'
+			# voteBounds.strokeColor.alpha = 0.75
+			# voteBounds.strokeWidth = 4
+			# voteBounds.fillColor = 'white' #rgba(68, 138, 255, 0.5)'
+			# voteBounds.fillColor.alpha = 0.75
+
+			# voteGroup.addChild(voteBounds)
+			# voteGroup.addChild(@voteFlag)
+
+			# voteBounds = new P.Path.Rectangle(bounds, new P.Size(5, 5))
+			# voteBounds.strokeColor = 'black'
+			# voteBounds.strokeColor.alpha = 0.5
+			# voteBounds.strokeWidth = 1
+			# # voteBounds.strokeWidth = 2
+			# # voteBounds.dashArray = [5, 3]
+			# voteGroup.addChild(voteBounds)
+			# voteText = new P.PointText(bounds.bottomLeft)
+			# voteText.justification = 'left';
+			# voteText.fillColor = 'black';
+			# voteText.content = 'Vote for ' + @title;
+			# voteGroup.addChild(voteText)
+			# @group.addChild(voteGroup)
 			@group.addChild(@voteFlag)
 			
 			if R.selectedTool != R.tools.select
@@ -108,36 +194,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@setPkToDrawing(pk)
 			return
 
-		getPathPoints: (path)->
-			points = []
-			for segment in path.segments
-				points.push(Utils.CS.projectToPosOnPlanet(segment.point))
-				points.push(Utils.CS.pointToObj(segment.handleIn))
-				points.push(Utils.CS.pointToObj(segment.handleOut))
-				points.push(segment.rtype)
-			return points
-
 		getPointLists: ()->
 			pointLists = []
 			for path in @paths
-				pointLists.push({ points: @getPathPoints(path), data: { strokeColor: path.strokeColor } })
+				pointLists.push({ points: path.getPoints(), data: { strokeColor: path.data.strokeColor } })
 			return pointLists
-
-		createPath: (points, strokeColor, planet=null)->
-			if not planet?
-				planet = new P.Point(0, 0)
-			path = new P.Path()
-			for point, i in points by 4
-				path.add(Utils.CS.posOnPlanetToProject(point, planet))
-				path.lastSegment.handleIn = new P.Point(points[i+1])
-				path.lastSegment.handleOut = new P.Point(points[i+2])
-				path.lastSegment.rtype = points[i+3]
-			path.strokeWidth = Item.Path.strokeWidth
-			path.strokeColor = strokeColor
-			path.strokeCap = 'round'
-			path.strokeJoin = 'round'
-			@addChild(path)
-			return path
 
 		addPathsFromPathList: (pathList, parseJSON=true, highlight=false)->
 			for p in pathList
@@ -148,14 +209,22 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 					points = pJSON
 				if not strokeColor?
 					strokeColor = new P.Color('grey')
-
-				path = @createPath(points, strokeColor)
+				data = 
+					points: points
+					planet: new P.Point(0, 0)
+					strokeWidth: Item.Path.strokeWidth
+					strokeColor: strokeColor
+				path = new Item.Path.PrecisePath(Date.now(), data, null, null, null, null, R.me, @id)
+				path.pk = path.id
+				path.loadPath()
+				if highlight
+					path.data.strokeColor = 'purple'
+				path.draw(null, null, false)
 
 			@computeRectangle()
 			return
 		
-		# Used to warn admin that the drawing has been flagged by websocket (in DrawingPanel.onDrawingChange() => status changed)
-		loadPathList: (callback)->
+		loadSVG: (callback)->
 
 			args =
 				pk: @pk
@@ -169,20 +238,26 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			return
 
-		createSVG: ()->
-			@setSVG({ documentElement: @getSVG(false) }, false)
-			return
+		# loadSVG: (callback)->
+		# 	jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg', ((result)=>
+		# 		@setSVG(result, false, callback)
+		# 		return
+		# 	))
+		# 	.fail(()=>
 
-		loadSVG: (callback)->
-			jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg', ((result)=>
-				@setSVG(result, false, callback)
-			))
-			.fail(()=>
-				console.log('load drawing svg failed')
-				# @loadPathList()
-			)
+		# 		if @svg? then return
 
-			return
+		# 		args =
+		# 			pk: @pk
+		# 			svgOnly: true
+		# 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+		# 			drawing = JSON.parse(result.drawing)
+		# 			if drawing.svg?
+		# 				@setSVG(drawing.svg, true, callback)
+		# 		)
+		# 	)
+
+		# 	return
 
 		# loadSVGToPrint: (callback)->
 		# 	jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg', ((result)=>
@@ -208,65 +283,53 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		setPathZIndex: (path, pathIndex, zIndex)->
 			@paths.pop()
 			@paths.splice(pathIndex, 0, path)
-			path.parent.insertChild(zIndex, path)
+			path.path.parent.insertChild(zIndex, path.path)
 			return
 
-		setSVGRasterMode: (svg, parse=true, callback=null)->
+		setSVG: (svg)->
 			parser = new DOMParser()
-			doc = null
-			if parse
-				parser = new DOMParser()
-				doc = parser.parseFromString(svg, "image/svg+xml")
-			else
-				doc = svg
+			doc = parser.parseFromString(svg, "image/svg+xml")
 			doc.documentElement.removeAttribute('visibility')
 			doc.documentElement.removeAttribute('xmlns')
 			@svg = doc.documentElement
-			callback?(@svg)
 			return
 
-		setSVG: (svg, parse=true, callback=null, hide=false)->
-			console.log(svg)
-
-			if not R.useSVG then return @setSVGRasterMode(svg, parse, callback)
-
-			if @svg then @svg.remove()
-			layerName = @getLayerName()
-			layer = document.getElementById(layerName)
-			# layer = document.createElement('div')
-			doc = null
-			if not layer then return
-			# layer.insertAdjacentHTML('afterbegin', svg)
-			if parse
-				parser = new DOMParser()
-				doc = parser.parseFromString(svg, "image/svg+xml")
-			else
-				doc = svg
-			doc.documentElement.removeAttribute('visibility')
-			doc.documentElement.removeAttribute('xmlns')
-			# doc.documentElement.removeAttribute('stroke')
-			# doc.documentElement.removeAttribute('stroke-width')
-			if @status == 'draft'
-				doc.documentElement.setAttribute('id', 'draftDrawing')
+		# setSVG: (svg, parse=true, callback=null, hide=false)->
+		# 	if @svg then @svg.remove()
+		# 	layerName = @getLayerName()
+		# 	layer = document.getElementById(layerName)
+		# 	# layer = document.createElement('div')
+		# 	if not layer then return
+		# 	# layer.insertAdjacentHTML('afterbegin', svg)
+		# 	if parse
+		# 		parser = new DOMParser()
+		# 		doc = parser.parseFromString(svg, "image/svg+xml")
+		# 	else
+		# 		doc = svg
+		# 	doc.documentElement.removeAttribute('visibility')
+		# 	doc.documentElement.removeAttribute('xmlns')
+		# 	# doc.documentElement.removeAttribute('stroke')
+		# 	# doc.documentElement.removeAttribute('stroke-width')
+		# 	if @status == 'draft'
+		# 		doc.documentElement.setAttribute('id', 'draftDrawing')
 			
-			# @svg = doc.documentElement
+		# 	# @svg = doc.documentElement
 
-			@svg = layer.appendChild(doc.documentElement)
+		# 	@svg = layer.appendChild(doc.documentElement)
 			
-			@svg.addEventListener("click",  ((event) => 
-				R.tools.select.deselectAll()
-				@select()
-				event.stopPropagation()
-				return -1
-			))
+		# 	@svg.addEventListener("click",  ((event) => 
+		# 		R.tools.select.deselectAll()
+		# 		@select()
+		# 		event.stopPropagation()
+		# 		return -1
+		# 	))
 
-			if hide
-				@svg.setAttribute('visibility', 'hidden')
+		# 	if hide
+		# 		@svg.setAttribute('visibility', 'hidden')
 
-			@setStrokeColorFromStatus()
-			callback?(@svg)
+		# 	callback?(@svg)
 
-			return
+		# 	return
 
 		setStrokeColorFromVote: (positive)->
 			# @svg?.setAttribute('stroke', if positive then "url(#pattern-validate)" else 'url(#pattern-reject)')
@@ -276,9 +339,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# color.lightness += if positive then 0.15 else -0.15
 			# @svg?.setAttribute('stroke', color.toCSS())
 
-			if R.useSVG
-				if @status == 'pending'
-					@svg?.setAttribute('stroke', if positive then Item.Path.colorMap.pendingVotedPositive else Item.Path.colorMap.pendingVotedNegative)
+			if @status == 'pending'
+				@svg?.setAttribute('stroke', if positive then '#009688' else '#f44336')
 
 			colorClass = if positive then 'drawing-color' else 'rejected-color'
 			spanJ = $('<span class="badge ' + colorClass + '"></span>')
@@ -286,16 +348,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			$('#RItems li[data-id="'+@id+'"] .badge-container').append(spanJ)
 			return
 
-		setStrokeColorFromStatus: ()->
-			if not R.useSVG then return
-			@svg?.setAttribute('stroke', Item.Path.colorMap[@status])
-			return
-
-		# getPathIds: ()->
-		# 	pathIds = []
-		# 	for child in @paths
-		# 		pathIds.push(child.id)
-		# 	return pathIds
+		getPathIds: ()->
+			pathIds = []
+			for child in @children()
+				pathIds.push(child.id)
+			return pathIds
 
 		getDuplicateData: ()->
 			data = 
@@ -422,9 +479,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		computeRectangle: ()->	
+			console.log('computeRectangle')
 			@rectangle = null
 			for path in @paths
-				bounds = path.bounds.expand(2 * Item.Path.strokeWidth)
+				bounds = path.getDrawingBounds()
 				if bounds?
 					@rectangle ?= bounds.clone()
 					@rectangle = @rectangle.unite(bounds)
@@ -494,29 +552,31 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		# 		drawing.addPaths()
 		# 	return
 
-		addChild: (path, save=false)->
+		addChild: (path)->
 			if @paths.indexOf(path) >= 0
 				console.log('path already in drawing')
 				return
 			@paths.push(path)
-			
-			@group.addChild(path)
-
-			path.data.drawingId = @id
+			path.drawingId = @id
 			# path.group.visible = true # can be hidden by rasterizer, must be shown here to update @drawing.bounds
-			# @pathPks ?= []
+			@pathPks ?= []
 			# if not path.pk?
 			# 	R.alertManager.alert 'Error: a path has not been saved yet, please wait until the path is saved before creating the drawing', 'error'
 			# 	return
-			# @pathPks.push(path.pk)
+			@pathPks.push(path.pk)
 
 			# @addPathToProperLayer(path)
 			# @group.addChild(path.path)
 
 			# @drawing.addChild(path.group)
 
-			@computeRectangle()
+			bounds = path.getDrawingBounds()
+			if bounds?
+				@rectangle ?= bounds.clone()
+				@rectangle = @rectangle.unite(bounds)
 
+			path.updateStrokeColor()
+			path.removeFromListItem()
 
 			# if path.drawn
 			# 	path.drawn = false
@@ -525,38 +585,129 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# @drawn = false
 			# if @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
 				# @replaceDrawing()
-
-			if save
-				@savePath(path)
-			return
-
-		savePath: (path)->
-			args = 
-				clientId: @id
-				pk: @pk
-				points: @getPathPoints(path)
-				data: { strokeColor: path.strokeColor }
-				bounds: @getBounds()
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'addPathToDrawing', args: args } ).done(@saveCallback)
 			return
 		
-		savePathCallback: (result)=>
-			R.loader.checkError(result)
+		replaceDrawing: ()->
+			if not @drawing? or not @drawingRelativePosition? then return
+			for item in @children()
+				item.drawn = false
+				item.drawing?.remove()
+				item.raster?.remove()
+			super()
 			return
 
 		removeChild: (path, updateRectangle=false, removeID=true)->
-			path.data.drawingId = null
+			if removeID
+				path.drawingId = null
 
 			pathIndex = @paths.indexOf(path)
 			if pathIndex >= 0
 				@paths.splice(pathIndex, 1)
 			
-			path.remove()
+			path.path?.remove()
 			
+			# if path.svg?
+			# 	path.svg.remove()
+
+			path.drawingId = null
+			pkIndex = @pathPks.indexOf(path.pk)
+			if pkIndex >= 0
+				@pathPks.splice(pkIndex, 1)
+
+			# R.view.mainLayer.addChild(path.group)
+			
+			# if updateRectangle
+			# 	@computeRectangle()
+
+			path.updateStrokeColor()
+			path.addToListItem()
+			@drawn = false
+			# if path.drawn
+			# 	path.drawn = false
+			# 	path.draw()
+			# 	path.rasterize()
+			# if updateRaster and @raster? and @raster.parent != null 	# if this was rasterized: clear raster and replace by drawing to be able to re-rasterize with the new path
+				# @replaceDrawing()
+			# R.rasterizer.rasterize(path, false)
+			# path.draw?()
+			# path.rasterize()
+			return
+
+		# @param name [String] the name of the value to change
+		# @param value [Anything] the new value
+		# @param updateGUI [Boolean] (optional, default is false) whether to update the GUI (parameters bar), true when called from SetParameterCommand
+		setParameter: (name, value, updateGUI, update)->
+			super(name, value, updateGUI, update)
+			return
+
+		save: (addCreateCommand=true) ->
+
+			# if R.view.grid.rectangleOverlapsTwoPlanets(@rectangle)
+  	# 			# R.alertManager.alert 'Your item overlaps with two planets', 'error'
+			# 	return
+
+			# if @rectangle.with == 0 and @rectangle.height == 0 or @paths.length == 0
+			# 	@remove()
+			# 	R.alertManager.alert "Error: The drawing is empty", "error"
+			# 	return
+
+			args = {
+				cityName: R.city.name
+				clientId: @id
+				date: Date.now()
+				# pathPks: @pathPks
+				title: @title or '' + Math.random()
+				description: @description or ''
+				points: @points 				# added in Path.save()
+				data: @pathData 				# added in Path.save()
+			}
+
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'saveDrawing', args: args } ).done(@saveCallback)
+
+
+			super(false)
+			return
+
+		# check if the save was successful and set @pk if it is
+		saveCallback: (result)=>
+
+			R.loader.checkError(result)
+			if not result.pk?  		# if @pk is null, the path was not saved, do not set pk nor rasterize
+				@remove()
+				return
+
+			@owner = result.owner
+			@setPK(result.pk)
+
+			# R.socket.emit "drawing change", type: 'new', pk: result.pk, pathPks: result.pathPks, city: R.city
+
+			if @selectAfterSave?
+				@select(true, true, true)
+
+			if @updateAfterSave?
+				@update(@updateAfterSave)
+
+			if @pathsToSave?
+				pointLists = []
+				for path in @pathsToSave
+					pointLists.push({ points: path.getPoints(), data: { strokeColor: path.data.strokeColor } })
+				args = 
+					clientId: @id
+					pk: @pk
+					pointLists: pointLists
+					bounds: @getBounds()
+				@pathsToSave = []
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'addPathsToDrawing', args: args } ).done(R.loader.checkError)
+			super
+			return
+
+		addPathToSave: (path)->
+			@pathsToSave ?= []
+			@pathsToSave.push(path)
 			return
 
 		getLayerName: () ->
-			statusName = if @status == 'flagged_pending' or @status == 'flagged' then 'flagged' else @status
+			statusName = if @status == 'emailNotConfirmed' or @status == 'notConfirmed' or @status == 'flagged_pending' or @status == 'flagged' then 'pending' else @status
 			return statusName + 'Layer'
 
 		getBounds: ()->
@@ -569,10 +720,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# @computeRectangle()
 			return if @voteFlag? then @rectangle.unite(@voteFlag.bounds) else @rectangle
 
+		addPaths: ()->
+			if @paths? and @paths.length > 0
+				for path in @paths
+					@group.addChild(path.path)
+			return
+
 		getSVG: (asString=true) ->
 			if @paths? and @paths.length > 0
 				for path in @paths
-					@group.addChild(path)
+					@group.addChild(path.path)
 				return @group.exportSVG( asString: asString )
 			else
 				return @svg
@@ -583,7 +740,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			svg = @getSVG()
 			@svgString = svg
 
-			imageData = R.view.getThumbnail(@, bounds.width, bounds.height, true, false)
+			# imageURL = R.view.getThumbnail(@, 1200, 630, true, true)
+			imageURL = R.view.getThumbnail(@, bounds.width, bounds.height, true, false)
 
 			args = {
 				pk: @pk
@@ -592,7 +750,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				title: @title
 				description: @description
 				svg: svg
-				png: imageData
+				png: imageURL
 				bounds: bounds
 			}
 			R.loader.showLoadingBar()
@@ -603,9 +761,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		removePaths: (addCommand=false)->
 			if addCommand
 				R.commandManager.add(new R.Command.ModifyDrawing(@))
-			for path in @paths
+			for path in @paths.slice()
 				path.remove()
-			@paths = []
 			if @status == 'draft'
 				R.toolManager.updateButtonsVisibility(@)
 			if addCommand
@@ -617,8 +774,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			R.loader.hideLoadingBar()
 			if not R.loader.checkError(result)
 				return
-
-			R.loader.createDrawing(result.draft)
 
 			R.tools['Precise path'].hideDraftLimits()
 
@@ -691,20 +846,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			return
 		
-		updateBox: () ->
-			bounds = @getBounds()
-
-			args = {
-				pk: @pk
-				clientId: @id
-				bounds: bounds
-			}
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawingBox', args: args } ).done((result)->
-				R.loader.checkError(result)
-				return)
-
-			return
-
 		updatePaths: ()->
 			@computeRectangle()
 
@@ -718,9 +859,27 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			R.loader.showLoadingBar(500)
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPathsToDrawing', args: args } ).done(()->
 				R.loader.hideLoadingBar()
-				R.loader.checkError()
+				R.loader.checkError
 				return)
 
+			return
+
+		addUpdateFunctionAndArguments: (args, type)->
+			for item in @children()
+				item.addUpdateFunctionAndArguments(args, type)
+			return
+
+		updateCallback: (result)=>
+			R.loader.hideLoadingBar()
+			if not R.loader.checkError(result)
+				@title = @previousTitle
+				@description = @previousDescription
+				contentJ = R.drawingPanel.drawingPanelJ.find('.content')
+				contentJ.find('#drawing-title').val(@title)
+				contentJ.find('#drawing-description').val(@description)
+				return
+			R.alertManager.alert "Drawing successfully modified", "success"
+			# R.socket.emit "drawing change", type: 'description', title: @title, description: @description, drawingId: @id
 			return
 
 		update: (data) =>
@@ -746,29 +905,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			return
 
-		updateCallback: (result)=>
-			R.loader.hideLoadingBar()
-			if not R.loader.checkError(result)
-				@title = @previousTitle
-				@description = @previousDescription
-				contentJ = R.drawingPanel.drawingPanelJ.find('.content')
-				contentJ.find('#drawing-title').val(@title)
-				contentJ.find('#drawing-description').val(@description)
-				return
-			R.alertManager.alert "Drawing successfully modified", "success"
-			# R.socket.emit "drawing change", type: 'description', title: @title, description: @description, drawingId: @id
-			return
-
 		deleteFromDatabaseCallback: ()=>
 			R.loader.hideLoadingBar()
 			id = @id
 			if not R.loader.checkError()
-				# if @pathIdsBeforeRemove?
-				# 	for id in @pathIdsBeforeRemove
-				# 		if R.items[id]?
-				# 			@addChild(R.items[id])
-				# 	@rasterize()
-				# 	R.rasterizer.rasterize(@, false)
+				if @pathIdsBeforeRemove?
+					for id in @pathIdsBeforeRemove
+						if R.items[id]?
+							@addChild(R.items[id])
+					@rasterize()
+					R.rasterizer.rasterize(@, false)
 				return
 			super()
 			R.alertManager.alert "Drawing successfully cancelled", "success"
@@ -776,7 +922,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		delete: ()->
-			# @pathIdsBeforeRemove = @getPathIds()
+			@pathIdsBeforeRemove = @getPathIds()
 			# @removeChildren()
 			deffered = super
 			return deffered
@@ -806,29 +952,56 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			R.loader.reloadRasters(@rectangle)
 
 			# we will add them with result.pathList
-			
+			for path in @paths.slice()
+				@removeChild(path)
+
 			draft = Drawing.getDraft()
 			if draft?
-				for path in @paths
-					draft.addChild(path)
-				draft.addPathsFromPathList(result.pathList)
-
-				for path in @paths.slice()
-					@removeChild(path)
-
-				draft.updateStatus(result.status)
-
-			@remove()
+				for path in draft.paths
+					@addChild(path)
+				draft.remove()
+			@svg?.remove()
+			@svg = null
+			@addPathsFromPathList(result.pathList)
+			@updateStatus(result.status)
+			@constructor.draft = @
+			# for path in @paths
+			# 	console.log(path.getPoints())
 			return
 
 		setRectangle: (rectangle, update=true)->
 			super(rectangle, update)
 			return
 
+		moveTo: (position, update)->
+			delta = position.subtract(@rectangle.center)
+			for item in @children()
+				item.rectangle.center.x += delta.x
+				item.rectangle.center.y += delta.y
+				if Item.Div.prototype.isPrototypeOf(item)
+					item.updateTransform()
+			super(position, update)
+			return
+
+		# check if drawing contains its children
+		containsChildren: ()->
+			bounds = item.getBounds()
+			if not bounds?
+				return true
+			for item in @children()
+				if not @rectangle.contains(bounds)
+					return false
+			return true
+
+		showChildren: ()->
+			for item in @children()
+				item.group?.visible = true
+			return
+
 		updateDrawingPanel: ()->
 			args =
 				pk: @pk
-				loadSVG: R.loadSVG
+				loadSVG: true
 
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
 				R.drawingPanel.setDrawing(@, result)
@@ -849,6 +1022,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				layer = document.getElementById(layerName)
 				@svg = layer.appendChild(@svg)
 
+			for path in @paths
+				# @addPathToProperLayer(path)
+				path.updateStrokeColor()
+				# path.drawn = false
+				# path.draw()
+				# path.rasterize()
+				# path.group.visible = true
+			# R.rasterizer.rasterizeRectangle(@rectangle)
+
 			voteFlagWasVisible = @voteFlag?.visible
 
 			@voteFlag?.remove()
@@ -861,14 +1043,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			if voteFlagWasVisible
 				@showVoteFlag()
-
-			@setStrokeColorFromStatus()
 			return
 
 		# can not select a drawing which the user does not own
 		select: (updateOptions=true, showPanelAndLoad=true, force=false) =>
 			if not @group.visible then return false
 			if not super(updateOptions, force) then return false
+			
+			for item in @children()
+				item.deselect()
 
 			if showPanelAndLoad
 				R.drawingPanel.selectionChanged()
@@ -886,7 +1069,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return true
 
 		# removeChildren: () ->
-		# 	for path in @paths
+		# 	for path in @children().slice()
 		# 		@removeChild(path, false)
 		# 	return
 
@@ -896,12 +1079,34 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@svg?.remove()
 			R.pkToDrawing.delete(@pk)
 			@removeFromListItem()
-
+			R.rasterizer.rasterizeRectangle(@rectangle)
 			super
-
 			R.drawings.splice(R.drawings.indexOf(@), 1)
 
 			return
+
+		getRaster: ()->
+			if @pathRaster? then return @pathRaster
+			if @paths.length == 0 then return null
+
+			group = new P.Group()
+			for path in @paths
+				if path.raster?
+					group.addChild(path.raster.clone())
+				else
+					if not path.drawing?
+						path.draw()
+					group.addChild(path.drawing.clone())
+			@pathRaster = group.rasterize(P.view.resolution, false)
+			group.remove()
+			return @pathRaster
+
+		children: ()->
+			# paths = []
+			# for child in @drawing.children
+			# 	if child.controller?
+			# 		paths.push(child.controller)
+			return @paths
 
 		highlight: (color)->
 			super()
@@ -927,6 +1132,22 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			
 			return
 
+		# drawChildren: ()->
+		# 	if @drawing.children.length == 0 then return
+			
+			
+		# 	for child in @drawing.children
+		# 		child.controller?.draw?()
+		# 	return
+
+		# disable rasterize if no children
+		rasterize: ()->	
+			# if @raster? or not @drawing? then return
+			# make sure children are drawn BEFORE this, otherwise this can be rasterized before children are drawn, see Rasterizer.drawItems()
+
+			# @drawChildren()
+			# super()
+			return
 
 	Item.Drawing = Drawing
 	R.Drawing = Drawing

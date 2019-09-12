@@ -3,13 +3,15 @@
   define(['paper', 'R'], function(P, R) {
     var CS;
     CS = {};
+    CS.PlanetWidth = 180;
+    CS.PlanetHeight = 90;
     CS.projectToPlanet = function(point) {
       var planet, x, y;
       planet = {};
       x = point.x / R.scale;
-      planet.x = Math.floor((x + 180) / 360);
+      planet.x = Math.floor((x + CS.PlanetWidth / 2) / CS.PlanetWidth);
       y = point.y / R.scale;
-      planet.y = Math.floor((y + 90) / 180);
+      planet.y = Math.floor((y + CS.PlanetHeight / 2) / CS.PlanetHeight);
       return planet;
     };
     CS.projectToPosOnPlanet = function(point, planet) {
@@ -18,8 +20,8 @@
         planet = CS.projectToPlanet(point);
       }
       pos = {};
-      pos.x = point.x / R.scale - 360 * planet.x;
-      pos.y = point.y / R.scale - 180 * planet.y;
+      pos.x = point.x / R.scale - CS.PlanetWidth * planet.x;
+      pos.y = point.y / R.scale - CS.PlanetHeight * planet.y;
       return pos;
     };
     CS.projectToPlanetJson = function(point) {
@@ -36,8 +38,8 @@
       if ((point.x == null) && (point.y == null)) {
         point = CS.arrayToPoint(point);
       }
-      x = planet.x * 360 + point.x;
-      y = planet.y * 180 + point.y;
+      x = planet.x * CS.PlanetWidth + point.x;
+      y = planet.y * CS.PlanetHeight + point.y;
       x *= R.scale;
       y *= R.scale;
       return new P.Point(x, y);
@@ -69,7 +71,7 @@
     CS.getLimit = function() {
       var planet;
       planet = CS.projectToPlanet(CS.getTopLeftCorner());
-      return CS.posOnPlanetToProject(new P.Point(-180, -90), new P.Point(planet.x + 1, planet.y + 1));
+      return CS.posOnPlanetToProject(new P.Point(-CS.PlanetWidth / 2, -CS.PlanetHeight / 2), new P.Point(planet.x + 1, planet.y + 1));
     };
     CS.boxFromRectangle = function(rectangle) {
       var brOnPlanet, planet, points, tlOnPlanet;

@@ -352,17 +352,8 @@
       };
 
       ToolManager.prototype.enterDrawingMode = function() {
-        var id, item, ref;
         if (R.selectedTool !== R.tools['Precise path']) {
           R.tools['Precise path'].select();
-        }
-        ref = R.items;
-        for (id in ref) {
-          item = ref[id];
-          if (R.items[id].owner === R.me) {
-            R.drawingPanel.showSubmitDrawing();
-            break;
-          }
         }
       };
 
@@ -373,7 +364,6 @@
         if (selectTool) {
           R.tools.select.select(false, true, true);
         }
-        R.drawingPanel.hideSubmitDrawing();
       };
 
       ToolManager.prototype.enableDrawingButton = function(enable) {

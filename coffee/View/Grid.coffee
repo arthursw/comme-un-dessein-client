@@ -34,20 +34,20 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			return
 
 		projectToGeoJSON: (point)->
-			return new P.Point(360 * point.x / @size.width, 180 * point.y / @size.height)
+			return new P.Point(Utils.CS.PlanetWidth * point.x / @size.width, Utils.CS.PlanetHeight * point.y / @size.height)
 
 		projectToGeoJSONRectangle: (rectangle)->
 			topLeft = @projectToGeoJSON(rectangle.topLeft)
-			return new P.Rectangle(topLeft.x, topLeft.y, 360 * rectangle.width / @size.width, 180 * rectangle.height / @size.height)
+			return new P.Rectangle(topLeft.x, topLeft.y, Utils.CS.PlanetWidth * rectangle.width / @size.width, Utils.CS.PlanetHeight * rectangle.height / @size.height)
 
 		geoJSONToProject: (point)->
-			return new P.Point(@size.width * point.x / 360, @size.height * point.y / 180)
+			return new P.Point(@size.width * point.x / Utils.CS.PlanetWidth, @size.height * point.y / Utils.CS.PlanetHeight)
 
 		boundsFromBox: (box)->
-			left = @size.width * box['coordinates'][0][0][0] / 360
-			top = @size.height * box['coordinates'][0][0][1] / 180
-			right = @size.width * box['coordinates'][0][2][0] / 360
-			bottom = @size.height * box['coordinates'][0][2][1] / 180
+			left = @size.width * box['coordinates'][0][0][0] / Utils.CS.PlanetWidth
+			top = @size.height * box['coordinates'][0][0][1] / Utils.CS.PlanetHeight
+			right = @size.width * box['coordinates'][0][2][0] / Utils.CS.PlanetWidth
+			bottom = @size.height * box['coordinates'][0][2][1] / Utils.CS.PlanetHeight
 			return new P.Rectangle(left, top, right-left, bottom-top)
 
 		createFrame: ()->
@@ -227,7 +227,7 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 
 			# 	ijOnPlanet = projectToPosOnPlanet(new P.Point(i*R.scale,j*R.scale))
 
-			# 	if ijOnPlanet.x == -180
+			# 	if ijOnPlanet.x == -Utils.CS.PlanetHeight
 			# 		px.strokeColor = "#00FF00"
 			# 		px.strokeWidth = 5
 			# 	else if n<4 # i-Math.floor(i)>0.0

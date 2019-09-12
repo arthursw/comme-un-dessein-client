@@ -49,6 +49,7 @@
       cityName = canvasJ.attr('data-city');
       cityFinished = canvasJ.attr('data-city-finished');
       cityMessage = canvasJ.attr('data-city-message');
+      R.useSVG = R.isCommeUnDessein && canvasJ.attr('data-city-use-svg') === 'True';
       if (cityName.length > 0) {
         R.city.name = cityName;
       }
@@ -336,7 +337,7 @@
         };
       })(this);
       $('#modify-user-profile').click(function(event) {
-        var changeUserCallback, confirmedText, emailConfirmed, emailJ, manageEmails, modal, resetPassword, submitChangeProfile, userEmail, usernameJ;
+        var changeUserCallback, confirmedText, dailyText, emailConfirmed, emailFrequencyLabel, emailFrequencyLabelJ, emailFrequencyPJ, emailFrequencySelectJ, emailFrequencySelectorJ, emailJ, manageEmails, modal, monthlyText, neverText, onlyIfRelevant, resetPassword, submitChangeProfile, userEmail, usernameJ, weeklyText;
         event.preventDefault();
         event.stopPropagation();
         changeUserCallback = function(result) {
@@ -390,6 +391,45 @@
         });
         userEmail = R.canvasJ.attr('data-user-email');
         emailJ.find('input').val(userEmail).attr('disabled', 'true');
+        emailFrequencyLabel = i18next.t('Email notification frequency');
+        dailyText = i18next.t('Daily');
+        weeklyText = i18next.t('Weekly');
+        monthlyText = i18next.t('Monthly');
+        neverText = i18next.t('Never');
+        onlyIfRelevant = i18next.t('You will only receive email if you have new notifications');
+        emailFrequencySelectorJ = $('<div id="email-frequency-container"></div>');
+        emailFrequencyLabelJ = $('<label for="mail-frequency">' + emailFrequencyLabel + ':</label>');
+        emailFrequencySelectJ = $("<select id=\"mail-frequency\" style=\"margin-left: 10px;\">\n\n	<option value=\"daily\">" + dailyText + "</option>\n<option value=\"weekly\">" + weeklyText + "</option>\n<option value=\"monthly\">" + monthlyText + "</option>\n<option value=\"never\">" + neverText + "</option>\n\n</select>");
+        emailFrequencyPJ = $('<p>' + onlyIfRelevant + '.</p>');
+        emailFrequencySelectorJ.append(emailFrequencyLabelJ);
+        emailFrequencySelectorJ.append(emailFrequencySelectJ);
+        emailFrequencySelectorJ.append(emailFrequencyPJ);
+        emailFrequencySelectJ.on('change', (function(_this) {
+          return function() {
+            var args;
+            args = {
+              emailFrequency: emailFrequencySelectJ.val()
+            };
+            $.ajax({
+              method: "POST",
+              url: "ajaxCall/",
+              data: {
+                data: JSON.stringify({
+                  "function": 'changeUserEmailFrequency',
+                  args: args
+                })
+              }
+            }).done(function(result) {
+              if (!R.loader.checkError(result)) {
+                return;
+              }
+              R.alertManager.alert('Your profile has successfully been updated', 'info');
+            });
+          };
+        })(this));
+        modal.addCustomContent({
+          divJ: emailFrequencySelectorJ
+        });
         manageEmails = (function(_this) {
           return function() {
             window.location = '/accounts/email/';

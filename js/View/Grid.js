@@ -26,25 +26,25 @@
       }
 
       Grid.prototype.projectToGeoJSON = function(point) {
-        return new P.Point(360 * point.x / this.size.width, 180 * point.y / this.size.height);
+        return new P.Point(Utils.CS.PlanetWidth * point.x / this.size.width, Utils.CS.PlanetHeight * point.y / this.size.height);
       };
 
       Grid.prototype.projectToGeoJSONRectangle = function(rectangle) {
         var topLeft;
         topLeft = this.projectToGeoJSON(rectangle.topLeft);
-        return new P.Rectangle(topLeft.x, topLeft.y, 360 * rectangle.width / this.size.width, 180 * rectangle.height / this.size.height);
+        return new P.Rectangle(topLeft.x, topLeft.y, Utils.CS.PlanetWidth * rectangle.width / this.size.width, Utils.CS.PlanetHeight * rectangle.height / this.size.height);
       };
 
       Grid.prototype.geoJSONToProject = function(point) {
-        return new P.Point(this.size.width * point.x / 360, this.size.height * point.y / 180);
+        return new P.Point(this.size.width * point.x / Utils.CS.PlanetWidth, this.size.height * point.y / Utils.CS.PlanetHeight);
       };
 
       Grid.prototype.boundsFromBox = function(box) {
         var bottom, left, right, top;
-        left = this.size.width * box['coordinates'][0][0][0] / 360;
-        top = this.size.height * box['coordinates'][0][0][1] / 180;
-        right = this.size.width * box['coordinates'][0][2][0] / 360;
-        bottom = this.size.height * box['coordinates'][0][2][1] / 180;
+        left = this.size.width * box['coordinates'][0][0][0] / Utils.CS.PlanetWidth;
+        top = this.size.height * box['coordinates'][0][0][1] / Utils.CS.PlanetHeight;
+        right = this.size.width * box['coordinates'][0][2][0] / Utils.CS.PlanetWidth;
+        bottom = this.size.height * box['coordinates'][0][2][1] / Utils.CS.PlanetHeight;
         return new P.Rectangle(left, top, right - left, bottom - top);
       };
 

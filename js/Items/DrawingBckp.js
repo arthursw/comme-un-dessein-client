@@ -28,6 +28,24 @@
 
       Drawing.parameters = Drawing.initializeParameters();
 
+      Drawing.create = function(duplicateData) {
+        var copy, i, id, len, ref;
+        copy = new this(null, duplicateData.data, duplicateData.id, null, duplicateData.owner, Date.now(), duplicateData.title, duplicateData.description);
+        ref = duplicateData.pathIds;
+        for (i = 0, len = ref.length; i < len; i++) {
+          id = ref[i];
+          if (R.items[id] != null) {
+            copy.addChild(R.items[id]);
+          }
+        }
+        copy.rasterize();
+        R.rasterizer.rasterize(copy, false);
+        if (!this.socketAction) {
+          copy.save(false);
+        }
+        return copy;
+      };
+
       Drawing.getDraft = function() {
         return this.draft;
       };
@@ -53,10 +71,10 @@
         }
         this.select = bind(this.select, this);
         this.deleteFromDatabaseCallback = bind(this.deleteFromDatabaseCallback, this);
-        this.updateCallback = bind(this.updateCallback, this);
         this.update = bind(this.update, this);
+        this.updateCallback = bind(this.updateCallback, this);
         this.submitCallback = bind(this.submitCallback, this);
-        this.savePathCallback = bind(this.savePathCallback, this);
+        this.saveCallback = bind(this.saveCallback, this);
         this.onLiClick = bind(this.onLiClick, this);
         Drawing.__super__.constructor.call(this, this.data, this.id, this.pk);
         if (this.pk != null) {
@@ -70,6 +88,7 @@
         this.paths = [];
         this.group.remove();
         this.votes = [];
+        this.sortedPaths = [];
         this.addToListItem();
         this.addToLayer();
         if (this.status === 'draft') {
@@ -77,8 +96,6 @@
         }
         if ((this.status === 'draft' || this.status === 'flagged_pending' || this.status === 'flagged') && pathList) {
           this.addPathsFromPathList(pathList);
-        } else if ((this.pk != null) && R.useSVG) {
-          this.loadSVG();
         }
         if (this.status === 'pending' && this.owner !== R.me) {
           this.drawVoteFlag();
@@ -93,9 +110,6 @@
         var bounds;
         if (flagged == null) {
           flagged = false;
-        }
-        if (R.useSVG) {
-          return;
         }
         bounds = this.getBounds();
         this.voteFlag = new P.Raster(!flagged ? '/static/images/icons/envelope.png' : '/static/images/icons/flagged.png');
@@ -141,70 +155,32 @@
         this.setPkToDrawing(pk);
       };
 
-      Drawing.prototype.getPathPoints = function(path) {
-        var j, len, points, ref, segment;
-        points = [];
-        ref = path.segments;
-        for (j = 0, len = ref.length; j < len; j++) {
-          segment = ref[j];
-          points.push(Utils.CS.projectToPosOnPlanet(segment.point));
-          points.push(Utils.CS.pointToObj(segment.handleIn));
-          points.push(Utils.CS.pointToObj(segment.handleOut));
-          points.push(segment.rtype);
-        }
-        return points;
-      };
-
       Drawing.prototype.getPointLists = function() {
-        var j, len, path, pointLists, ref;
+        var i, len, path, pointLists, ref;
         pointLists = [];
         ref = this.paths;
-        for (j = 0, len = ref.length; j < len; j++) {
-          path = ref[j];
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
           pointLists.push({
-            points: this.getPathPoints(path),
+            points: path.getPoints(),
             data: {
-              strokeColor: path.strokeColor
+              strokeColor: path.data.strokeColor
             }
           });
         }
         return pointLists;
       };
 
-      Drawing.prototype.createPath = function(points, strokeColor, planet) {
-        var i, j, len, path, point;
-        if (planet == null) {
-          planet = null;
-        }
-        if (planet == null) {
-          planet = new P.Point(0, 0);
-        }
-        path = new P.Path();
-        for (i = j = 0, len = points.length; j < len; i = j += 4) {
-          point = points[i];
-          path.add(Utils.CS.posOnPlanetToProject(point, planet));
-          path.lastSegment.handleIn = new P.Point(points[i + 1]);
-          path.lastSegment.handleOut = new P.Point(points[i + 2]);
-          path.lastSegment.rtype = points[i + 3];
-        }
-        path.strokeWidth = Item.Path.strokeWidth;
-        path.strokeColor = strokeColor;
-        path.strokeCap = 'round';
-        path.strokeJoin = 'round';
-        this.addChild(path);
-        return path;
-      };
-
       Drawing.prototype.addPathsFromPathList = function(pathList, parseJSON, highlight) {
-        var j, len, p, pJSON, path, points, strokeColor;
+        var data, i, len, p, pJSON, path, points, strokeColor;
         if (parseJSON == null) {
           parseJSON = true;
         }
         if (highlight == null) {
           highlight = false;
         }
-        for (j = 0, len = pathList.length; j < len; j++) {
-          p = pathList[j];
+        for (i = 0, len = pathList.length; i < len; i++) {
+          p = pathList[i];
           pJSON = parseJSON ? JSON.parse(p) : p;
           points = pJSON.points;
           strokeColor = pJSON.data != null ? pJSON.data.strokeColor : null;
@@ -214,12 +190,24 @@
           if (strokeColor == null) {
             strokeColor = new P.Color('grey');
           }
-          path = this.createPath(points, strokeColor);
+          data = {
+            points: points,
+            planet: new P.Point(0, 0),
+            strokeWidth: Item.Path.strokeWidth,
+            strokeColor: strokeColor
+          };
+          path = new Item.Path.PrecisePath(Date.now(), data, null, null, null, null, R.me, this.id);
+          path.pk = path.id;
+          path.loadPath();
+          if (highlight) {
+            path.data.strokeColor = 'purple';
+          }
+          path.draw(null, null, false);
         }
         this.computeRectangle();
       };
 
-      Drawing.prototype.loadPathList = function(callback) {
+      Drawing.prototype.loadSVG = function(callback) {
         var args;
         args = {
           pk: this.pk,
@@ -243,115 +231,26 @@
         })(this));
       };
 
-      Drawing.prototype.createSVG = function() {
-        this.setSVG({
-          documentElement: this.getSVG(false)
-        }, false);
-      };
-
-      Drawing.prototype.loadSVG = function(callback) {
-        var jqxhr;
-        jqxhr = $.get(location.origin + '/static/drawings/' + this.pk + '.svg', ((function(_this) {
-          return function(result) {
-            return _this.setSVG(result, false, callback);
-          };
-        })(this))).fail((function(_this) {
-          return function() {
-            return console.log('load drawing svg failed');
-          };
-        })(this));
-      };
-
       Drawing.prototype.setPathZIndex = function(path, pathIndex, zIndex) {
         this.paths.pop();
         this.paths.splice(pathIndex, 0, path);
-        path.parent.insertChild(zIndex, path);
+        path.path.parent.insertChild(zIndex, path.path);
       };
 
-      Drawing.prototype.setSVGRasterMode = function(svg, parse, callback) {
+      Drawing.prototype.setSVG = function(svg) {
         var doc, parser;
-        if (parse == null) {
-          parse = true;
-        }
-        if (callback == null) {
-          callback = null;
-        }
         parser = new DOMParser();
-        doc = null;
-        if (parse) {
-          parser = new DOMParser();
-          doc = parser.parseFromString(svg, "image/svg+xml");
-        } else {
-          doc = svg;
-        }
+        doc = parser.parseFromString(svg, "image/svg+xml");
         doc.documentElement.removeAttribute('visibility');
         doc.documentElement.removeAttribute('xmlns');
         this.svg = doc.documentElement;
-        if (typeof callback === "function") {
-          callback(this.svg);
-        }
-      };
-
-      Drawing.prototype.setSVG = function(svg, parse, callback, hide) {
-        var doc, layer, layerName, parser;
-        if (parse == null) {
-          parse = true;
-        }
-        if (callback == null) {
-          callback = null;
-        }
-        if (hide == null) {
-          hide = false;
-        }
-        console.log(svg);
-        if (!R.useSVG) {
-          return this.setSVGRasterMode(svg, parse, callback);
-        }
-        if (this.svg) {
-          this.svg.remove();
-        }
-        layerName = this.getLayerName();
-        layer = document.getElementById(layerName);
-        doc = null;
-        if (!layer) {
-          return;
-        }
-        if (parse) {
-          parser = new DOMParser();
-          doc = parser.parseFromString(svg, "image/svg+xml");
-        } else {
-          doc = svg;
-        }
-        doc.documentElement.removeAttribute('visibility');
-        doc.documentElement.removeAttribute('xmlns');
-        if (this.status === 'draft') {
-          doc.documentElement.setAttribute('id', 'draftDrawing');
-        }
-        this.svg = layer.appendChild(doc.documentElement);
-        this.svg.addEventListener("click", ((function(_this) {
-          return function(event) {
-            R.tools.select.deselectAll();
-            _this.select();
-            event.stopPropagation();
-            return -1;
-          };
-        })(this)));
-        if (hide) {
-          this.svg.setAttribute('visibility', 'hidden');
-        }
-        this.setStrokeColorFromStatus();
-        if (typeof callback === "function") {
-          callback(this.svg);
-        }
       };
 
       Drawing.prototype.setStrokeColorFromVote = function(positive) {
         var colorClass, ref, spanJ;
-        if (R.useSVG) {
-          if (this.status === 'pending') {
-            if ((ref = this.svg) != null) {
-              ref.setAttribute('stroke', positive ? Item.Path.colorMap.pendingVotedPositive : Item.Path.colorMap.pendingVotedNegative);
-            }
+        if (this.status === 'pending') {
+          if ((ref = this.svg) != null) {
+            ref.setAttribute('stroke', positive ? '#009688' : '#f44336');
           }
         }
         colorClass = positive ? 'drawing-color' : 'rejected-color';
@@ -360,14 +259,15 @@
         $('#RItems li[data-id="' + this.id + '"] .badge-container').append(spanJ);
       };
 
-      Drawing.prototype.setStrokeColorFromStatus = function() {
-        var ref;
-        if (!R.useSVG) {
-          return;
+      Drawing.prototype.getPathIds = function() {
+        var child, i, len, pathIds, ref;
+        pathIds = [];
+        ref = this.children();
+        for (i = 0, len = ref.length; i < len; i++) {
+          child = ref[i];
+          pathIds.push(child.id);
         }
-        if ((ref = this.svg) != null) {
-          ref.setAttribute('stroke', Item.Path.colorMap[this.status]);
-        }
+        return pathIds;
       };
 
       Drawing.prototype.getDuplicateData = function() {
@@ -493,12 +393,13 @@
       };
 
       Drawing.prototype.computeRectangle = function() {
-        var bounds, j, len, path, ref;
+        var bounds, i, len, path, ref;
+        console.log('computeRectangle');
         this.rectangle = null;
         ref = this.paths;
-        for (j = 0, len = ref.length; j < len; j++) {
-          path = ref[j];
-          bounds = path.bounds.expand(2 * Item.Path.strokeWidth);
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
+          bounds = path.getDrawingBounds();
           if (bounds != null) {
             if (this.rectangle == null) {
               this.rectangle = bounds.clone();
@@ -527,69 +428,165 @@
         return item;
       };
 
-      Drawing.prototype.addChild = function(path, save) {
-        if (save == null) {
-          save = false;
-        }
+      Drawing.prototype.addChild = function(path) {
+        var bounds;
         if (this.paths.indexOf(path) >= 0) {
           console.log('path already in drawing');
           return;
         }
         this.paths.push(path);
-        this.group.addChild(path);
-        path.data.drawingId = this.id;
-        this.computeRectangle();
-        if (save) {
-          this.savePath(path);
+        path.drawingId = this.id;
+        if (this.pathPks == null) {
+          this.pathPks = [];
         }
-      };
-
-      Drawing.prototype.savePath = function(path) {
-        var args;
-        args = {
-          clientId: this.id,
-          pk: this.pk,
-          points: this.getPathPoints(path),
-          data: {
-            strokeColor: path.strokeColor
-          },
-          bounds: this.getBounds()
-        };
-        $.ajax({
-          method: "POST",
-          url: "ajaxCall/",
-          data: {
-            data: JSON.stringify({
-              "function": 'addPathToDrawing',
-              args: args
-            })
+        this.pathPks.push(path.pk);
+        bounds = path.getDrawingBounds();
+        if (bounds != null) {
+          if (this.rectangle == null) {
+            this.rectangle = bounds.clone();
           }
-        }).done(this.saveCallback);
+          this.rectangle = this.rectangle.unite(bounds);
+        }
+        path.updateStrokeColor();
+        path.removeFromListItem();
       };
 
-      Drawing.prototype.savePathCallback = function(result) {
-        R.loader.checkError(result);
+      Drawing.prototype.replaceDrawing = function() {
+        var i, item, len, ref, ref1, ref2;
+        if ((this.drawing == null) || (this.drawingRelativePosition == null)) {
+          return;
+        }
+        ref = this.children();
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          item.drawn = false;
+          if ((ref1 = item.drawing) != null) {
+            ref1.remove();
+          }
+          if ((ref2 = item.raster) != null) {
+            ref2.remove();
+          }
+        }
+        Drawing.__super__.replaceDrawing.call(this);
       };
 
       Drawing.prototype.removeChild = function(path, updateRectangle, removeID) {
-        var pathIndex;
+        var pathIndex, pkIndex, ref;
         if (updateRectangle == null) {
           updateRectangle = false;
         }
         if (removeID == null) {
           removeID = true;
         }
-        path.data.drawingId = null;
+        if (removeID) {
+          path.drawingId = null;
+        }
         pathIndex = this.paths.indexOf(path);
         if (pathIndex >= 0) {
           this.paths.splice(pathIndex, 1);
         }
-        path.remove();
+        if ((ref = path.path) != null) {
+          ref.remove();
+        }
+        path.drawingId = null;
+        pkIndex = this.pathPks.indexOf(path.pk);
+        if (pkIndex >= 0) {
+          this.pathPks.splice(pkIndex, 1);
+        }
+        path.updateStrokeColor();
+        path.addToListItem();
+        this.drawn = false;
+      };
+
+      Drawing.prototype.setParameter = function(name, value, updateGUI, update) {
+        Drawing.__super__.setParameter.call(this, name, value, updateGUI, update);
+      };
+
+      Drawing.prototype.save = function(addCreateCommand) {
+        var args;
+        if (addCreateCommand == null) {
+          addCreateCommand = true;
+        }
+        args = {
+          cityName: R.city.name,
+          clientId: this.id,
+          date: Date.now(),
+          title: this.title || '' + Math.random(),
+          description: this.description || '',
+          points: this.points,
+          data: this.pathData
+        };
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'saveDrawing',
+              args: args
+            })
+          }
+        }).done(this.saveCallback);
+        Drawing.__super__.save.call(this, false);
+      };
+
+      Drawing.prototype.saveCallback = function(result) {
+        var args, i, len, path, pointLists, ref;
+        R.loader.checkError(result);
+        if (result.pk == null) {
+          this.remove();
+          return;
+        }
+        this.owner = result.owner;
+        this.setPK(result.pk);
+        if (this.selectAfterSave != null) {
+          this.select(true, true, true);
+        }
+        if (this.updateAfterSave != null) {
+          this.update(this.updateAfterSave);
+        }
+        if (this.pathsToSave != null) {
+          pointLists = [];
+          ref = this.pathsToSave;
+          for (i = 0, len = ref.length; i < len; i++) {
+            path = ref[i];
+            pointLists.push({
+              points: path.getPoints(),
+              data: {
+                strokeColor: path.data.strokeColor
+              }
+            });
+          }
+          args = {
+            clientId: this.id,
+            pk: this.pk,
+            pointLists: pointLists,
+            bounds: this.getBounds()
+          };
+          this.pathsToSave = [];
+          $.ajax({
+            method: "POST",
+            url: "ajaxCall/",
+            data: {
+              data: JSON.stringify({
+                "function": 'addPathsToDrawing',
+                args: args
+              })
+            }
+          }).done(R.loader.checkError);
+        }
+        Drawing.__super__.saveCallback.apply(this, arguments);
+      };
+
+      Drawing.prototype.addPathToSave = function(path) {
+        if (this.pathsToSave == null) {
+          this.pathsToSave = [];
+        }
+        this.pathsToSave.push(path);
       };
 
       Drawing.prototype.getLayerName = function() {
         var statusName;
-        statusName = this.status === 'flagged_pending' || this.status === 'flagged' ? 'flagged' : this.status;
+        statusName = this.status === 'emailNotConfirmed' || this.status === 'notConfirmed' || this.status === 'flagged_pending' || this.status === 'flagged' ? 'pending' : this.status;
         return statusName + 'Layer';
       };
 
@@ -605,16 +602,27 @@
         }
       };
 
+      Drawing.prototype.addPaths = function() {
+        var i, len, path, ref;
+        if ((this.paths != null) && this.paths.length > 0) {
+          ref = this.paths;
+          for (i = 0, len = ref.length; i < len; i++) {
+            path = ref[i];
+            this.group.addChild(path.path);
+          }
+        }
+      };
+
       Drawing.prototype.getSVG = function(asString) {
-        var j, len, path, ref;
+        var i, len, path, ref;
         if (asString == null) {
           asString = true;
         }
         if ((this.paths != null) && this.paths.length > 0) {
           ref = this.paths;
-          for (j = 0, len = ref.length; j < len; j++) {
-            path = ref[j];
-            this.group.addChild(path);
+          for (i = 0, len = ref.length; i < len; i++) {
+            path = ref[i];
+            this.group.addChild(path.path);
           }
           return this.group.exportSVG({
             asString: asString
@@ -625,11 +633,11 @@
       };
 
       Drawing.prototype.submit = function() {
-        var args, bounds, imageData, svg;
+        var args, bounds, imageURL, svg;
         bounds = this.getBounds();
         svg = this.getSVG();
         this.svgString = svg;
-        imageData = R.view.getThumbnail(this, bounds.width, bounds.height, true, false);
+        imageURL = R.view.getThumbnail(this, bounds.width, bounds.height, true, false);
         args = {
           pk: this.pk,
           clientId: this.id,
@@ -637,7 +645,7 @@
           title: this.title,
           description: this.description,
           svg: svg,
-          png: imageData,
+          png: imageURL,
           bounds: bounds
         };
         R.loader.showLoadingBar();
@@ -654,19 +662,18 @@
       };
 
       Drawing.prototype.removePaths = function(addCommand) {
-        var j, len, path, ref;
+        var i, len, path, ref;
         if (addCommand == null) {
           addCommand = false;
         }
         if (addCommand) {
           R.commandManager.add(new R.Command.ModifyDrawing(this));
         }
-        ref = this.paths;
-        for (j = 0, len = ref.length; j < len; j++) {
-          path = ref[j];
+        ref = this.paths.slice();
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
           path.remove();
         }
-        this.paths = [];
         if (this.status === 'draft') {
           R.toolManager.updateButtonsVisibility(this);
         }
@@ -681,7 +688,6 @@
         if (!R.loader.checkError(result)) {
           return;
         }
-        R.loader.createDrawing(result.draft);
         R.tools['Precise path'].hideDraftLimits();
         R.loader.reloadRasters(this.rectangle);
         R.commandManager.clearHistory();
@@ -739,28 +745,6 @@
         modal.show();
       };
 
-      Drawing.prototype.updateBox = function() {
-        var args, bounds;
-        bounds = this.getBounds();
-        args = {
-          pk: this.pk,
-          clientId: this.id,
-          bounds: bounds
-        };
-        $.ajax({
-          method: "POST",
-          url: "ajaxCall/",
-          data: {
-            data: JSON.stringify({
-              "function": 'updateDrawingBox',
-              args: args
-            })
-          }
-        }).done(function(result) {
-          R.loader.checkError(result);
-        });
-      };
-
       Drawing.prototype.updatePaths = function() {
         var args;
         this.computeRectangle();
@@ -782,8 +766,31 @@
           }
         }).done(function() {
           R.loader.hideLoadingBar();
-          R.loader.checkError();
+          R.loader.checkError;
         });
+      };
+
+      Drawing.prototype.addUpdateFunctionAndArguments = function(args, type) {
+        var i, item, len, ref;
+        ref = this.children();
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          item.addUpdateFunctionAndArguments(args, type);
+        }
+      };
+
+      Drawing.prototype.updateCallback = function(result) {
+        var contentJ;
+        R.loader.hideLoadingBar();
+        if (!R.loader.checkError(result)) {
+          this.title = this.previousTitle;
+          this.description = this.previousDescription;
+          contentJ = R.drawingPanel.drawingPanelJ.find('.content');
+          contentJ.find('#drawing-title').val(this.title);
+          contentJ.find('#drawing-description').val(this.description);
+          return;
+        }
+        R.alertManager.alert("Drawing successfully modified", "success");
       };
 
       Drawing.prototype.update = function(data) {
@@ -815,25 +822,22 @@
         }).done(this.updateCallback);
       };
 
-      Drawing.prototype.updateCallback = function(result) {
-        var contentJ;
-        R.loader.hideLoadingBar();
-        if (!R.loader.checkError(result)) {
-          this.title = this.previousTitle;
-          this.description = this.previousDescription;
-          contentJ = R.drawingPanel.drawingPanelJ.find('.content');
-          contentJ.find('#drawing-title').val(this.title);
-          contentJ.find('#drawing-description').val(this.description);
-          return;
-        }
-        R.alertManager.alert("Drawing successfully modified", "success");
-      };
-
       Drawing.prototype.deleteFromDatabaseCallback = function() {
-        var id;
+        var i, id, len, ref;
         R.loader.hideLoadingBar();
         id = this.id;
         if (!R.loader.checkError()) {
+          if (this.pathIdsBeforeRemove != null) {
+            ref = this.pathIdsBeforeRemove;
+            for (i = 0, len = ref.length; i < len; i++) {
+              id = ref[i];
+              if (R.items[id] != null) {
+                this.addChild(R.items[id]);
+              }
+            }
+            this.rasterize();
+            R.rasterizer.rasterize(this, false);
+          }
           return;
         }
         Drawing.__super__.deleteFromDatabaseCallback.call(this);
@@ -842,6 +846,7 @@
 
       Drawing.prototype["delete"] = function() {
         var deffered;
+        this.pathIdsBeforeRemove = this.getPathIds();
         deffered = Drawing.__super__["delete"].apply(this, arguments);
         return deffered;
       };
@@ -884,7 +889,7 @@
       };
 
       Drawing.prototype.cancelCallback = function(result) {
-        var draft, j, k, len, len1, path, ref, ref1;
+        var draft, i, j, len, len1, path, ref, ref1, ref2;
         R.loader.hideLoadingBar();
         if (!R.loader.checkError(result)) {
           return;
@@ -894,22 +899,27 @@
         }
         R.commandManager.clearHistory();
         R.loader.reloadRasters(this.rectangle);
+        ref = this.paths.slice();
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
+          this.removeChild(path);
+        }
         draft = Drawing.getDraft();
         if (draft != null) {
-          ref = this.paths;
-          for (j = 0, len = ref.length; j < len; j++) {
-            path = ref[j];
-            draft.addChild(path);
+          ref1 = draft.paths;
+          for (j = 0, len1 = ref1.length; j < len1; j++) {
+            path = ref1[j];
+            this.addChild(path);
           }
-          draft.addPathsFromPathList(result.pathList);
-          ref1 = this.paths.slice();
-          for (k = 0, len1 = ref1.length; k < len1; k++) {
-            path = ref1[k];
-            this.removeChild(path);
-          }
-          draft.updateStatus(result.status);
+          draft.remove();
         }
-        this.remove();
+        if ((ref2 = this.svg) != null) {
+          ref2.remove();
+        }
+        this.svg = null;
+        this.addPathsFromPathList(result.pathList);
+        this.updateStatus(result.status);
+        this.constructor.draft = this;
       };
 
       Drawing.prototype.setRectangle = function(rectangle, update) {
@@ -919,11 +929,53 @@
         Drawing.__super__.setRectangle.call(this, rectangle, update);
       };
 
+      Drawing.prototype.moveTo = function(position, update) {
+        var delta, i, item, len, ref;
+        delta = position.subtract(this.rectangle.center);
+        ref = this.children();
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          item.rectangle.center.x += delta.x;
+          item.rectangle.center.y += delta.y;
+          if (Item.Div.prototype.isPrototypeOf(item)) {
+            item.updateTransform();
+          }
+        }
+        Drawing.__super__.moveTo.call(this, position, update);
+      };
+
+      Drawing.prototype.containsChildren = function() {
+        var bounds, i, item, len, ref;
+        bounds = item.getBounds();
+        if (bounds == null) {
+          return true;
+        }
+        ref = this.children();
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          if (!this.rectangle.contains(bounds)) {
+            return false;
+          }
+        }
+        return true;
+      };
+
+      Drawing.prototype.showChildren = function() {
+        var i, item, len, ref, ref1;
+        ref = this.children();
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          if ((ref1 = item.group) != null) {
+            ref1.visible = true;
+          }
+        }
+      };
+
       Drawing.prototype.updateDrawingPanel = function() {
         var args;
         args = {
           pk: this.pk,
-          loadSVG: R.loadSVG
+          loadSVG: true
         };
         $.ajax({
           method: "POST",
@@ -942,7 +994,7 @@
       };
 
       Drawing.prototype.updateStatus = function(status) {
-        var layer, layerName, ref, ref1, voteFlagWasVisible;
+        var i, layer, layerName, len, path, ref, ref1, ref2, voteFlagWasVisible;
         if (this.status === status) {
           return;
         }
@@ -956,9 +1008,14 @@
           layer = document.getElementById(layerName);
           this.svg = layer.appendChild(this.svg);
         }
-        voteFlagWasVisible = (ref = this.voteFlag) != null ? ref.visible : void 0;
-        if ((ref1 = this.voteFlag) != null) {
-          ref1.remove();
+        ref = this.paths;
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
+          path.updateStrokeColor();
+        }
+        voteFlagWasVisible = (ref1 = this.voteFlag) != null ? ref1.visible : void 0;
+        if ((ref2 = this.voteFlag) != null) {
+          ref2.remove();
         }
         if (this.status === 'pending' && this.owner !== R.me) {
           this.drawVoteFlag();
@@ -969,11 +1026,10 @@
         if (voteFlagWasVisible) {
           this.showVoteFlag();
         }
-        this.setStrokeColorFromStatus();
       };
 
       Drawing.prototype.select = function(updateOptions, showPanelAndLoad, force) {
-        var drawing, j, len, ref, ref1;
+        var drawing, i, item, j, len, len1, ref, ref1, ref2;
         if (updateOptions == null) {
           updateOptions = true;
         }
@@ -989,13 +1045,18 @@
         if (!Drawing.__super__.select.call(this, updateOptions, force)) {
           return false;
         }
+        ref = this.children();
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          item.deselect();
+        }
         if (showPanelAndLoad) {
           R.drawingPanel.selectionChanged();
         }
-        ref = R.drawings;
-        for (j = 0, len = ref.length; j < len; j++) {
-          drawing = ref[j];
-          if (((ref1 = drawing.getBoundsWithFlag()) != null ? ref1.intersects(this.rectangle) : void 0) && drawing.isVisible()) {
+        ref1 = R.drawings;
+        for (j = 0, len1 = ref1.length; j < len1; j++) {
+          drawing = ref1[j];
+          if (((ref2 = drawing.getBoundsWithFlag()) != null ? ref2.intersects(this.rectangle) : void 0) && drawing.isVisible()) {
             drawing.hideVoteFlag();
           }
         }
@@ -1015,10 +1076,10 @@
       };
 
       Drawing.prototype.remove = function() {
-        var j, len, path, ref, ref1;
+        var i, len, path, ref, ref1;
         ref = this.paths.slice();
-        for (j = 0, len = ref.length; j < len; j++) {
-          path = ref[j];
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
           this.removeChild(path);
         }
         if ((ref1 = this.svg) != null) {
@@ -1026,8 +1087,39 @@
         }
         R.pkToDrawing["delete"](this.pk);
         this.removeFromListItem();
+        R.rasterizer.rasterizeRectangle(this.rectangle);
         Drawing.__super__.remove.apply(this, arguments);
         R.drawings.splice(R.drawings.indexOf(this), 1);
+      };
+
+      Drawing.prototype.getRaster = function() {
+        var group, i, len, path, ref;
+        if (this.pathRaster != null) {
+          return this.pathRaster;
+        }
+        if (this.paths.length === 0) {
+          return null;
+        }
+        group = new P.Group();
+        ref = this.paths;
+        for (i = 0, len = ref.length; i < len; i++) {
+          path = ref[i];
+          if (path.raster != null) {
+            group.addChild(path.raster.clone());
+          } else {
+            if (path.drawing == null) {
+              path.draw();
+            }
+            group.addChild(path.drawing.clone());
+          }
+        }
+        this.pathRaster = group.rasterize(P.view.resolution, false);
+        group.remove();
+        return this.pathRaster;
+      };
+
+      Drawing.prototype.children = function() {
+        return this.paths;
       };
 
       Drawing.prototype.highlight = function(color) {
@@ -1064,6 +1156,8 @@
           ref.visible = true;
         }
       };
+
+      Drawing.prototype.rasterize = function() {};
 
       return Drawing;
 

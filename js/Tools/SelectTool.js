@@ -159,13 +159,11 @@
       };
 
       SelectTool.prototype.unhighlightItems = function() {
-        var item, name, ref;
-        ref = R.items;
-        for (name in ref) {
-          item = ref[name];
-          if (item instanceof Item.Drawing) {
-            item.unhighlight();
-          }
+        var drawing, i, len, ref;
+        ref = R.drawings;
+        for (i = 0, len = ref.length; i < len; i++) {
+          drawing = ref[i];
+          drawing.unhighlight();
         }
       };
 

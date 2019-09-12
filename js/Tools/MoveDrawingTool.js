@@ -72,24 +72,14 @@
       };
 
       MoveDrawingTool.prototype.update = function(event) {
-        var draft, i, len, path, ref;
+        var draft;
         if (this.dragging) {
           draft = R.Drawing.getDraft();
           if (draft != null) {
-            console.log(draft.rectangle);
             draft.rectangle.x += event.delta.x;
             draft.rectangle.y += event.delta.y;
-            console.log(draft.rectangle);
-            ref = draft.paths;
-            for (i = 0, len = ref.length; i < len; i++) {
-              path = ref[i];
-              path.path.position.x += event.delta.x;
-              path.path.position.y += event.delta.y;
-              path.rectangle.x += event.delta.x;
-              path.rectangle.y += event.delta.y;
-              path.controlPath.position.x += event.delta.x;
-              path.controlPath.position.y += event.delta.y;
-            }
+            draft.group.position.x += event.delta.x;
+            draft.group.position.y += event.delta.y;
           }
         }
       };

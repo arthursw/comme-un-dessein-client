@@ -51,21 +51,13 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command' ], (P, R, 
 			if @dragging
 				draft = R.Drawing.getDraft()
 				if draft?
-					console.log(draft.rectangle)
 					draft.rectangle.x += event.delta.x
 					draft.rectangle.y += event.delta.y
-					console.log(draft.rectangle)
-					for path in draft.paths
-						path.path.position.x += event.delta.x
-						path.path.position.y += event.delta.y
-						path.rectangle.x += event.delta.x
-						path.rectangle.y += event.delta.y
-						path.controlPath.position.x += event.delta.x
-						path.controlPath.position.y += event.delta.y
-					# 	path.group.position.x += event.delta.x
-					# 	path.group.position.x += event.delta.x
-					# draft.group.position.y += event.delta.y
-					# draft.group.position.y += event.delta.y
+					draft.group.position.x += event.delta.x
+					draft.group.position.y += event.delta.y
+					# for path in draft.paths
+					# 	path.position.x += event.delta.x
+					# 	path.position.y += event.delta.y
 			return
 
 		end: (moved) ->

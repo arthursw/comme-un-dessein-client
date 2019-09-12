@@ -947,34 +947,16 @@
         }
       }).done(checkError);
     };
-    R.setSelectedDrawingsToCity = function(city) {
-      var args;
-      args = {
-        pk: R.s.pk,
-        cityName: city
-      };
-      $.ajax({
-        method: "POST",
-        url: "ajaxCall/",
-        data: {
-          data: JSON.stringify({
-            "function": 'setDrawingToCity',
-            args: args
-          })
-        }
-      }).done(checkError);
-    };
-    R.updateDrawings = function() {
-      $.ajax({
-        method: "POST",
-        url: "ajaxCall/",
-        data: {
-          data: JSON.stringify({
-            "function": 'updateDrawings',
-            args: {}
-          })
-        }
-      }).done(checkError);
+    R.updateDrawingBoxes = function() {
+      var drawing, j, len, ref;
+      if (!R.administrator) {
+        return false;
+      }
+      ref = R.drawings;
+      for (j = 0, len = ref.length; j < len; j++) {
+        drawing = ref[j];
+        drawing.updateBox();
+      }
     };
     R.validateDrawing = function() {
       var ref;

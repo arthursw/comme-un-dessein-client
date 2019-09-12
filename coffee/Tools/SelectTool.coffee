@@ -126,9 +126,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		unhighlightItems: ()->
-			for name, item of R.items
-				if item instanceof Item.Drawing
-					item.unhighlight()
+			for drawing in R.drawings
+				drawing.unhighlight()
 			return
 
 		# Create selection rectangle path (remove if existed)

@@ -139,13 +139,6 @@
         this.btnJ.removeClass('displayName');
       };
 
-      EraserTool.prototype.deleteAllPaths = function() {
-        var paths, ref;
-        paths = ((ref = R.Drawing.getDraft()) != null ? ref.paths : void 0) || [];
-        R.drawingPanel.deleteGivenPaths(paths);
-        this.setButtonErase();
-      };
-
       EraserTool.prototype.select = function(deselectItems, updateParameters) {
         if (deselectItems == null) {
           deselectItems = true;
@@ -189,7 +182,7 @@
       };
 
       EraserTool.prototype.erase = function() {
-        var data, draft, i, intersection, intersections, item, j, k, l, len, len1, len2, len3, location, newP, p, path, pathIndex, paths, points, ref, ref1, zIndex;
+        var draft, i, intersection, intersections, j, k, l, len, len1, len2, len3, location, newP, newPath, p, path, pathIndex, paths, ref, zIndex;
         draft = R.Drawing.getDraft();
         if ((draft == null) || (this.circle == null)) {
           return;
@@ -197,12 +190,12 @@
         pathIndex = 0;
         ref = draft.paths.slice();
         for (i = 0, len = ref.length; i < len; i++) {
-          item = ref[i];
-          if ((ref1 = item.getBounds()) != null ? ref1.intersects(this.circle.bounds) : void 0) {
-            intersections = this.circle.getCrossings(item.controlPath);
+          path = ref[i];
+          if (path.bounds.intersects(this.circle.bounds)) {
+            intersections = this.circle.getCrossings(path);
             if (intersections.length > 0) {
-              zIndex = item.path.index;
-              paths = [item.controlPath];
+              zIndex = path.index;
+              paths = [path];
               console.log(intersections);
               for (j = 0, len1 = intersections.length; j < len1; j++) {
                 intersection = intersections[j];
@@ -211,45 +204,35 @@
                   location = p.getLocationOf(intersection.point);
                   if (location != null) {
                     newP = p.split(location);
-                    p.strokeColor = item.data.strokeColor;
+                    p.strokeColor = path.strokeColor;
                     p.lastSegment.handleOut = null;
-                    p.lastSegment.data = {
-                      split: true
-                    };
                     if (newP != null) {
-                      newP.strokeColor = item.data.strokeColor;
+                      newP.strokeColor = path.strokeColor;
                       paths.push(newP);
                       newP.firstSegment.handleIn = null;
-                      newP.firstSegment.data = {
-                        split: true
-                      };
                     }
                   }
                 }
               }
-              item.remove();
+              draft.removeChild(path);
               for (l = 0, len3 = paths.length; l < len3; l++) {
                 p = paths[l];
-                if (this.isPathInCircle(p)) {
-                  console.log('remove a path');
-                  p.remove();
-                } else {
-                  data = R.Tools.Item.Item.PrecisePath.getDataFromPath(p);
-                  points = R.Tools.Item.Item.Path.pathOnPlanetFromPath(p);
-                  data.strokeColor = p.strokeColor.toCSS();
-                  path = new R.Tools.Item.Item.PrecisePath(Date.now(), data, null, null, points, null, R.me, draft.id);
-                  path.draw(false, true, false);
-                  draft.setPathZIndex(path, pathIndex, zIndex);
+                if (!this.isPathInCircle(p)) {
+                  newPath = p.clone();
+                  draft.addChild(newPath);
+                  draft.setPathZIndex(newPath, pathIndex, zIndex);
                 }
+                p.remove();
               }
             } else {
-              if (this.isPathInCircle(item.controlPath)) {
-                item.remove();
+              if (this.isPathInCircle(path)) {
+                draft.removeChild(path);
               }
             }
           }
           pathIndex++;
         }
+        draft.computeRectangle();
       };
 
       EraserTool.prototype.begin = function(event, from, data) {

@@ -41,13 +41,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@contentJ.find('.share-buttons button').popover()
 
 			# the button to start drawing
-			@beginDrawingBtnJ = $('button.begin-drawing')
-			@beginDrawingBtnJ.click(@beginDrawingClicked)
+			# @beginDrawingBtnJ = $('button.begin-drawing')
+			# @beginDrawingBtnJ.click(@beginDrawingClicked)
 
 
 			# the button to open the panel
-			@submitDrawingBtnJ = $('button.submit-drawing')
-			@submitDrawingBtnJ.click(@submitDrawingClicked)
+			# @submitDrawingBtnJ = $('button.submit-drawing')
+			# @submitDrawingBtnJ.click(@submitDrawingClicked)
 
 			tileInfoJ = @contentJ.find('.tile-info')
 
@@ -778,43 +778,45 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@drawingPanelJ.find('.loading-animation').hide()
 			return
 
-		showSubmitDrawing: ()->
-			# @hideBeginDrawing()
+		# showSubmitDrawing: ()->
+		# 	# @hideBeginDrawing()
 			
-			# @submitDrawingBtnJ.removeClass('hidden')
-			# @submitDrawingBtnJ.show()
+		# 	# @submitDrawingBtnJ.removeClass('hidden')
+		# 	# @submitDrawingBtnJ.show()
 			
-			# @cancelDrawingBtnJ.removeClass('hidden')
-			# @cancelDrawingBtnJ.show()
-			# @contentJ.find('#drawing-title').focus()
-			return
+		# 	# @cancelDrawingBtnJ.removeClass('hidden')
+		# 	# @cancelDrawingBtnJ.show()
+		# 	# @contentJ.find('#drawing-title').focus()
+		# 	return
 
-		hideSubmitDrawing: ()->
-			# $('#submit-drawing-button').hide()
-			@submitDrawingBtnJ.hide()
-			# @cancelDrawingBtnJ.hide()
-			return
+		# hideSubmitDrawing: ()->
+		# 	# $('#submit-drawing-button').hide()
+		# 	# @submitDrawingBtnJ.hide()
+		# 	# @cancelDrawingBtnJ.hide()
+		# 	return
 
-		showBeginDrawing: ()->
-			# @hideSubmitDrawing()
-			@beginDrawingBtnJ.show()
-			return
+		# showBeginDrawing: ()->
+		# 	# @hideSubmitDrawing()
+		# 	@beginDrawingBtnJ.show()
+		# 	return
 
-		hideBeginDrawing: ()->
-			@beginDrawingBtnJ.hide()
-			return
+		# hideBeginDrawing: ()->
+		# 	@beginDrawingBtnJ.hide()
+		# 	return
 
-		beginDrawingClicked: ()=>
-			R.toolManager.enterDrawingMode()
-			@beginDrawingBtnJ.hide()
+		# beginDrawingClicked: ()=>
+		# 	R.toolManager.enterDrawingMode()
+		# 	@beginDrawingBtnJ.hide()
 
-			# if there are already some draft paths: directly show submit button
-			for id, item of R.items
-				if item instanceof Item.Path
-					if item.owner == R.me and item.drawingId == null
-						@showSubmitDrawing()
-						return
-			return
+		# 	# if there are already some draft paths: directly show submit button
+
+		# 	for id, item of R.items
+		# 		console.log('WARNING, ENTERED DEPRECATED CODE')
+		# 		if item instanceof Item.Path
+		# 			if item.owner == R.me and item.drawingId == null
+		# 				@showSubmitDrawing()
+		# 				return
+		# 	return
 		
 		setThumbnail: (item, thumbnailJ)->
 			svg = R.view.getThumbnail(item)
@@ -830,7 +832,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			@contentJ.find('.thumbnail-footer').show()
 
-			@setThumbnail(@currentItem, @contentJ.find('.drawing-thumbnail'))
+			drawingThumbnailJ = @contentJ.find('.drawing-thumbnail')
+
+			if @currentItem.svg?
+				@setThumbnail(@currentItem, drawingThumbnailJ)
+			else
+				@currentItem.loadSVG(()=> @setThumbnail(@currentItem, drawingThumbnailJ) )
+			
 			return
 
 		# createDrawingFromItems: (items)->
@@ -907,7 +915,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			# set currentDrawing after the two prevous functions
 			@currentItem = draft
-			@currentItem.addPaths()
+			# @currentItem.addPaths()
 
 			@contentJ.find('.tile-info').hide()
 			
@@ -951,6 +959,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			bounds = @currentItem.getBounds()
 			if bounds?
 				R.view.fitRectangle(bounds, true)
+
+			draft.createSVG()
 
 			@setDrawingThumbnail()
 
@@ -1638,7 +1648,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 								if data.status == 'flagged' or not R.administrator
 									drawing.remove()
 								if R.administrator and data.status == 'flagged_pending'
-									drawing.loadSVG()
+									drawing.loadPathList()
 						else if data.bounds? and R.loader.getLoadingBounds().intersects(data.bounds)
 							isActive = data.status == 'pending' or data.status == 'validated' or data.status == 'drawing'
 							rejectedAndShowRejected = data.status == 'rejected' and R.loadRejectedDrawings
@@ -1957,30 +1967,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			tile = JSON.parse(result.tile)
 			R.tools.choose.removeTile(tile)
 			return
-
-		deleteGivenPaths: (paths)->
-			pathsToDelete = []
-			pathsToDeleteResurectors = {}
-
-			for path in paths
-				if path.pk?
-					pathsToDelete.push(path)
-					pathsToDeleteResurectors[path.id] = data: path.getDuplicateData(), constructor: path.constructor
-				else
-					path.remove()
-
-			if pathsToDelete.length > 0
-				deleteCommand = new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors)
-				R.commandManager.add(deleteCommand, true)
-			return
-
-		# deletePaths: ()=>
-		# 	paths = @currentItem.paths.slice()
-		# 	@currentItem.removeChildren()
-		# 	@currentItem.remove()
-
-		# 	@deleteGivenPaths(paths)
-		# 	return
 
 		# deleteDrawing: ()=>
 

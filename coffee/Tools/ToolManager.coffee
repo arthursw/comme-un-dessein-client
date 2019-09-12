@@ -635,10 +635,10 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				R.tools['Precise path'].select()
 			# R.sidebar.favoriteToolsJ.find("[data-name='Select']").css( opacity: 0.25 )
 
-			for id, item of R.items
-				if R.items[id].owner == R.me
-					R.drawingPanel.showSubmitDrawing()
-					break
+			# for id, item of R.items
+			# 	if R.items[id].owner == R.me
+			# 		R.drawingPanel.showSubmitDrawing()
+			# 		break
 			# @drawingMode = true
 			# R.view.showDraftLayer()
 			return
@@ -648,7 +648,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			# R.sidebar.favoriteToolsJ.find("[data-name='Select']").css( opacity: 1 )
 			if selectTool
 				R.tools.select.select(false, true, true)
-			R.drawingPanel.hideSubmitDrawing()
+			# R.drawingPanel.hideSubmitDrawing()
 			# R.view.hideDraftLayer()
 			return
 

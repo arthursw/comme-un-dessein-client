@@ -102,7 +102,7 @@ define [
 		cityName = canvasJ.attr('data-city')
 		cityFinished = canvasJ.attr('data-city-finished')
 		cityMessage = canvasJ.attr('data-city-message')
-		
+		R.useSVG = R.isCommeUnDessein and canvasJ.attr('data-city-use-svg') == 'True'
 
 		if cityName.length > 0
 			R.city.name = cityName
@@ -530,6 +530,45 @@ define [
 			emailJ = modal.addTextInput(name: 'Email', id: 'profile-email', placeholder: 'Email', className: '', label: 'Email ' + confirmedText, type: 'email')
 			userEmail = R.canvasJ.attr('data-user-email')
 			emailJ.find('input').val(userEmail).attr('disabled', 'true')
+
+			emailFrequencyLabel = i18next.t('Email notification frequency')
+			dailyText = i18next.t('Daily')
+			weeklyText = i18next.t('Weekly')
+			monthlyText = i18next.t('Monthly')
+			neverText = i18next.t('Never')
+			onlyIfRelevant = i18next.t('You will only receive email if you have new notifications')
+
+			emailFrequencySelectorJ = $('<div id="email-frequency-container"></div>')
+
+			emailFrequencyLabelJ = $('<label for="mail-frequency">' + emailFrequencyLabel + ':</label>')
+			emailFrequencySelectJ = $("""
+				<select id="mail-frequency" style="margin-left: 10px;">
+
+					<option value="daily">""" + dailyText + """</option>
+					<option value="weekly">""" + weeklyText + """</option>
+					<option value="monthly">""" + monthlyText + """</option>
+					<option value="never">""" + neverText + """</option>
+
+				</select>""")
+			emailFrequencyPJ = $('<p>' + onlyIfRelevant + '.</p>')
+
+			emailFrequencySelectorJ.append(emailFrequencyLabelJ)
+			emailFrequencySelectorJ.append(emailFrequencySelectJ)
+			emailFrequencySelectorJ.append(emailFrequencyPJ)
+			
+			emailFrequencySelectJ.on('change', ()=> 
+
+				args = 
+					emailFrequency: emailFrequencySelectJ.val()
+
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'changeUserEmailFrequency', args: args } ).done((result)=> 
+					if not R.loader.checkError(result) then return
+					R.alertManager.alert 'Your profile has successfully been updated', 'info'
+					return)
+
+				return)
+
+			modal.addCustomContent(divJ: emailFrequencySelectorJ)
 
 			manageEmails = ()=>
 				window.location = '/accounts/email/'

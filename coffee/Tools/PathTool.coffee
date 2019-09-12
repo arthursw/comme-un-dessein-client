@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P, R, Utils, Tool, Button, i18next) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Button', 'i18next' ], (P, R, Utils, Tool, Command, Button, i18next) ->
 
 	# PathTool: the mother class of all drawing tools
 	# doctodo: P.Path are created with three steps:
@@ -168,7 +168,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		# @param [String] author (username) of the event
 		# @param [Object] Item initial data (strokeWidth, strokeColor, etc.)
 		# begin, update, and end handlers are called by onMouseDown handler (then from == R.me, data == null) and by socket.on "begin" signal (then from == author of the signal, data == Item initial data)
-		begin: (event, from=R.me, data=null) ->
+		beginBackup: (event, from=R.me, data=null) ->
 			if event.event.which == 2 then return 			# if middle mouse button (wheel) pressed: return
 			if R.tracer?.draggingImage then return
 			
@@ -222,10 +222,43 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			@using = true
 			return
 
-		circleMode: ()->
-			return R.drawingMode == 'line' or R.drawingMode == 'lineOrthoDiag' or R.drawingMode == 'orthoDiag'  or R.drawingMode == 'ortho'
+		begin: (event, from=R.me, data=null) ->
+			if event.event.which == 2 then return 			# if middle mouse button (wheel) pressed: return
+			if R.tracer?.draggingImage then return
+			
+			if P.view.zoom < 0.5
+				R.alertManager.alert 'Please zoom before drawing', 'info'
+				return
 
-		animateCircle: (time, createCircle=false, from=R.me)=>
+			if @draftLimit? and not @draftLimit.contains(event.point)
+				@constructor.displayDraftIsTooBigError()
+				bounds = R.Drawing.getDraft()?.getBounds()
+				if bounds?
+					intersection = R.view.getViewBounds(true).intersect(bounds)
+					if intersection.width < 0 || intersection.height < 0 || intersection.area < 10000
+						R.view.fitRectangle(bounds, false, if P.view.zoom < 1 then 1 else P.view.zoom)
+				return
+
+			# deselect all and create new P.Path in all case except in polygonMode
+			if not @currentPath?
+				R.tools.select.deselectAll(false)
+				
+				@currentPath = new P.Path()
+				@currentPath.strokeWidth = @Path.strokeWidth
+				@currentPath.strokeColor = R.selectedColor
+				@currentPath.strokeCap = 'round'
+				@currentPath.strokeJoin = 'round'
+				@currentPath.add(event.point)
+
+			@using = true
+
+			R.socket.emit "draw begin", R.me, event.point
+			return
+
+		# circleModeBackup: ()->
+		# 	return R.drawingMode == 'line' or R.drawingMode == 'lineOrthoDiag' or R.drawingMode == 'orthoDiag'  or R.drawingMode == 'ortho'
+
+		animateCircleBackup: (time, createCircle=false, from=R.me)=>
 			path = R.currentPaths[from]
 			if (createCircle or @circlePath?) and path?
 				@circlePath?.remove()
@@ -245,11 +278,11 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 
 			path = R.currentPaths[R.me]
 
-			if path?
+			if @currentPath?
 				if draftBounds?
-					draftBounds = draftBounds.unite(path.getDrawingBounds())
+					draftBounds = draftBounds.unite(@currentPath.bounds.expand(2 * @Path.strokeWidth))
 				else
-					draftBounds = path.getDrawingBounds()
+					draftBounds = @currentPath.bounds.expand(2 * @Path.strokeWidth)
 			
 			if not draftBounds? or draftBounds.area == 0 then return null
 
@@ -290,7 +323,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		# update path action and emit event on websocket (if user is the author of the event)
 		# @param [Paper event or REvent] (usually) mouse drag event
 		# @param [String] author (username) of the event
-		update: (event, from=R.me) ->
+		updateBackup: (event, from=R.me) ->
 			
 			if @selectedSegment?
 				@selectedSegment.point = event.point
@@ -356,141 +389,211 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 			# if R.me? and from==R.me then R.socket.emit( "update", R.me, R.eventToObject(event), @name)
 			# if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "update", arguments: [event, R.me]
 			return
+		
+		update: (event, from=R.me) ->
+			if not @currentPath? then return
+
+			draftLimit = @showDraftLimits()
+
+			draftIsTooBig = draftLimit? and not draftLimit.contains(event.point)
+			
+			draftIsOutsideFrame = not R.view.contains(event.point)
+
+			if draftIsTooBig or draftIsOutsideFrame
+
+				if draftIsTooBig
+					@constructor.displayDraftIsTooBigError()
+				else if draftIsOutsideFrame
+					R.alertManager.alert 'Your path must be in the drawing area', 'error'
+
+				p = @currentPath.clone()
+				p.strokeColor = 'red'
+				R.view.mainLayer.addChild(p)
+				setTimeout((()=> p.remove()), 1000)
+
+				event.point = @currentPath.lastSegment.point
+				@end(event, from)
+
+				@showDraftLimits()
+
+				return
+
+			@currentPath.add(event.point)
+
+			R.socket.emit "draw update", R.me, event.point
+			return
 
 		# Update path action (usually from a mouse move event, necessary for the polygon mode):
 		# @param [Paper event or REvent] (usually) mouse move event
-		move: (event) ->
+		moveBackup: (event) ->
 			if R.currentPaths[R.me]?.data?.polygonMode then R.currentPaths[R.me].createMove?(event)
 			return
-
-		createPath: (event, from)->
-			path = R.currentPaths[from]
-			if not path? then return 		# when the path has been deleted because too big
-			if not path.group then return
-
-			if R.me? and from==R.me 						# if user is the author of the event: select and save path and emit event on websocket
-
-				# if path.rectangle.area == 0
-				# 	path.remove()
-				# 	delete R.currentPaths[from]
-				# 	return
-
-				# bounds = path.getBounds()
-				# locks = Lock.getLocksWhichIntersect(bounds)
-				# for lock in locks
-				# 	if lock.rectangle.contains(bounds)
-				# 		if lock.owner == R.me
-				# 			lock.addItem(path)
-				# 		else
-				# 			R.alertManager.alert("The path intersects with a lock", "Warning")
-				# 			path.remove()
-				# 			delete R.currentPaths[from]
-				# 			return
-				# if path.getDrawingBounds().area > R.rasterizer.maxArea()
-				# 	R.alertManager.alert("The path is too big", "Warning")
-				# 	path.remove()
-				# 	delete R.currentPaths[from]
-				# 	return
-
-				# if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "createPath", arguments: [event, R.me]
-
-				if (not R.me?) or not _.isString(R.me)
-					R.alertManager.alert("You must log in before drawing, your drawing won't be saved", "Info")
-					return
-
-
-				path.save(true)
-				path.rasterize()
-				R.rasterizer.rasterize(path)
-
-				R.toolManager.updateButtonsVisibility()
-
-				# path.controlPath.selected = true
-			else
-				path.endCreate(event.point, event)
-			delete R.currentPaths[from]
+		
+		move: (event) ->
 			return
+
+		# createPath: (event, from)->
+		# 	path = R.currentPaths[from]
+		# 	if not path? then return 		# when the path has been deleted because too big
+		# 	if not path.group then return
+
+		# 	if R.me? and from==R.me 						# if user is the author of the event: select and save path and emit event on websocket
+
+		# 		# if path.rectangle.area == 0
+		# 		# 	path.remove()
+		# 		# 	delete R.currentPaths[from]
+		# 		# 	return
+
+		# 		# bounds = path.getBounds()
+		# 		# locks = Lock.getLocksWhichIntersect(bounds)
+		# 		# for lock in locks
+		# 		# 	if lock.rectangle.contains(bounds)
+		# 		# 		if lock.owner == R.me
+		# 		# 			lock.addItem(path)
+		# 		# 		else
+		# 		# 			R.alertManager.alert("The path intersects with a lock", "Warning")
+		# 		# 			path.remove()
+		# 		# 			delete R.currentPaths[from]
+		# 		# 			return
+		# 		# if path.getDrawingBounds().area > R.rasterizer.maxArea()
+		# 		# 	R.alertManager.alert("The path is too big", "Warning")
+		# 		# 	path.remove()
+		# 		# 	delete R.currentPaths[from]
+		# 		# 	return
+
+		# 		# if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "createPath", arguments: [event, R.me]
+
+		# 		if (not R.me?) or not _.isString(R.me)
+		# 			R.alertManager.alert("You must log in before drawing, your drawing won't be saved", "Info")
+		# 			return
+
+
+		# 		path.save(true)
+		# 		path.rasterize()
+		# 		R.rasterizer.rasterize(path)
+
+		# 		R.toolManager.updateButtonsVisibility()
+
+		# 		# path.controlPath.selected = true
+		# 	else
+		# 		path.endCreate(event.point, event)
+		# 	delete R.currentPaths[from]
+		# 	return
 
 		# End path action:
 		# - end path action
 		# - if not in polygon mode: select and save path and emit event on websocket (if user is the author of the event), (remove path from R.currentPaths)
 		# @param [Paper event or REvent] (usually) mouse up event
 		# @param [String] author (username) of the event
+		# endBackup: (event, from=R.me) ->
+		# 	@using = false
+
+		# 	if @selectedSegment?
+		# 		@selectedSegment = null
+		# 		return
+
+		# 	path = R.currentPaths[from]
+		# 	if not path? then return false		# when the path has been deleted because too big
+			
+		# 	draftLimit = @showDraftLimits()
+
+		# 	if @circlePath?
+		# 		R.currentPaths[from].remove()
+		# 		delete R.currentPaths[from]
+				
+		# 		draftIsOutsideFrame = not R.view.contains(@circlePath.bounds)
+		# 		draftIsTooBig = @draftLimit? and not @draftLimit.contains(@circlePath.bounds)
+				
+		# 		if draftIsTooBig
+		# 			@constructor.displayDraftIsTooBigError()
+		# 			return false
+		# 		else if draftIsOutsideFrame
+		# 			R.alertManager.alert 'Your path must be in the drawing area', 'error'
+		# 			return false
+				
+		# 		circleLength = @circlePath.getLength()
+
+		# 		path = new @Path(Date.now(), null, null, null, null, null, R.me)
+		# 		path.ignoreDrawingMode = true
+		# 		path.beginCreate(@circlePath.getPointAt(0), event, false)
+		# 		path.controlPath.removeSegments()
+		# 		path.controlPath.addSegments(@circlePath.segments)
+		# 		path.controlPath.addSegment(@circlePath.firstSegment)
+		# 		path.rectangle = path.controlPath.bounds.expand(3*path.data.strokeWidth)
+		# 		path.draw()
+				
+		# 		# step = 10
+		# 		# for i in [step .. circleLength] by step
+		# 		# 	p = @circlePath.getPointAt(i)
+		# 		# 	path.updateCreate(p, event, false)
+
+		# 		# path.endCreate(@circlePath.getPointAt(circleLength), event, false)
+
+		# 		R.currentPaths[from] = path
+
+		# 		@circlePath.remove()
+		# 		@circlePath = null
+		# 		clearInterval(@animateCircleIntervalID)
+		# 		@createPath(event, from)
+		# 		R.drawingPanel.showSubmitDrawing()
+		# 		return
+
+
+				
+
+		# 	# if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))
+		# 	# 	R.alertManager.alert 'Your path must be in the drawing area', 'error'
+		# 	# 	R.currentPaths[from].remove()
+		# 	# 	delete R.currentPaths[from]
+		# 	# 	return false
+			
+		# 	if @draftLimit? and not @draftLimit.contains(@currentPath.bounds)
+		# 		@constructor.displayDraftIsTooBigError()
+		# 		@currentPath.remove()
+		# 		@currentPath = null
+		# 		return false
+
+		# 	path.endCreate(event.point, event, false)
+
+		# 	if not path.data?.polygonMode
+		# 		@createPath(event, from)
+
+		# 	R.drawingPanel.showSubmitDrawing()
+
+		# 	return
+		
 		end: (event, from=R.me) ->
+			if not @currentPath? then return
+
 			@using = false
 
-			if @selectedSegment?
-				@selectedSegment = null
-				return
+			@currentPath.add(event.point)
 
-			path = R.currentPaths[from]
-			if not path? then return false		# when the path has been deleted because too big
-			
 			draftLimit = @showDraftLimits()
-
-			if @circlePath?
-				R.currentPaths[from].remove()
-				delete R.currentPaths[from]
-				
-				draftIsOutsideFrame = not R.view.contains(@circlePath.bounds)
-				draftIsTooBig = @draftLimit? and not @draftLimit.contains(@circlePath.bounds)
-				
-				if draftIsTooBig
-					@constructor.displayDraftIsTooBigError()
-					return false
-				else if draftIsOutsideFrame
-					R.alertManager.alert 'Your path must be in the drawing area', 'error'
-					return false
-				
-				circleLength = @circlePath.getLength()
-
-				path = new @Path(Date.now(), null, null, null, null, null, R.me)
-				path.ignoreDrawingMode = true
-				path.beginCreate(@circlePath.getPointAt(0), event, false)
-				path.controlPath.removeSegments()
-				path.controlPath.addSegments(@circlePath.segments)
-				path.controlPath.addSegment(@circlePath.firstSegment)
-				path.rectangle = path.controlPath.bounds.expand(3*path.data.strokeWidth)
-				path.draw()
-				
-				# step = 10
-				# for i in [step .. circleLength] by step
-				# 	p = @circlePath.getPointAt(i)
-				# 	path.updateCreate(p, event, false)
-
-				# path.endCreate(@circlePath.getPointAt(circleLength), event, false)
-
-				R.currentPaths[from] = path
-
-				@circlePath.remove()
-				@circlePath = null
-				clearInterval(@animateCircleIntervalID)
-				@createPath(event, from)
-				R.drawingPanel.showSubmitDrawing()
-				return
-
-
-				
-
-			# if R.view.grid.rectangleOverlapsTwoPlanets(path.controlPath.bounds.expand(path.data.strokeWidth))
-			# 	R.alertManager.alert 'Your path must be in the drawing area', 'error'
-			# 	R.currentPaths[from].remove()
-			# 	delete R.currentPaths[from]
-			# 	return false
 			
-			if @draftLimit? and not @draftLimit.contains(R.currentPaths[from].controlPath.bounds)
+			if @draftLimit? and not @draftLimit.contains(@currentPath.bounds)
 				@constructor.displayDraftIsTooBigError()
-				R.currentPaths[from].remove()
-				delete R.currentPaths[from]
+				@currentPath.remove()
+				@currentPath = null
 				return false
 
-			path.endCreate(event.point, event, false)
+			draft = R.Item.Drawing.getDraft()
 
-			if not path.data?.polygonMode
-				@createPath(event, from)
+			R.commandManager.add(new Command.ModifyDrawing(draft))
+			
+			# Simplify if there is more than one point (a path with twice the same point)	
+			if not (@currentPath.segments.length == 2 and @currentPath.firstSegment.point.equals(@currentPath.lastSegment.point))
+				@currentPath.simplify()
 
-			R.drawingPanel.showSubmitDrawing()
+			# @currentPath.smooth()
+			draft.addChild(@currentPath, true)
 
+			@currentPath = null
+
+			# R.drawingPanel.showSubmitDrawing()
+			R.toolManager.updateButtonsVisibility()
+
+			R.socket.emit "draw end", R.me, event.point
 			return
 
 		# Finish path action (necessary in polygon mode):
@@ -500,8 +603,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'i18next' ], (P,
 		# @param [String] author (username) of the event
 		finish: (from=R.me)->
 			if not R.currentPaths[R.me]?.data?.polygonMode then return false
-			R.currentPaths[from].finish()
-			@createPath(event, from)
+			# R.currentPaths[from].finish()
+			# @createPath(event, from)
 			return true
 
 		keyUp: (event)->

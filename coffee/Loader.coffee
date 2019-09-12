@@ -108,12 +108,12 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			return
 
 
-		loadRequired: ()->
-			if @previousLoadPosition?
-				if @previousLoadPosition.position.subtract(P.view.center).length<50
-					if Math.abs(1-@previousLoadPosition.zoom/P.view.zoom)<0.2
-						return false
-			return true
+		# loadRequired: ()->
+		# 	if @previousLoadPosition?
+		# 		if @previousLoadPosition.position.subtract(P.view.center).length<50
+		# 			if Math.abs(1-@previousLoadPosition.zoom/P.view.zoom)<0.2
+		# 				return false
+		# 	return true
 
 		getLoadingBounds: (area)->
 			if not area?
@@ -125,79 +125,79 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				return P.view.bounds
 			return area
 
-		unloadAreas: (area, limit, qZoom)->
+		# unloadAreas: (area, limit, qZoom)->
 
-			itemsOutsideLimit = []
+		# 	itemsOutsideLimit = []
 
-			# remove RItems which are not within limit anymore AND in area which must be unloaded
-			# (do not remove items on an area which is not unloaded, otherwise they wont be reloaded if user comes back on it)
-			for own id, item of R.items
-				if (not item.getBounds()?.intersects(limit)) and (not item.isDraft())
-					itemsOutsideLimit.push(item)
+		# 	# remove RItems which are not within limit anymore AND in area which must be unloaded
+		# 	# (do not remove items on an area which is not unloaded, otherwise they wont be reloaded if user comes back on it)
+		# 	for own id, item of R.items
+		# 		if (not item.getBounds()?.intersects(limit)) and (not item.isDraft())
+		# 			itemsOutsideLimit.push(item)
 
-			i = @loadedAreas.length
-			while i--
-				area = @loadedAreas[i]
-				pos = Utils.CS.posOnPlanetToProject(area.pos, area.planet)
-				rectangle = new P.Rectangle(pos.x, pos.y, R.scale * area.zoom, R.scale * area.zoom)
+		# 	i = @loadedAreas.length
+		# 	while i--
+		# 		area = @loadedAreas[i]
+		# 		pos = Utils.CS.posOnPlanetToProject(area.pos, area.planet)
+		# 		rectangle = new P.Rectangle(pos.x, pos.y, R.scale * area.zoom, R.scale * area.zoom)
 
-				if not rectangle.intersects(limit) or area.zoom != qZoom
+		# 		if not rectangle.intersects(limit) or area.zoom != qZoom
 
-					if @debug then @updateDebugArea(area)
+		# 			if @debug then @updateDebugArea(area)
 
-					# # remove raster corresponding to the area
-					# x = area.x*1000 	# should be equal to pos.x
-					# y = area.y*1000		# should be equal to pos.y
+		# 			# # remove raster corresponding to the area
+		# 			# x = area.x*1000 	# should be equal to pos.x
+		# 			# y = area.y*1000		# should be equal to pos.y
 
-					# if R.rasters[x]?[y]?
-					# 	R.rasters[x][y].remove()
-					# 	delete R.rasters[x][y]
-					# 	if Utils.isEmpty(R.rasters[x]) then delete R.rasters[x]
+		# 			# if R.rasters[x]?[y]?
+		# 			# 	R.rasters[x][y].remove()
+		# 			# 	delete R.rasters[x][y]
+		# 			# 	if Utils.isEmpty(R.rasters[x]) then delete R.rasters[x]
 
-					# remove area from loaded areas
-					@loadedAreas.splice(i,1)
+		# 			# remove area from loaded areas
+		# 			@loadedAreas.splice(i,1)
 
-					# remove items on this area
-					# items to remove must not intersect with the limit, and can overlap two areas:
-					j = itemsOutsideLimit.length
-					while j--
-						item = itemsOutsideLimit[j]
-						if item.getBounds()?.intersects(rectangle)
-							item.remove()
-							itemsOutsideLimit.splice(j,1)
-			return
+		# 			# remove items on this area
+		# 			# items to remove must not intersect with the limit, and can overlap two areas:
+		# 			j = itemsOutsideLimit.length
+		# 			while j--
+		# 				item = itemsOutsideLimit[j]
+		# 				if item.getBounds()?.intersects(rectangle)
+		# 					item.remove()
+		# 					itemsOutsideLimit.splice(j,1)
+		# 	return
 
-		getAreaToLoad: (areasToLoad, pos, planet, x, y, scale, qZoom)->
-			if not @areaIsLoaded(pos, planet, qZoom)
-				area = { pos: pos, planet: planet }
+		# getAreaToLoad: (areasToLoad, pos, planet, x, y, scale, qZoom)->
+		# 	if not @areaIsLoaded(pos, planet, qZoom)
+		# 		area = { pos: pos, planet: planet }
 
-				areasToLoad.push(area)
+		# 		areasToLoad.push(area)
 
-				area.zoom = qZoom
+		# 		area.zoom = qZoom
 
-				if @debug then @createAreaDebugRectangle(x, y, scale)
+		# 		if @debug then @createAreaDebugRectangle(x, y, scale)
 
-				@loadedAreas.push(area)
-			return
+		# 		@loadedAreas.push(area)
+		# 	return
 
-		getAreasToLoad: (scale, qZoom, t, l, b, r)->
-			areasToLoad = []
-			for x in [l .. r] by scale
-				for y in [t .. b] by scale
-					planet = Utils.CS.projectToPlanet(new P.Point(x,y))
-					pos = Utils.CS.projectToPosOnPlanet(new P.Point(x,y))
-					# rasterizer always add all areas since it must check if it is up-to-date
-					# (items which are loaded could need to be updated)
-					@getAreaToLoad(areasToLoad, pos, planet, x, y, scale, qZoom)
-			return areasToLoad
+		# getAreasToLoad: (scale, qZoom, t, l, b, r)->
+		# 	areasToLoad = []
+		# 	for x in [l .. r] by scale
+		# 		for y in [t .. b] by scale
+		# 			planet = Utils.CS.projectToPlanet(new P.Point(x,y))
+		# 			pos = Utils.CS.projectToPosOnPlanet(new P.Point(x,y))
+		# 			# rasterizer always add all areas since it must check if it is up-to-date
+		# 			# (items which are loaded could need to be updated)
+		# 			@getAreaToLoad(areasToLoad, pos, planet, x, y, scale, qZoom)
+		# 	return areasToLoad
 
-		nothingToLoad: (areasToLoad)->
-			return areasToLoad.length<=0
+		# nothingToLoad: (areasToLoad)->
+		# 	return areasToLoad.length<=0
 
-		requestAreas: (rectangle, areasToLoad, qZoom)->
-#			Dajaxice.draw.load(@loadCallback, { rectangle: rectangle, areasToLoad: areasToLoad, qZoom: qZoom, city: R.city })
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'load', args: { rectangle: rectangle, areasToLoad: areasToLoad, qZoom: qZoom, cityName: R.city.name } } ).done(@loadCallback)
-			return
+# 		requestAreas: (rectangle, areasToLoad, qZoom)->
+# #			Dajaxice.draw.load(@loadCallback, { rectangle: rectangle, areasToLoad: areasToLoad, qZoom: qZoom, city: R.city })
+# 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'load', args: { rectangle: rectangle, areasToLoad: areasToLoad, qZoom: qZoom, cityName: R.city.name } } ).done(@loadCallback)
+# 			return
 
 		# loadAll: ()->
 		# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadAll', args: { cityName: R.city.name } } ).done((results)=> 
@@ -404,7 +404,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			@rasters.forEach (rastersOfScale, s)=>
 				rastersOfScale.forEach (rastersY, y)=>						
 					rastersY.forEach (rs, x)=>
-						if rs.length > 0 and rs[0].bounds.intersects(bounds)
+						if rs.length > 0 and rs[0].data.bounds.intersects(bounds)
 							while rs.length > 0
 								rs.pop().remove()
 							# console.log('remove rasters in bounds: ', x, ', ', y, ', bounds:', bounds)
@@ -436,12 +436,12 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 
 			return quantizedBounds
 
-		getLoadingBounds: ()->
-			bounds = P.view.bounds
-			scaleNumber = @getScaleNumber()
-			scale = @getScale(scaleNumber)
-			nPixelsPerTile = scale * 1000
-			return	bounds.expand(nPixelsPerTile)
+		# getLoadingBounds: ()->
+		# 	bounds = P.view.bounds
+		# 	scaleNumber = @getScaleNumber()
+		# 	scale = @getScale(scaleNumber)
+		# 	nPixelsPerTile = scale * 1000
+		# 	return	bounds.expand(nPixelsPerTile)
 
 		removeRaster: (rx, ry)->
 			@rasters.forEach (rastersOfScale, s)=>
@@ -453,6 +453,11 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			return
 
 		loadRasters: (bounds=P.view.bounds, alsoLoadDrawingsAndTiles=true)->
+			
+			if R.useSVG
+				if alsoLoadDrawingsAndTiles
+					@loadDrawingsAndTiles(bounds)
+				return
 
 			# @rectangle ?= new P.Path.Rectangle(P.view.bounds.expand(-P.view.bounds.width / 3, -P.view.bounds.height / 3))
 			# @rectangle.position = P.view.bounds.center
@@ -550,10 +555,12 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 							raster.position.y = (n + 0.5) * nPixelsPerTile
 							raster.scale(scale * 1.001)
 							# raster.scale(scale)
+							
+							rasterBounds = new P.Rectangle(m * nPixelsPerTile, n * nPixelsPerTile, nPixelsPerTile, nPixelsPerTile)
+							raster.data.bounds = rasterBounds
+
 							rs.push(raster)
 							group.addChild(raster)
-
-							rasterBounds = new P.Rectangle(m * nPixelsPerTile, n * nPixelsPerTile, nPixelsPerTile, nPixelsPerTile)
 
 							# rectangle = new P.Path.Rectangle(rasterBounds.expand(-10))
 							# rectangle.strokeColor = 'blue'
@@ -616,52 +623,52 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 		# - remove loaded areas which where unloaded
 		# - load areas
 		# @param [P.Rectangle] (optional) the area to load, *area* equals the bounds of the view if not defined
-		load: (area=null) ->
+		# load: (area=null) ->
 
-			if not @loadRequired() then return false
-			debugger
-			if area? then console.log area.toString()
+		# 	if not @loadRequired() then return false
+		# 	debugger
+		# 	if area? then console.log area.toString()
 
-			# R.startLoadingBar()
+		# 	# R.startLoadingBar()
 
-			@previousLoadPosition = position: P.view.center, zoom: P.view.zoom
+		# 	@previousLoadPosition = position: P.view.center, zoom: P.view.zoom
 
-			bounds = @getLoadingBounds(area)
+		# 	bounds = @getLoadingBounds(area)
 
-			unloadDist = Math.round(R.scale / P.view.zoom)
+		# 	unloadDist = Math.round(R.scale / P.view.zoom)
 
-			limit = R.view.entireArea or bounds.expand(unloadDist)
+		# 	limit = R.view.entireArea or bounds.expand(unloadDist)
 
-			# remove rasters which are outside the limit
-			R.rasterizer.unload(limit)
+		# 	# remove rasters which are outside the limit
+		# 	R.rasterizer.unload(limit)
 
-			qZoom = Utils.CS.quantizeZoom(1.0 / P.view.zoom)
+		# 	qZoom = Utils.CS.quantizeZoom(1.0 / P.view.zoom)
 
-			# remove areas which are outside the limit
-			@unloadAreas(area, limit, qZoom)
+		# 	# remove areas which are outside the limit
+		# 	@unloadAreas(area, limit, qZoom)
 
-			scale = R.scale * qZoom
+		# 	scale = R.scale * qZoom
 
-			# find top, left, bottom and right positions of the area in the quantized space
-			t = Utils.floorToMultiple(bounds.top, scale)
-			l = Utils.floorToMultiple(bounds.left, scale)
-			b = Utils.floorToMultiple(bounds.bottom, scale)
-			r = Utils.floorToMultiple(bounds.right, scale)
+		# 	# find top, left, bottom and right positions of the area in the quantized space
+		# 	t = Utils.floorToMultiple(bounds.top, scale)
+		# 	l = Utils.floorToMultiple(bounds.left, scale)
+		# 	b = Utils.floorToMultiple(bounds.bottom, scale)
+		# 	r = Utils.floorToMultiple(bounds.right, scale)
 
-			if @debug then @updateDebugPaths(limit, bounds, t, l, b, r)
+		# 	if @debug then @updateDebugPaths(limit, bounds, t, l, b, r)
 
-			# add areas to load
-			areasToLoad = @getAreasToLoad(scale, qZoom, t, l, b, r)
+		# 	# add areas to load
+		# 	areasToLoad = @getAreasToLoad(scale, qZoom, t, l, b, r)
 
-			if @nothingToLoad(areasToLoad) then return false
+		# 	if @nothingToLoad(areasToLoad) then return false
 
-			# load areas
-			@showDrawingBar()
-			@showLoadingBar(500)
+		# 	# load areas
+		# 	@showDrawingBar()
+		# 	@showLoadingBar(500)
 
-			rectangle = { left: l / 1000.0, top: t / 1000.0, right: r / 1000.0, bottom: b / 1000.0 }
-			@requestAreas(rectangle, areasToLoad, qZoom)
-			return true
+		# 	rectangle = { left: l / 1000.0, top: t / 1000.0, right: r / 1000.0, bottom: b / 1000.0 }
+		# 	@requestAreas(rectangle, areasToLoad, qZoom)
+		# 	return true
 
 		dispatchLoadFinished: ()->
 			# console.log "dispatch command executed"
@@ -1058,60 +1065,60 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 		# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'benchmark_load', args: { areasToLoad: areasToLoad } } ).done(R.loader.checkError))
 		# 	return
 
-	class RasterizerLoader extends Loader
+	# class RasterizerLoader extends Loader
 
-		loadRequired: ()->
-			return true
+	# 	loadRequired: ()->
+	# 		return true
 
-		nothingToLoad: (areasToLoad)->
-			return false
+	# 	nothingToLoad: (areasToLoad)->
+	# 		return false
 
-		getAreaToLoad: (areasToLoad, pos, planet, x, y, scale, qZoom)->
-			area = { pos: pos, planet: planet }
+	# 	getAreaToLoad: (areasToLoad, pos, planet, x, y, scale, qZoom)->
+	# 		area = { pos: pos, planet: planet }
 
-			areasToLoad.push(area)
+	# 		areasToLoad.push(area)
 
-			if @debug then @createAreaDebugRectangle(x, y, scale)
+	# 		if @debug then @createAreaDebugRectangle(x, y, scale)
 
-			if not @areaIsLoaded(pos, planet)
-				@loadedAreas.push(area)
-			return
+	# 		if not @areaIsLoaded(pos, planet)
+	# 			@loadedAreas.push(area)
+	# 		return
 
-		createItemsDates: ()->
-			itemsDates = {}
-			for id, item of R.items
-				# if bounds.contains(item.getBounds())
-				# type = ''
-				# if Lock.prototype.isPrototypeOf(item)
-				# 	type = 'Box'
-				# else if Div.prototype.isPrototypeOf(item)
-				# 	type = 'Div'
-				# else if Path.prototype.isPrototypeOf(item)
-				# 	type = 'Path'
-				itemsDates[id] = item.lastUpdateDate
-				# itemsDates.push( id: id, lastUpdate: item.lastUpdateDate, type: type )
-			return itemsDates
+	# 	createItemsDates: ()->
+	# 		itemsDates = {}
+	# 		for id, item of R.items
+	# 			# if bounds.contains(item.getBounds())
+	# 			# type = ''
+	# 			# if Lock.prototype.isPrototypeOf(item)
+	# 			# 	type = 'Box'
+	# 			# else if Div.prototype.isPrototypeOf(item)
+	# 			# 	type = 'Div'
+	# 			# else if Path.prototype.isPrototypeOf(item)
+	# 			# 	type = 'Path'
+	# 			itemsDates[id] = item.lastUpdateDate
+	# 			# itemsDates.push( id: id, lastUpdate: item.lastUpdateDate, type: type )
+	# 		return itemsDates
 
-		# requestAreas: (rectangle, areasToLoad, qZoom)->
-		# 	itemsDates = @createItemsDates()
-		# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadRasterizer', args: { areasToLoad: areasToLoad, itemsDates: itemsDates, city: R.city } } ).done(@loadCallback)
-		# 	return
+	# 	# requestAreas: (rectangle, areasToLoad, qZoom)->
+	# 	# 	itemsDates = @createItemsDates()
+	# 	# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadRasterizer', args: { areasToLoad: areasToLoad, itemsDates: itemsDates, city: R.city } } ).done(@loadCallback)
+	# 	# 	return
 
-		mustLoadItem: ()->
-			return true
+	# 	mustLoadItem: ()->
+	# 		return true
 
-		unloadItem: (item)->
-			itemToReplace = R.items[item._id.$oid]
-			if itemToReplace?
-				console.log "itemToReplace: " + itemToReplace.id
-				itemToReplace.remove() 	# if item is loaded: remove it (it must be updated)
-			return
+	# 	unloadItem: (item)->
+	# 		itemToReplace = R.items[item._id.$oid]
+	# 		if itemToReplace?
+	# 			console.log "itemToReplace: " + itemToReplace.id
+	# 			itemToReplace.remove() 	# if item is loaded: remove it (it must be updated)
+	# 		return
 
-		endLoading: ()->
-			if typeof window.saveOnServer == "function"
-				R.rasterizerBot.rasterizeAndSaveOnServer()
-			return
+	# 	endLoading: ()->
+	# 		if typeof window.saveOnServer == "function"
+	# 			R.rasterizerBot.rasterizeAndSaveOnServer()
+	# 		return
 
-	Loader.RasterizerLoader = RasterizerLoader
+	# Loader.RasterizerLoader = RasterizerLoader
 
 	return Loader

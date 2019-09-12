@@ -141,6 +141,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			if not rectangle? then return null
 
+
 			viewRatio = 1
 			rectangleRatio = rectangle.width / rectangle.height
 			
@@ -164,7 +165,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			if not drawing.svg? and drawing.paths? and drawing.paths.length > 0
 				for path in drawing.paths
-					@thumbnailProject.activeLayer.addChild(path.path.clone())
+					clone = path.clone()
+					@thumbnailProject.activeLayer.addChild(clone)
 
 			if viewRatio < rectangleRatio
 				@thumbnailProject.view.zoom = Math.min(sizeX / rectangle.width, 1)

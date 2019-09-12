@@ -22,7 +22,6 @@
         this.submitPhotoClicked = bind(this.submitPhotoClicked, this);
         this.handleFiles = bind(this.handleFiles, this);
         this.submitDrawingClicked = bind(this.submitDrawingClicked, this);
-        this.beginDrawingClicked = bind(this.beginDrawingClicked, this);
         this.showContent = bind(this.showContent, this);
         this.showLoadAnimation = bind(this.showLoadAnimation, this);
         this.resizeGeneralInformation = bind(this.resizeGeneralInformation, this);
@@ -70,10 +69,6 @@
           };
         })(this));
         this.contentJ.find('.share-buttons button').popover();
-        this.beginDrawingBtnJ = $('button.begin-drawing');
-        this.beginDrawingBtnJ.click(this.beginDrawingClicked);
-        this.submitDrawingBtnJ = $('button.submit-drawing');
-        this.submitDrawingBtnJ.click(this.submitDrawingClicked);
         tileInfoJ = this.contentJ.find('.tile-info');
         this.printTileJ = tileInfoJ.find('.print-tile');
         this.printTileJ.click(this.printTileClicked);
@@ -821,36 +816,6 @@
         this.drawingPanelJ.find('.loading-animation').hide();
       };
 
-      DrawingPanel.prototype.showSubmitDrawing = function() {};
-
-      DrawingPanel.prototype.hideSubmitDrawing = function() {
-        this.submitDrawingBtnJ.hide();
-      };
-
-      DrawingPanel.prototype.showBeginDrawing = function() {
-        this.beginDrawingBtnJ.show();
-      };
-
-      DrawingPanel.prototype.hideBeginDrawing = function() {
-        this.beginDrawingBtnJ.hide();
-      };
-
-      DrawingPanel.prototype.beginDrawingClicked = function() {
-        var id, item, ref;
-        R.toolManager.enterDrawingMode();
-        this.beginDrawingBtnJ.hide();
-        ref = R.items;
-        for (id in ref) {
-          item = ref[id];
-          if (item instanceof Item.Path) {
-            if (item.owner === R.me && item.drawingId === null) {
-              this.showSubmitDrawing();
-              return;
-            }
-          }
-        }
-      };
-
       DrawingPanel.prototype.setThumbnail = function(item, thumbnailJ) {
         var svg;
         svg = R.view.getThumbnail(item);
@@ -861,11 +826,21 @@
       };
 
       DrawingPanel.prototype.setDrawingThumbnail = function() {
+        var drawingThumbnailJ;
         if (this.currentItem.itemType === 'tile') {
           return;
         }
         this.contentJ.find('.thumbnail-footer').show();
-        this.setThumbnail(this.currentItem, this.contentJ.find('.drawing-thumbnail'));
+        drawingThumbnailJ = this.contentJ.find('.drawing-thumbnail');
+        if (this.currentItem.svg != null) {
+          this.setThumbnail(this.currentItem, drawingThumbnailJ);
+        } else {
+          this.currentItem.loadSVG((function(_this) {
+            return function() {
+              return _this.setThumbnail(_this.currentItem, drawingThumbnailJ);
+            };
+          })(this));
+        }
       };
 
       DrawingPanel.prototype.checkPathToSubmit = function() {
@@ -889,7 +864,6 @@
         R.tools.select.deselectAll();
         R.toolManager.leaveDrawingMode(true);
         this.currentItem = draft;
-        this.currentItem.addPaths();
         this.contentJ.find('.tile-info').hide();
         this.drawingPanelTitleJ.attr('data-i18n', 'Create drawing').text(i18next.t('Create drawing'));
         this.contentJ.find('.comments-container').hide();
@@ -920,6 +894,7 @@
         if (bounds != null) {
           R.view.fitRectangle(bounds, true);
         }
+        draft.createSVG();
         this.setDrawingThumbnail();
         this.currentItem.select(true, false);
       };
@@ -1643,7 +1618,7 @@
                     drawing.remove();
                   }
                   if (R.administrator && data.status === 'flagged_pending') {
-                    drawing.loadSVG();
+                    drawing.loadPathList();
                   }
                 }
               } else if ((data.bounds != null) && R.loader.getLoadingBounds().intersects(data.bounds)) {
@@ -2026,28 +2001,6 @@
         }
         tile = JSON.parse(result.tile);
         R.tools.choose.removeTile(tile);
-      };
-
-      DrawingPanel.prototype.deleteGivenPaths = function(paths) {
-        var deleteCommand, i, len, path, pathsToDelete, pathsToDeleteResurectors;
-        pathsToDelete = [];
-        pathsToDeleteResurectors = {};
-        for (i = 0, len = paths.length; i < len; i++) {
-          path = paths[i];
-          if (path.pk != null) {
-            pathsToDelete.push(path);
-            pathsToDeleteResurectors[path.id] = {
-              data: path.getDuplicateData(),
-              constructor: path.constructor
-            };
-          } else {
-            path.remove();
-          }
-        }
-        if (pathsToDelete.length > 0) {
-          deleteCommand = new Command.DeleteItems(pathsToDelete, pathsToDeleteResurectors);
-          R.commandManager.add(deleteCommand, true);
-        }
       };
 
       return DrawingPanel;
