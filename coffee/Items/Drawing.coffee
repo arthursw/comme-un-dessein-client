@@ -339,7 +339,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				# 	# R.view.mainLayer.addChild(@group)
 				# 	itemListJ = R.view.testListJ
 				else
-					R.alertManager.alert "Error: drawing status is invalid", "error"
+					@group.visible = false
+					if @svg?
+						$(@svg).hide()
+					# R.alertManager.alert "Error: drawing status is invalid", "error"
 
 			return itemListJ
 

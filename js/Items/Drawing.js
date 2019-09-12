@@ -414,7 +414,10 @@
             itemListJ = R.view.flaggedListJ;
             break;
           default:
-            R.alertManager.alert("Error: drawing status is invalid", "error");
+            this.group.visible = false;
+            if (this.svg != null) {
+              $(this.svg).hide();
+            }
         }
         return itemListJ;
       };
