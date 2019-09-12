@@ -83,7 +83,7 @@
         if (value < 1 && bounds.contains(R.view.grid.limitCD.bounds)) {
           return;
         }
-        if (bounds.contains(R.view.grid.limitCD.bounds.scale(snap ? Math.pow(value, 2) : value))) {
+        if (value < 1 && bounds.contains(R.view.grid.limitCD.bounds.scale(snap ? Math.pow(value, 2) : value))) {
           R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(200), true);
           return;
         }
