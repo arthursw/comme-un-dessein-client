@@ -472,13 +472,17 @@
         this.rejectedListJ.find('ul.rPath-list').append(hideOtherDrawingsLiJ);
       };
 
-      View.prototype.loadRejectedDrawings = function() {
+      View.prototype.loadRejectedDrawings = function(callback) {
+        if (callback == null) {
+          callback = null;
+        }
         R.loader.inactiveRasterGroup.visible = true;
         R.view.rejectedLayer.visible = true;
+        R.loadRejectedDrawings = true;
         document.getElementById('rejectedLayer').setAttribute('visibility', 'visible');
         this.rejectedListJ.find('.rPath-list').removeClass('hide-drawings');
         R.loader.clearRasters();
-        R.loader.loadRasters();
+        R.loader.loadRasters(P.view.bounds, true, callback);
       };
 
       View.prototype.getViewBounds = function(considerPanels) {

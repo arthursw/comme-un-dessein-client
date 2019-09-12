@@ -458,13 +458,14 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			return
 
-		loadRejectedDrawings: ()->
+		loadRejectedDrawings: (callback=null)->
 			R.loader.inactiveRasterGroup.visible = true
 			R.view.rejectedLayer.visible = true
+			R.loadRejectedDrawings = true
 			document.getElementById('rejectedLayer').setAttribute('visibility', 'visible')
 			@rejectedListJ.find('.rPath-list').removeClass('hide-drawings')
 			R.loader.clearRasters()
-			R.loader.loadRasters()
+			R.loader.loadRasters(P.view.bounds, true, callback)
 			return
 
 		getViewBounds: (considerPanels)->

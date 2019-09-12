@@ -192,8 +192,11 @@
         R.toolManager.updateButtonsVisibility();
       };
 
-      Loader.prototype.loadDrawingsAndTiles = function(bounds) {
+      Loader.prototype.loadDrawingsAndTiles = function(bounds, callback) {
         var args, grid;
+        if (callback == null) {
+          callback = null;
+        }
         grid = R.view.grid;
         args = {
           cityName: R.city.name,
@@ -213,7 +216,12 @@
               args: args
             })
           }
-        }).done(this.loadDrawingsAndTilesCallback);
+        }).done((function(_this) {
+          return function(results) {
+            _this.loadDrawingsAndTilesCallback(results);
+            return typeof callback === "function" ? callback() : void 0;
+          };
+        })(this));
       };
 
       Loader.prototype.loadDrawingsAndTilesCallback = function(results) {
@@ -310,7 +318,7 @@
         })(this));
       };
 
-      Loader.prototype.loadRasters = function(bounds, alsoLoadDrawingsAndTiles) {
+      Loader.prototype.loadRasters = function(bounds, alsoLoadDrawingsAndTiles, callback) {
         var drawingsToLoad, group, j, k, layerName, len, limits, m, n, nPixelsPerTile, o, quantizedBounds, quantizedViewBounds, raster, rasterBounds, rastersOfScale, rastersY, ref, ref1, ref2, ref3, ref4, ref5, rs, scale, scaleNumber;
         if (bounds == null) {
           bounds = P.view.bounds;
@@ -318,9 +326,12 @@
         if (alsoLoadDrawingsAndTiles == null) {
           alsoLoadDrawingsAndTiles = true;
         }
+        if (callback == null) {
+          callback = null;
+        }
         if (R.useSVG) {
           if (alsoLoadDrawingsAndTiles) {
-            this.loadDrawingsAndTiles(bounds);
+            this.loadDrawingsAndTiles(bounds, callback);
           }
           return;
         }

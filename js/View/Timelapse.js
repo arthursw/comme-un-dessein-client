@@ -8,6 +8,7 @@
       Timelapse.duration = 2 * 60 * 1000;
 
       function Timelapse() {
+        this.loadOnceRejectedDrawingsAreLoaded = bind(this.loadOnceRejectedDrawingsAreLoaded, this);
         this.load = bind(this.load, this);
         this.loadTimelapseDataFromDatabase = bind(this.loadTimelapseDataFromDatabase, this);
         this.handleTimelapseData = bind(this.handleTimelapseData, this);
@@ -545,14 +546,19 @@
       };
 
       Timelapse.prototype.load = function(loadRejectedDrawings) {
-        var jqxhr;
         if (loadRejectedDrawings == null) {
           loadRejectedDrawings = true;
         }
         if (loadRejectedDrawings) {
-          R.view.loadRejectedDrawings();
           R.view.rejectedLayer.data.setVisibility(true);
+          R.view.loadRejectedDrawings(this.loadOnceRejectedDrawingsAreLoaded);
+          return;
         }
+        this.loadOnceRejectedDrawingsAreLoaded();
+      };
+
+      Timelapse.prototype.loadOnceRejectedDrawingsAreLoaded = function() {
+        var jqxhr;
         if (!this.loaded) {
           R.loader.showLoadingBar();
           jqxhr = $.get(location.origin + '/static/timelapses/' + R.city.name + '-timelapse.json', ((function(_this) {

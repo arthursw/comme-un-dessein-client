@@ -303,7 +303,6 @@
         if (hide == null) {
           hide = false;
         }
-        console.log(svg);
         if (!R.useSVG) {
           return this.setSVGRasterMode(svg, parse, callback);
         }

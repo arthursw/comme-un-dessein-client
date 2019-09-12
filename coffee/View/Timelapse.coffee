@@ -434,9 +434,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'i18next', 'moment' ], (P, R,
 		load: (loadRejectedDrawings = true)=>
 
 			if loadRejectedDrawings
-				R.view.loadRejectedDrawings()
 				R.view.rejectedLayer.data.setVisibility(true)
+				R.view.loadRejectedDrawings(@loadOnceRejectedDrawingsAreLoaded)
+				return
+			@loadOnceRejectedDrawingsAreLoaded()
+			return
 
+		loadOnceRejectedDrawingsAreLoaded: ()=>
 			if not @loaded
 				R.loader.showLoadingBar()
 

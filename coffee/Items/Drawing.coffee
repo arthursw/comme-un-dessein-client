@@ -226,7 +226,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		setSVG: (svg, parse=true, callback=null, hide=false)->
-			console.log(svg)
 
 			if not R.useSVG then return @setSVGRasterMode(svg, parse, callback)
 

@@ -328,7 +328,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			R.toolManager.updateButtonsVisibility()
 			return
 
-		loadDrawingsAndTiles: (bounds)->
+		loadDrawingsAndTiles: (bounds, callback=null)->
 			grid = R.view.grid
 			args = 
 				cityName: R.city.name
@@ -343,7 +343,9 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				args.drawingsToIgnore = Array.from( R.pkToDrawing.keys() )
 				args.tilesToIgnore = R.tools.choose.tilePks
 
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawingsAndTilesFromBounds', args: args } ).done(@loadDrawingsAndTilesCallback)
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawingsAndTilesFromBounds', args: args } ).done((results)=>
+				@loadDrawingsAndTilesCallback(results)
+				callback?())
 			return
 
 		loadDrawingsAndTilesCallback: (results)=>
@@ -452,11 +454,11 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 								rs.pop().remove()
 			return
 
-		loadRasters: (bounds=P.view.bounds, alsoLoadDrawingsAndTiles=true)->
+		loadRasters: (bounds=P.view.bounds, alsoLoadDrawingsAndTiles=true, callback=null)->
 			
 			if R.useSVG
 				if alsoLoadDrawingsAndTiles
-					@loadDrawingsAndTiles(bounds)
+					@loadDrawingsAndTiles(bounds, callback)
 				return
 
 			# @rectangle ?= new P.Path.Rectangle(P.view.bounds.expand(-P.view.bounds.width / 3, -P.view.bounds.height / 3))
