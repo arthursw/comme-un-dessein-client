@@ -1821,7 +1821,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				R.alertManager.alert 'You cannot vote for your own ' + type, 'error'
 				return
 			
-			if type == 'drawing' and @currentItem.status != 'pending' or type == 'tile' and @currentItem.status != 'created'
+			if (not R.administrator) and type == 'drawing' and @currentItem.status != 'pending' or type == 'tile' and @currentItem.status != 'created'
 				R.alertManager.alert 'The ' + type + ' is already validated', 'error'
 				return
 			

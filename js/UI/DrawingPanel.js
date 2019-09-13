@@ -1840,7 +1840,7 @@
           R.alertManager.alert('You cannot vote for your own ' + type, 'error');
           return;
         }
-        if (type === 'drawing' && this.currentItem.status !== 'pending' || type === 'tile' && this.currentItem.status !== 'created') {
+        if ((!R.administrator) && type === 'drawing' && this.currentItem.status !== 'pending' || type === 'tile' && this.currentItem.status !== 'created') {
           R.alertManager.alert('The ' + type + ' is already validated', 'error');
           return;
         }
