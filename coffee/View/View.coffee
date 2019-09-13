@@ -351,6 +351,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@drawingLayer.name  = 'drawingLayer'
 			@drawingLayer.strokeColor = Path.colorMap['drawing']
 			@drawingLayer.strokeWidth = Path.strokeWidth
+			@validatedLayer = @drawingLayer
 			@drawnLayer = new P.Layer()
 			@drawnLayer.name  = 'drawnLayer'
 			@drawnLayer.strokeColor = Path.colorMap['drawn']

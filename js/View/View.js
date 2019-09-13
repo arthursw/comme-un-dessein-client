@@ -361,6 +361,7 @@
         this.drawingLayer.name = 'drawingLayer';
         this.drawingLayer.strokeColor = Path.colorMap['drawing'];
         this.drawingLayer.strokeWidth = Path.strokeWidth;
+        this.validatedLayer = this.drawingLayer;
         this.drawnLayer = new P.Layer();
         this.drawnLayer.name = 'drawnLayer';
         this.drawnLayer.strokeColor = Path.colorMap['drawn'];
