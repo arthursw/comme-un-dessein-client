@@ -18,6 +18,7 @@ define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, i
 		initialize: ()->
 
 			@userToPaths = new Map()
+			@userToColor = new Map()
 			@fadeTailsIntervalID = null
 
 			# initialize jQuery objects
@@ -344,8 +345,11 @@ define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, i
 			nAlivePaths = 0
 			@userToPaths.forEach (paths, user) =>
 				for path in paths.slice()
+					path.scale(0.9)
+					path.position = path.position.add(path.data.direction)
 					path.data.lives--
 					path.strokeColor.alpha -= 0.1
+					path.fillColor.alpha -= 0.1
 					if path.data.lives == 0
 						path.remove()
 						paths.splice(paths.indexOf(path), 1)
@@ -356,14 +360,21 @@ define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, i
 				@fadeTailsIntervalID = null
 			return
 
-		createPath: (point)->
-			path = new P.Path()
-			path.strokeWidth = R.Item.Path.strokeWidth
-			path.strokeColor = R.selectionBlue
+		createPath: (point, color)->
+			# path = new P.Path()
+			path = new P.Path.Circle(point, 3)
+			# path.strokeWidth = 0.5 # R.Item.Path.strokeWidth
+			# path.strokeColor = R.selectionBlue
+			# path.fillColor = R.selectionBlue
+			path.strokeColor = color
+			path.fillColor = color
+			path.strokeColor.alpha = 1
+			path.fillColor.alpha = 1
+			path.data.direction = P.Point.random().subtract(0.5).multiply(3)
 			path.strokeCap = 'round'
 			path.strokeJoin = 'round'
 			path.data.lives = 10
-			path.add(point)
+			# path.add(point)
 			return path
 
 		onDrawBegin: (user, point)=>
@@ -372,7 +383,13 @@ define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, i
 			if not paths?
 				paths = []
 				@userToPaths.set(user, paths)
-			path = @createPath(point)
+
+			color = @userToColor.get(user)
+			if not color?
+			    color = new P.Color({hue: Math.floor(Math.random()*360/10)*10, saturation: 0.35, brightness: 0.95});
+				@userToColor.set(user, color)
+
+			path = @createPath(point, color)
 			paths.push(path)
 			if not @fadeTailsIntervalID
 				@fadeTailsIntervalID = setInterval(@fadeTailsInterval, 100)
@@ -382,16 +399,16 @@ define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, i
 			if user == R.me then return
 			paths = @userToPaths.get(user)
 			if paths?
-				paths[paths.length - 1].add(point)
-				path = @createPath(point)
+				# paths[paths.length - 1].add(point)
+				path = @createPath(point, @userToColor.get(user))
 				paths.push(path)
 			return
 
 		onDrawEnd: (user, point)=>
 			if user == R.me then return
-			paths = @userToPaths.get(user)
-			if paths?
-				paths[paths.length - 1].add(point)
+			# paths = @userToPaths.get(user)
+			# if paths?
+			# 	paths[paths.length - 1].add(point)
 			return
 
 		onBounce: (data) ->

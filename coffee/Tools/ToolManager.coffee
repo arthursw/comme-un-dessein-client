@@ -275,7 +275,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			if value < 1 and bounds.contains(R.view.grid.limitCD.bounds)
 				return
 			
-			if bounds.contains(R.view.grid.limitCD.bounds.scale(if snap then Math.pow(value, 2) else value))
+			if value < 1 and bounds.contains(R.view.grid.limitCD.bounds.scale(if snap then Math.pow(value, 2) else value))
 				R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(200), true)
 				return
 			

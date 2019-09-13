@@ -111,8 +111,9 @@
           });
           $(window).resize(this.onWindowResize);
           document.addEventListener('wheel', (function(event) {
-            console.log(event);
-            R.toolManager.zoom(Math.pow(1.1, -event.deltaY), false);
+            if (!(event.metaKey || event.shiftKey || event.ctrlKey)) {
+              R.toolManager.zoom(Math.pow(1.005, -event.deltaY), false);
+            }
             return event.preventDefault();
           }), {
             passive: false
@@ -1062,7 +1063,9 @@
       };
 
       View.prototype.mousewheel = function(event) {
-        this.moveBy(new P.Point(-event.deltaX, event.deltaY));
+        if (event.shiftKey || event.metaKey || event.ctrlKey) {
+          this.moveBy(new P.Point(-event.deltaX, event.deltaY));
+        }
       };
 
       return View;

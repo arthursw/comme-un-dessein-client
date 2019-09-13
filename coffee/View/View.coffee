@@ -100,8 +100,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 				$(window).resize(@onWindowResize)
 				document.addEventListener('wheel', ((event)-> 
-					console.log(event)
-					R.toolManager.zoom(Math.pow(1.1, -event.deltaY), false)
+					if not (event.metaKey or event.shiftKey or event.ctrlKey)
+						R.toolManager.zoom(Math.pow(1.005, -event.deltaY), false)
 					event.preventDefault()), {passive: false})
 
 				window.onhashchange = @onHashChange
@@ -1138,7 +1138,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			return
 
 		mousewheel: (event)=>
-			@moveBy(new P.Point(-event.deltaX, event.deltaY))
+			if event.shiftKey or event.metaKey or event.ctrlKey
+				@moveBy(new P.Point(-event.deltaX, event.deltaY))
 			return
 
 		# hash format: [repo-owner=repo-owner-name&commit-hash=commit-hash][&city-owner=city-owner&city-name=city-name][&location=location-x,location-y]

@@ -30,6 +30,7 @@
 
       Socket.prototype.initialize = function() {
         this.userToPaths = new Map();
+        this.userToColor = new Map();
         this.fadeTailsIntervalID = null;
         this.chatJ = $("#chatContent");
         this.chatMainJ = this.chatJ.find("#chatMain");
@@ -304,8 +305,11 @@
             results1 = [];
             for (j = 0, len = ref.length; j < len; j++) {
               path = ref[j];
+              path.scale(0.9);
+              path.position = path.position.add(path.data.direction);
               path.data.lives--;
               path.strokeColor.alpha -= 0.1;
+              path.fillColor.alpha -= 0.1;
               if (path.data.lives === 0) {
                 path.remove();
                 results1.push(paths.splice(paths.indexOf(path), 1));
@@ -322,20 +326,22 @@
         }
       };
 
-      Socket.prototype.createPath = function(point) {
+      Socket.prototype.createPath = function(point, color) {
         var path;
-        path = new P.Path();
-        path.strokeWidth = R.Item.Path.strokeWidth;
-        path.strokeColor = R.selectionBlue;
+        path = new P.Path.Circle(point, 3);
+        path.strokeColor = color;
+        path.fillColor = color;
+        path.strokeColor.alpha = 1;
+        path.fillColor.alpha = 1;
+        path.data.direction = P.Point.random().subtract(0.5).multiply(3);
         path.strokeCap = 'round';
         path.strokeJoin = 'round';
         path.data.lives = 10;
-        path.add(point);
         return path;
       };
 
       Socket.prototype.onDrawBegin = function(user, point) {
-        var path, paths;
+        var color, path, paths;
         if (user === R.me) {
           return;
         }
@@ -344,7 +350,16 @@
           paths = [];
           this.userToPaths.set(user, paths);
         }
-        path = this.createPath(point);
+        color = this.userToColor.get(user);
+        if (color == null) {
+          color = new P.Color({
+            hue: Math.floor(Math.random() * 360 / 10) * 10,
+            saturation: 0.35,
+            brightness: 0.95
+          });
+        }
+        this.userToColor.set(user, color);
+        path = this.createPath(point, color);
         paths.push(path);
         if (!this.fadeTailsIntervalID) {
           this.fadeTailsIntervalID = setInterval(this.fadeTailsInterval, 100);
@@ -358,20 +373,14 @@
         }
         paths = this.userToPaths.get(user);
         if (paths != null) {
-          paths[paths.length - 1].add(point);
-          path = this.createPath(point);
+          path = this.createPath(point, this.userToColor.get(user));
           paths.push(path);
         }
       };
 
       Socket.prototype.onDrawEnd = function(user, point) {
-        var paths;
         if (user === R.me) {
           return;
-        }
-        paths = this.userToPaths.get(user);
-        if (paths != null) {
-          paths[paths.length - 1].add(point);
         }
       };
 
