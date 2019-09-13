@@ -78,7 +78,7 @@
 
   requirejs(['R', 'jquery', 'underscore'], function(R) {
     R.defaultColors = [];
-    R.strokeWidth = parseFloat($('#canvas').attr('data-city-stroke-width'));
+    R.strokeWidth = $('#canvas').attr('data-city-stroke-width');
     if (_.isString(R.strokeWidth)) {
       R.strokeWidth = parseFloat(R.strokeWidth.replace(',', '.'));
     } else {
