@@ -358,7 +358,7 @@
         this.pendingLayer.strokeColor = Path.colorMap['pending'];
         this.pendingLayer.strokeWidth = Path.strokeWidth;
         this.drawingLayer = new P.Layer();
-        this.drawingLayer.name = 'drawingLayer';
+        this.drawingLayer.name = 'validatedLayer';
         this.drawingLayer.strokeColor = Path.colorMap['drawing'];
         this.drawingLayer.strokeWidth = Path.strokeWidth;
         this.validatedLayer = this.drawingLayer;
