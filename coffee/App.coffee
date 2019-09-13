@@ -132,21 +132,21 @@ requirejs.config
 requirejs [ 'R', 'jquery', 'underscore' ], (R) ->
 
 	R.defaultColors = []
-	R.strokeWidth = $('#canvas').attr('data-city-stroke-width')
+	R.strokeWidth = parseFloat($('#canvas').attr('data-city-stroke-width'))
 	if _.isString(R.strokeWidth)
-		R.strokeWidth = parseFloat(R.strokeWidth)
+		R.strokeWidth = parseFloat(R.strokeWidth.replace(',', '.'))
 	else
 		R.strokeWidth = null
 
 	R.cityWidth = $('#canvas').attr('data-city-width')
 	if _.isString(R.cityWidth)
-		R.cityWidth = parseFloat(R.cityWidth)
+		R.cityWidth = parseFloat(R.cityWidth.replace(',', '.'))
 	else
 		R.cityWidth = null
 	
 	R.cityHeight = $('#canvas').attr('data-city-height')
 	if _.isString(R.cityHeight)
-		R.cityHeight = parseFloat(R.cityHeight)
+		R.cityHeight = parseFloat(R.cityHeight.replace(',', '.'))
 	else
 		R.cityHeight = null
 
