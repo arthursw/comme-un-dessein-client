@@ -100,7 +100,7 @@
       };
 
       AlertManager.prototype.show = function() {
-        var alertJ, blink, suffix;
+        var alertJ, blink, ref, suffix;
         if (this.alertTimeOut != null) {
           clearTimeout(this.alertTimeOut);
           this.alertTimeOut = null;
@@ -117,7 +117,9 @@
         })(this)), 250);
         R.sidebar.sidebarJ.addClass('r-alert');
         suffix = this.alertsContainer.hasClass('top') ? '-top' : '';
-        R.drawingPanel.drawingPanelJ.addClass('r-alert' + suffix);
+        if ((ref = R.drawingPanel) != null) {
+          ref.drawingPanelJ.addClass('r-alert' + suffix);
+        }
         $('#timeline').addClass('r-alert' + suffix);
         $('#submit-drawing-button').addClass('r-alert' + suffix);
         this.openning = true;

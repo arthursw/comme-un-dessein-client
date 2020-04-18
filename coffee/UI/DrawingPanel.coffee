@@ -123,8 +123,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				if Utils.specialKeys[event.keyCode] == 'enter'
 					event.preventDefault()
 					event.stopPropagation()
-					if not R.drawingPanel.currentItem? then return 		# When typing enter twice
-					if R.drawingPanel.currentItem.status == 'draft'
+					if not @currentItem? then return 		# When typing enter twice
+					if @currentItem.status == 'draft'
 						@submitDrawing()
 					else
 						@modifyDrawing()
@@ -169,6 +169,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					modal.show()
 					return
 
+			@initializeDiscussion()
 			# @close()
 			return
 
@@ -580,6 +581,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@contentJ.find('.delete-drawing').show()
 			$('#submit-drawing-button').addClass('drawingPanel')
 			@drawingPanelJ.removeClass('general')
+			@drawingPanelJ.removeClass('discussion')
 			# @contentJ.find('#drawing-panel-no-selection')
 			@onWindowResize()
 			# @drawingPanelJ.show()
@@ -615,6 +617,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			R.toolManager.updateButtonsVisibility()
 			R.tools.choose.deselectTile(false)
+
+			if @currentItem? and @currentItem.itemType == 'discussion' and @currentItem.draft
+				R.tools.discuss.removeCurrentDiscussion()
+
 			return
 
 		setGeneralInformation: ()=>
@@ -913,7 +919,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			R.tools.select.deselectAll()
 			R.toolManager.leaveDrawingMode(true)
 
-			# set currentDrawing after the two prevous functions
+			# set currentDrawing after the two previous functions
 			@currentItem = draft
 			# @currentItem.addPaths()
 
@@ -966,6 +972,80 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			@currentItem.select(true, false) # Important to deselect (for example when selecting a tool) and close the drawing panel
 
+			return
+
+		initializeDiscussion: ()->
+			document.getElementById('drawing-title').addEventListener('input', (event)-> R.tools.discuss.updateCurrentDiscussion(event.target.value) )
+			return
+		
+		setPanelForDiscussion: (@currentItem = R.tools.discuss.currentDiscussion)->
+			
+
+			@contentJ.find('.tile-info').hide()
+			
+			@drawingPanelTitleJ.attr('data-i18n', 'Create discussion').text(i18next.t('Create discussion'))
+
+			@open()
+			@drawingPanelJ.addClass('discussion')
+			@showContent()
+
+			@contentJ.find('.delete-drawing').hide()
+
+			@contentJ.find('#drawing-panel-no-selection').hide().siblings().show()
+
+			setTimeout (() => @contentJ.find('#drawing-title').focus() ), 200
+
+			@contentJ.find('#drawing-thumbnail').hide()
+			@contentJ.find('.title-group').show()
+
+			@submitBtnJ.show()
+			@modifyBtnJ.hide()
+			@cancelBtnJ.show()
+			@cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel').text(i18next.t('Cancel'))
+
+			@votesJ.hide()
+			@contentJ.find('.share-buttons').hide()
+
+			@contentJ.find('.comments-container').hide()
+
+			R.tools.discuss.centerOnDiscussion()
+
+			@currentItem.itemType = 'discussion'
+
+			return
+
+		addDiscussionClicked: ()=>
+			@setPanelForDiscussion()
+			@contentJ.find('#drawing-title').attr('placeholder', i18next.t('Discussion Title')).show().removeAttr('readonly').val('').select()
+
+			$.ajax( method: "GET", url: "http://espero.collectivethinking.co:8080/p/core/new/post/" ).done((result)=>
+				$('#discussion-content').append(result.template)
+				return).error((result)=> 
+				console.log(result))
+			return
+
+		openDiscussion: (discussion)=>
+			@setPanelForDiscussion(discussion)
+
+			drawingTitleJ = @contentJ.find('#drawing-title')
+
+			drawingTitleJ.show().val(@currentItem.pointText.content)
+			if discussion.owner == R.me
+				drawingTitleJ.removeAttr('readonly')
+
+				@submitBtnJ.hide()
+				@modifyBtnJ.show()
+				@cancelBtnJ.show()
+				@cancelBtnJ.find('span.text').attr('data-i18n', 'Delete discussion').text(i18next.t('Delete discussion'))
+			else 
+				@submitBtnJ.show()
+				@modifyBtnJ.hide()
+				drawingTitleJ.attr('readonly')
+			
+			$.ajax( method: "GET", url: "http://localhost:8080/p/core/296/" ).done((result)=>
+				$('#discussion-content').append(result.template)
+				return).error((result)=> 
+				console.log(result))
 			return
 
 		createTilePhoto: (photoURL)->
@@ -1281,7 +1361,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			@contentJ.find('#drawing-author').show().val(@currentItem.owner)
 			@contentJ.find('.title-group').hide()
-			@contentJ.find('#drawing-title').show().val(@currentItem.title)
+			@contentJ.find('#drawing-title').attr('placeholder', i18next.t('Drawing Title')).show().val(@currentItem.title)
 			
 			@thumbnailFooterAuthor.show().text(@currentItem.owner)
 			@thumbnailFooterTitle.show().text(@currentItem.title)
@@ -1546,6 +1626,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				return)
 			return
 
+		loadDiscussion: (discussion)->
+			if not discussion.pk? then return
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDiscussion', args: { pk: discussion.pk } } ).done((result)=>
+				if not R.loader.checkError(result) then return
+				discussion = JSON.parse(result.discussion)
+				@openDiscussion(discussion)
+				return)
+			return
+
 		onDrawingChange: (data)->
 
 			switch data.type
@@ -1574,7 +1663,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 								@setVotes()
 				when 'new'
 					drawingLink = @getItemLink(data)
-					if R.administrator
+					if R.administrator and data.itemType == 'drawing'
 						@notify('New drawing', data.itemType + ' url: ' + drawingLink, window.location.origin + '/static/images/icons/plus.png')
 
 					# ok if both are undefined: corresponds to CommeUnDessein
@@ -1592,12 +1681,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 						if R.loader.getLoadingBounds().intersects(data.bounds)
 							@loadDrawing(data.pk)
-					else
+					else if data.itemType == 'tile'
 
 						R.alertManager.alert 'A new tile has been reserved', 'info', null, {html: '<a style="color: #2196f3;text-decoration: underline;" href="'+drawingLink+'">Un nouvelle case</a> a été réservée !'}
 
 						if R.loader.getLoadingBounds().intersects(data.bounds)
 							@loadTile(data.pk)
+
+					else if data.itemType == 'discussion'
+
+						if not R.tools.discuss.discussions.get(data.clientId)? and R.loader.getLoadingBounds().intersects(data.bounds)
+							R.alertManager.alert 'A new discussion has been created', 'info'
+							@loadDiscussion(data.pk)
 
 				when 'description', 'title'
 					if R.administrator
@@ -1852,8 +1947,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 		submitDrawing: ()=>
 
+			if not @currentItem?
+				return
+
 			if not R.me? or not _.isString(R.me)
-				R.alertManager.alert "You must be logged in to submit a drawing", "error"
+				R.alertManager.alert "You must be logged in to submit a " + @currentItem.itemType, "error"
 				return
 			
 			title = @contentJ.find('#drawing-title').val()
@@ -1878,15 +1976,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 		modifyDrawing: ()=>
 
-			if not R.me? or not _.isString(R.me)
-				R.alertManager.alert "You must be logged in to modify a drawing", "error"
-				return
-
 			if not @currentItem?
-				R.alertManager.alert "You must select a drawing first", "error"
 				return
 
-			if @currentItem.status != 'pending' and @currentItem.status != 'emailNotConfirmed' and @currentItem.status != 'notConfirmed'
+			if not R.me? or not _.isString(R.me)
+				R.alertManager.alert "You must be logged in to submit a " + @currentItem.itemType, "error"
+				return
+
+			if @currentItem.itemType == 'drawing' and @currentItem.status != 'pending' and @currentItem.status != 'emailNotConfirmed' and @currentItem.status != 'notConfirmed'
 				R.alertManager.alert "The drawing is already validated, it cannot be modified anymore", "error"
 				return				
 
@@ -1895,6 +1992,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			return
 
 		cancelDrawing: ()=>
+			if @currentItem.itemType == 'discussion'
+				@cancelDiscussion()
+				return
+
 			if @currentItem.itemType == 'tile'
 				@cancelTile()
 				return
@@ -1938,6 +2039,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			modal.addText('This will reset the votes and comments of the drawing')
 			modal.modalJ.find('[name="submit"]').addClass('btn-danger').removeClass('btn-primary')
 			modal.show()
+			return
+
+		cancelDiscussion: ()->
+			R.tools.discuss.removeCurrentDiscussion()
+			@close()
 			return
 
 		cancelTile: ()=>

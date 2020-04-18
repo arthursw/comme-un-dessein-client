@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Drawing', 'Items/Divs/Text' ], (P, R, Utils, Command, Item, ModuleLoader, Drawing, Text) ->
+define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Drawing', 'Items/Discussion', 'Items/Divs/Text' ], (P, R, Utils, Command, Item, ModuleLoader, Drawing, Discussion, Text) ->
 # define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Lock', 'Items/Divs/Div', 'Items/Divs/Media', 'Items/Drawing', 'Items/Divs/Text' ], (P, R, Utils, Command, Item, ModuleLoader, Lock, Div, Media, Drawing, Text) ->
 	# --- load --- #
 
@@ -358,6 +358,11 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			for tile in tiles
 				R.tools.choose.createTile(tile)
 
+			discussions = JSON.parse(results.discussions)
+			
+			for discussion in discussions
+				R.tools.discuss.createDiscussion(discussion)
+
 			return
 
 		# loadTiles: (bounds)->
@@ -454,6 +459,16 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 								rs.pop().remove()
 			return
 
+		removeRastersXY: (rs)->
+			rasterBounds = null
+			while rs.length > 0
+				raster = rs.pop()
+				rasterBounds = raster.data.bounds
+				raster.remove()
+			if rasterBounds?
+				R.tools.discuss.removeDisucssionsInRectangle(rasterBounds)
+			return
+
 		loadRasters: (bounds=P.view.bounds, alsoLoadDrawingsAndTiles=true, callback=null)->
 			
 			if R.useSVG
@@ -518,8 +533,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 					rastersOfScale.forEach (rastersY, y)=>
 						rastersY.forEach (rs, x)=>
 							# console.log('remove other scale: ', x, ', ', y)
-							while rs.length > 0
-								rs.pop().remove()
+							@removeRastersXY(rs)
 							return
 
 					@rasters.delete(s)
@@ -529,8 +543,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 						rastersY.forEach (rs, x)=>
 							if y < quantizedViewBounds.t or y > quantizedViewBounds.b or x < quantizedViewBounds.l or x > quantizedViewBounds.r
 								# console.log('remove not in view bounds: ', x, ', ', y)
-								while rs.length > 0
-									rs.pop().remove()
+								@removeRastersXY(rs)
 								rastersY.delete(x)
 							return
 

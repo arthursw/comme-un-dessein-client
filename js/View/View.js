@@ -111,6 +111,9 @@
           });
           $(window).resize(this.onWindowResize);
           document.addEventListener('wheel', (function(event) {
+            if (event.target !== R.canvasJ.get(0)) {
+              return;
+            }
             if (!(event.metaKey || event.shiftKey || event.ctrlKey)) {
               R.toolManager.zoom(Math.pow(1.005, -event.deltaY), false);
             }
@@ -370,6 +373,9 @@
         this.draftLayer.name = 'draftLayer';
         this.draftLayer.strokeColor = Path.colorMap['draft'];
         this.draftLayer.strokeWidth = Path.strokeWidth;
+        this.discussionLayer = new P.Layer();
+        this.discussionLayer.name = 'discussionLayer';
+        this.discussionLayer.strokeWidth = Path.strokeWidth;
         this.flaggedLayer = new P.Layer();
         this.flaggedLayer.name = 'flaggedLayer';
         this.flaggedLayer.strokeWidth = Path.strokeWidth;
@@ -636,6 +642,7 @@
         if (R.svgJ != null) {
           transform = Utils.getSVGTransform(P.view.matrix);
           R.svgJ.find('g:first').attr('transform', transform.transform);
+          R.discussionJ.find('g:first').attr('transform', transform.transform);
         }
       };
 
@@ -761,7 +768,7 @@
       };
 
       View.prototype.initializePosition = function() {
-        var boxRectangle, br, controller, defsJ, folder, folderName, i, len, patternRejectsJ, patternValidateJ, planet, pos, ref, ref1, site, siteString, svg, tl;
+        var boxRectangle, br, controller, defsJ, discussionGroup, discussionSVG, folder, folderName, i, len, patternRejectsJ, patternValidateJ, planet, pos, ref, ref1, site, siteString, svg, svgNS, tl;
         if (R.city == null) {
           R.city = {};
         }
@@ -787,6 +794,23 @@
             return _this.selectDrawings(event);
           };
         })(this));
+        svgNS = "http://www.w3.org/2000/svg";
+        discussionSVG = document.createElementNS(svgNS, "svg");
+        discussionSVG.setAttribute('width', R.svgJ.attr('width'));
+        discussionSVG.setAttribute('height', R.svgJ.attr('height'));
+        discussionGroup = document.createElementNS(svgNS, "g");
+        discussionSVG.appendChild(discussionGroup);
+        R.discussionJ = $(discussionSVG);
+        R.discussionJ.css({
+          'position': 'absolute'
+        });
+        R.discussionJ.css({
+          'z-index': 10
+        });
+        R.discussionJ.css({
+          'pointer-events': 'none'
+        });
+        R.discussionJ.insertBefore(R.canvasJ);
         if (R.loadedBox == null) {
           if (R.initialZoom == null) {
             R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true);

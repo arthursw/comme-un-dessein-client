@@ -333,6 +333,8 @@ define [
 		R.drawingPanel = new DrawingPanel()
 		# R.fontManager = new FontManager()
 
+		R.toolManager.createChangeImageButton()
+		R.toolManager.createAutoTraceButton()
 		R.toolManager.createDeleteButton()
 		R.toolManager.createSubmitButton()
 		

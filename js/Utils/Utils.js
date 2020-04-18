@@ -610,8 +610,11 @@
       pair: function(val1, val2, separator) {
         return this.number(val1) + (separator || ',') + this.number(val2);
       },
-      point: function(val, separator) {
-        return this.number(val.x) + (separator || ',') + this.number(val.y);
+      point: function(val, separator, unit) {
+        if (unit == null) {
+          unit = '';
+        }
+        return this.number(val.x) + unit + (separator || ',') + this.number(val.y) + unit;
       },
       size: function(val, separator) {
         return this.number(val.width) + (separator || ',') + this.number(val.height);
@@ -625,13 +628,16 @@
     Utils.isZero = function(val) {
       return val >= -EPSILON && val <= EPSILON;
     };
-    Utils.getSVGTransform = function(matrix, coordinates, center) {
+    Utils.getSVGTransform = function(matrix, coordinates, center, unit) {
       var angle, attrs, decomposed, parts, point, scale, skew, trans;
       if (coordinates == null) {
         coordinates = false;
       }
       if (center == null) {
         center = null;
+      }
+      if (unit == null) {
+        unit = null;
       }
       attrs = new P.Base();
       trans = matrix.getTranslation();
@@ -650,7 +656,7 @@
           scale = decomposed.scaling;
           skew = decomposed.skewing;
           if (trans && !trans.isZero()) {
-            parts.push('translate(' + Utils.formatter.point(trans) + ')');
+            parts.push('translate(' + Utils.formatter.point(trans, null, unit) + ')');
           }
           if (angle) {
             parts.push('rotate(' + Utils.formatter.number(angle) + ')');

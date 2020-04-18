@@ -348,6 +348,7 @@
         if (args.extractor != null) {
           this.extractors[args.name] = args;
         }
+        return args.divJ;
       };
 
       Modal.prototype.addButton = function(args) {

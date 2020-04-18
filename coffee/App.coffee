@@ -66,6 +66,9 @@ requirejs.config
 
 		# 'domReady': [libs + 'domReady']
 		'i18next': [libs + 'i18next.min']
+		'potrace': [libs + 'potrace']
+		# 'tui-image-editor': [libs + 'tui-image-editor.min']
+		# 'imagetracer': [libs + 'imagetracer_v1.2.5']
 		'i18nextXHRBackendID': [libs + 'i18nextXHRBackend']
 		'i18nextBrowserLanguageDetectorID': [libs + 'i18nextBrowserLanguageDetector']
 		'moment': [libs + 'moment.min']
@@ -113,6 +116,15 @@ requirejs.config
 		# 'jszip': libs + 'jszip/jszip'
 		# 'fileSaver': libs + 'FileSaver.min'
 		# 'color-classifier': libs + 'color-classifier'
+		'cropper': libs + 'cropper/cropper.min'
+		'three': libs + 'three/build/three.min'
+		'EffectComposer': libs + 'three/examples/js/postprocessing/EffectComposer'
+		'CopyShader': libs + 'three/examples/js/shaders/CopyShader'
+		'RenderPass': libs + 'three/examples/js/postprocessing/RenderPass'
+		'ShaderPass': libs + 'three/examples/js/postprocessing/ShaderPass'
+		'grayscaleShader': libs + 'three/shaders/grayscale'
+		'adaptiveThresholdShader': libs + 'three/shaders/adaptiveThreshold'
+		'vertexShader': libs + 'three/shaders/vertex'
 
 	shim:
 		'mousewheel': ['jquery']
@@ -127,6 +139,11 @@ requirejs.config
 			exports: '_'
 		'jquery':
 			exports: '$'
+		'three':
+			exports: 'THREE'
+		'EffectComposer': ['three', 'CopyShader']
+		'RenderPass': ['three', 'EffectComposer']
+		'ShaderPass': ['three', 'EffectComposer']
 		
 # Load the main app module to start the app
 requirejs [ 'R', 'jquery', 'underscore' ], (R) ->

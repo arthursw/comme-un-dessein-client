@@ -100,6 +100,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 				$(window).resize(@onWindowResize)
 				document.addEventListener('wheel', ((event)-> 
+					if event.target != R.canvasJ.get(0) then return
 					if not (event.metaKey or event.shiftKey or event.ctrlKey)
 						R.toolManager.zoom(Math.pow(1.005, -event.deltaY), false)
 					event.preventDefault()), {passive: false})
@@ -360,6 +361,11 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@draftLayer.name  = 'draftLayer'
 			@draftLayer.strokeColor = Path.colorMap['draft']
 			@draftLayer.strokeWidth = Path.strokeWidth
+			
+			@discussionLayer = new P.Layer()
+			@discussionLayer.name  = 'discussionLayer'
+			@discussionLayer.strokeWidth = Path.strokeWidth
+
 			@flaggedLayer = new P.Layer()
 			@flaggedLayer.name  = 'flaggedLayer'
 			@flaggedLayer.strokeWidth = Path.strokeWidth
@@ -649,6 +655,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if R.svgJ?
 				transform = Utils.getSVGTransform(P.view.matrix)
 				R.svgJ.find('g:first').attr('transform', transform.transform)
+				# transform = Utils.getSVGTransform(P.view.matrix, false, null, 'px')
+				# console.log(transform)
+				# R.discussionJ.find('#discussion-view').css( 'transform': transform.transform )
+				R.discussionJ.find('g:first').attr('transform', transform.transform)
 			return
 
 		addMoveCommand: ()=>
@@ -831,6 +841,30 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			R.svgJ.prepend(defsJ)
 			
 			R.svgJ.click((event)=> @selectDrawings(event))
+
+			svgNS = "http://www.w3.org/2000/svg"
+			discussionSVG = document.createElementNS(svgNS, "svg")
+			discussionSVG.setAttribute('width', R.svgJ.attr('width'))
+			discussionSVG.setAttribute('height', R.svgJ.attr('height'))
+
+			discussionGroup = document.createElementNS(svgNS, "g")
+			discussionSVG.appendChild(discussionGroup)
+
+			R.discussionJ = $(discussionSVG)
+			R.discussionJ.css('position': 'absolute')
+			R.discussionJ.css('z-index': 10)
+			R.discussionJ.css('pointer-events': 'none')
+			R.discussionJ.insertBefore(R.canvasJ)
+
+			# R.discussionJ.css('position': 'absolute')
+			# R.discussionJ.css('top': '0')
+			# R.discussionJ.css('left': '0')
+			# R.discussionJ.css('right': '0')
+			# R.discussionJ.css('bottom': '0')
+			# R.discussionJ.append('<div id="discussion-view">')
+			
+
+			
 
 			# check if canvas has an attribute 'data-box'
 			# boxString = R.canvasJ.attr("data-box")

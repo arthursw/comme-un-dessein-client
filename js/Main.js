@@ -200,6 +200,8 @@
       R.commandManager = new CommandManager();
       R.toolManager = new ToolManager();
       R.drawingPanel = new DrawingPanel();
+      R.toolManager.createChangeImageButton();
+      R.toolManager.createAutoTraceButton();
       R.toolManager.createDeleteButton();
       R.toolManager.createSubmitButton();
       R.view.initializePosition();

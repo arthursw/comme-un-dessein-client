@@ -668,8 +668,8 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 			return if @precision < 16 then Math.round(val * @multiplier) / @multiplier else val
 		pair: (val1, val2, separator) ->
 			return @number(val1) + (separator or ',') + @number(val2)
-		point: (val, separator) ->
-			return @number(val.x) + (separator or ',') + @number(val.y)
+		point: (val, separator, unit='') ->
+			return @number(val.x) + unit + (separator or ',') + @number(val.y) + unit
 		size: (val, separator) ->
 			return @number(val.width) + (separator or ',') + @number(val.height)
 		rectangle: (val, separator) ->
@@ -684,7 +684,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		return val >= -EPSILON && val <= EPSILON
 
 	# Taken from paper.js SvgExport.js
-	Utils.getSVGTransform = (matrix, coordinates=false, center=null) ->
+	Utils.getSVGTransform = (matrix, coordinates=false, center=null, unit=null) ->
 		# Use new Base() so we can use Base#set() on it.
 		attrs = new P.Base()
 		trans = matrix.getTranslation()
@@ -710,7 +710,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 				scale = decomposed.scaling
 				skew = decomposed.skewing
 				if trans and !trans.isZero()
-					parts.push 'translate(' + Utils.formatter.point(trans) + ')'
+					parts.push 'translate(' + Utils.formatter.point(trans, null, unit) + ')'
 				if angle
 					parts.push 'rotate(' + Utils.formatter.number(angle) + ')'
 				if !Utils.isZero(scale.x - 1) or !Utils.isZero(scale.y - 1)

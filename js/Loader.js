@@ -3,7 +3,7 @@
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     hasProp = {}.hasOwnProperty;
 
-  define(['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Drawing', 'Items/Divs/Text'], function(P, R, Utils, Command, Item, ModuleLoader, Drawing, Text) {
+  define(['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Drawing', 'Items/Discussion', 'Items/Divs/Text'], function(P, R, Utils, Command, Item, ModuleLoader, Drawing, Discussion, Text) {
     var Loader;
     Loader = (function() {
       Loader.maxNumPoints = 1000;
@@ -225,7 +225,7 @@
       };
 
       Loader.prototype.loadDrawingsAndTilesCallback = function(results) {
-        var j, len, tile, tiles;
+        var discussion, discussions, j, k, len, len1, tile, tiles;
         if (!this.checkError(results)) {
           return;
         }
@@ -234,6 +234,11 @@
         for (j = 0, len = tiles.length; j < len; j++) {
           tile = tiles[j];
           R.tools.choose.createTile(tile);
+        }
+        discussions = JSON.parse(results.discussions);
+        for (k = 0, len1 = discussions.length; k < len1; k++) {
+          discussion = discussions[k];
+          R.tools.discuss.createDiscussion(discussion);
         }
       };
 
@@ -318,6 +323,19 @@
         })(this));
       };
 
+      Loader.prototype.removeRastersXY = function(rs) {
+        var raster, rasterBounds;
+        rasterBounds = null;
+        while (rs.length > 0) {
+          raster = rs.pop();
+          rasterBounds = raster.data.bounds;
+          raster.remove();
+        }
+        if (rasterBounds != null) {
+          R.tools.discuss.removeDisucssionsInRectangle(rasterBounds);
+        }
+      };
+
       Loader.prototype.loadRasters = function(bounds, alsoLoadDrawingsAndTiles, callback) {
         var drawingsToLoad, group, j, k, layerName, len, limits, m, n, nPixelsPerTile, o, quantizedBounds, quantizedViewBounds, raster, rasterBounds, rastersOfScale, rastersY, ref, ref1, ref2, ref3, ref4, ref5, rs, scale, scaleNumber;
         if (bounds == null) {
@@ -363,9 +381,7 @@
             if (s !== scaleNumber) {
               rastersOfScale.forEach(function(rastersY, y) {
                 return rastersY.forEach(function(rs, x) {
-                  while (rs.length > 0) {
-                    rs.pop().remove();
-                  }
+                  _this.removeRastersXY(rs);
                 });
               });
               return _this.rasters["delete"](s);
@@ -373,9 +389,7 @@
               return rastersOfScale.forEach(function(rastersY, y) {
                 return rastersY.forEach(function(rs, x) {
                   if (y < quantizedViewBounds.t || y > quantizedViewBounds.b || x < quantizedViewBounds.l || x > quantizedViewBounds.r) {
-                    while (rs.length > 0) {
-                      rs.pop().remove();
-                    }
+                    _this.removeRastersXY(rs);
                     rastersY["delete"](x);
                   }
                 });

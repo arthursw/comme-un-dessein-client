@@ -41,6 +41,7 @@
     baseUrl: baseUrl,
     paths: {
       'i18next': [libs + 'i18next.min'],
+      'potrace': [libs + 'potrace'],
       'i18nextXHRBackendID': [libs + 'i18nextXHRBackend'],
       'i18nextBrowserLanguageDetectorID': [libs + 'i18nextBrowserLanguageDetector'],
       'moment': [libs + 'moment.min'],
@@ -57,7 +58,16 @@
       'gui': [libs + 'dat.gui'],
       'zeroClipboard': [libs + 'ZeroClipboard.min'],
       'socket.ioID': libs + 'socket.io',
-      'js-cookie': libs + 'js.cookie'
+      'js-cookie': libs + 'js.cookie',
+      'cropper': libs + 'cropper/cropper.min',
+      'three': libs + 'three/build/three.min',
+      'EffectComposer': libs + 'three/examples/js/postprocessing/EffectComposer',
+      'CopyShader': libs + 'three/examples/js/shaders/CopyShader',
+      'RenderPass': libs + 'three/examples/js/postprocessing/RenderPass',
+      'ShaderPass': libs + 'three/examples/js/postprocessing/ShaderPass',
+      'grayscaleShader': libs + 'three/shaders/grayscale',
+      'adaptiveThresholdShader': libs + 'three/shaders/adaptiveThreshold',
+      'vertexShader': libs + 'three/shaders/vertex'
     },
     shim: {
       'mousewheel': ['jquery'],
@@ -72,7 +82,13 @@
       },
       'jquery': {
         exports: '$'
-      }
+      },
+      'three': {
+        exports: 'THREE'
+      },
+      'EffectComposer': ['three', 'CopyShader'],
+      'RenderPass': ['three', 'EffectComposer'],
+      'ShaderPass': ['three', 'EffectComposer']
     }
   });
 

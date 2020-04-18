@@ -288,7 +288,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			@modalBodyJ.append(args.divJ)
 			if args.extractor?
 				@extractors[args.name] = args
-			return
+			return args.divJ
 
 		# args:
 		# - type: bootstrap button type / appearance

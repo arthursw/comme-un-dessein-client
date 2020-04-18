@@ -2,9 +2,9 @@
 (function() {
   var dependencies;
 
-  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/MoveDrawingTool', 'Tools/ItemTool', 'Tools/Tracer', 'Tools/ChooseTool', 'UI/Modal', 'i18next'];
+  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/MoveDrawingTool', 'Tools/ItemTool', 'Tools/Tracer', 'Tools/ChooseTool', 'Tools/DiscussTool', 'UI/Modal', 'i18next'];
 
-  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, MoveDrawingTool, ItemTool, Tracer, ChooseTool, Modal, i18next) {
+  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, MoveDrawingTool, ItemTool, Tracer, ChooseTool, DiscussTool, Modal, i18next) {
     var ToolManager;
     ToolManager = (function() {
       ToolManager.minZoomPow = -7;
@@ -56,6 +56,7 @@
         this.createZoombuttons();
         this.createUndoRedoButtons();
         R.tools.choose = new R.Tools.Choose();
+        R.tools.discuss = new R.Tools.Discuss();
         this.createInfoButton();
         R.tools.move.select();
         return;
@@ -305,6 +306,54 @@
           })(this)
         });
         this.deleteButton.hide();
+      };
+
+      ToolManager.prototype.createChangeImageButton = function() {
+        this.changeImageButton = new Button({
+          name: 'Change image',
+          iconURL: 'new 1/Image.svg',
+          classes: 'btn-info displayName',
+          parentJ: $('#submit-drawing-button'),
+          ignoreFavorite: true,
+          onClick: (function(_this) {
+            return function() {
+              var ref;
+              if ((ref = R.tracer) != null) {
+                ref.openImageModal();
+              }
+            };
+          })(this)
+        });
+        this.changeImageButton.hide();
+      };
+
+      ToolManager.prototype.createAutoTraceButton = function() {
+        this.autoTraceButton = new Button({
+          name: 'Trace automatically',
+          iconURL: 'new 1/Lightning bolt 1.svg',
+          classes: 'btn-warning displayName',
+          parentJ: $('#submit-drawing-button'),
+          ignoreFavorite: true,
+          onClick: (function(_this) {
+            return function() {
+              var ref;
+              if ((ref = R.tracer) != null) {
+                ref.autoTrace();
+              }
+            };
+          })(this)
+        });
+        this.autoTraceButton.hide();
+      };
+
+      ToolManager.prototype.showTracerButtons = function() {
+        this.changeImageButton.show();
+        this.autoTraceButton.show();
+      };
+
+      ToolManager.prototype.hideTracerButtons = function() {
+        this.changeImageButton.hide();
+        this.autoTraceButton.hide();
       };
 
       ToolManager.prototype.updateButtonsVisibility = function(draft) {

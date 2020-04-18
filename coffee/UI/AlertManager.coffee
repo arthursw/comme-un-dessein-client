@@ -97,7 +97,9 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 
 			R.sidebar.sidebarJ.addClass('r-alert')
 			suffix = if @alertsContainer.hasClass('top') then '-top' else ''
-			R.drawingPanel.drawingPanelJ.addClass('r-alert' + suffix)
+			
+			R.drawingPanel?.drawingPanelJ.addClass('r-alert' + suffix)
+
 			$('#timeline').addClass('r-alert' + suffix)
 			$('#submit-drawing-button').addClass('r-alert' + suffix)
 			@openning = true

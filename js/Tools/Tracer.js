@@ -2,31 +2,63 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'i18next'], function(P, R, Utils, Button, Modal, i18next) {
+  define(['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer', 'Tools/Camera', 'Tools/PathTool', 'Commands/Command', 'i18next', 'cropper'], function(P, R, Utils, Button, Modal, Vectorizer, PathTool, Camera, Command, i18next, Cropper) {
     var Tracer;
     Tracer = (function() {
+      Tracer.handleColor = '#42b3f4';
+
+      Tracer.maxRasterSize = 3 * R.Tools.Path.maxDraftSize;
+
       function Tracer() {
         this.handleFiles = bind(this.handleFiles, this);
         this.fileDropped = bind(this.fileDropped, this);
-        this.submitURL = bind(this.submitURL, this);
+        this.autoTraceCallback = bind(this.autoTraceCallback, this);
+        this.autoTraceSized = bind(this.autoTraceSized, this);
+        this.autoTrace = bind(this.autoTrace, this);
+        this.appendSVG = bind(this.appendSVG, this);
+        this.createRasterController = bind(this.createRasterController, this);
+        this.filterImage = bind(this.filterImage, this);
+        this.addRasterFilterControls = bind(this.addRasterFilterControls, this);
+        this.processImage = bind(this.processImage, this);
+        this.ignoreCropImage = bind(this.ignoreCropImage, this);
+        this.cropImage = bind(this.cropImage, this);
+        this.setEditImageMode = bind(this.setEditImageMode, this);
+        this.addRasterCropControls = bind(this.addRasterCropControls, this);
         this.rasterOnError = bind(this.rasterOnError, this);
         this.rasterOnLoad = bind(this.rasterOnLoad, this);
         this.drawHandles = bind(this.drawHandles, this);
         this.drawCorners = bind(this.drawCorners, this);
         this.drawMoves = bind(this.drawMoves, this);
         this.removeRaster = bind(this.removeRaster, this);
+        this.openImageModal = bind(this.openImageModal, this);
+        this.onModalSubmit = bind(this.onModalSubmit, this);
+        this.onDragOver = bind(this.onDragOver, this);
+        this.onDragEnter = bind(this.onDragEnter, this);
         this.tracerGroup = null;
         this.tracerBtn = null;
+        this.vectorizer = new Vectorizer();
         this.createTracerButton();
         this.initializeGlobalDragAndDrop();
         return;
       }
+
+      Tracer.prototype.onDragEnter = function() {
+        event.stopPropagation();
+        event.preventDefault();
+      };
+
+      Tracer.prototype.onDragOver = function() {
+        event.stopPropagation();
+        event.preventDefault();
+      };
 
       Tracer.prototype.initializeGlobalDragAndDrop = function() {
         document.body.addEventListener('dragenter', (function(_this) {
           return function(event) {
             event.stopPropagation();
             event.preventDefault();
+            event.dataTransfer.effectAllowed = "move";
+            console.log('dragenter');
             R.alertManager.alert('Drop your image here to trace it', 'info');
           };
         })(this));
@@ -40,6 +72,7 @@
           return function(event) {
             event.stopPropagation();
             event.preventDefault();
+            console.log('dragleave');
           };
         })(this));
         document.body.addEventListener('drop', this.fileDropped, false);
@@ -57,56 +90,119 @@
           order: null
         });
         this.tracerBtn.hide();
-        return this.tracerBtn.btnJ.click((function(_this) {
+        this.tracerBtn.btnJ.click(this.openImageModal);
+      };
+
+      Tracer.prototype.onModalSubmit = function() {
+        this.imageURL = this.filterCanvas.toDataURL();
+        this.createRasterController();
+      };
+
+      Tracer.prototype.openImageModal = function() {
+        var elemJ, inputJ, j, len, ref;
+        this.removeRaster();
+        this.imageFile = null;
+        this.imageURL = null;
+        this.modal = Modal.createModal({
+          id: 'import-image',
+          title: "Import image to trace",
+          submit: this.onModalSubmit,
+          submitButtonText: 'Trace'
+        });
+        inputJ = $('<input type="file" multiple accept="image/*">');
+        this.modal.addCustomContent({
+          name: 'tracerFileInput',
+          divJ: inputJ
+        });
+        inputJ.css({
+          margin: 'auto'
+        });
+        inputJ.get(0).addEventListener('change', this.handleFiles, false);
+        inputJ.hide();
+        this.photoFromCameraButtonJ = this.modal.addButton({
+          addToBody: true,
+          type: 'success',
+          name: 'Take a photo with the camera',
+          icon: 'glyphicon-facetime-video'
+        });
+        this.photoFromCameraButtonJ.click(Camera.initialize);
+        this.imageFromComputerButtonJ = this.modal.addButton({
+          addToBody: true,
+          type: 'info',
+          name: 'Select an image on your computer',
+          icon: 'glyphicon-folder-open'
+        });
+        this.imageFromComputerButtonJ.click((function(_this) {
           return function() {
-            var dropZoneJ, inputJ, orText;
-            _this.removeRaster();
-            _this.modal = Modal.createModal({
-              id: 'import-image',
-              title: "Import image to trace",
-              submit: _this.submitURL
-            });
-            dropZoneJ = $("<div id=\"modal-dropZone\" style=\"min-height: 200px; white-space: pre; border: 3px dashed gray; text-align: center; padding-top: 85px; margin-bottom: 15px;\"\nondragenter=\"document.getElementById('modal-dropZone').textContent = ''; event.stopPropagation(); event.preventDefault();\"\nondragover=\"event.stopPropagation(); event.preventDefault();\">" + i18next.t('Drop image here') + "</div>");
-            dropZoneJ.get(0).addEventListener('drop', _this.fileDropped, false);
-            _this.modal.addCustomContent({
-              name: 'dropZone',
-              divJ: dropZoneJ
-            });
-            orText = _this.modal.addText('or');
-            orText.css({
-              'text-align': 'center',
-              'margin': 10
-            });
-            inputJ = $('<input type="file" multiple accept="image/*">');
-            _this.modal.addCustomContent({
-              name: 'tracerFileInput',
-              divJ: inputJ
-            });
-            inputJ.css({
-              margin: 'auto'
-            });
-            inputJ.get(0).addEventListener('change', _this.handleFiles, false);
-            orText = _this.modal.addText('or');
-            orText.css({
-              'text-align': 'center',
-              'margin': 10
-            });
-            _this.modal.addTextInput({
-              name: 'imageURL',
-              placeholder: 'http://exemple.fr/belle-image.png',
-              type: 'url',
-              submitShortcut: true,
-              label: 'Import image from URL',
-              required: true,
-              errorMessage: i18next.t('The URL is invalid')
-            });
-            _this.modal.show();
+            inputJ.click();
           };
         })(this));
+        this.imageFromURLButtonJ = this.modal.addButton({
+          addToBody: true,
+          type: 'warning',
+          name: 'Import image from URL',
+          icon: 'glyphicon-link'
+        });
+        this.dragDropTextJ = this.modal.addText('or drop and image on this page', 'or drop and image on this page');
+        this.dragDropTextJ.css({
+          'text-align': 'center'
+        });
+        ref = [this.photoFromCameraButtonJ, this.imageFromComputerButtonJ, this.imageFromURLButtonJ];
+        for (j = 0, len = ref.length; j < len; j++) {
+          elemJ = ref[j];
+          elemJ.css({
+            'margin-bottom': '10px',
+            'font-size': 'large'
+          }).find('.glyphicon').css({
+            'padding-right': '10px'
+          });
+          elemJ.addClass('btn-lg');
+        }
+        this.urlInputJ = this.modal.addTextInput({
+          name: 'imageURL',
+          placeholder: 'http://exemple.fr/belle-image.png',
+          type: 'url',
+          submitShortcut: true,
+          label: 'Import image from URL',
+          required: true,
+          errorMessage: i18next.t('The URL is invalid')
+        });
+        this.urlInputJ.hide();
+        this.imageFromURLButtonJ.click((function(_this) {
+          return function() {
+            _this.urlInputJ.show();
+            _this.photoFromCameraButtonJ.hide();
+            _this.imageFromComputerButtonJ.hide();
+            _this.imageFromURLButtonJ.hide();
+            _this.dragDropTextJ.hide();
+            _this.modal.modalJ.find(".modal-footer").show();
+          };
+        })(this));
+        this.imageContainerJ = this.modal.addCustomContent({
+          divJ: $('<div id="processed-image">')
+        });
+        this.cropButtonJ = this.modal.addButton({
+          type: 'success',
+          name: 'Crop image'
+        });
+        this.ignoreCropButtonJ = this.modal.addButton({
+          type: 'info',
+          name: 'Use full size image'
+        });
+        this.cropButtonJ.click(this.cropImage);
+        this.ignoreCropButtonJ.click(this.ignoreCropImage);
+        this.cropButtonJ.hide();
+        this.ignoreCropButtonJ.hide();
+        this.modal.modalBodyJ.css({
+          'display': 'flex',
+          'flex-direction': 'column'
+        });
+        this.modal.show();
+        this.modal.modalJ.find(".modal-footer").hide();
       };
 
       Tracer.prototype.removeRaster = function() {
-        var ref, ref1;
+        var ref, ref1, ref2;
         if (this.moves != null) {
           this.moves.remove();
         }
@@ -118,6 +214,9 @@
         }
         if ((ref1 = this.tracerGroup) != null) {
           ref1.remove();
+        }
+        if ((ref2 = R.toolManager) != null) {
+          ref2.hideTracerButtons();
         }
       };
 
@@ -135,16 +234,17 @@
           handle.name = 'handle-move-' + pos;
           handleSize = size.clone();
           if (pos === 'topCenter' || pos === 'bottomCenter') {
-            handleSize.width = bounds.width;
+            handleSize.width = bounds.width - size.width;
           } else {
-            handleSize.height = bounds.height;
+            handleSize.height = bounds.height - size.height;
           }
           handlePos = bounds[pos].subtract(handleSize.divide(2));
           handlePath = new P.Path.Rectangle(handlePos, handleSize);
-          handlePath.fillColor = '#42b3f4';
+          handlePath.fillColor = this.constructor.handleColor;
           handlePath.strokeColor = 'white';
           handlePath.strokeWidth = 1;
           handlePath.strokeScaling = false;
+          handlePath.opacity = 0.5;
           handle.addChild(handlePath);
           arrow = sign.clone();
           arrow.position = bounds[pos].add(signOffsets[pos]);
@@ -210,10 +310,11 @@
           handle.name = 'handle-corner-' + pos;
           handlePos = bounds[pos].subtract(size.divide(2));
           handlePath = new P.Path.Rectangle(handlePos, size);
-          handlePath.fillColor = '#42b3f4';
+          handlePath.fillColor = this.constructor.handleColor;
           handlePath.strokeColor = 'white';
           handlePath.strokeWidth = 1;
           handlePath.strokeScaling = false;
+          handlePath.opacity = 0.5;
           handle.addChild(handlePath);
           box = handlePath.bounds.expand(-15 / P.view.zoom);
           if ((base = this.raster).data == null) {
@@ -245,7 +346,7 @@
               return function(event) {
                 var ref1;
                 if (!((ref1 = R.selectedTool) != null ? ref1.using : void 0)) {
-                  R.stageJ.css('cursor', 'default');
+                  R.stageJ.css('cursor', 'pointer');
                 }
               };
             })(this));
@@ -286,6 +387,9 @@
                   _this.raster.data[pos].position = bounds[pos];
                 }
                 _this.corners.bringToFront();
+                if (_this.rasterParts != null) {
+                  _this.createRasterParts();
+                }
               };
             })(this));
             handle.on('mouseup', (function(_this) {
@@ -353,7 +457,7 @@
       };
 
       Tracer.prototype.rasterOnLoad = function(event) {
-        var viewBounds;
+        var ref, viewBounds;
         R.loader.hideLoadingBar();
         viewBounds = R.view.getViewBounds();
         this.raster.position = viewBounds.center;
@@ -365,19 +469,283 @@
         }
         this.raster.applyMatrix = false;
         this.drawHandles();
+        if ((ref = R.toolManager) != null) {
+          ref.showTracerButtons();
+        }
       };
 
       Tracer.prototype.rasterOnError = function(event) {
+        var ref;
         R.loader.hideLoadingBar();
         this.removeRaster();
+        if ((ref = R.toolManager) != null) {
+          ref.hideTracerButtons();
+        }
         R.alertManager.alert('Could not load the image', 'error');
       };
 
-      Tracer.prototype.submitURL = function(data) {
+      Tracer.prototype.setFullscreen = function() {
+        this.modal.modalJ.find('.modal-dialog').css({
+          position: 'absolute',
+          top: '60px',
+          bottom: 0,
+          width: '100%'
+        });
+        this.modal.modalJ.find('.modal-content').css({
+          display: 'flex',
+          'flex-direction': 'column',
+          height: '100%'
+        });
+        this.modal.modalJ.find('.modal-body').css({
+          display: 'flex',
+          'flex-grow': 1
+        });
+      };
+
+      Tracer.prototype.addRasterCropControls = function() {
+        this.rotateImageButtonJ = this.modal.addButton({
+          addToBody: true,
+          type: 'info',
+          name: 'Rotate',
+          icon: 'glyphicon-repeat'
+        });
+        this.flipVImageButtonJ = this.modal.addButton({
+          addToBody: true,
+          type: 'info',
+          name: 'Flip Vertical',
+          icon: 'glyphicon-resize-vertical'
+        });
+        this.flipHImageButtonJ = this.modal.addButton({
+          addToBody: true,
+          type: 'info',
+          name: 'Flip Horizontal',
+          icon: 'glyphicon-resize-horizontal'
+        });
+        this.rotateImageButtonJ.click((function(_this) {
+          return function() {
+            var ref;
+            return (ref = _this.cropper) != null ? ref.rotate(90) : void 0;
+          };
+        })(this));
+        this.flipVImageButtonJ.click((function(_this) {
+          return function() {
+            var ref;
+            return (ref = _this.cropper) != null ? ref.scale(1, -1 * _this.cropper.getData().scaleY) : void 0;
+          };
+        })(this));
+        this.flipHImageButtonJ.click((function(_this) {
+          return function() {
+            var ref;
+            return (ref = _this.cropper) != null ? ref.scale(-1 * _this.cropper.getData().scaleX, 1) : void 0;
+          };
+        })(this));
+      };
+
+      Tracer.prototype.setEditImageMode = function() {
+        var image;
+        this.modal.modalJ.find('.modal-footer button[name="submit"]').hide();
+        this.setFullscreen();
+        this.addRasterCropControls();
+        this.photoFromCameraButtonJ.hide();
+        this.imageFromComputerButtonJ.hide();
+        this.imageFromURLButtonJ.hide();
+        this.dragDropTextJ.hide();
+        this.modal.modalJ.find(".modal-footer").show();
+        image = new Image();
+        image.src = this.imageURL;
+        this.imageContainerJ.append(image);
+        this.imageContainerJ.css({
+          'max-width': '500px',
+          'margin': 'auto'
+        });
+        image.onload = (function(_this) {
+          return function() {
+            $(image).css({
+              'max-width': '100%',
+              display: 'block',
+              margin: 'auto'
+            });
+            _this.cropper = new Cropper(image);
+            _this.cropButtonJ.show();
+            return _this.ignoreCropButtonJ.show();
+          };
+        })(this);
+      };
+
+      Tracer.prototype.cropImage = function() {
+        var cropOptions;
+        cropOptions = {
+          minWidth: 256,
+          minHeight: 256,
+          maxWidth: 1000,
+          maxHeight: 1000,
+          fillColor: '#fff',
+          imageSmoothingEnabled: true,
+          imageSmoothingQuality: 'high'
+        };
+        this.filterCanvas = this.cropper.getCroppedCanvas(cropOptions);
+        this.cropper.destroy();
+        this.imageContainerJ.empty();
+        this.imageContainerJ.append(this.filterCanvas);
+        $(this.filterCanvas).css({
+          'max-width': '500px'
+        });
+        this.cropButtonJ.hide();
+        this.ignoreCropButtonJ.hide();
+        this.rotateImageButtonJ.hide();
+        this.flipVImageButtonJ.hide();
+        this.flipHImageButtonJ.hide();
+        this.modal.modalJ.find('.modal-footer button[name="submit"]').show();
+        this.filterImage();
+      };
+
+      Tracer.prototype.ignoreCropImage = function() {
+        this.cropButtonJ.hide();
+        this.ignoreCropButtonJ.hide();
+        this.filterImage();
+      };
+
+      Tracer.prototype.adaptiveThreshold = function() {
+        var C, average, blockSize, color, context, finalImageData, height, index, j, k, l, m, n, nPixelsInBlock, no2, o, ref, ref1, ref2, ref3, ref4, ref5, sourceData, sourceImageData, width, x, xf, xi, y, yf, yi;
+        n = 15;
+        C = 12;
+        width = this.filterCanvas.width;
+        height = this.filterCanvas.height;
+        no2 = Math.floor(n / 2);
+        blockSize = 2 * no2 + 1;
+        nPixelsInBlock = blockSize * blockSize;
+        finalImageData = new ImageData(width, height);
+        context = this.filterCanvas.getContext('2d');
+        sourceImageData = context.getImageData(0, 0, width, height);
+        sourceData = sourceImageData.data;
+        for (y = j = 0, ref = height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
+          for (x = k = 0, ref1 = width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
+            average = 0;
+            for (yi = l = ref2 = -no2, ref3 = no2; ref2 <= ref3 ? l <= ref3 : l >= ref3; yi = ref2 <= ref3 ? ++l : --l) {
+              for (xi = m = ref4 = -no2, ref5 = no2; ref4 <= ref5 ? m <= ref5 : m >= ref5; xi = ref4 <= ref5 ? ++m : --m) {
+                xf = x + xi < 0 ? x - xi : x + xi >= width ? x - xi : x + xi;
+                yf = y + yi < 0 ? y - yi : y + yi >= height ? y - yi : y + yi;
+                index = xf + yf * width;
+                average += sourceData[4 * index + 0];
+              }
+            }
+            average /= nPixelsInBlock;
+            index = x + y * width;
+            color = average - C < sourceData[4 * index + 0] ? 255 : 0;
+            for (n = o = 0; o <= 2; n = ++o) {
+              finalImageData.data[4 * index + n] = color;
+            }
+            finalImageData.data[4 * index + 3] = 255;
+          }
+        }
+        context.putImageData(finalImageData, 0, 0);
+      };
+
+      Tracer.prototype.grayscale = function(context) {
+        var blue, brightnessThreshold, color, finalColor, green, height, index, j, k, l, n, red, ref, ref1, saturationThreshold, sourceData, sourceImageData, width, x, y;
+        brightnessThreshold = parseFloat(this.brightnessThresholdButtonJ.find('input').val());
+        saturationThreshold = parseFloat(this.saturationThresholdButtonJ.find('input').val());
+        if (Number.isNaN(brightnessThreshold)) {
+          brightnessThreshold = parseFloat(this.brightnessThresholdButtonJ.find('input').attr('value'));
+        }
+        if (Number.isNaN(saturationThreshold)) {
+          saturationThreshold = parseFloat(this.saturationThresholdButtonJ.find('input').attr('value'));
+        }
+        width = this.filterCanvas.width;
+        height = this.filterCanvas.height;
+        context = this.filterCanvas.getContext('2d');
+        sourceImageData = context.getImageData(0, 0, width, height);
+        sourceData = sourceImageData.data;
+        for (y = j = 0, ref = height - 1; 0 <= ref ? j <= ref : j >= ref; y = 0 <= ref ? ++j : --j) {
+          for (x = k = 0, ref1 = width - 1; 0 <= ref1 ? k <= ref1 : k >= ref1; x = 0 <= ref1 ? ++k : --k) {
+            index = x + y * width;
+            red = sourceData[4 * index + 0];
+            green = sourceData[4 * index + 1];
+            blue = sourceData[4 * index + 2];
+            color = new P.Color(red / 255, green / 255, blue / 255);
+            finalColor = Math.min(color.brightness, 1 - color.saturation);
+            for (n = l = 0; l <= 2; n = ++l) {
+              sourceData[4 * index + n] = finalColor * 255;
+            }
+            sourceData[4 * index + 3] = sourceData[4 * index + 3];
+          }
+        }
+        context.putImageData(sourceImageData, 0, 0);
+      };
+
+      Tracer.prototype.processImage = function() {
+        var context;
+        context = this.filterCanvas.getContext('2d');
+        if (this.initialImage == null) {
+          this.initialImage = context.getImageData(0, 0, this.filterCanvas.width, this.filterCanvas.height);
+        } else {
+          context.putImageData(this.initialImage, 0, 0);
+        }
+        console.log('start grayscale');
+        this.grayscale();
+        this.adaptiveThreshold();
+        console.log('grayscale finished');
+      };
+
+      Tracer.prototype.addRasterFilterControls = function() {
+        this.brightnessThresholdButtonJ = this.modal.addTextInput({
+          type: 'number',
+          name: 'Brightness threshold',
+          label: 'Brigthness threshold',
+          defaultValue: 0.3
+        });
+        this.saturationThresholdButtonJ = this.modal.addTextInput({
+          type: 'number',
+          name: 'Saturation threshold',
+          label: 'Saturation threshold',
+          defaultValue: 0.3
+        });
+        this.adaptiveThresholdButtonJ = this.modal.addTextInput({
+          type: 'number',
+          name: 'Adaptive threshold',
+          label: 'Adaptive threshold',
+          defaultValue: 0.05
+        });
+        this.brightnessThresholdButtonJ.find('input').attr('min', '-1').attr('max', '1').attr('value', '0.3').attr('step', 0.01).on('change', (function(_this) {
+          return function() {
+            return Utils.deferredExecution(_this.processImage, 'brightnessThreshold', 500);
+          };
+        })(this));
+        this.saturationThresholdButtonJ.find('input').attr('min', '-1').attr('max', '1').attr('value', '0.3').attr('step', 0.01).on('change', (function(_this) {
+          return function() {
+            return Utils.deferredExecution(_this.processImage, 'saturationThreshold', 500);
+          };
+        })(this));
+        this.adaptiveThresholdButtonJ.find('input').attr('min', '-1').attr('max', '1').attr('value', '0.05').attr('step', 0.01).on('change', (function(_this) {
+          return function() {
+            return Utils.deferredExecution(_this.processImage, 'adaptiveThreshold', 500);
+          };
+        })(this));
+        this.filterControlsContainerJ = $('<div>');
+        this.filterControlsContainerJ.append(this.brightnessThresholdButtonJ);
+        this.filterControlsContainerJ.append(this.saturationThresholdButtonJ);
+        this.filterControlsContainerJ.append(this.adaptiveThresholdButtonJ);
+        this.modal.modalBodyJ.find('#processed-image').css({
+          'display': 'flex',
+          'flex-direction': 'row'
+        }).append(this.filterControlsContainerJ);
+      };
+
+      Tracer.prototype.filterImage = function() {
+        this.processImage();
+        this.onModalSubmit();
+      };
+
+      Tracer.prototype.createRasterController = function() {
+        this.modal.hide();
+        if (this.imageURL == null) {
+          return;
+        }
+        this.imageFile = null;
         this.removeRaster();
         this.tracerGroup = new P.Group();
-        this.tracerGroup.opacity = 0.5;
-        this.raster = new P.Raster(data.imageURL);
+        this.raster = new P.Raster(this.imageURL);
+        this.raster.opacity = 0.5;
         this.tracerGroup.addChild(this.raster);
         this.raster.position = R.view.getViewBounds().center;
         R.loader.showLoadingBar();
@@ -386,8 +754,139 @@
         this.raster.onLoad = this.rasterOnLoad;
       };
 
+      Tracer.prototype.appendSVG = function(svgstr) {
+        var svgContainer;
+        svgContainer = this.svgContainerJ.get(0);
+        svgContainer.style.display = 'inline-block';
+        svgContainer.innerHTML = svgstr;
+      };
+
+      Tracer.prototype.createRasterParts = function() {
+        var j, k, maxDraftSize, nRectanglesHeight, nRectanglesWidth, nx, ny, rectangle, rectanglePath, ref, ref1, ref2, totalRectangle;
+        maxDraftSize = R.Tools.Path.maxDraftSize;
+        nRectanglesWidth = Math.floor(this.raster.bounds.width / maxDraftSize) + 1;
+        nRectanglesHeight = Math.floor(this.raster.bounds.height / maxDraftSize) + 1;
+        totalRectangle = new P.Rectangle(this.raster.bounds.left, this.raster.bounds.top, nRectanglesWidth * maxDraftSize, nRectanglesHeight * maxDraftSize);
+        totalRectangle.center = this.raster.bounds.center;
+        if ((ref = this.rasterParts) != null) {
+          ref.remove();
+        }
+        this.rasterParts = new P.Group();
+        for (nx = j = 0, ref1 = nRectanglesWidth - 1; 0 <= ref1 ? j <= ref1 : j >= ref1; nx = 0 <= ref1 ? ++j : --j) {
+          for (ny = k = 0, ref2 = nRectanglesHeight - 1; 0 <= ref2 ? k <= ref2 : k >= ref2; ny = 0 <= ref2 ? ++k : --k) {
+            rectangle = new P.Rectangle(totalRectangle.left + nx * maxDraftSize, totalRectangle.top + ny * maxDraftSize, maxDraftSize, maxDraftSize);
+            rectangle = this.raster.bounds.intersect(rectangle);
+            rectanglePath = P.Path.Rectangle(rectangle);
+            rectanglePath.fillColor = this.constructor.handleColor;
+            rectanglePath.strokeColor = 'white';
+            rectanglePath.opacity = 0.8;
+            rectanglePath.on('mouseenter', (function(_this) {
+              return function(event) {
+                event.target.opacity = 0.05;
+                R.stageJ.css('cursor', 'pointer');
+              };
+            })(this));
+            rectanglePath.on('mouseleave', (function(_this) {
+              return function(event) {
+                var ref3;
+                if ((ref3 = R.selectedTool) != null) {
+                  ref3.updateCursor();
+                }
+                event.target.opacity = 0.8;
+              };
+            })(this));
+            rectanglePath.on('mousedown', (function(_this) {
+              return function(event) {
+                _this.draggingImage = true;
+              };
+            })(this));
+            rectanglePath.on('click', (function(_this) {
+              return function(event) {
+                _this.autoTraceSized(event.target.bounds);
+                _this.rasterParts.remove();
+                _this.draggingImage = false;
+              };
+            })(this));
+            this.rasterParts.addChild(rectanglePath);
+          }
+        }
+        this.tracerGroup.addChild(this.rasterParts);
+      };
+
+      Tracer.prototype.autoTrace = function() {
+        if (this.raster.bounds.width > R.Tools.Path.maxDraftSize || this.raster.bounds.height > R.Tools.Path.maxDraftSize) {
+          R.alertManager.alert('The image is too big to fit in one drawing', 'info');
+          this.createRasterParts();
+          return;
+        }
+        this.autoTraceSized();
+      };
+
+      Tracer.prototype.autoTraceSized = function(bounds) {
+        var args, png, rasterPart;
+        if (bounds == null) {
+          bounds = null;
+        }
+        png = this.imageURL;
+        this.rasterPartRectangle = bounds != null ? bounds : this.raster.bounds;
+        this.subRasterRectangle = new P.Rectangle(0, 0, this.raster.width, this.raster.height);
+        if (bounds != null) {
+          this.subRasterRectangle = new P.Rectangle(bounds.topLeft.subtract(this.raster.bounds.topLeft).divide(this.raster.scaling), bounds.bottomRight.subtract(this.raster.bounds.topLeft).divide(this.raster.scaling));
+          rasterPart = this.raster.getSubRaster(this.subRasterRectangle);
+          png = rasterPart.toDataURL();
+          rasterPart.remove();
+        }
+        args = {
+          png: png
+        };
+        $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'autoTrace',
+              args: args
+            })
+          }
+        }).done(this.autoTraceCallback);
+      };
+
+      Tracer.prototype.autoTraceCallback = function(result) {
+        this.modal.hide();
+        this.addSvgToDraft(result.svg);
+      };
+
+      Tracer.prototype.addPathsToDraft = function(item, draft) {
+        var child, j, len, ref;
+        ref = item.children.slice();
+        for (j = 0, len = ref.length; j < len; j++) {
+          child = ref[j];
+          if (child instanceof P.Path) {
+            child.strokeWidth = R.Path.strokeWidth;
+            child.strokeColor = 'black';
+            child.strokeCap = 'round';
+            child.strokeJoin = 'round';
+            draft.addChild(child, false);
+          } else if (child.children != null) {
+            this.addPathsToDraft(child, draft);
+          }
+        }
+      };
+
+      Tracer.prototype.addSvgToDraft = function(svg) {
+        var draft, svgPaper;
+        svgPaper = P.project.importSVG(svg);
+        svgPaper.translate(this.rasterPartRectangle.topLeft);
+        svgPaper.scale(this.rasterPartRectangle.width / this.subRasterRectangle.width, this.rasterPartRectangle.topLeft);
+        draft = R.Item.Drawing.getDraft();
+        R.commandManager.add(new Command.ModifyDrawing(draft));
+        this.addPathsToDraft(svgPaper, draft);
+        draft.updatePaths();
+        svgPaper.remove();
+      };
+
       Tracer.prototype.fileDropped = function(event) {
-        var file, j, len, reader, ref, ref1;
+        var file, j, len, reader, ref;
         event.stopPropagation();
         event.preventDefault();
         if (R.selectedTool !== R.tools['Precise path']) {
@@ -400,18 +899,17 @@
         for (j = 0, len = ref.length; j < len; j++) {
           file = ref[j];
           if (file.type.match(/image.*/)) {
+            this.imageFile = file;
             reader = new FileReader();
-            if ((ref1 = this.modal) != null) {
-              ref1.hide();
-            }
             reader.onload = (function(_this) {
               return function(readerEvent) {
-                _this.submitURL({
-                  imageURL: readerEvent.target.result
-                });
+                _this.imageURL = readerEvent.target.result;
+                _this.urlInputJ.val(_this.imageURL);
+                _this.setEditImageMode();
               };
             })(this);
             reader.readAsDataURL(file);
+            return;
           }
         }
       };
@@ -422,18 +920,18 @@
         for (j = 0, len = ref.length; j < len; j++) {
           file = ref[j];
           if (file.type.match(/image.*/)) {
+            this.imageFile = file;
             reader = new FileReader();
-            this.modal.hide();
             reader.onload = (function(_this) {
               return function(readerEvent) {
-                _this.submitURL({
-                  imageURL: readerEvent.target.result
-                });
+                _this.imageURL = readerEvent.target.result;
+                _this.urlInputJ.val(_this.imageURL);
+                _this.setEditImageMode();
               };
             })(this);
             reader.readAsDataURL(file);
+            return;
           }
-          return;
         }
       };
 
@@ -448,13 +946,25 @@
       };
 
       Tracer.prototype.hide = function() {
-        var ref;
-        return (ref = this.tracerGroup) != null ? ref.visible = false : void 0;
+        var ref, ref1;
+        if ((ref = this.tracerGroup) != null) {
+          ref.visible = false;
+        }
+        if ((ref1 = R.toolManager) != null) {
+          ref1.hideTracerButtons();
+        }
       };
 
       Tracer.prototype.show = function() {
-        var ref;
-        return (ref = this.tracerGroup) != null ? ref.visible = true : void 0;
+        var ref, ref1;
+        if ((ref = this.tracerGroup) != null) {
+          ref.visible = true;
+        }
+        if (this.tracerGroup != null) {
+          if ((ref1 = R.toolManager) != null) {
+            ref1.showTracerButtons();
+          }
+        }
       };
 
       Tracer.prototype.mouseUp = function(event) {

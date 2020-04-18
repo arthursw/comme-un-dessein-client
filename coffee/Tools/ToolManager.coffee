@@ -11,6 +11,7 @@ dependencies = [
 	'Tools/ItemTool'
 	'Tools/Tracer'
 	'Tools/ChooseTool'
+	'Tools/DiscussTool'
 	'UI/Modal'
 	'i18next'
 	# 'Tools/TextTool'
@@ -21,7 +22,7 @@ dependencies = [
 	# dependencies.push('Tools/ScreenshotTool')
 	# dependencies.push('Tools/CarTool')
 
-define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, MoveDrawingTool, ItemTool, Tracer, ChooseTool, Modal, i18next) -> # , TextTool, GradientTool, CarTool) ->
+define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, MoveDrawingTool, ItemTool, Tracer, ChooseTool, DiscussTool, Modal, i18next) -> # , TextTool, GradientTool, CarTool) ->
 
 	class ToolManager
 		
@@ -235,6 +236,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			@createUndoRedoButtons()
 
 			R.tools.choose = new R.Tools.Choose()
+			R.tools.discuss = new R.Tools.Discuss()
 
 			# R.chooser = new Chooser()
 
@@ -577,6 +579,44 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 					return
 			})
 			@deleteButton.hide()
+			return
+
+		createChangeImageButton: ()->
+			@changeImageButton = new Button({
+				name: 'Change image'
+				iconURL: 'new 1/Image.svg'
+				classes: 'btn-info displayName'
+				parentJ: $('#submit-drawing-button')
+				ignoreFavorite: true
+				onClick: ()=>
+					R.tracer?.openImageModal()
+					return
+			})
+			@changeImageButton.hide()
+			return
+		
+		createAutoTraceButton: ()->
+			@autoTraceButton = new Button({
+				name: 'Trace automatically'
+				iconURL: 'new 1/Lightning bolt 1.svg'
+				classes: 'btn-warning displayName'
+				parentJ: $('#submit-drawing-button')
+				ignoreFavorite: true
+				onClick: ()=>
+					R.tracer?.autoTrace()
+					return
+			})
+			@autoTraceButton.hide()
+			return
+		
+		showTracerButtons: ()->
+			@changeImageButton.show()
+			@autoTraceButton.show()
+			return
+		
+		hideTracerButtons: ()->
+			@changeImageButton.hide()
+			@autoTraceButton.hide()
 			return
 
 		updateButtonsVisibility: (draft=null)->
