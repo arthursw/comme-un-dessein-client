@@ -589,7 +589,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				parentJ: $('#submit-drawing-button')
 				ignoreFavorite: true
 				onClick: ()=>
-					R.tracer?.openImageModal()
+					R.tracer?.openImageModal(false, true)
 					return
 			})
 			@changeImageButton.hide()
@@ -610,8 +610,9 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			return
 		
 		showTracerButtons: ()->
-			@changeImageButton.show()
-			@autoTraceButton.show()
+			if R.tracer.isVisible()
+				@changeImageButton.show()
+				@autoTraceButton.show()
 			return
 		
 		hideTracerButtons: ()->

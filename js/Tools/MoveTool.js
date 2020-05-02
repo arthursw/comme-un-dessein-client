@@ -40,7 +40,6 @@
       }
 
       MoveTool.prototype.select = function(deselectItems, updateParameters, forceSelect, selectedBy) {
-        var ref;
         if (deselectItems == null) {
           deselectItems = false;
         }
@@ -54,9 +53,6 @@
           selectedBy = 'default';
         }
         MoveTool.__super__.select.call(this, deselectItems, updateParameters, selectedBy);
-        if ((ref = R.tracer) != null) {
-          ref.hide();
-        }
         R.stageJ.addClass("moveTool");
       };
 

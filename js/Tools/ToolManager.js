@@ -319,7 +319,7 @@
             return function() {
               var ref;
               if ((ref = R.tracer) != null) {
-                ref.openImageModal();
+                ref.openImageModal(false, true);
               }
             };
           })(this)
@@ -347,8 +347,10 @@
       };
 
       ToolManager.prototype.showTracerButtons = function() {
-        this.changeImageButton.show();
-        this.autoTraceButton.show();
+        if (R.tracer.isVisible()) {
+          this.changeImageButton.show();
+          this.autoTraceButton.show();
+        }
       };
 
       ToolManager.prototype.hideTracerButtons = function() {

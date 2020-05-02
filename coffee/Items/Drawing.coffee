@@ -496,7 +496,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		# 		drawing.addPaths()
 		# 	return
 
-		addChild: (path, save=false)->
+		addChild: (path, save=false, computeRectangle=true)->
 			if @paths.indexOf(path) >= 0
 				console.log('path already in drawing')
 				return
@@ -516,8 +516,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# @group.addChild(path.path)
 
 			# @drawing.addChild(path.group)
-
-			@computeRectangle()
+			
+			if computeRectangle
+				@computeRectangle()
 
 
 			# if path.drawn

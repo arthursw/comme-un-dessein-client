@@ -28,7 +28,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 		# Select tool and disable Div interactions (to be able to scroll even when user clicks on them, for exmaple disable textarea default behaviour)
 		select: (deselectItems=false, updateParameters=true, forceSelect=false, selectedBy='default')->
 			super(deselectItems, updateParameters, selectedBy)
-			R.tracer?.hide()
+			# R.tracer?.hide()
 			R.stageJ.addClass("moveTool")
 
 			# for div in R.divs

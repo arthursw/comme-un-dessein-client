@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer', 'Tools/Camera', 'Tools/PathTool', 'Commands/Command', 'i18next', 'cropper' ], (P, R, Utils, Button, Modal, Vectorizer, PathTool, Camera, Command, i18next, Cropper) ->
+define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer', 'Tools/ImageProcessor', 'Tools/Camera', 'Tools/PathTool', 'Commands/Command', 'i18next', 'cropper' ], (P, R, Utils, Button, Modal, Vectorizer, ImageProcessor, PathTool, Camera, Command, i18next, Cropper) ->
 
 	class Tracer
 		
@@ -11,6 +11,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@vectorizer = new Vectorizer()
 			@createTracerButton()
 			@initializeGlobalDragAndDrop()
+			@imageProcessor = new ImageProcessor()
 			return
 		
 		onDragEnter: ()=>
@@ -63,16 +64,36 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 
 			@tracerBtn.hide()
 
-			@tracerBtn.btnJ.click @openImageModal
+			@tracerBtn.btnJ.click @restoreImageOrOpenModal
+			return
+		
+		restoreImageOrOpenModal: ()=>
+			if @tracerGroup?.visible
+				@openImageModal(false, true)
+				return
+
+			@imageURL = localStorage.getItem('rater-url')
+			closedRaster = localStorage.getItem('closed-raster') == 'true'
+			if !closedRaster and @imageURL? and @imageURL != ''
+				rasterBoundsJSON = localStorage.getItem('rater-bounds')
+				if rasterBoundsJSON?
+					rasterBounds = JSON.parse(rasterBoundsJSON)
+					@createRasterController(new P.Rectangle(rasterBounds))
+				else
+					@openImageModal(closedRaster)
+			else
+				@openImageModal(closedRaster)
 			return
 		
 		onModalSubmit: ()=>	
-			@imageURL = @filterCanvas.toDataURL()
+			if @filterCanvas?
+				@imageURL ?= @filterCanvas.toDataURL()
 			@createRasterController()
 			return
 
-		openImageModal: ()=>
-			@removeRaster()
+		openImageModal: (closedRaster, keepRaster=false)=>
+			if not keepRaster
+				@removeRaster()
 			@imageFile = null
 			@imageURL = null
 			@modal = Modal.createModal( 
@@ -91,7 +112,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 
 			@photoFromCameraButtonJ = @modal.addButton( addToBody: true, type: 'success', name: 'Take a photo with the camera', icon: 'glyphicon-facetime-video' ) # 'glyphicon-camera' )
 			@photoFromCameraButtonJ.click(Camera.initialize)
-			@imageFromComputerButtonJ = @modal.addButton( addToBody: true, type: 'info', name: 'Select an image on your computer', icon: 'glyphicon-folder-open' )
+			@imageFromComputerButtonJ = @modal.addButton( addToBody: true, type: 'warning', name: 'Select an image on your computer', icon: 'glyphicon-folder-open' )
 			@imageFromComputerButtonJ.click ()=> 
 				inputJ.click()
 				# @photoFromCameraButtonJ.hide()
@@ -101,12 +122,19 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				# @modal.modalJ.find(".modal-footer").show()
 				# @modal.hide()
 				return
-			@imageFromURLButtonJ = @modal.addButton( addToBody: true, type: 'warning', name: 'Import image from URL', icon: 'glyphicon-link' )
+			@imageFromURLButtonJ = @modal.addButton( addToBody: true, type: 'info', name: 'Import image from URL', icon: 'glyphicon-link' )
+			if closedRaster
+				@reloadPreviousImageButtonJ = @modal.addButton( addToBody: true, type: 'primary', name: 'Reload previous image', icon: 'glyphicon-picture' )
+				@reloadPreviousImageButtonJ.click ()=>
+					localStorage.setItem('closed-raster', 'false')
+					@restoreImageOrOpenModal()
+					return
 
 			@dragDropTextJ = @modal.addText('or drop and image on this page', 'or drop and image on this page')
 			@dragDropTextJ.css( 'text-align': 'center' )
 
-			for elemJ in [@photoFromCameraButtonJ, @imageFromComputerButtonJ, @imageFromURLButtonJ]
+			for elemJ in [@photoFromCameraButtonJ, @imageFromComputerButtonJ, @imageFromURLButtonJ, @reloadPreviousImageButtonJ]
+				if not elemJ? then continue
 				elemJ.css( 'margin-bottom': '10px', 'font-size': 'large' ).find('.glyphicon').css( 'padding-right': '10px' )
 				elemJ.addClass('btn-lg')
 			
@@ -135,6 +163,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				@photoFromCameraButtonJ.hide()
 				@imageFromComputerButtonJ.hide()
 				@imageFromURLButtonJ.hide()
+				@reloadPreviousImageButtonJ?.hide()
 				@dragDropTextJ.hide()
 				@modal.modalJ.find(".modal-footer").show()
 				return
@@ -145,19 +174,29 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			#	@enableSubmitButtons()
 			# 	return
 
+			@urlInputJ.find('input').change(@updateImageURLfromInputDeferred).bind("paste",  @updateImageURLfromInputDeferred).keyup(@updateImageURLfromInputDeferred)
+
 			# @adaptiveThresholdCJ = @modal.addCustomContent({ divJ: $('<div><label for="adaptive-threshold-c">Adaptive threshold C:</label> <input type="number" id="adaptive-threshold-c" step="1" value="10"></div>') })
 			# @adaptiveThresholdWindowSizeJ = @modal.addCustomContent({ divJ: $('<div><label for="adaptive-threshold-window-size">Adaptive threshold window size:</label> <input type="number" id="adaptive-threshold-window-size" step="1" value="10"></div>') })
 			
-		
 			@imageContainerJ = @modal.addCustomContent({ divJ: $('<div id="processed-image">') })
+			marginContainerJ = $('<div class="margin-container">')
+			marginContainerJ.css(
+				'max-width': '100%'
+				'max-height': '100%'
+				'display': 'flex'
+				'flex': 'auto'
+				'min-height': '0px'
+			)
+			@imageContainerJ.append(marginContainerJ)
+
 			# @svgContainerJ = @modal.addCustomContent({ divJ: $('<div id="vectorizer-svg">') })
 
 			# @autoTraceButtonJ = @modal.addButton({ type: 'success', name: 'Trace automatically' })
 			# @autoTraceButtonJ.click @submitTraceAutomatically
 
-			@cropButtonJ = @modal.addButton({ type: 'success', name: 'Crop image' })
 			@ignoreCropButtonJ = @modal.addButton({ type: 'info', name: 'Use full size image' })
-
+			@cropButtonJ = @modal.addButton({ type: 'success', name: 'Crop image' })
 
 			@cropButtonJ.click @cropImage
 			@ignoreCropButtonJ.click @ignoreCropImage
@@ -176,7 +215,17 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@modal.modalJ.find(".modal-footer").hide()
 			
 			return
+
+		updateImageURLfromInput: ()=>
+			@imageURL = @urlInputJ.find('input').val()
+			console.log(@imageURL)
+			@createImagePreview()
+			return
 		
+		updateImageURLfromInputDeferred: ()=>
+			Utils.deferredExecution(@updateImageURLfromInput, 'updateImageURLfromInput', 200)
+			return
+
 		# disableSubmitButtons: ()->
 		# 	# @autoTraceButtonJ.attr('disabled', 'true')
 		# 	@manualTraceButtonJ.attr('disabled', 'true')
@@ -195,6 +244,10 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@raster?.remove()
 			@tracerGroup?.remove()
 			R.toolManager?.hideTracerButtons()
+			return
+		
+		saveBoundsToLocalStorage: ()->
+			localStorage.setItem('rater-bounds', JSON.stringify(@raster.bounds.toJSON()))
 			return
 
 		drawMoves: (bounds, size, sign, signRotations, signOffsets)=>
@@ -237,6 +290,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 					if not @draggingImage then return
 					if not @scalingImage
 						@tracerGroup.position = @tracerGroup.position.add(event.delta)
+						@saveBoundsToLocalStorage()
 						@draggingImage = true
 					return)
 
@@ -295,6 +349,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 					handle.on('mousedown', ()=>
 						@draggingImage = true
 						@removeRaster()
+						localStorage.setItem('closed-raster', 'true')
 						return)
 					handle.on('mouseenter', (event)=>
 						if not R.selectedTool?.using
@@ -336,7 +391,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 						
 						if @rasterParts?
 							@createRasterParts()
-
+						@saveBoundsToLocalStorage()
 						return)
 					handle.on('mouseup', (event)=>
 						@draggingImage = false
@@ -404,6 +459,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 		drawHandles: ()=>
 			if not @tracerGroup? then return
 
+
 			size = new paper.Size(30 / P.view.zoom, 30 / P.view.zoom)
 			bounds = @raster.bounds.expand(size)
 
@@ -437,20 +493,27 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@drawMoves(bounds, size, sign, signRotations, signOffsets)
 			@drawCorners(bounds, size, sign, signRotations, signOffsets)
 			# @drawButtons(bounds, size)
+
 			return
 
-		rasterOnLoad: (event)=>
+		rasterOnLoad: (bounds=null)->
 			R.loader.hideLoadingBar()
 
-			viewBounds = R.view.getViewBounds()
+			if bounds?
+				@raster.fitBounds(bounds)
+			else
+				viewBounds = R.view.getViewBounds()
 
-			@raster.position = viewBounds.center
-			if @raster.bounds.width > viewBounds.width
-				@raster.scaling = new paper.Point(viewBounds.width / (@raster.bounds.width + @raster.bounds.width * 0.25) )
-			if @raster.bounds.height > viewBounds.height
-				@raster.scaling = @raster.scaling.multiply( viewBounds.height / (@raster.bounds.height + @raster.bounds.height * 0.25) )
+				@raster.position = viewBounds.center
+				if @raster.bounds.width > viewBounds.width
+					@raster.scaling = new paper.Point(viewBounds.width / (@raster.bounds.width + @raster.bounds.width * 0.25) )
+				if @raster.bounds.height > viewBounds.height
+					@raster.scaling = @raster.scaling.multiply( viewBounds.height / (@raster.bounds.height + @raster.bounds.height * 0.25) )
 
 			@raster.applyMatrix = false
+
+			localStorage.setItem('rater-url', @raster.source)
+			@saveBoundsToLocalStorage()
 
 			@drawHandles()
 			R.toolManager?.showTracerButtons()
@@ -474,10 +537,14 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				display: 'flex'
 				'flex-direction': 'column'
 				height: '100%'
+				overflow: 'auto'
 			)
 			@modal.modalJ.find('.modal-body').css(
 				display: 'flex'
-				'flex-grow': 1
+				height: '100%'
+				flex: '1 1 auto'
+				'overflow-y': 'auto'
+				'min-height': '0px'
 			)
 			return
 		
@@ -490,6 +557,24 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@flipHImageButtonJ.click ()=> @cropper?.scale(-1 * @cropper.getData().scaleX, 1)
 			return
 		
+		createImagePreview: ()=>
+
+			@image ?= new Image()
+			@image.src = @imageURL
+			
+			@imageContainerJ.css(
+				'margin': 'auto'
+				'max-height': '100%'
+				'max-width': '100%'
+				'flex': '1 1 auto'
+				'overflow-y': 'auto'
+				'min-height': '0px'
+				'padding': '20px'
+			)
+			@imageContainerJ.find('.margin-container').append(@image)
+			
+			return
+		
 		setEditImageMode: ()=>
 			@modal.modalJ.find('.modal-footer button[name="submit"]').hide()
 
@@ -499,32 +584,65 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@photoFromCameraButtonJ.hide()
 			@imageFromComputerButtonJ.hide()
 			@imageFromURLButtonJ.hide()
+			@reloadPreviousImageButtonJ?.hide()
 			@dragDropTextJ.hide()
 			@modal.modalJ.find(".modal-footer").show()
 			
-			image = new Image()
-			image.src = @imageURL
-			@imageContainerJ.append(image)
-			@imageContainerJ.css('max-width': '500px', 'margin': 'auto' )
-			
-			image.onload = ()=>
-				$(image).css( 'max-width': '100%', display: 'block', margin: 'auto' )
-				@cropper = new Cropper(image)
+			@createImagePreview()
+
+			@imageURL = null
+			@image.onload = ()=>
+				$(@image).css( 
+					display: 'block', 
+					'max-width': '100%', 
+					'max-height': '100%', 
+					display: 'flex'
+					'object-fit': 'contain'
+				)
+				@cropper = new Cropper(@image)
 				@cropButtonJ.show()
 				@ignoreCropButtonJ.show()
 			return
 		
-		cropImage: ()=>
+		cropImage: (cropData=null)=>
+			if cropData
+				@cropper.setData(cropData)
+			
 			cropOptions = 
-				minWidth: 256
-				minHeight: 256
-				maxWidth: 1000
-				maxHeight: 1000
+				minWidth: 200
+				minHeight: 200
+				# maxWidth: 1500
+				# maxHeight: 1500
+				maxWidth: 750
+				maxHeight: 750
 				fillColor: '#fff'
 				imageSmoothingEnabled: true
 				imageSmoothingQuality: 'high'
 			
 			@filterCanvas = @cropper.getCroppedCanvas(cropOptions)
+
+			@filterImage()
+			return
+
+		ignoreCropImage: ()=>
+			canvas = document.createElement('canvas')
+			ratio = @image.naturalWidth / @image.naturalHeight
+			if ratio > 0.5
+				if @image.naturalWidth > 750
+					canvas.width = 750
+					canvas.height = canvas.width / ratio
+			else
+				if @image.naturalHeight > 750
+					canvas.height = 750
+					canvas.width = canvas.width * ratio
+			context = canvas.getContext('2d')
+			context.drawImage(@image, 0, 0, @image.naturalWidth, @image.naturalHeight, 0, 0, canvas.width, canvas.height)
+			@filterCanvas = canvas
+			@filterImage()
+			return
+		
+		filterImage: ()=>
+
 			@cropper.destroy()
 			@imageContainerJ.empty()
 			@imageContainerJ.append(@filterCanvas)
@@ -538,137 +656,12 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 
 			@modal.modalJ.find('.modal-footer button[name="submit"]').show()
 
-			@filterImage()
-			return
-
-		ignoreCropImage: ()=>
-			@cropButtonJ.hide()
-			@ignoreCropButtonJ.hide()
-			@filterImage()
-			return
-
-		adaptiveThreshold: ()->
-			# adaptive threshold
-
-			# size of the block
-			n = 15 
-			C = 12
-			# C = parseFloat(@adaptiveThresholdButtonJ.find('input').val())
-			# if Number.isNaN(C)
-			# 	C = parseFloat(@adaptiveThresholdButtonJ.find('input').attr('value'))
-			# C *= 255
-
-			width = @filterCanvas.width
-			height = @filterCanvas.height
-
-			no2 = Math.floor(n / 2)
-			blockSize = 2 * no2 + 1
-			nPixelsInBlock = blockSize * blockSize
-			finalImageData = new ImageData(width, height)
-			context = @filterCanvas.getContext('2d')
-			sourceImageData = context.getImageData(0, 0, width, height)
-			sourceData = sourceImageData.data
-		  
-			for y in [0 .. height-1]
-				for x in [0 .. width-1]
-
-					average = 0
-
-					for yi in [-no2 .. no2]
-						for xi in [-no2 .. no2]
-					
-							xf = if x + xi < 0 then x - xi else if x + xi >= width then x - xi else x + xi
-							yf = if y + yi < 0 then y - yi else if y + yi >= height then y - yi else y + yi
-							index = xf + yf * width
-							average += sourceData[4 * index + 0]
-							
-					average /= nPixelsInBlock
-					index = x + y * width
-					color = if average - C < sourceData[4 * index + 0] then 255 else 0
-					for n in [0 .. 2]
-						finalImageData.data[4 * index + n] = color
-					finalImageData.data[4 * index + 3] = 255
-			
-			context.putImageData(finalImageData, 0, 0)
-			return
-
-
-		grayscale: (context)->
-
-			brightnessThreshold = parseFloat(@brightnessThresholdButtonJ.find('input').val())
-			saturationThreshold = parseFloat(@saturationThresholdButtonJ.find('input').val())
-
-			if Number.isNaN(brightnessThreshold)
-				brightnessThreshold = parseFloat(@brightnessThresholdButtonJ.find('input').attr('value'))
-			if Number.isNaN(saturationThreshold)
-				saturationThreshold = parseFloat(@saturationThresholdButtonJ.find('input').attr('value'))
-			
-			width = @filterCanvas.width
-			height = @filterCanvas.height
-
-			context = @filterCanvas.getContext('2d')
-			sourceImageData = context.getImageData(0, 0, width, height)
-			sourceData = sourceImageData.data
-			for y in [0 .. height-1]
-				for x in [0 .. width-1]
-
-					index = x + y * width
-					red = sourceData[4 * index + 0]
-					green = sourceData[4 * index + 1]
-					blue = sourceData[4 * index + 2]
-					color = new P.Color(red / 255, green / 255, blue / 255)
-					
-					# finalColor = color.brightness > brightnessThreshold or color.saturation > 1 - saturationThreshold ? 0 : 1
-					
-					finalColor = Math.min(color.brightness, 1 - color.saturation)
-
-					for n in [0 .. 2]
-						sourceData[4 * index + n] = finalColor * 255
-					sourceData[4 * index + 3] = sourceData[4 * index + 3]
-			
-			context.putImageData(sourceImageData, 0, 0)
-			return
-		
-		processImage: ()=>
-			context = @filterCanvas.getContext('2d')
-			if not @initialImage?
-				@initialImage = context.getImageData(0, 0, @filterCanvas.width, @filterCanvas.height)
-			else
-				context.putImageData(@initialImage, 0, 0)
-			console.log('start grayscale')
-			@grayscale()
-			@adaptiveThreshold()
-			console.log('grayscale finished')
-			return
-		
-		addRasterFilterControls: ()=>
-
-
-			@brightnessThresholdButtonJ = @modal.addTextInput( type: 'number', name: 'Brightness threshold', label: 'Brigthness threshold', defaultValue: 0.3 )
-			@saturationThresholdButtonJ = @modal.addTextInput( type: 'number', name: 'Saturation threshold', label: 'Saturation threshold', defaultValue: 0.3 )
-			@adaptiveThresholdButtonJ = @modal.addTextInput( type: 'number', name: 'Adaptive threshold', label: 'Adaptive threshold', defaultValue: 0.05 )
-			
-			@brightnessThresholdButtonJ.find('input').attr('min', '-1').attr('max', '1').attr('value', '0.3').attr('step', 0.01).on('change', ()=> Utils.deferredExecution(@processImage, 'brightnessThreshold', 500) )
-			@saturationThresholdButtonJ.find('input').attr('min', '-1').attr('max', '1').attr('value', '0.3').attr('step', 0.01).on('change', ()=> Utils.deferredExecution(@processImage, 'saturationThreshold', 500) )
-			@adaptiveThresholdButtonJ.find('input').attr('min', '-1').attr('max', '1').attr('value', '0.05').attr('step', 0.01).on('change', ()=> Utils.deferredExecution(@processImage, 'adaptiveThreshold', 500) )
-			
-			@filterControlsContainerJ = $('<div>')
-			@filterControlsContainerJ.append(@brightnessThresholdButtonJ)
-			@filterControlsContainerJ.append(@saturationThresholdButtonJ)
-			@filterControlsContainerJ.append(@adaptiveThresholdButtonJ)
-			@modal.modalBodyJ.find('#processed-image').css( 'display': 'flex', 'flex-direction': 'row' ).append(@filterControlsContainerJ)
-
-			return
-
-		filterImage: ()=>
-			# @addRasterFilterControls()
-			@processImage()
+			@imageProcessor.processImage(@filterCanvas)
 			@onModalSubmit()
-			# @filterButtonJ.show()
 			return
 
-		createRasterController: ()=>
-			@modal.hide()
+		createRasterController: (bounds=null)=>
+			@modal?.hide()
 			if not @imageURL? then return
 
 			@imageFile = null
@@ -680,7 +673,10 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@raster = new P.Raster(@imageURL)
 			@raster.opacity = 0.5
 			@tracerGroup.addChild(@raster)
-			@raster.position = R.view.getViewBounds().center
+			if bounds?
+				@raster.position = bounds.center
+			else
+				@raster.position = R.view.getViewBounds().center
 			R.loader.showLoadingBar()
 
 			# @raster.source = data.imageURL
@@ -688,7 +684,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 
 			@raster.onError = @rasterOnError
 
-			@raster.onLoad = @rasterOnLoad
+			@raster.onLoad = ()=> @rasterOnLoad(bounds)
 
 			return
 
@@ -760,32 +756,48 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			return
 
 		autoTraceSized: (bounds=null)=>
-			
-			png = @imageURL
+
 			@rasterPartRectangle = if bounds? then bounds else @raster.bounds
 			@subRasterRectangle = new P.Rectangle(0, 0, @raster.width, @raster.height)
-
+			
 			if bounds?
-				# if @raster.bounds.width > @constructor.maxRasterSize or @raster.bounds.height > @constructor.maxRasterSize
-				# 	R.alertManager.alert 'The image is too big', 'info'
-				# 	return
-				
 				@subRasterRectangle = new P.Rectangle(bounds.topLeft.subtract(@raster.bounds.topLeft).divide(@raster.scaling), 
 														bounds.bottomRight.subtract(@raster.bounds.topLeft).divide(@raster.scaling))
-				
+			rasterPart = null
+			try
 				rasterPart = @raster.getSubRaster(@subRasterRectangle)
+				rasterPart.width *= 2
+				rasterPart.height *= 2
+				console.log(rasterPart.width)
 				png = rasterPart.toDataURL()
 				rasterPart.remove()
 
-			args = {
-				png: png
-			}
-			
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'autoTrace', args: args } ).done(@autoTraceCallback)
-			
+				args = {
+					png: png
+				}
+				
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'autoTrace', args: args } ).done(@autoTraceCallback)
+				
+			catch err
+				rasterPart?.remove()
+				if err.code == 18
+					modal = Modal.createModal( 
+						id: 'import-image-cross-origin-issue',
+						title: "Autotrace does not work with image URL", 
+						submitButtonText: "Download image",
+						submit: ()-> return window.location = @imageURL
+					)
+					modal.addText('You cannot trace automatically an image from an URL. Please make sure the image copyright allows reusing the image, then download the image on your computer and choose the image from your computer.', 'You cannot trace automatically an image from an URL')
+					modal.show()
+				return
+
 			return
 		
 		autoTraceCallback: (result)=>
+			if result.state == "error"
+				@modal.hide()
+				R.alertManager.alert(result.error, "error")
+				return
 			@modal.hide()
 			@addSvgToDraft(result.svg)
 			return
@@ -797,7 +809,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 					child.strokeColor = 'black'
 					child.strokeCap = 'round'
 					child.strokeJoin = 'round'
-					draft.addChild(child, false)
+					draft.addChild(child, false, false)
+					draft.computeRectangle()
 				else if child.children?
 					@addPathsToDraft(child, draft)
 			return
@@ -806,7 +819,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			svgPaper = P.project.importSVG(svg)
 			
 			svgPaper.translate(@rasterPartRectangle.topLeft)
-			svgPaper.scale(@rasterPartRectangle.width / @subRasterRectangle.width, @rasterPartRectangle.topLeft)
+			svgPaper.scale(@rasterPartRectangle.width / ( 2 * @subRasterRectangle.width ), @rasterPartRectangle.topLeft)
 			# svgPaper.fitBounds(@rasterPartRectangle)
 
 			draft = R.Item.Drawing.getDraft()
@@ -817,6 +830,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			draft.updatePaths()
 
 			svgPaper.remove()
+			R.toolManager.updateButtonsVisibility()
 
 			return
 
@@ -838,7 +852,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 					# @modal?.hide()
 					reader.onload = (readerEvent)=>
 						@imageURL = readerEvent.target.result
-						@urlInputJ.val(@imageURL)
+						# @urlInputJ.val(@imageURL)
 						# @enableSubmitButtons()
 						@setEditImageMode()
 						# @submitURL(imageURL: readerEvent.target.result)
@@ -858,7 +872,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 					# @modal.hide()
 					reader.onload = (readerEvent)=>
 						@imageURL = readerEvent.target.result
-						@urlInputJ.val(@imageURL)
+						# @urlInputJ.val(@imageURL)
 						# @enableSubmitButtons()
 						# @image = new Image()
 						# @image.src = @imageURL
@@ -875,20 +889,25 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 
 		showButton: ()->
 			@tracerBtn?.show()
+			if @tracerGroup?
+				R.toolManager?.showTracerButtons()
+			return
 		
 		hideButton: ()->
 			@tracerBtn?.hide()
+			R.toolManager?.hideTracerButtons()
+			return
 
 		hide: ()->
 			@tracerGroup?.visible = false
-			R.toolManager?.hideTracerButtons()
 			return
 		
 		show: ()->
 			@tracerGroup?.visible = true
-			if @tracerGroup?
-				R.toolManager?.showTracerButtons()
 			return
+		
+		isVisible: ()->
+			return @tracerGroup?.visible and @tracerGroup.parent?
 
 		mouseUp: (event)->
 			@draggingImage = false

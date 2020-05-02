@@ -529,9 +529,12 @@
         return item;
       };
 
-      Drawing.prototype.addChild = function(path, save) {
+      Drawing.prototype.addChild = function(path, save, computeRectangle) {
         if (save == null) {
           save = false;
+        }
+        if (computeRectangle == null) {
+          computeRectangle = true;
         }
         if (this.paths.indexOf(path) >= 0) {
           console.log('path already in drawing');
@@ -540,7 +543,9 @@
         this.paths.push(path);
         this.group.addChild(path);
         path.data.drawingId = this.id;
-        this.computeRectangle();
+        if (computeRectangle) {
+          this.computeRectangle();
+        }
         if (save) {
           this.savePath(path);
         }
