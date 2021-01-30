@@ -1165,3 +1165,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=Rasterizer.js.map

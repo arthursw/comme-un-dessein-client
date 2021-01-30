@@ -230,15 +230,17 @@
           return;
         }
         this.createDrawings(results);
-        tiles = JSON.parse(results.tiles);
-        for (j = 0, len = tiles.length; j < len; j++) {
-          tile = tiles[j];
-          R.tools.choose.createTile(tile);
-        }
-        discussions = JSON.parse(results.discussions);
-        for (k = 0, len1 = discussions.length; k < len1; k++) {
-          discussion = discussions[k];
-          R.tools.discuss.createDiscussion(discussion);
+        if (R.application === 'ESPERO') {
+          tiles = JSON.parse(results.tiles);
+          for (j = 0, len = tiles.length; j < len; j++) {
+            tile = tiles[j];
+            R.tools.choose.createTile(tile);
+          }
+          discussions = JSON.parse(results.discussions);
+          for (k = 0, len1 = discussions.length; k < len1; k++) {
+            discussion = discussions[k];
+            R.tools.discuss.createDiscussion(discussion);
+          }
         }
       };
 
@@ -412,7 +414,7 @@
               for (o = 0, len = drawingsToLoad.length; o < len; o++) {
                 layerName = drawingsToLoad[o];
                 group = new P.Group();
-                raster = new P.Raster(location.origin + '/static/rasters/' + layerName + '/zoom' + scaleNumber + '/' + m + ',' + n + '.png' + '?version=' + Math.random());
+                raster = new P.Raster(location.origin + '/static/rasters/' + R.city.name + '/' + layerName + '/zoom' + scaleNumber + '/' + m + ',' + n + '.png' + '?version=' + Math.random());
                 raster.position.x = (m + 0.5) * nPixelsPerTile;
                 raster.position.y = (n + 0.5) * nPixelsPerTile;
                 raster.scale(scale * 1.001);
@@ -856,3 +858,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=Loader.js.map

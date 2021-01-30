@@ -2032,7 +2032,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					@close()
 					return),
 				submitButtonText: 'Modify drawing', 
-				submitButtonIcon: 'glyphicon-ban-circle',
+				submitButtonIcon: 'glyphicon-pencil',
 				)
 		
 			modal.addText('Are you sure you really want to modify the drawing')

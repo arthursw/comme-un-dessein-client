@@ -403,7 +403,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			yellow = '#FFC107'
 			brown = '#795548'
 			black = '#000000'
-			colors = [red, blue, green, yellow, brown, black]
+			@colors = [red, blue, green, yellow, brown, black]
 
 			if R.isCommeUnDessein
 				R.selectedColor = black
@@ -453,7 +453,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				position = @colorBtn.cloneJ.offset()
 				height = @colorBtn.cloneJ.outerHeight()
 				ulJ = $('<ul>').attr('id', 'color-picker').css( position: 'fixed', top: position.top + height, left: position.left )
-				for color in colors
+				for color in @colors
 					liJ = $('<li>').attr('data-color', color).css( background: color, width: 50, height: 50, cursor: 'pointer' ).mousedown((event)=> 
 						color = $(event.target).attr('data-color')
 						R.selectedColor = color

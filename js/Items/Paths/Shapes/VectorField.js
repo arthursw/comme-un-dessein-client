@@ -195,3 +195,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=VectorField.js.map

@@ -326,3 +326,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=ScreenshotTool.js.map

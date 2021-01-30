@@ -74,6 +74,9 @@
         this.addToLayer();
         if (this.status === 'draft') {
           this.constructor.draft = this;
+          this.group.shadowColor = 'lightblue';
+          this.group.shadowBlur = 10;
+          this.group.shadowOffset = new P.Point(0, 0);
         }
         if ((this.status === 'draft' || this.status === 'flagged_pending' || this.status === 'flagged') && pathList) {
           this.addPathsFromPathList(pathList);
@@ -164,7 +167,7 @@
           pointLists.push({
             points: this.getPathPoints(path),
             data: {
-              strokeColor: path.strokeColor
+              strokeColor: path.strokeColor.toCSS()
             }
           });
         }
@@ -558,7 +561,7 @@
           pk: this.pk,
           points: this.getPathPoints(path),
           data: {
-            strokeColor: path.strokeColor
+            strokeColor: path.strokeColor.toCSS()
           },
           bounds: this.getBounds()
         };
@@ -637,6 +640,7 @@
         svg = this.getSVG();
         this.svgString = svg;
         imageData = R.view.getThumbnail(this, bounds.width, bounds.height, true, false);
+        console.log(imageData);
         args = {
           pk: this.pk,
           clientId: this.id,
@@ -957,7 +961,7 @@
         this.removeFromListItem();
         this.addToListItem();
         this.addToLayer();
-        if (this.svg != null) {
+        if ((this.svg != null) && R.useSVG) {
           this.svg.remove();
           layerName = this.getLayerName();
           layer = document.getElementById(layerName);
@@ -1081,3 +1085,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=Drawing.js.map

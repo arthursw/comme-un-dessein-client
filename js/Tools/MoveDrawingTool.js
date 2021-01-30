@@ -72,10 +72,10 @@
       };
 
       MoveDrawingTool.prototype.update = function(event) {
-        var draft;
+        var draft, ref;
         if (this.dragging) {
           draft = R.Drawing.getDraft();
-          if (draft != null) {
+          if ((draft != null) && (draft.rectangle != null) && ((ref = draft.group) != null ? ref.children.length : void 0) > 0) {
             draft.rectangle.x += event.delta.x;
             draft.rectangle.y += event.delta.y;
             draft.group.position.x += event.delta.x;
@@ -105,3 +105,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=MoveDrawingTool.js.map

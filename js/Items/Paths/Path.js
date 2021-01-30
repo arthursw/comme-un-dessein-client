@@ -30,7 +30,7 @@
         flagged: '#EE2233'
       };
 
-      Path.strokeWidth = R.strokeWidth || Utils.CS.mmToPixel(7);
+      Path.strokeWidth = R.city.strokeWidth || R.city.pixelPerMm * 7;
 
       Path.strokeColor = 'black';
 
@@ -498,7 +498,7 @@
               pk: draft.pk,
               points: this.getPoints(),
               data: {
-                strokeColor: this.data.strokeColor
+                strokeColor: this.data.strokeColor.toCSS()
               },
               bounds: draft.getBounds()
             };
@@ -518,7 +518,7 @@
           R.commandManager.add(new Command.ModifyDrawing(draft));
           draft.points = this.getPoints();
           draft.pathData = {
-            strokeColor: this.data.strokeColor
+            strokeColor: this.data.strokeColor.toCSS()
           };
           draft.addChild(this);
           draft.save();
@@ -721,3 +721,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=Path.js.map

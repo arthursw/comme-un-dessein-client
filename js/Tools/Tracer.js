@@ -2,7 +2,7 @@
 (function() {
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  define(['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer', 'Tools/ImageProcessor', 'Tools/Camera', 'Tools/PathTool', 'Commands/Command', 'i18next', 'cropper'], function(P, R, Utils, Button, Modal, Vectorizer, ImageProcessor, PathTool, Camera, Command, i18next, Cropper) {
+  define(['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer', 'Tools/ImageProcessor', 'Tools/Camera', 'Tools/PathTool', 'Commands/Command', 'i18next', 'cropper'], function(P, R, Utils, Button, Modal, Vectorizer, ImageProcessor, Camera, PathTool, Command, i18next, Cropper) {
     var Tracer;
     Tracer = (function() {
       Tracer.handleColor = '#42b3f4';
@@ -117,11 +117,6 @@
       };
 
       Tracer.prototype.onModalSubmit = function() {
-        if (this.filterCanvas != null) {
-          if (this.imageURL == null) {
-            this.imageURL = this.filterCanvas.toDataURL();
-          }
-        }
         this.createRasterController();
       };
 
@@ -664,22 +659,7 @@
         }
         this.dragDropTextJ.hide();
         this.modal.modalJ.find(".modal-footer").show();
-        this.createImagePreview();
-        this.imageURL = null;
-        this.image.onload = (function(_this) {
-          return function() {
-            $(_this.image).css({
-              display: 'block',
-              'max-width': '100%',
-              'max-height': '100%',
-              display: 'flex',
-              'object-fit': 'contain'
-            });
-            _this.cropper = new Cropper(_this.image);
-            _this.cropButtonJ.show();
-            return _this.ignoreCropButtonJ.show();
-          };
-        })(this);
+        this.onModalSubmit();
       };
 
       Tracer.prototype.cropImage = function(cropData) {
@@ -704,23 +684,15 @@
       };
 
       Tracer.prototype.ignoreCropImage = function() {
-        var canvas, context, ratio;
-        canvas = document.createElement('canvas');
-        ratio = this.image.naturalWidth / this.image.naturalHeight;
-        if (ratio > 0.5) {
-          if (this.image.naturalWidth > 750) {
-            canvas.width = 750;
-            canvas.height = canvas.width / ratio;
-          }
-        } else {
-          if (this.image.naturalHeight > 750) {
-            canvas.height = 750;
-            canvas.width = canvas.width * ratio;
-          }
-        }
-        context = canvas.getContext('2d');
-        context.drawImage(this.image, 0, 0, this.image.naturalWidth, this.image.naturalHeight, 0, 0, canvas.width, canvas.height);
-        this.filterCanvas = canvas;
+        var imageData;
+        imageData = this.cropper.getCanvasData();
+        this.cropper.setCropBoxData({
+          left: imageData.left,
+          top: imageData.top,
+          width: imageData.width,
+          height: imageData.height
+        });
+        this.cropImage();
         this.filterImage();
       };
 
@@ -842,7 +814,7 @@
       };
 
       Tracer.prototype.autoTraceSized = function(bounds) {
-        var args, err, error, modal, png, rasterPart;
+        var args, c, color, colors, err, error, j, len, modal, png, ref, ref1;
         if (bounds == null) {
           bounds = null;
         }
@@ -851,16 +823,27 @@
         if (bounds != null) {
           this.subRasterRectangle = new P.Rectangle(bounds.topLeft.subtract(this.raster.bounds.topLeft).divide(this.raster.scaling), bounds.bottomRight.subtract(this.raster.bounds.topLeft).divide(this.raster.scaling));
         }
-        rasterPart = null;
+        if ((R.tools["Precise path"].draftLimit != null) && !R.tools["Precise path"].draftLimit.contains(this.subRasterRectangle)) {
+          R.tools["Precise path"].constructor.displayDraftIsTooBigError();
+          return;
+        }
+        this.rasterPart = null;
         try {
-          rasterPart = this.raster.getSubRaster(this.subRasterRectangle);
-          rasterPart.width *= 2;
-          rasterPart.height *= 2;
-          console.log(rasterPart.width);
-          png = rasterPart.toDataURL();
-          rasterPart.remove();
+          this.rasterPart = this.raster.getSubRaster(this.subRasterRectangle);
+          console.log(this.rasterPart.width);
+          png = this.rasterPart.toDataURL();
+          this.rasterPart.remove();
+          this.rasterPart = null;
+          colors = [];
+          ref = R.toolManager.colors;
+          for (j = 0, len = ref.length; j < len; j++) {
+            color = ref[j];
+            c = new paper.Color(color);
+            colors.push([Math.round(c.red * 255), Math.round(c.green * 255), Math.round(c.blue * 255), 255]);
+          }
           args = {
-            png: png
+            png: png,
+            colors: colors
           };
           $.ajax({
             method: "POST",
@@ -874,9 +857,10 @@
           }).done(this.autoTraceCallback);
         } catch (error) {
           err = error;
-          if (rasterPart != null) {
-            rasterPart.remove();
+          if ((ref1 = this.rasterPart) != null) {
+            ref1.remove();
           }
+          this.rasterPart = null;
           if (err.code === 18) {
             modal = Modal.createModal({
               id: 'import-image-cross-origin-issue',
@@ -894,13 +878,18 @@
       };
 
       Tracer.prototype.autoTraceCallback = function(result) {
+        var ref, ref1;
         if (result.state === "error") {
-          this.modal.hide();
+          if ((ref = this.modal) != null) {
+            ref.hide();
+          }
           R.alertManager.alert(result.error, "error");
           return;
         }
-        this.modal.hide();
-        this.addSvgToDraft(result.svg);
+        if ((ref1 = this.modal) != null) {
+          ref1.hide();
+        }
+        this.addSvgToDraft(result.svg, result.colors);
       };
 
       Tracer.prototype.addPathsToDraft = function(item, draft) {
@@ -910,28 +899,41 @@
           child = ref[j];
           if (child instanceof P.Path) {
             child.strokeWidth = R.Path.strokeWidth;
-            child.strokeColor = 'black';
+            if ((item.strokeColor != null) && (child.strokeColor == null)) {
+              child.strokeColor = item.strokeColor;
+            }
             child.strokeCap = 'round';
             child.strokeJoin = 'round';
             draft.addChild(child, false, false);
-            draft.computeRectangle();
           } else if (child.children != null) {
             this.addPathsToDraft(child, draft);
           }
         }
       };
 
-      Tracer.prototype.addSvgToDraft = function(svg) {
-        var draft, svgPaper;
+      Tracer.prototype.addSvgToDraft = function(svg, colors) {
+        var draft, regex, subst, svgPaper;
+        svg = svg.replace('<?xml version="1.0" standalone="yes"?>\n', '');
+        regex = /style="stroke:([#\d\w]+); fill:none;"/gm;
+        subst = 'stroke="$1" stroke-width="' + R.Path.strokeWidth + '"';
+        svg = svg.replace(regex, subst);
         svgPaper = P.project.importSVG(svg);
+        console.log(svgPaper.exportSVG({
+          string: true
+        }));
         svgPaper.translate(this.rasterPartRectangle.topLeft);
-        svgPaper.scale(this.rasterPartRectangle.width / (2 * this.subRasterRectangle.width), this.rasterPartRectangle.topLeft);
+        svgPaper.scale(this.rasterPartRectangle.width / this.subRasterRectangle.width, this.rasterPartRectangle.topLeft);
+        svgPaper.strokeCap = 'round';
+        svgPaper.strokeJoin = 'round';
+        svgPaper.strokeWidth = R.Path.strokeWidth;
         draft = R.Item.Drawing.getDraft();
         R.commandManager.add(new Command.ModifyDrawing(draft));
         this.addPathsToDraft(svgPaper, draft);
+        draft.computeRectangle();
         draft.updatePaths();
         svgPaper.remove();
         R.toolManager.updateButtonsVisibility();
+        R.tools["Precise path"].showDraftLimits();
       };
 
       Tracer.prototype.fileDropped = function(event) {
@@ -1043,3 +1045,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=Tracer.js.map

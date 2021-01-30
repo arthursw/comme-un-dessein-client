@@ -50,7 +50,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command' ], (P, R, 
 		update: (event) ->
 			if @dragging
 				draft = R.Drawing.getDraft()
-				if draft?
+				if draft? and draft.rectangle? and draft.group?.children.length > 0
 					draft.rectangle.x += event.delta.x
 					draft.rectangle.y += event.delta.y
 					draft.group.position.x += event.delta.x

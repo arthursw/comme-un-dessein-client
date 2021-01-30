@@ -740,3 +740,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=PixelPath.js.map

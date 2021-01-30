@@ -245,6 +245,9 @@
           this.currentPath.strokeColor = R.selectedColor;
           this.currentPath.strokeCap = 'round';
           this.currentPath.strokeJoin = 'round';
+          this.currentPath.shadowColor = 'lightblue';
+          this.currentPath.shadowBlur = 10;
+          this.currentPath.shadowOffset = new P.Point(0, 0);
           this.currentPath.add(event.point);
         }
         this.using = true;
@@ -472,3 +475,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=PathTool.js.map

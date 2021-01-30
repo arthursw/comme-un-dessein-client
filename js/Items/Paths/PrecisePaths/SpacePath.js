@@ -114,3 +114,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=SpacePath.js.map

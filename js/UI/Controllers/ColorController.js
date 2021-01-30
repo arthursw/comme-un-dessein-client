@@ -295,3 +295,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=ColorController.js.map

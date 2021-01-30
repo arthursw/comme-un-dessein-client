@@ -168,14 +168,14 @@
       };
 
       ToolManager.prototype.createColorButtons = function() {
-        var black, blue, brown, closeColorMenu, colors, green, red, yellow;
+        var black, blue, brown, closeColorMenu, green, red, yellow;
         red = '#F44336';
         blue = '#448AFF';
         green = '#8BC34A';
         yellow = '#FFC107';
         brown = '#795548';
         black = '#000000';
-        colors = [red, blue, green, yellow, brown, black];
+        this.colors = [red, blue, green, yellow, brown, black];
         if (R.isCommeUnDessein) {
           R.selectedColor = black;
           return;
@@ -200,7 +200,7 @@
         });
         this.colorBtn.btnJ.click((function(_this) {
           return function() {
-            var color, height, i, len, liJ, position, ulJ;
+            var color, height, i, len, liJ, position, ref, ulJ;
             position = _this.colorBtn.cloneJ.offset();
             height = _this.colorBtn.cloneJ.outerHeight();
             ulJ = $('<ul>').attr('id', 'color-picker').css({
@@ -208,8 +208,9 @@
               top: position.top + height,
               left: position.left
             });
-            for (i = 0, len = colors.length; i < len; i++) {
-              color = colors[i];
+            ref = _this.colors;
+            for (i = 0, len = ref.length; i < len; i++) {
+              color = ref[i];
               liJ = $('<li>').attr('data-color', color).css({
                 background: color,
                 width: 50,
@@ -436,3 +437,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=ToolManager.js.map

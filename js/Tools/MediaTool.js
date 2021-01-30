@@ -52,3 +52,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=MediaTool.js.map

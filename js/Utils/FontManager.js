@@ -122,3 +122,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=FontManager.js.map

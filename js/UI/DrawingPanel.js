@@ -2076,7 +2076,7 @@
             };
           })(this)),
           submitButtonText: 'Modify drawing',
-          submitButtonIcon: 'glyphicon-ban-circle'
+          submitButtonIcon: 'glyphicon-pencil'
         });
         modal.addText('Are you sure you really want to modify the drawing');
         modal.addText('This will reset the votes and comments of the drawing');
@@ -2139,3 +2139,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=DrawingPanel.js.map

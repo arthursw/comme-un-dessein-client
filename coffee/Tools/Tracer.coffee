@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer', 'Tools/ImageProcessor', 'Tools/Camera', 'Tools/PathTool', 'Commands/Command', 'i18next', 'cropper' ], (P, R, Utils, Button, Modal, Vectorizer, ImageProcessor, PathTool, Camera, Command, i18next, Cropper) ->
+define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer', 'Tools/ImageProcessor', 'Tools/Camera', 'Tools/PathTool', 'Commands/Command', 'i18next', 'cropper' ], (P, R, Utils, Button, Modal, Vectorizer, ImageProcessor, Camera, PathTool, Command, i18next, Cropper) ->
 
 	class Tracer
 		
@@ -86,8 +86,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			return
 		
 		onModalSubmit: ()=>	
-			if @filterCanvas?
-				@imageURL ?= @filterCanvas.toDataURL()
+			# if @filterCanvas?
+			# 	@imageURL ?= @filterCanvas.toDataURL()
 			@createRasterController()
 			return
 
@@ -111,7 +111,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			
 
 			@photoFromCameraButtonJ = @modal.addButton( addToBody: true, type: 'success', name: 'Take a photo with the camera', icon: 'glyphicon-facetime-video' ) # 'glyphicon-camera' )
-			@photoFromCameraButtonJ.click(Camera.initialize)
+			@photoFromCameraButtonJ.click Camera.initialize
 			@imageFromComputerButtonJ = @modal.addButton( addToBody: true, type: 'warning', name: 'Select an image on your computer', icon: 'glyphicon-folder-open' )
 			@imageFromComputerButtonJ.click ()=> 
 				inputJ.click()
@@ -497,6 +497,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			return
 
 		rasterOnLoad: (bounds=null)->
+
 			R.loader.hideLoadingBar()
 
 			if bounds?
@@ -517,6 +518,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 
 			@drawHandles()
 			R.toolManager?.showTracerButtons()
+
 			return
 
 		rasterOnError: (event)=>
@@ -587,23 +589,26 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@reloadPreviousImageButtonJ?.hide()
 			@dragDropTextJ.hide()
 			@modal.modalJ.find(".modal-footer").show()
-			
-			@createImagePreview()
 
-			@imageURL = null
-			@image.onload = ()=>
-				$(@image).css( 
-					display: 'block', 
-					'max-width': '100%', 
-					'max-height': '100%', 
-					display: 'flex'
-					'object-fit': 'contain'
-				)
-				@cropper = new Cropper(@image)
-				@cropButtonJ.show()
-				@ignoreCropButtonJ.show()
+			@onModalSubmit()
+
+			# @createImagePreview()
+
+			# @imageURL = null
+			# @image.onload = ()=>
+			# 	$(@image).css( 
+			# 		display: 'block', 
+			# 		'max-width': '100%', 
+			# 		'max-height': '100%', 
+			# 		display: 'flex'
+			# 		'object-fit': 'contain'
+			# 	)
+			# 	@cropper = new Cropper(@image)
+			# 	@cropButtonJ.show()
+			# 	@ignoreCropButtonJ.show()
 			return
 		
+		# not used anymore
 		cropImage: (cropData=null)=>
 			if cropData
 				@cropper.setData(cropData)
@@ -624,23 +629,29 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@filterImage()
 			return
 
+		# not used anymore
 		ignoreCropImage: ()=>
-			canvas = document.createElement('canvas')
-			ratio = @image.naturalWidth / @image.naturalHeight
-			if ratio > 0.5
-				if @image.naturalWidth > 750
-					canvas.width = 750
-					canvas.height = canvas.width / ratio
-			else
-				if @image.naturalHeight > 750
-					canvas.height = 750
-					canvas.width = canvas.width * ratio
-			context = canvas.getContext('2d')
-			context.drawImage(@image, 0, 0, @image.naturalWidth, @image.naturalHeight, 0, 0, canvas.width, canvas.height)
-			@filterCanvas = canvas
+			# canvas = document.createElement('canvas')
+			# ratio = @image.naturalWidth / @image.naturalHeight
+			# if ratio > 0.5
+			# 	if @image.naturalWidth > 750
+			# 		canvas.width = 750
+			# 		canvas.height = canvas.width / ratio
+			# else
+			# 	if @image.naturalHeight > 750
+			# 		canvas.height = 750
+			# 		canvas.width = canvas.width * ratio
+			# context = canvas.getContext('2d')
+			# context.drawImage(@image, 0, 0, @image.naturalWidth, @image.naturalHeight, 0, 0, canvas.width, canvas.height)
+			# @filterCanvas = canvas
+			# imageData = @cropper.getImageData()
+			imageData = @cropper.getCanvasData()
+			@cropper.setCropBoxData( { left: imageData.left, top: imageData.top, width: imageData.width, height: imageData.height } )
+			@cropImage()
 			@filterImage()
 			return
 		
+		# not used anymore
 		filterImage: ()=>
 
 			@cropper.destroy()
@@ -756,30 +767,44 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			return
 
 		autoTraceSized: (bounds=null)=>
-
+			
 			@rasterPartRectangle = if bounds? then bounds else @raster.bounds
 			@subRasterRectangle = new P.Rectangle(0, 0, @raster.width, @raster.height)
 			
 			if bounds?
 				@subRasterRectangle = new P.Rectangle(bounds.topLeft.subtract(@raster.bounds.topLeft).divide(@raster.scaling), 
 														bounds.bottomRight.subtract(@raster.bounds.topLeft).divide(@raster.scaling))
-			rasterPart = null
-			try
-				rasterPart = @raster.getSubRaster(@subRasterRectangle)
-				rasterPart.width *= 2
-				rasterPart.height *= 2
-				console.log(rasterPart.width)
-				png = rasterPart.toDataURL()
-				rasterPart.remove()
 
+			if R.tools["Precise path"].draftLimit? and not R.tools["Precise path"].draftLimit.contains(@subRasterRectangle)
+				R.tools["Precise path"].constructor.displayDraftIsTooBigError()
+				return
+
+			@rasterPart = null
+			try
+				@rasterPart = @raster.getSubRaster(@subRasterRectangle)
+
+				# @rasterPart.smoothing = false
+				# @rasterPart.width *= 2
+				# @rasterPart.height *= 2
+
+				console.log(@rasterPart.width)
+				png = @rasterPart.toDataURL()
+				@rasterPart.remove()
+				@rasterPart = null
+				colors = []
+				for color in R.toolManager.colors
+					c = new paper.Color(color)
+					colors.push([Math.round(c.red*255), Math.round(c.green*255), Math.round(c.blue*255), 255])
 				args = {
-					png: png
+					png: png,
+					colors: colors
 				}
 				
 				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'autoTrace', args: args } ).done(@autoTraceCallback)
 				
 			catch err
-				rasterPart?.remove()
+				@rasterPart?.remove()
+				@rasterPart = null
 				if err.code == 18
 					modal = Modal.createModal( 
 						id: 'import-image-cross-origin-issue',
@@ -795,42 +820,87 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 		
 		autoTraceCallback: (result)=>
 			if result.state == "error"
-				@modal.hide()
+				@modal?.hide()
+				# @rasterPart?.remove()
+				# @rasterPart = null
 				R.alertManager.alert(result.error, "error")
 				return
-			@modal.hide()
-			@addSvgToDraft(result.svg)
+			@modal?.hide()
+			@addSvgToDraft(result.svg, result.colors)
 			return
 		
 		addPathsToDraft: (item, draft)->
 			for child in item.children.slice()
 				if child instanceof P.Path
 					child.strokeWidth = R.Path.strokeWidth
-					child.strokeColor = 'black'
+					if item.strokeColor? and not child.strokeColor?
+						child.strokeColor = item.strokeColor
 					child.strokeCap = 'round'
 					child.strokeJoin = 'round'
+					# draft.computeRectangle()
+					# console.log(child.strokeColor, child.strokeWidth)
 					draft.addChild(child, false, false)
-					draft.computeRectangle()
 				else if child.children?
 					@addPathsToDraft(child, draft)
 			return
 
-		addSvgToDraft: (svg)->
+		# setStrokeColor: (item, rasterPart)->
+		# 	if item.className == 'Shape'
+		# 		path = item.toPath()
+		# 		item.remove()
+		# 		item = path
+		# 	if item.className == 'Path'
+		# 		point = rasterPart.globalToLocal(item.getPointAt(item.length/2))
+		# 		item.strokeColor = rasterPart.getPixel(point)
+		# 	else
+		# 		console.log(item.children)
+		# 		for child in item.children
+		# 			@setStrokeColor(child, rasterPart)
+		# 	return
+
+		addSvgToDraft: (svg, colors)->
+			# svgsPaper = new paper.Group()
+			
+			# svg = svg.replace(new RegExp('stroke:', 'g'), 'stroke-width: ' + R.Path.strokeWidth + 'px; stroke-color:')
+			svg = svg.replace('<?xml version="1.0" standalone="yes"?>\n', '')
+
+			regex = /style="stroke:([#\d\w]+); fill:none;"/gm
+			# subst = 'style="stroke:$1; fill:none;" stroke="$1" stroke-width="' + R.Path.strokeWidth + '"'
+			subst = 'stroke="$1" stroke-width="' + R.Path.strokeWidth + '"'
+
+			# // The substituted value will be contained in the result variable
+			svg = svg.replace(regex, subst)
+			
 			svgPaper = P.project.importSVG(svg)
+			console.log(svgPaper.exportSVG( string: true ))
+
+			# @setStrokeColor(svgPaper, @rasterPart)
+			# @rasterPart?.remove()
+			# @rasterPart = null
+
+			# svgPaper.remove()
+			# svgsPaper.addChild(svgPaper)
 			
 			svgPaper.translate(@rasterPartRectangle.topLeft)
-			svgPaper.scale(@rasterPartRectangle.width / ( 2 * @subRasterRectangle.width ), @rasterPartRectangle.topLeft)
+			svgPaper.scale(@rasterPartRectangle.width / @subRasterRectangle.width, @rasterPartRectangle.topLeft)
 			# svgPaper.fitBounds(@rasterPartRectangle)
+
+			svgPaper.strokeCap = 'round'
+			svgPaper.strokeJoin = 'round'
+			svgPaper.strokeWidth = R.Path.strokeWidth
 
 			draft = R.Item.Drawing.getDraft()
 			R.commandManager.add(new Command.ModifyDrawing(draft))
 
 			@addPathsToDraft(svgPaper, draft)
+			draft.computeRectangle()
 			
 			draft.updatePaths()
 
 			svgPaper.remove()
 			R.toolManager.updateButtonsVisibility()
+			
+			R.tools["Precise path"].showDraftLimits()
 
 			return
 

@@ -353,15 +353,16 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 
 			@createDrawings(results)
 
-			tiles = JSON.parse(results.tiles)
-			
-			for tile in tiles
-				R.tools.choose.createTile(tile)
+			if R.application == 'ESPERO'
+				tiles = JSON.parse(results.tiles)
+				
+				for tile in tiles
+					R.tools.choose.createTile(tile)
 
-			discussions = JSON.parse(results.discussions)
-			
-			for discussion in discussions
-				R.tools.discuss.createDiscussion(discussion)
+				discussions = JSON.parse(results.discussions)
+				
+				for discussion in discussions
+					R.tools.discuss.createDiscussion(discussion)
 
 			return
 
@@ -565,7 +566,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 
 							group = new P.Group()
 
-							raster = new P.Raster(location.origin + '/static/rasters/' + layerName + '/zoom' + scaleNumber + '/' + m + ','  + n + '.png' + '?version=' + Math.random())
+							raster = new P.Raster(location.origin + '/static/rasters/' + R.city.name + '/' + layerName + '/zoom' + scaleNumber + '/' + m + ','  + n + '.png' + '?version=' + Math.random())
 							raster.position.x = (m + 0.5) * nPixelsPerTile
 							raster.position.y = (n + 0.5) * nPixelsPerTile
 							raster.scale(scale * 1.001)

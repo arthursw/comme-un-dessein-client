@@ -458,3 +458,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=SpeedPath.js.map

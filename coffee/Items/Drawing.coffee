@@ -56,6 +56,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			
 			if @status == 'draft'
 				@constructor.draft = @
+				@group.shadowColor = 'lightblue'
+				@group.shadowBlur = 10
+				@group.shadowOffset = new P.Point(0, 0)
 
 			if (@status == 'draft' or @status == 'flagged_pending' or @status == 'flagged') and pathList
 				@addPathsFromPathList(pathList)
@@ -120,7 +123,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		getPointLists: ()->
 			pointLists = []
 			for path in @paths
-				pointLists.push({ points: @getPathPoints(path), data: { strokeColor: path.strokeColor } })
+				pointLists.push({ points: @getPathPoints(path), data: { strokeColor: path.strokeColor.toCSS() } })
 			return pointLists
 
 		createPath: (points, strokeColor, planet=null)->
@@ -538,7 +541,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				clientId: @id
 				pk: @pk
 				points: @getPathPoints(path)
-				data: { strokeColor: path.strokeColor }
+				data: { strokeColor: path.strokeColor.toCSS() }
 				bounds: @getBounds()
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'addPathToDrawing', args: args } ).done(@saveCallback)
 			return
@@ -587,6 +590,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@svgString = svg
 
 			imageData = R.view.getThumbnail(@, bounds.width, bounds.height, true, false)
+			console.log(imageData)
 
 			args = {
 				pk: @pk
@@ -846,7 +850,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@addToListItem()
 			@addToLayer()
 			
-			if @svg?
+			if @svg? and R.useSVG
 				@svg.remove()
 				layerName = @getLayerName()
 				layer = document.getElementById(layerName)

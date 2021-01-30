@@ -248,6 +248,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 				@currentPath.strokeColor = R.selectedColor
 				@currentPath.strokeCap = 'round'
 				@currentPath.strokeJoin = 'round'
+				@currentPath.shadowColor = 'lightblue'
+				@currentPath.shadowBlur = 10
+				@currentPath.shadowOffset = new P.Point(0, 0)
 				@currentPath.add(event.point)
 
 			@using = true

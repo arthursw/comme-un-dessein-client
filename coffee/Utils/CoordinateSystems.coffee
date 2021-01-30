@@ -144,12 +144,12 @@ define ['paper', 'R'], (P, R) ->
 			zoom = 25
 		return zoom
 	
-	CS.pixelsPerMm = 1
+	# CS.pixelsPerMm = 1
 
-	CS.pixelToMm = (pixel)->
-		return pixel / CS.pixelsPerMm
+	# CS.pixelToMm = (pixel)->
+	# 	return pixel / CS.pixelsPerMm
 
-	CS.mmToPixel = (mm)->
-		return mm * CS.pixelsPerMm
+	# CS.mmToPixel = (mm)->
+	# 	return mm * CS.pixelsPerMm
 
 	return CS

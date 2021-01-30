@@ -163,3 +163,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=Sidebar.js.map

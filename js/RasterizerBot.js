@@ -166,3 +166,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=RasterizerBot.js.map

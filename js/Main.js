@@ -36,26 +36,25 @@
     };
     R.loadActiveDrawings = true;
     $(document).ready(function() {
-      var canvasJ, cityFinished, cityMessage, cityName, deleteAccountWarning, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
+      var canvasJ, cityName, deleteAccountWarning, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
       canvasJ = $('#canvas');
       R.administrator = canvasJ.attr('data-is-admin') === 'True';
       R.application = canvasJ.attr('data-application');
       R.isCommeUnDessein = R.application === 'COMME_UN_DESSEIN';
-      R.city = {
-        owner: null,
-        site: null,
-        finished: false
-      };
+      if (R.city == null) {
+        R.city = {};
+      }
+      R.city.owner = null;
+      R.city.site = null;
+      R.city.mode = canvasJ.attr('data-city-mode');
       cityName = canvasJ.attr('data-city');
-      cityFinished = canvasJ.attr('data-city-finished');
-      cityMessage = canvasJ.attr('data-city-message');
       R.useSVG = R.isCommeUnDessein && canvasJ.attr('data-city-use-svg') === 'True';
       if (cityName.length > 0) {
         R.city.name = cityName;
       }
-      R.city.finished = cityFinished === 'True';
+      R.city.finished = canvasJ.attr('data-city-finished') === 'True';
       if (R.city.finished) {
-        showEndModal(cityMessage, R.city.name);
+        showEndModal(canvasJ.attr('data-city-message'), R.city.name);
       }
       updateContent = function() {
         $("body").localize();
@@ -497,3 +496,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=Main.js.map

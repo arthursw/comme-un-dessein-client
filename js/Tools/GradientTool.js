@@ -297,3 +297,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=GradientTool.js.map

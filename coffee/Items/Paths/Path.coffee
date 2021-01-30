@@ -67,7 +67,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			flagged: '#EE2233'
 		}
 
-		@strokeWidth = R.strokeWidth or Utils.CS.mmToPixel(7)
+		@strokeWidth = R.city.strokeWidth or R.city.pixelPerMm * 7
 		@strokeColor = 'black'
 
 		# parameters are defined as in {RTool}
@@ -586,14 +586,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 						clientId: draft.id
 						pk: draft.pk
 						points: @getPoints()
-						data: { strokeColor: @data.strokeColor }
+						data: { strokeColor: @data.strokeColor.toCSS() }
 						bounds: draft.getBounds()
 					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'addPathToDrawing', args: args } ).done(@saveCallback)
 			else
 				draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
 				R.commandManager.add(new Command.ModifyDrawing(draft))
 				draft.points = @getPoints()
-				draft.pathData = { strokeColor: @data.strokeColor }
+				draft.pathData = { strokeColor: @data.strokeColor.toCSS() }
 				draft.addChild(@)
 				draft.save()
 

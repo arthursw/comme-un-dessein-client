@@ -67,3 +67,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=SquareFractal.js.map

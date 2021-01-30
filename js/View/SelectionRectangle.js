@@ -654,3 +654,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=SelectionRectangle.js.map

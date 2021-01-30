@@ -446,3 +446,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=Vectorizer.js.map

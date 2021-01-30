@@ -2,7 +2,7 @@
 (function() {
   var hasProp = {}.hasOwnProperty;
 
-  define(['paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2', 'bootstrap'], function(P, R, CS, _, $, tinycolor, bs) {
+  define(['paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2', 'bootstrap', 'fileSaver'], function(P, R, CS, _, $, tinycolor, bs, fileSaver) {
     var EPSILON, Formatter, Utils, __nativeSI__, __nativeST__, checkError, sqrtTwoPi;
     if (typeof window !== "undefined" && window !== null) {
       window.tinycolor = tinycolor;
@@ -1359,8 +1359,29 @@
         nMonths++;
       }
     };
+    R.dataURItoBlob = function(dataURI) {
+      var ab, blob, byteString, i, ia, j, mimeString, ref;
+      byteString = atob(dataURI.split(',')[1]);
+      mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+      ab = new ArrayBuffer(byteString.length);
+      ia = new Uint8Array(ab);
+      for (i = j = 0, ref = byteString.length - 1; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      blob = new Blob([ab], {
+        type: mimeString
+      });
+      return blob;
+    };
+    R.saveImageDataURL = function(dataURL, imageName) {
+      var furl;
+      furl = dataURItoBlob(dataURL);
+      return saveAs(furl, imageName);
+    };
     R.Utils = Utils;
     return Utils;
   });
 
 }).call(this);
+
+//# sourceMappingURL=Utils.js.map

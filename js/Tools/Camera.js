@@ -5,27 +5,39 @@
     Camera = (function() {
       function Camera() {}
 
+      Camera.threeSize = 900;
+
+      Camera.initialized = false;
+
       Camera.initialize = function() {
         console.log('initialize camera');
         require(['three'], function(THREE) {
           window.THREE = THREE;
           console.log('three loaded');
-          require(['EffectComposer', 'RenderPass', 'ShaderPass', 'grayscaleShader', 'adaptiveThresholdShader', 'vertexShader', 'gui'], function(EffectComposer, RenderPass, ShaderPass, grayscaleShader, adaptiveThresholdShader, vertexShader, GUI) {
+          require(['EffectComposer', 'RenderPass', 'ShaderPass', 'paletteShader', 'adaptiveThresholdShader', 'separateColorsShader', 'stripesShader', 'erodeShader', 'vertexShader', 'gui'], function(EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI) {
             console.log('everything else loaded');
-            Camera.initializeThreeJS(THREE, EffectComposer, RenderPass, ShaderPass, grayscaleShader, adaptiveThresholdShader, vertexShader, GUI);
+            Camera.initializeThreeJS(THREE, EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI);
           });
         });
       };
 
-      Camera.initializeThreeJS = function(THREE, EffectComposer, RenderPass, ShaderPass, grayscaleShader, adaptiveThresholdShader, vertexShader, GUI) {
-        var constraints, threeHeight, threeWidth;
+      Camera.initializeThreeJS = function(THREE, EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI) {
+        var black, blue, brown, c, color, colorVectorArray, colors, constraints, green, i, len, minDimension, red, threeHeight, threeWidth, white, yellow;
         console.log('initializeThreeJS');
+        $('#camera').show();
         $('#camera').addClass('active');
         Camera.scene = new THREE.Scene();
         Camera.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-        threeWidth = window.innerWidth;
-        threeHeight = window.innerHeight;
+        Camera.stream = null;
+        threeWidth = Camera.threeSize;
+        threeHeight = Camera.threeSize;
+        minDimension = Math.min(threeWidth, threeHeight);
         Camera.canvas = document.createElement("canvas");
+        $(Camera.canvas).css({
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)'
+        });
         Camera.context = canvas.getContext("webgl");
         Camera.renderer = new THREE.WebGLRenderer({
           canvas: Camera.canvas,
@@ -35,28 +47,52 @@
           format: THREE.RGBFormat,
           stencilBuffer: true
         });
-        Camera.renderer.setPixelRatio(window.devicePixelRatio);
-        Camera.renderer.setSize(threeWidth, threeHeight);
+        Camera.renderer.setPixelRatio(1);
+        Camera.renderer.setSize(minDimension, minDimension);
         document.body.appendChild(Camera.renderer.domElement);
         Camera.video = document.createElement('video');
         Camera.texture = new THREE.VideoTexture(Camera.video);
+        red = '#F44336';
+        blue = '#448AFF';
+        green = '#8BC34A';
+        yellow = '#FFC107';
+        brown = '#704433';
+        white = '#FFFFFF';
+        black = '#000000';
+        colors = [red, blue, green, yellow, brown, black, white];
+        if (R.isCommeUnDessein) {
+          colors = [black, black, black, black, black, black, white];
+        }
+        colorVectorArray = [];
+        for (i = 0, len = colors.length; i < len; i++) {
+          color = colors[i];
+          c = new THREE.Color(color);
+          colorVectorArray.push(new THREE.Vector3(c.r, c.g, c.b));
+        }
         Camera.uniforms = {
           time: {
             type: "f",
             value: Date.now()
           },
+          label: {
+            type: "b",
+            value: false
+          },
           resolution: {
             type: "v2",
-            value: new THREE.Vector2(threeWidth, threeHeight)
+            value: new THREE.Vector2(minDimension, minDimension)
           },
           tDiffuse: {
             value: Camera.texture
           },
-          threshold1: {
-            value: 0.3
+          hue: {
+            value: 0.0
           },
-          threshold2: {
-            value: 0.3
+          saturation: {
+            value: 0.0
+          },
+          lightness: {
+            value: 0.0
           },
           C: {
             value: 0.05
@@ -64,8 +100,15 @@
           windowSize: {
             value: 15
           },
+          stripeWidth: {
+            value: 5
+          },
           mousePosition: {
             value: new THREE.Vector2(0.5, 0.5)
+          },
+          colors: {
+            type: "v3v",
+            value: colorVectorArray
           }
         };
         Camera.material = new THREE.MeshBasicMaterial({
@@ -77,24 +120,49 @@
         Camera.effectComposer = new THREE.EffectComposer(Camera.renderer);
         Camera.renderPass = new THREE.RenderPass(Camera.scene, Camera.camera);
         Camera.effectComposer.addPass(Camera.renderPass);
-        Camera.grayscaleShaderPass = new THREE.ShaderPass({
+        Camera.paletteShaderPass = new THREE.ShaderPass({
           uniforms: Camera.uniforms,
           vertexShader: vertexShader.trim(),
-          fragmentShader: grayscaleShader.trim()
+          fragmentShader: paletteShader.trim()
         });
-        Camera.effectComposer.addPass(Camera.grayscaleShaderPass);
+        Camera.effectComposer.addPass(Camera.paletteShaderPass);
+        console.log('create @paletteShaderPass:', Camera.paletteShaderPass);
+        Camera.separateColorsShaderPass = new THREE.ShaderPass({
+          uniforms: Camera.uniforms,
+          vertexShader: vertexShader.trim(),
+          fragmentShader: separateColorsShader.trim()
+        });
+        Camera.effectComposer.addPass(Camera.separateColorsShaderPass);
+        Camera.separateColorsShaderPass.enabled = false;
+        Camera.erodeShaderPass = new THREE.ShaderPass({
+          uniforms: Camera.uniforms,
+          vertexShader: vertexShader.trim(),
+          fragmentShader: erodeShader.trim()
+        });
+        Camera.effectComposer.addPass(Camera.erodeShaderPass);
+        Camera.effectComposer.addPass(Camera.erodeShaderPass);
+        Camera.effectComposer.addPass(Camera.erodeShaderPass);
+        Camera.erodeShaderPass.enabled = false;
+        Camera.stripesShaderPass = new THREE.ShaderPass({
+          uniforms: Camera.uniforms,
+          vertexShader: vertexShader.trim(),
+          fragmentShader: stripesShader.trim()
+        });
+        Camera.effectComposer.addPass(Camera.stripesShaderPass);
+        Camera.stripesShaderPass.enabled = false;
         window.addEventListener("resize", Camera.onWindowResize, false);
-        $('#camera').append(Camera.canvas);
+        $('#camera').prepend(Camera.canvas);
         Camera.animate();
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           constraints = {
             video: {
-              width: 400,
-              height: 400,
+              width: 300,
+              height: 300,
               facingMode: 'user'
             }
           };
           navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+            Camera.stream = stream;
             Camera.video.srcObject = stream;
             return Camera.video.play();
           })["catch"](function(error) {
@@ -103,20 +171,92 @@
         } else {
           console.error('MediaDevices interface not available.');
         }
-        Camera.gui = new dat.GUI({
-          autoPlace: false
+        if (!Camera.initialized) {
+          $('#cancel-photo').click(Camera.cancelPhoto);
+          $('#take-photo').click(Camera.takePhoto);
+          if (Camera.sliders == null) {
+            Camera.sliders = {};
+          }
+          Camera.initializeSliders('saturation');
+          Camera.initializeSliders('lightness');
+          Camera.initialized = true;
+          $('#camera').mousemove(function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            return -1;
+          });
+        }
+      };
+
+      Camera.initializeSliders = function(name) {
+        var sliderJ;
+        sliderJ = $('.cd-slider.' + name);
+        sliderJ.find('.btn.minus').click(function() {
+          return Camera.addParameter(name, -5);
         });
-        Camera.gui.add(Camera.grayscaleShaderPass.uniforms.threshold1, 'value', 0, 1, 0.01).name('Threshold 1');
-        Camera.gui.add(Camera.grayscaleShaderPass.uniforms.threshold2, 'value', 0, 1, 0.01).name('Threshold 1');
-        $('#camera').append(Camera.gui.domElement);
-        $(Camera.gui.domElement).css({
-          'z-index': 10002,
-          position: 'absolute',
-          right: 0,
-          bottom: 0
+        sliderJ.find('.btn.plus').click(function() {
+          return Camera.addParameter(name, 5);
         });
-        $('#cancel-photo').click(Camera.cancelPhoto);
-        $('#take-photo').click(Camera.cancelPhoto);
+        sliderJ.find('.cd-inline').click(function(event) {
+          return Camera.setParameter(name, event);
+        });
+        Camera.sliders[name] = {
+          dragging: false
+        };
+        sliderJ.find('.cd-inline').mousedown(function() {
+          return Camera.sliders[name].dragging = true;
+        });
+        sliderJ.find('.cd-inline').mousemove(function(event) {
+          if (Camera.sliders[name].dragging) {
+            Camera.setParameter(name, event);
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          return -1;
+        });
+        $(window).mouseup(function() {
+          return Camera.sliders[name].dragging = false;
+        });
+      };
+
+      Camera.updateSlider = function(name, value) {
+        var iconJ, line1J, line2J, percent;
+        iconJ = $('.cd-slider.' + name + ' .cd-inline .glyphicon');
+        percent = Math.round((1 + value) * 0.5 * 100);
+        iconJ.css({
+          left: percent + '%'
+        });
+        line1J = $('.cd-slider.' + name + ' .cd-inline .cd-line:first-child');
+        line1J.css({
+          width: 'calc(' + percent + '% - 20px)'
+        });
+        line2J = $('.cd-slider.' + name + ' .cd-inline .cd-line:last-child');
+        line2J.css({
+          width: 'calc(' + (100 - percent) + '% - 20px)',
+          left: percent + '%'
+        });
+      };
+
+      Camera.addParameter = function(name, delta) {
+        var value;
+        value = Camera.paletteShaderPass.uniforms[name].value + (delta / 100) * 2;
+        if (value < -1) {
+          value = -1;
+        }
+        if (value > 1) {
+          value = 1;
+        }
+        Camera.paletteShaderPass.uniforms[name].value = value;
+        Camera.updateSlider(name, value);
+      };
+
+      Camera.setParameter = function(name, event) {
+        var lineJ, value;
+        lineJ = $('.cd-slider.' + name + ' .cd-inline');
+        value = (event.clientX - lineJ.offset().left) / lineJ.width();
+        value = -1 + 2 * value;
+        Camera.paletteShaderPass.uniforms[name].value = value;
+        Camera.updateSlider(name, value);
       };
 
       Camera.cancelPhoto = function() {
@@ -124,45 +264,37 @@
       };
 
       Camera.takePhoto = function() {
-        Camera.renderer.domElement.toBlob(function(blob) {
-          var image, reader;
-          image = new Image();
-          reader = new FileReader();
-          reader.onload = function(e) {
-            image.src = e.target.result;
-            image.onload = function() {
-              var context, height, imageCanvas, imageData, width;
-              imageCanvas = document.createElement("canvas");
-              width = Math.floor(image.width);
-              height = Math.floor(image.height);
-              imageCanvas.width = width;
-              imageCanvas.height = height;
-              context = imageCanvas.getContext('2d');
-              context.drawImage(image, 0, 0, width, height);
-              imageData = context.getImageData(0, 0, width, height).data;
-              traceHomeMadeProcess(imageData, width, height);
-            };
-          };
-        });
-        reader.readAsDataURL(blob);
+        Camera.paletteShaderPass.enabled = true;
+        Camera.separateColorsShaderPass.enabled = true;
+        Camera.erodeShaderPass.enabled = true;
+        Camera.stripesShaderPass.enabled = true;
+        Camera.effectComposer.render();
+        R.tracer.imageURL = Camera.renderer.domElement.toDataURL();
+        Camera.paletteShaderPass.enabled = true;
+        Camera.separateColorsShaderPass.enabled = false;
+        Camera.erodeShaderPass.enabled = false;
+        Camera.stripesShaderPass.enabled = false;
         Camera.remove();
+        R.tracer.setEditImageMode();
       };
 
       Camera.resizePlane = function() {
-        var newPlaneGeometry;
+        var newPlaneGeometry, ts;
         if (Camera.texture.image && Camera.texture.image.naturalWidth > 0 && Camera.texture.image.naturalHeight > 0) {
-          newPlaneGeometry = new THREE.PlaneGeometry(texture.image.naturalWidth / window.innerWidth, texture.image.naturalHeight / window.innerHeight);
+          ts = Camera.threeSize;
+          newPlaneGeometry = new THREE.PlaneGeometry(texture.image.naturalWidth / ts, texture.image.naturalHeight / ts);
           geometry.vertices = newPlaneGeometry.vertices;
           geometry.verticesNeedUpdate = true;
         }
       };
 
       Camera.onWindowResize = function() {
-        var threeHeight, threeWidth;
-        threeWidth = window.innerWidth;
-        threeHeight = window.innerHeight;
-        Camera.renderer.setSize(threeWidth, threeHeight);
-        Camera.effectComposer.setSize(threeWidth, threeHeight);
+        var minDimension, threeHeight, threeWidth;
+        threeWidth = Camera.threeSize;
+        threeHeight = Camera.threeSize;
+        minDimension = Math.min(threeWidth, threeHeight);
+        Camera.renderer.setSize(minDimension, minDimension);
+        Camera.effectComposer.setSize(minDimension, minDimension);
         Camera.resizePlane();
       };
 
@@ -177,9 +309,14 @@
       };
 
       Camera.remove = function() {
+        if (Camera.stream != null) {
+          Camera.stream.getTracks().forEach(function(track) {
+            return track.stop();
+          });
+        }
+        window.removeEventListener("resize", Camera.onWindowResize, false);
         $('#camera').hide();
         $(Camera.renderer.domElement).remove();
-        $(Camera.gui.domElement).remove();
         $(Camera.canvas).remove();
         $(Camera.video).remove();
         Camera.renderer = null;
@@ -191,7 +328,7 @@
         Camera.geometry = null;
         Camera.effectComposer = null;
         Camera.renderPass = null;
-        Camera.grayscaleShaderPass = null;
+        Camera.paletteShaderPass = null;
       };
 
       return Camera;
@@ -204,3 +341,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=Camera.js.map

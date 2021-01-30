@@ -2,6 +2,7 @@
 # window.XMLHttpRequest = window.RXMLHttpRequest
 
 libs = '../../libs/'
+console.log('libs', libs)
 
 getParameters = (hash)->
 	# queryString = queryString.split('+').join(' ')
@@ -114,7 +115,7 @@ requirejs.config
 		# 'octokat': libs + 'octokat'
 		# 'spacebrew': libs + 'sb-1.4.1.min'
 		# 'jszip': libs + 'jszip/jszip'
-		# 'fileSaver': libs + 'FileSaver.min'
+		'fileSaver': libs + 'FileSaver.min'
 		# 'color-classifier': libs + 'color-classifier'
 		'cropper': libs + 'cropper/cropper.min'
 		'three': libs + 'three/build/three.min'
@@ -123,6 +124,10 @@ requirejs.config
 		'RenderPass': libs + 'three/examples/js/postprocessing/RenderPass'
 		'ShaderPass': libs + 'three/examples/js/postprocessing/ShaderPass'
 		'grayscaleShader': libs + 'three/shaders/grayscale'
+		'paletteShader': libs + 'three/shaders/palette'
+		'separateColorsShader': libs + 'three/shaders/separateColors'
+		'stripesShader': libs + 'three/shaders/stripes'
+		'erodeShader': libs + 'three/shaders/erode'
 		'adaptiveThresholdShader': libs + 'three/shaders/adaptiveThreshold'
 		'vertexShader': libs + 'three/shaders/vertex'
 
@@ -149,23 +154,33 @@ requirejs.config
 requirejs [ 'R', 'jquery', 'underscore' ], (R) ->
 
 	R.defaultColors = []
-	R.strokeWidth = $('#canvas').attr('data-city-stroke-width')
-	if _.isString(R.strokeWidth)
-		R.strokeWidth = parseFloat(R.strokeWidth.replace(',', '.'))
+	R.city = {}
+	canvasJ = $('#canvas')
+	R.city.strokeWidth = canvasJ.attr('data-city-stroke-width')
+	if _.isString(R.city.strokeWidth)
+		R.city.strokeWidth = parseFloat(R.city.strokeWidth.replace(',', '.'))
 	else
-		R.strokeWidth = null
+		R.city.strokeWidth = null
 
-	R.cityWidth = $('#canvas').attr('data-city-width')
-	if _.isString(R.cityWidth)
-		R.cityWidth = parseFloat(R.cityWidth.replace(',', '.'))
+	R.city.width = canvasJ.attr('data-city-width')
+	if _.isString(R.city.width)
+		R.city.width = parseFloat(R.city.width.replace(',', '.'))
 	else
-		R.cityWidth = null
+		R.city.width = null
 	
-	R.cityHeight = $('#canvas').attr('data-city-height')
-	if _.isString(R.cityHeight)
-		R.cityHeight = parseFloat(R.cityHeight.replace(',', '.'))
+	R.city.height = canvasJ.attr('data-city-height')
+	if _.isString(R.city.height)
+		R.city.height = parseFloat(R.city.height.replace(',', '.'))
 	else
-		R.cityHeight = null
+		R.city.height = null
+
+	R.city.pixelPerMm = canvasJ.attr('data-city-pixel-per-mm')
+	if _.isString(R.city.pixelPerMm)
+		R.city.pixelPerMm = parseFloat(R.city.pixelPerMm.replace(',', '.'))
+		if isNaN(R.city.pixelPerMm)
+			console.error('City pixelPerMm is Nan', R.city.pixelPerMm, canvasJ.attr('data-city-pixel-per-mm'))
+	else
+		R.city.pixelPerMm = null
 
 	R.polygonMode = false					# whether to draw in polygon mode or not (in polygon mode: each time the user clicks a point
 											# will be created, in default mode: each time the user moves the mouse a point will be created)

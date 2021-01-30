@@ -10,7 +10,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 	class View
 		
-		@thumbnailSize = 300
+		@thumbnailSize = 300 # in pixels, will be divided by pixelPerMm to get the size in mm, that is in paper projet coordinates
 
 		constructor: ()->
 
@@ -164,10 +164,11 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# 	)
 			# )
 
-			if not drawing.svg? and drawing.paths? and drawing.paths.length > 0
-				for path in drawing.paths
-					clone = path.clone()
-					@thumbnailProject.activeLayer.addChild(clone)
+			if (not drawing.svg? or toDataURL) and drawing.paths? and drawing.paths.length > 0
+				# for path in drawing.paths
+				# 	clone = path.clone()
+				# 	@thumbnailProject.activeLayer.addChild(clone)
+				@thumbnailProject.activeLayer.addChild(drawing.group.clone())
 
 			if viewRatio < rectangleRatio
 				@thumbnailProject.view.zoom = Math.min(sizeX / rectangle.width, 1)
@@ -560,7 +561,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			
 			@updateSVG()
 
-			for div in R.divs 										# update RDivs' positions
+			for div in R.divs 										# update RDivs positions
 				div.updateTransform()
 
 			R.rasterizer.move()

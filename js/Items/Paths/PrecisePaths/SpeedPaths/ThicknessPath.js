@@ -100,3 +100,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=ThicknessPath.js.map

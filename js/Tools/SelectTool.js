@@ -404,3 +404,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=SelectTool.js.map

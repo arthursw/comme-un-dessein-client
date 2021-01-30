@@ -179,3 +179,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=Shape.js.map

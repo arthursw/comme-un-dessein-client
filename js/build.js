@@ -38,7 +38,7 @@
       // 'octokat': '../../wetu-server/Wetu/static/libs/octokat',
       // 'spacebrew': '../../wetu-server/Wetu/static/libs/sb-1.4.1.min',
       // 'jszip': '../../wetu-server/Wetu/static/libs/jszip/jszip',
-      // 'fileSaver': '../../wetu-server/Wetu/static/libs/FileSaver.min',
+      'fileSaver': '../../wetu-server/Wetu/static/libs/FileSaver.min',
       // 'color-classifier': '../../wetu-server/Wetu/static/libs/color-classifier'
     },
     shim: {

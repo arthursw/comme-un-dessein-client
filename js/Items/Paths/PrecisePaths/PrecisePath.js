@@ -1157,3 +1157,5 @@
   });
 
 }).call(this);
+
+//# sourceMappingURL=PrecisePath.js.map
