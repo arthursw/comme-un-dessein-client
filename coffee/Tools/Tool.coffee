@@ -92,7 +92,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 				order: @constructor.order
 			)
 
-			@btn.btnJ.click( ()=> @select(null, null, null, true) )
+			# @btn.btnJ.click( ()=> @select(null, null, null, true) )
+			@btn.btnJ.click( ()=> @select() )
 
 			return
 
@@ -104,7 +105,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 		# @param [RTool constructor] the constructor used to update gui parameters (@constructor.parameters)
 		# @param [Item] selected item to update gui parameters
 		# @param [Boolean] deselected selected items (false when selecting MoveTool or SelectTool)
-		select: (deselectItems=true, updateParameters=true, fromMiddleMouseButton=false)=>
+		select: (deselectItems=true, updateParameters=true, selectedBy='default')=>
 			if R.selectedTool == @ then return
 
 			@btn?.addClass('btn-info')
@@ -121,7 +122,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button' ], (P, R, Utils, Button) ->
 			if updateParameters
 				@updateParameters()
 
-			if not fromMiddleMouseButton
+			if selectedBy != 'middleMouseButton' and selectedBy != 'spaceKey'
 				R.toolManager?.updateButtonsVisibility()
 
 			R.toolbar?.updateArrowsVisibility()

@@ -1,15 +1,16 @@
 dependencies = ['paper', 'R',  'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Paths/Path', 'Items/Divs/Div' ]
 if document?
 	dependencies.push('i18next')
-	dependencies.push('hammer')
+	dependencies.push('hammerjs')
 	dependencies.push('mousewheel')
 	# dependencies.push('tween')
+	dependencies.push('jquery-hammer')
 
 define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, mousewheel) ->
 
 	class View
 		
-		@thumbnailSize = 300
+		@thumbnailSize = 300 # in pixels, will be divided by pixelPerMm to get the size in mm, that is in paper projet coordinates
 
 		constructor: ()->
 
@@ -98,6 +99,11 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				$(window).on( touchcancel: @mouseup )
 
 				$(window).resize(@onWindowResize)
+				document.addEventListener('wheel', ((event)-> 
+					if event.target != R.canvasJ.get(0) then return
+					if not (event.metaKey or event.shiftKey or event.ctrlKey)
+						R.toolManager.zoom(Math.pow(1.005, -event.deltaY), false)
+					event.preventDefault()), {passive: false})
 
 				window.onhashchange = @onHashChange
 
@@ -112,7 +118,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@previousMousePosition = null 			# the previous position of the mouse in the mousedown/move/up
 			@initialMousePosition = null 			# the initial position of the mouse in the mousedown/move/up
 
-			@firstHashChange = true
+			# @firstHashChange = true
 
 			@createThumbnailProject()
 			return
@@ -136,12 +142,33 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			if not rectangle? then return null
 
+
 			viewRatio = 1
 			rectangleRatio = rectangle.width / rectangle.height
 			
-			if not drawing.svg? and drawing.paths? and drawing.paths.length > 0
-				for path in drawing.paths
-					@thumbnailProject.activeLayer.addChild(path.path)
+			# jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg', ((result)=>
+			# 	@setSVG(result, false, callback)
+			# 	return
+			# ))
+			# .fail(()=>
+
+			# 	if @svg? then return
+
+			# 	args =
+			# 		pk: @pk
+			# 		svgOnly: true
+			# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+			# 		drawing = JSON.parse(result.drawing)
+			# 		if drawing.svg?
+			# 			@setSVG(drawing.svg, true, callback)
+			# 	)
+			# )
+
+			if (not drawing.svg? or toDataURL) and drawing.paths? and drawing.paths.length > 0
+				# for path in drawing.paths
+				# 	clone = path.clone()
+				# 	@thumbnailProject.activeLayer.addChild(clone)
+				@thumbnailProject.activeLayer.addChild(drawing.group.clone())
 
 			if viewRatio < rectangleRatio
 				@thumbnailProject.view.zoom = Math.min(sizeX / rectangle.width, 1)
@@ -150,7 +177,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			@thumbnailProject.view.setCenter(rectangle.center)
 			@thumbnailProject.activeLayer.name = 'mainLayer'
-			@thumbnailProject.activeLayer.strokeColor = if blackStroke then 'black' else R.Path.colorMap[drawing.status]
+			# @thumbnailProject.activeLayer.strokeColor = if blackStroke then 'black' else R.Path.colorMap[drawing.status]
 			if blackStroke
 				@thumbnailProject.activeLayer.strokeWidth = 3
 			else
@@ -161,10 +188,60 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# drawing.group.remove()
 
 			if drawing.svg? and not toDataURL
-				$(result).find('#mainLayer').append(drawing.svg.cloneNode(true))
+				svg = drawing.svg.cloneNode(true)
+				# console.log("view: ", svg.getAttribute('xmlns'))
+				# svg.removeAttribute('xmlns')
+				# svg.setAttribute('visibility', 'visible')
+				$(result).find('#mainLayer').append(svg)
 
 			@thumbnailProject.clear()
 			paper.projects[0].activate()
+			return result
+
+		getTileThumbnail: (tileRectangle)->
+			# activeLayer = P.project.activeLayer.clone()
+			# activeLayer.remove()
+			items = P.project.getItems(overlapping: tileRectangle, class: P.Raster )
+
+			@thumbnailProject.activate()
+			@thumbnailProject.view.viewSize = new P.Size(tileRectangle.width, tileRectangle.height)
+			@thumbnailCanvas.width = tileRectangle.width
+			@thumbnailCanvas.height = tileRectangle.height
+			rectangle = tileRectangle
+
+			if not rectangle? then return null
+
+			viewRatio = 1
+			rectangleRatio = rectangle.width / rectangle.height
+			
+			for item in items
+				if item instanceof P.Raster
+					raster = new P.Raster(item.source)
+					raster.position = item.position
+					@thumbnailProject.activeLayer.addChild(raster)
+
+			# if viewRatio < rectangleRatio
+			# 	@thumbnailProject.view.zoom = Math.min(sizeX / rectangle.width, 1)
+			# else
+			# 	@thumbnailProject.view.zoom = Math.min(sizeY / rectangle.height, 1)
+
+			@thumbnailProject.view.setCenter(rectangle.center)
+			@thumbnailProject.activeLayer.name = 'mainLayer'
+			# @thumbnailProject.activeLayer.strokeColor = if blackStroke then 'black' else R.Path.colorMap[drawing.status]
+			# if blackStroke
+			# 	@thumbnailProject.activeLayer.strokeWidth = 3
+			# else
+			# 	@thumbnailProject.activeLayer.strokeWidth = R.Path.strokeWidth
+			@thumbnailProject.view.update()
+			@thumbnailProject.view.draw()
+			result = @thumbnailCanvas.toDataURL()
+			# drawing.group.remove()
+
+			# if drawing.svg? and not toDataURL
+			# 	$(result).find('#mainLayer').append(drawing.svg.cloneNode(true))
+
+			# @thumbnailProject.clear()
+			# paper.projects[0].activate()
 			return result
 
 		createBackground: ()->
@@ -259,6 +336,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 		createLayers: ()->
 
+			@rasterLayer = new P.Layer()
+			@rasterLayer.name  = 'rejectedLayer'
+			R.loader.initializeGroups(@rasterLayer)
+
 			@rejectedLayer = new P.Layer()
 			@rejectedLayer.name  = 'rejectedLayer'
 			@rejectedLayer.visible = false
@@ -269,9 +350,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@pendingLayer.strokeColor = Path.colorMap['pending']
 			@pendingLayer.strokeWidth = Path.strokeWidth
 			@drawingLayer = new P.Layer()
-			@drawingLayer.name  = 'drawingLayer'
+			@drawingLayer.name  = 'validatedLayer'
 			@drawingLayer.strokeColor = Path.colorMap['drawing']
 			@drawingLayer.strokeWidth = Path.strokeWidth
+			@validatedLayer = @drawingLayer
 			@drawnLayer = new P.Layer()
 			@drawnLayer.name  = 'drawnLayer'
 			@drawnLayer.strokeColor = Path.colorMap['drawn']
@@ -280,9 +362,15 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@draftLayer.name  = 'draftLayer'
 			@draftLayer.strokeColor = Path.colorMap['draft']
 			@draftLayer.strokeWidth = Path.strokeWidth
+			
+			@discussionLayer = new P.Layer()
+			@discussionLayer.name  = 'discussionLayer'
+			@discussionLayer.strokeWidth = Path.strokeWidth
+
 			@flaggedLayer = new P.Layer()
 			@flaggedLayer.name  = 'flaggedLayer'
 			@flaggedLayer.strokeWidth = Path.strokeWidth
+			@mainLayer.bringToFront()
 
 			if R.city.finished
 				@pendingLayer.visible = false
@@ -302,36 +390,90 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			@pendingListJ = @createLayerListItem('Pending', @pendingLayer)
 			@pendingListJ.removeClass('closed')
 			@drawingListJ = @createLayerListItem('Drawing', @drawingLayer)
-			@drawnListJ = @createLayerListItem('Drawn', @drawnLayer)
+			if R.isCommeUnDessein
+				@drawnListJ = @createLayerListItem('Drawn', @drawnLayer)
 			@rejectedListJ = @createLayerListItem('Rejected', @rejectedLayer)
 			@flaggedListJ = @createLayerListItem('Flagged', @flaggedLayer)
 			
-			if R.administrator
-				@testListJ = @createLayerListItem('Test', @testLayer)
+			# if R.administrator
+			# 	@testListJ = @createLayerListItem('Test', @testLayer)
 
-			@rejectedListJ.find(".show-btn").click (event)=>
-				@loadRejectedDrawings()
-				event.preventDefault()
-				event.stopPropagation()
-				return -1
+			@createLoadRejectedDrawingsButton()
+			@createHideOtherDrawingsButton()
+
+			# @rejectedListJ.find(".show-btn").click (event)=>
+			# 	@loadRejectedDrawings()
+			# 	event.preventDefault()
+			# 	event.stopPropagation()
+			# 	return -1
 
 			if not R.administrator
 				@flaggedListJ.hide()
 
 			return
 
-		loadRejectedDrawings: ()->
+		createLoadRejectedDrawingsButton: ()->
+			loadRejectedDrawingsText = 'Show rejected drawings'
+			hideRejectedDrawingsText = 'Hide rejected drawings'
+			loadRejectedDrawingButtonJ = $('<button class="">').css( color: 'black', height: 25 ).text(loadRejectedDrawingsText)
+			loadRejectedDrawingButtonJ.attr('data-i18n', loadRejectedDrawingsText)
+			loadRejectedDrawingButtonJ.click (event)=>
+				R.loadRejectedDrawings = !R.loadRejectedDrawings
+				if R.loadRejectedDrawings
+					loadRejectedDrawingButtonJ.text(i18next.t(hideRejectedDrawingsText)).attr('data-i18n', hideRejectedDrawingsText)
+					@loadRejectedDrawings()
+				else
+					loadRejectedDrawingButtonJ.text(i18next.t(loadRejectedDrawingsText)).attr('data-i18n', loadRejectedDrawingsText)
+					R.loader.inactiveRasterGroup.visible = false
+					R.view.rejectedLayer.visible = false
+					document.getElementById('rejectedLayer').setAttribute('visibility', 'hidden')
+					@rejectedListJ.find('.rPath-list').addClass('hide-drawings')
+				return
+			loadRejectedDrawingLiJ = $('<li>').css( 'justify-content': 'center' ).append(loadRejectedDrawingButtonJ)
+			@rejectedListJ.find('ul.rPath-list').append(loadRejectedDrawingLiJ)
 
-			if R.rejectedDrawingsLoaded then return
-			R.rejectedDrawingsLoaded = true
+			return
 
-			for item in R.rejectedDrawings
-				if R.pkToDrawing?[item._id.$oid]?
-					continue
-				bounds = if item.bounds? then JSON.parse(item.bounds) else null
-				date = item.date?.$date
-				drawing = new R.Drawing(null, null, item.clientId, item._id.$oid, item.owner, date, item.title, null, item.status, item.pathList, item.svg, bounds)
+		createHideOtherDrawingsButton: ()->
+			hideOtherDrawingsText = 'Hide other drawings'
+			showOtherDrawingsText = 'Show other drawings'
+			hideOtherDrawingsButtonJ = $('<button class="">').css( color: 'black', height: 25 ).text(hideOtherDrawingsText)
+			hideOtherDrawingsButtonJ.attr('data-i18n', hideOtherDrawingsText)
+			hideOtherDrawingsButtonJ.click (event)=>
+				activeRasterGroup = R.loader.activeRasterGroup
+				activeRasterGroup.visible = !activeRasterGroup.visible
+				R.view.pendingLayer.visible = activeRasterGroup.visible
+				R.view.draftLayer.visible = activeRasterGroup.visible
+				visibility = if activeRasterGroup.visible then 'visible' else 'hidden'
+				document.getElementById('pendingLayer').setAttribute('visibility', visibility)
+				document.getElementById('drawingLayer').setAttribute('visibility', visibility)
+				document.getElementById('drawnLayer').setAttribute('visibility', visibility)
+				document.getElementById('draftLayer').setAttribute('visibility', visibility)
+				if activeRasterGroup.visible
+					@drawingListJ.find('.rPath-list').removeClass('hide-drawings')
+					@pendingListJ.find('.rPath-list').removeClass('hide-drawings')
+				else
+					@drawingListJ.find('.rPath-list').addClass('hide-drawings')
+					@pendingListJ.find('.rPath-list').addClass('hide-drawings')
 
+				if !activeRasterGroup.visible
+					hideOtherDrawingsButtonJ.text(i18next.t(showOtherDrawingsText)).attr('data-i18n', showOtherDrawingsText)
+				else
+					hideOtherDrawingsButtonJ.text(i18next.t(hideOtherDrawingsText)).attr('data-i18n', hideOtherDrawingsText)
+				return
+			hideOtherDrawingsLiJ = $('<li>').css( 'justify-content': 'center' ).append(hideOtherDrawingsButtonJ)
+			@rejectedListJ.find('ul.rPath-list').append(hideOtherDrawingsLiJ)
+
+			return
+
+		loadRejectedDrawings: (callback=null)->
+			R.loader.inactiveRasterGroup.visible = true
+			R.view.rejectedLayer.visible = true
+			R.loadRejectedDrawings = true
+			document.getElementById('rejectedLayer').setAttribute('visibility', 'visible')
+			@rejectedListJ.find('.rPath-list').removeClass('hide-drawings')
+			R.loader.clearRasters()
+			R.loader.loadRasters(P.view.bounds, true, callback)
 			return
 
 		getViewBounds: (considerPanels)->
@@ -419,11 +561,12 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			
 			@updateSVG()
 
-			for div in R.divs 										# update RDivs' positions
+			for div in R.divs 										# update RDivs positions
 				div.updateTransform()
 
 			R.rasterizer.move()
 			@grid.update() 											# update grid
+			R.loader.loadRasters()
 
 			# update @entireArea (the area which must be kept loaded, in a video game or website)
 			# if the loaded entire areas contain the center of the view, it is the current entire area
@@ -476,7 +619,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			windowSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight())
 			
 			# WARNING: on small screen, the drawing panel takes the whole width, that would make window.width negative
-			if windowSize.width < 600
+			if windowSize.width < 870
 				considerPanels = false
 
 			sidebarWidth = if considerPanels and R.sidebar.isOpened() then R.sidebar.sidebarJ.outerWidth() else 0
@@ -497,7 +640,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# R.toolManager.enableDrawingButton(P.view.zoom >= 1)
 
 			if considerPanels
-				windowCenterInView = P.view.viewToProject(new P.Point(windowSize.width / 2, windowSize.height / 2))
+				windowCenterInView = P.view.viewToProject(new P.Point(R.stageJ.innerWidth() / 2, R.stageJ.innerHeight() / 2))
 				visibleViewCenterInView = P.view.viewToProject(new P.Point(sidebarWidth + windowSize.width / 2, windowSize.height / 2))
 				offset = visibleViewCenterInView.subtract(windowCenterInView)
 				@moveTo(rectangle.center.subtract(offset), null, true, false, updateHash)
@@ -513,6 +656,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if R.svgJ?
 				transform = Utils.getSVGTransform(P.view.matrix)
 				R.svgJ.find('g:first').attr('transform', transform.transform)
+				# transform = Utils.getSVGTransform(P.view.matrix, false, null, 'px')
+				# console.log(transform)
+				# R.discussionJ.find('#discussion-view').css( 'transform': transform.transform )
+				R.discussionJ.find('g:first').attr('transform', transform.transform)
 			return
 
 		addMoveCommand: ()=>
@@ -571,7 +718,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if parameters['zoom']?
 				zoom = parseFloat(parameters['zoom'])
 				if zoom? and Number.isFinite(zoom)
-					P.view.zoom = Math.max(0.125, Math.min(4, zoom))
+					P.view.zoom = R.toolManager.clampZoom(zoom)
 					R.tracer?.update()
 
 			mustReload = false
@@ -592,30 +739,72 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# 	R.cityManager.loadCity(parameters['city-name'], parameters['city-owner'], p)
 			# 	return
 			
-			drawingPrefixIndex = location.pathname.indexOf('/drawing-')
-			if drawingPrefixIndex >= 0 
-				drawingPrefixIndex = drawingPrefixIndex + '/drawing-'.length
-			else
-				drawingPrefixIndex = location.pathname.indexOf('/debug-drawing-')
-				if drawingPrefixIndex >= 0
-					drawingPrefixIndex = drawingPrefixIndex + '/debug-drawing-'.length
-
-			if drawingPrefixIndex >= 0
-				drawingPk = location.pathname.substring(drawingPrefixIndex)
-				R.loader.focusOnDrawing = drawingPk
+			# drawingPrefixIndex = location.pathname.indexOf('/drawing-')
+			# if drawingPrefixIndex >= 0
+			# 	drawingPk = location.pathname.substring(drawingPrefixIndex  + '/drawing-'.length)
+			# 	R.loader.focusOnDrawing = drawingPk
 			
-			@moveTo(p, null, !@firstHashChange, @firstHashChange, false)
+			if p?
+				@moveTo(p, null, false, true, false)
+			else
+				loadDrawingOrTile = @initializePositionFromDrawingOrTile()
+				if not loadDrawingOrTile
+					@moveTo(new P.Point(), null, false, true, false)
 
-			@firstHashChange = true
+			# @moveTo(p, null, !@firstHashChange, @firstHashChange, false)
+			# @firstHashChange = true
 
 			if reloadIfNecessary and mustReload
 				window.location.reload()
+
 			return
+
+		initializePositionFromDrawingOrTile: ()->
+			boundsString = R.canvasJ.attr("data-bounds")
+			bounds = if boundsString? and boundsString.length > 0 then JSON.parse(boundsString) else null
+			if bounds?
+				rectangle = new P.Rectangle(bounds)
+				drawingPk = R.canvasJ.attr("data-drawing-pk")
+				if drawingPk? and drawingPk.length > 0
+					@fitRectangle(rectangle, true)
+					# args =
+					# 	pk: drawingPk
+					# 	loadPathList: true
+					# 	# loadSVG: true
+
+					# $.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
+					# 	# R.drawingPanel.setDrawing(@, result)
+					# )
+				tilePk = R.canvasJ.attr("data-tile-pk")
+				if tilePk? and tilePk.length > 0
+					R.tools.choose.select()
+					R.tools.choose.loadTile(tilePk, rectangle, true)
+				
+				return true
+
+			return false
 
 		# User has choosen a city from world: display @grid.frame (gray background) and update @restrictedArea
 		loadCity: ()->
 			@gird.createFrame()
 			@initializePosition()
+			return
+
+		selectDrawings: (event)->
+			point = Utils.Event.GetPoint(event)
+			point.y -= 62 # the stage is at 62 pixel
+			point = P.view.viewToProject(point)
+			rectangle = new P.Rectangle(point, point)
+			rectangle = rectangle.expand(5)
+			
+			drawingsToSelect = []
+			for drawing in R.drawings
+				if drawing.getBoundsWithFlag()?.intersects(rectangle) and drawing.isVisible()
+					drawingsToSelect.push(drawing)
+
+			R.tools.select.deselectAll()
+			for drawing in drawingsToSelect
+				drawing.select()
 			return
 
 		## Init position
@@ -652,31 +841,39 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			defsJ.append(patternRejectsJ)
 			R.svgJ.prepend(defsJ)
 			
-			R.svgJ.click((event)=>
-				
-				point = Utils.Event.GetPoint(event)
-				point.y -= 62 # the stage is at 62 pixel
-				point = P.view.viewToProject(point)
-				rectangle = new P.Rectangle(point, point)
-				rectangle = rectangle.expand(5)
-				
-				drawingsToSelect = []
-				for drawing in R.drawings
-					if drawing.getBounds()?.intersects(rectangle) and drawing.isVisible()
-						drawingsToSelect.push(drawing)
+			R.svgJ.click((event)=> @selectDrawings(event))
 
-				R.tools.select.deselectAll()
-				for drawing in drawingsToSelect
-					drawing.select()
+			svgNS = "http://www.w3.org/2000/svg"
+			discussionSVG = document.createElementNS(svgNS, "svg")
+			discussionSVG.setAttribute('width', R.svgJ.attr('width'))
+			discussionSVG.setAttribute('height', R.svgJ.attr('height'))
 
-				return
-			)
+			discussionGroup = document.createElementNS(svgNS, "g")
+			discussionSVG.appendChild(discussionGroup)
+
+			R.discussionJ = $(discussionSVG)
+			R.discussionJ.css('position': 'absolute')
+			R.discussionJ.css('z-index': 10)
+			R.discussionJ.css('pointer-events': 'none')
+			R.discussionJ.insertBefore(R.canvasJ)
+
+			# R.discussionJ.css('position': 'absolute')
+			# R.discussionJ.css('top': '0')
+			# R.discussionJ.css('left': '0')
+			# R.discussionJ.css('right': '0')
+			# R.discussionJ.css('bottom': '0')
+			# R.discussionJ.append('<div id="discussion-view">')
+			
+
+			
 
 			# check if canvas has an attribute 'data-box'
 			# boxString = R.canvasJ.attr("data-box")
 			#
 			# if not boxString or boxString.length==0
 			if not R.loadedBox?
+				if not R.initialZoom?
+					R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true)
 				window?.onhashchange(null, false)
 				return
 
@@ -777,6 +974,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if R.currentDiv? then return
 			# event = Utils.Snap.snap(event)
 			R.selectedTool?.end(event)
+
 			return
 
 		onKeyDown: (event) =>
@@ -790,7 +988,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			# select 'Move' tool when user press space key (and reselect previous tool after)
 			if event.key == 'space' and R.selectedTool?.name != 'Move'
-				R.tools.move.select()
+				R.tools.move.select(null, null, null, 'spaceKey')
 
 			if event.key == 'z' and (event.modifiers.control or event.modifiers.meta)
 				R.commandManager.undo()
@@ -814,7 +1012,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			switch event.key
 				when 'space'
-					R.previousTool?.select()
+					R.previousTool?.select(null, null, null, 'spaceKey')
 				when 'v'
 					R.tools.select.select()
 				when 't'
@@ -843,6 +1041,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			return
 
 		onWindowResize: (event)=>
+			P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight())
+			
 			# update grid and mCustomScrollbar when window is resized
 			# R.backgroundCanvas.width = window.innerWidth
 			# R.backgroundCanvas.height = window.innerHeight
@@ -854,7 +1054,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			# R.canvasJ.width(window.innerWidth)
 			# R.canvasJ.height(window.innerHeight-50)
-			P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight())
+			
 			R.svgJ.attr('width', R.stageJ.innerWidth())
 			R.svgJ.attr('height', R.stageJ.innerHeight())
 			# R.selectionCanvasJ.width(window.innerWidth)
@@ -873,7 +1073,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			switch event.which						# switch on mouse button number (left, middle or right click)
 				when moveButton
-					R.tools.move.select(false, true, true)		# select move tool if middle mouse button
+					R.tools.move.select(false, true, null, 'middleMouseButton')		# select move tool if middle mouse button
 				when 3
 					R.selectedTool?.finish?() 	# finish current path (in polygon mode) if right click
 
@@ -903,7 +1103,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				R.selectedTool.updateNative(event)
 				return
 
-			if R.selectedTool?.name == 'Select'
+			if R.selectedTool?.name == 'Select' or R.selectedTool == R.tools.choose
 				paperEvent = Utils.Event.jEventToPaperEvent(event, @previousMousePosition, @initialMousePosition, 'mousemove')
 				R.selectedTool?.move?(paperEvent)
 
@@ -949,7 +1149,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 				# deselect move tool and select previous tool if middle mouse button
 				if event.which == 2 # middle mouse button
-					R.previousTool?.select(null, null, null, true)
+					R.previousTool?.select(null, null, null, 'middleMouseButton')
 				return
 
 
@@ -974,7 +1174,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			return
 
 		mousewheel: (event)=>
-			@moveBy(new P.Point(-event.deltaX, event.deltaY))
+			if event.shiftKey or event.metaKey or event.ctrlKey
+				@moveBy(new P.Point(-event.deltaX, event.deltaY))
 			return
 
 		# hash format: [repo-owner=repo-owner-name&commit-hash=commit-hash][&city-owner=city-owner&city-name=city-name][&location=location-x,location-y]

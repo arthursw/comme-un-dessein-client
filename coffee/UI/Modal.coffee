@@ -91,9 +91,9 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			options.interpolation ?= {}
 			options.interpolation.escapeValue = escapeValue
 			content = i18next.t(textKey, options)
-			@modalBodyJ.append("<p data-i18n-options='#{JSON.stringify(options)}' data-i18n='[html]#{textKey}'>#{content}</p>")
-
-			return
+			divJ = $("<p data-i18n-options='#{JSON.stringify(options)}' data-i18n='[html]#{textKey}'>#{content}</p>")
+			@modalBodyJ.append(divJ)
+			return divJ
 
 		addTextInput: (args)->
 			name = args.name
@@ -288,11 +288,12 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			@modalBodyJ.append(args.divJ)
 			if args.extractor?
 				@extractors[args.name] = args
-			return
+			return args.divJ
 
 		# args:
 		# - type: bootstrap button type / appearance
 		# - name: name
+		# - addToBody: bool (default: false)
 		# - submit: submit function
 		addButton: (args)->
 			args.type ?= 'default'
@@ -308,6 +309,10 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 					buttonJ.remove()
 					@hide()
 					return
+
+			if args.addToBody
+				@addCustomContent( { name: args.name, divJ: buttonJ } )
+				return buttonJ
 
 			submitButtonJ = @modalJ.find('.modal-footer .btn-primary[name="submit"]')
 			if submitButtonJ.length > 0
@@ -335,7 +340,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 		addProgressBar: ()->
 			progressJ = $(""" <div class="progress modal-progress-bar">
 				<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
-					<span class="sr-only">Loading...</span>
+					<span class="sr-only" data-i18n="Loading">Loading...</span>
 				</div>
 			</div>""")
 			@modalBodyJ.append(progressJ)

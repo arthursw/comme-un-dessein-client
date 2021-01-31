@@ -9,8 +9,8 @@
         this.grid = new P.Group();
         this.grid.name = 'grid group';
         this.layer.addChild(this.grid);
-        this.size = new P.Size(Utils.CS.mmToPixel(R.cityWidth || 4000), Utils.CS.mmToPixel(R.cityHeight || 3000));
-        this.frameSize = this.size.multiply(1000);
+        this.size = new P.Size(R.city.pixelPerMm * (R.city.width || 100000), R.city.pixelPerMm * (R.city.height || 100000));
+        this.frameSize = this.size.multiply(10);
         this.frameRectangle = new P.Rectangle(this.frameSize.multiply(-0.5), this.frameSize);
         this.limitCDRectangle = new P.Rectangle(this.size.multiply(-0.5), this.size);
         if (R.city.name !== 'world') {
@@ -24,6 +24,29 @@
         this.update();
         return;
       }
+
+      Grid.prototype.projectToGeoJSON = function(point) {
+        return new P.Point(Utils.CS.PlanetWidth * point.x / this.size.width, Utils.CS.PlanetHeight * point.y / this.size.height);
+      };
+
+      Grid.prototype.projectToGeoJSONRectangle = function(rectangle) {
+        var topLeft;
+        topLeft = this.projectToGeoJSON(rectangle.topLeft);
+        return new P.Rectangle(topLeft.x, topLeft.y, Utils.CS.PlanetWidth * rectangle.width / this.size.width, Utils.CS.PlanetHeight * rectangle.height / this.size.height);
+      };
+
+      Grid.prototype.geoJSONToProject = function(point) {
+        return new P.Point(this.size.width * point.x / Utils.CS.PlanetWidth, this.size.height * point.y / Utils.CS.PlanetHeight);
+      };
+
+      Grid.prototype.boundsFromBox = function(box) {
+        var bottom, left, right, top;
+        left = this.size.width * box['coordinates'][0][0][0] / Utils.CS.PlanetWidth;
+        top = this.size.height * box['coordinates'][0][0][1] / Utils.CS.PlanetHeight;
+        right = this.size.width * box['coordinates'][0][2][0] / Utils.CS.PlanetWidth;
+        bottom = this.size.height * box['coordinates'][0][2][1] / Utils.CS.PlanetHeight;
+        return new P.Rectangle(left, top, right - left, bottom - top);
+      };
 
       Grid.prototype.createFrame = function() {
         var child, i, l1, l2, l3, l4, len, ref;

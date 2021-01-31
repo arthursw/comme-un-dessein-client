@@ -2,6 +2,7 @@
 # window.XMLHttpRequest = window.RXMLHttpRequest
 
 libs = '../../libs/'
+console.log('libs', libs)
 
 getParameters = (hash)->
 	# queryString = queryString.split('+').join(' ')
@@ -20,11 +21,11 @@ repository = owner: 'arthursw', commit: null
 
 if parameters? and parameters['repository-owner']? and parameters['repository-commit']?
 	prefix = if parameters['repository-use-cdn']? then '//cdn.' else '//'
-	baseUrl = prefix + 'rawgit.com/' + parameters['repository-owner'] + '/comme-un-dessein-client/' + parameters['repository-commit'] + '/js'
+	baseUrl = prefix + 'rawgit.com/' + parameters['repository-owner'] + '/wetu-client/' + parameters['repository-commit'] + '/js'
 	repository = owner: parameters['repository-owner'], commit: parameters['repository-commit']
 	libs = location.origin + '/static/libs/'
 else
-	baseUrl = '../static/comme-un-dessein-client/js'
+	baseUrl = '../static/wetu-client/js'
 
 # Place third party dependencies in the lib folder
 #
@@ -66,11 +67,15 @@ requirejs.config
 
 		# 'domReady': [libs + 'domReady']
 		'i18next': [libs + 'i18next.min']
+		'potrace': [libs + 'potrace']
+		# 'tui-image-editor': [libs + 'tui-image-editor.min']
+		# 'imagetracer': [libs + 'imagetracer_v1.2.5']
 		'i18nextXHRBackendID': [libs + 'i18nextXHRBackend']
 		'i18nextBrowserLanguageDetectorID': [libs + 'i18nextBrowserLanguageDetector']
 		'moment': [libs + 'moment.min']
 		'jqueryI18next': [libs + 'jquery-i18next.min']
-		'hammer': [libs + 'hammer.min']
+		'hammerjs': [libs + 'hammer.min']
+		'jquery-hammer': [libs + 'jquery.hammer']
 		# 'ace': [libs + 'ace']
 		# 'aceTools': [libs + 'ace/ext-language_tools']
 		'underscore': [libs + 'underscore-min']
@@ -110,8 +115,21 @@ requirejs.config
 		# 'octokat': libs + 'octokat'
 		# 'spacebrew': libs + 'sb-1.4.1.min'
 		# 'jszip': libs + 'jszip/jszip'
-		# 'fileSaver': libs + 'FileSaver.min'
+		'fileSaver': libs + 'FileSaver.min'
 		# 'color-classifier': libs + 'color-classifier'
+		'cropper': libs + 'cropper/cropper.min'
+		'three': libs + 'three/build/three.min'
+		'EffectComposer': libs + 'three/examples/js/postprocessing/EffectComposer'
+		'CopyShader': libs + 'three/examples/js/shaders/CopyShader'
+		'RenderPass': libs + 'three/examples/js/postprocessing/RenderPass'
+		'ShaderPass': libs + 'three/examples/js/postprocessing/ShaderPass'
+		'grayscaleShader': libs + 'three/shaders/grayscale'
+		'paletteShader': libs + 'three/shaders/palette'
+		'separateColorsShader': libs + 'three/shaders/separateColors'
+		'stripesShader': libs + 'three/shaders/stripes'
+		'erodeShader': libs + 'three/shaders/erode'
+		'adaptiveThresholdShader': libs + 'three/shaders/adaptiveThreshold'
+		'vertexShader': libs + 'three/shaders/vertex'
 
 	shim:
 		'mousewheel': ['jquery']
@@ -126,28 +144,43 @@ requirejs.config
 			exports: '_'
 		'jquery':
 			exports: '$'
+		'three':
+			exports: 'THREE'
+		'EffectComposer': ['three', 'CopyShader']
+		'RenderPass': ['three', 'EffectComposer']
+		'ShaderPass': ['three', 'EffectComposer']
 		
 # Load the main app module to start the app
 requirejs [ 'R', 'jquery', 'underscore' ], (R) ->
 
 	R.defaultColors = []
-	R.strokeWidth = $('#canvas').attr('data-city-stroke-width')
-	if _.isString(R.strokeWidth)
-		R.strokeWidth = parseFloat(R.strokeWidth)
+	R.city = {}
+	canvasJ = $('#canvas')
+	R.city.strokeWidth = canvasJ.attr('data-city-stroke-width')
+	if _.isString(R.city.strokeWidth)
+		R.city.strokeWidth = parseFloat(R.city.strokeWidth.replace(',', '.'))
 	else
-		R.strokeWidth = null
+		R.city.strokeWidth = null
 
-	R.cityWidth = $('#canvas').attr('data-city-width')
-	if _.isString(R.cityWidth)
-		R.cityWidth = parseFloat(R.cityWidth)
+	R.city.width = canvasJ.attr('data-city-width')
+	if _.isString(R.city.width)
+		R.city.width = parseFloat(R.city.width.replace(',', '.'))
 	else
-		R.cityWidth = null
+		R.city.width = null
 	
-	R.cityHeight = $('#canvas').attr('data-city-height')
-	if _.isString(R.cityHeight)
-		R.cityHeight = parseFloat(R.cityHeight)
+	R.city.height = canvasJ.attr('data-city-height')
+	if _.isString(R.city.height)
+		R.city.height = parseFloat(R.city.height.replace(',', '.'))
 	else
-		R.cityHeight = null
+		R.city.height = null
+
+	R.city.pixelPerMm = canvasJ.attr('data-city-pixel-per-mm')
+	if _.isString(R.city.pixelPerMm)
+		R.city.pixelPerMm = parseFloat(R.city.pixelPerMm.replace(',', '.'))
+		if isNaN(R.city.pixelPerMm)
+			console.error('City pixelPerMm is Nan', R.city.pixelPerMm, canvasJ.attr('data-city-pixel-per-mm'))
+	else
+		R.city.pixelPerMm = null
 
 	R.polygonMode = false					# whether to draw in polygon mode or not (in polygon mode: each time the user clicks a point
 											# will be created, in default mode: each time the user moves the mouse a point will be created)

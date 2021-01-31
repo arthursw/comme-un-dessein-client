@@ -111,7 +111,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command' ], (P, R, Utils, Command
 
 		setButton: (name, enable)->
 			opacity = if enable then 1 else 0.25
-			R.sidebar.favoriteToolsJ.find("[data-name='"+name+"']").css( opacity: opacity )
+			R.sidebar.favoriteToolsJ.find("[data-name='"+name+"'] img").css( opacity: opacity )
 			return
 
 		setUndoButton: (enable)->

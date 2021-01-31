@@ -2,7 +2,7 @@
 (function() {
   var hasProp = {}.hasOwnProperty;
 
-  define(['paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2', 'bootstrap'], function(P, R, CS, _, $, tinycolor, bs) {
+  define(['paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2', 'bootstrap', 'fileSaver'], function(P, R, CS, _, $, tinycolor, bs, fileSaver) {
     var EPSILON, Formatter, Utils, __nativeSI__, __nativeST__, checkError, sqrtTwoPi;
     if (typeof window !== "undefined" && window !== null) {
       window.tinycolor = tinycolor;
@@ -484,7 +484,8 @@
         delta: delta,
         middlePoint: previousPosition.add(delta.divide(2)),
         type: type,
-        count: count
+        count: count,
+        originalEvent: event
       };
       return paperEvent;
     };
@@ -609,8 +610,11 @@
       pair: function(val1, val2, separator) {
         return this.number(val1) + (separator || ',') + this.number(val2);
       },
-      point: function(val, separator) {
-        return this.number(val.x) + (separator || ',') + this.number(val.y);
+      point: function(val, separator, unit) {
+        if (unit == null) {
+          unit = '';
+        }
+        return this.number(val.x) + unit + (separator || ',') + this.number(val.y) + unit;
       },
       size: function(val, separator) {
         return this.number(val.width) + (separator || ',') + this.number(val.height);
@@ -624,13 +628,16 @@
     Utils.isZero = function(val) {
       return val >= -EPSILON && val <= EPSILON;
     };
-    Utils.getSVGTransform = function(matrix, coordinates, center) {
+    Utils.getSVGTransform = function(matrix, coordinates, center, unit) {
       var angle, attrs, decomposed, parts, point, scale, skew, trans;
       if (coordinates == null) {
         coordinates = false;
       }
       if (center == null) {
         center = null;
+      }
+      if (unit == null) {
+        unit = null;
       }
       attrs = new P.Base();
       trans = matrix.getTranslation();
@@ -649,7 +656,7 @@
           scale = decomposed.scaling;
           skew = decomposed.skewing;
           if (trans && !trans.isZero()) {
-            parts.push('translate(' + Utils.formatter.point(trans) + ')');
+            parts.push('translate(' + Utils.formatter.point(trans, null, unit) + ')');
           }
           if (angle) {
             parts.push('rotate(' + Utils.formatter.number(angle) + ')');
@@ -701,6 +708,23 @@
             "function": 'setDebugMode',
             args: {
               debug: debugMode
+            }
+          })
+        }
+      }).done(checkError);
+    };
+    R.setSimulateSlowResponsesMode = function(simulateSlowResponsesMode) {
+      if (!R.administrator) {
+        return false;
+      }
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'setSimulateSlowResponsesMode',
+            args: {
+              simulateSlowResponses: simulateSlowResponsesMode
             }
           })
         }
@@ -770,7 +794,22 @@
         }
       }).done(checkError);
     };
-    R.setNegativeVoteThreshold = function(voteThreshold) {
+    R.setVoteThresholds = function(negativeVoteThreshold, positiveVoteThreshold, negativeVoteThresholdTile, positiveVoteThresholdTile, cityName) {
+      if (negativeVoteThreshold == null) {
+        negativeVoteThreshold = 2;
+      }
+      if (positiveVoteThreshold == null) {
+        positiveVoteThreshold = 2;
+      }
+      if (negativeVoteThresholdTile == null) {
+        negativeVoteThresholdTile = 2;
+      }
+      if (positiveVoteThresholdTile == null) {
+        positiveVoteThresholdTile = 2;
+      }
+      if (cityName == null) {
+        cityName = R.city.name;
+      }
       if (!R.administrator) {
         return false;
       }
@@ -779,32 +818,21 @@
         url: "ajaxCall/",
         data: {
           data: JSON.stringify({
-            "function": 'setNegativeVoteThreshold',
+            "function": 'setVoteThresholds',
             args: {
-              voteThreshold: voteThreshold
+              cityName: cityName,
+              negativeVoteThreshold: negativeVoteThresholdTile,
+              positiveVoteThreshold: positiveVoteThreshold,
+              negativeVoteThresholdTile: negativeVoteThresholdTile
             }
           })
         }
       }).done(checkError);
     };
-    R.setPositiveVoteThreshold = function(voteThreshold) {
-      if (!R.administrator) {
-        return false;
+    R.setVoteValidationDelay = function(hours, minutes, seconds, cityName) {
+      if (cityName == null) {
+        cityName = R.city.name;
       }
-      $.ajax({
-        method: "POST",
-        url: "ajaxCall/",
-        data: {
-          data: JSON.stringify({
-            "function": 'setPositiveVoteThreshold',
-            args: {
-              voteThreshold: voteThreshold
-            }
-          })
-        }
-      }).done(checkError);
-    };
-    R.setVoteValidationDelay = function(hours, minutes, seconds) {
       if (!R.administrator) {
         return false;
       }
@@ -815,6 +843,7 @@
           data: JSON.stringify({
             "function": 'setVoteValidationDelay',
             args: {
+              cityName: cityName,
               hours: hours,
               minutes: minutes,
               seconds: seconds
@@ -823,7 +852,10 @@
         }
       }).done(checkError);
     };
-    R.setVoteMinDuration = function(hours, minutes, seconds) {
+    R.setVoteMinDuration = function(hours, minutes, seconds, cityName) {
+      if (cityName == null) {
+        cityName = R.city.name;
+      }
       if (!R.administrator) {
         return false;
       }
@@ -834,6 +866,7 @@
           data: JSON.stringify({
             "function": 'setVoteMinDuration',
             args: {
+              cityName: cityName,
               hours: hours,
               minutes: minutes,
               seconds: seconds
@@ -842,15 +875,27 @@
         }
       }).done(checkError);
     };
-    R.setVoteParameters = function(negativeVoteThreshold, positiveVoteThreshold, voteValidationDelayInSeconds, voteMinDurationInSeconds) {
+    R.setVoteParameters = function(negativeVoteThreshold, positiveVoteThreshold, negativeVoteThresholdTile, positiveVoteThresholdTile, voteValidationDelayInSeconds, voteMinDurationInSeconds, cityName) {
+      if (negativeVoteThreshold == null) {
+        negativeVoteThreshold = 2;
+      }
       if (positiveVoteThreshold == null) {
         positiveVoteThreshold = 2;
+      }
+      if (negativeVoteThresholdTile == null) {
+        negativeVoteThresholdTile = 2;
+      }
+      if (positiveVoteThresholdTile == null) {
+        positiveVoteThresholdTile = 2;
       }
       if (voteValidationDelayInSeconds == null) {
         voteValidationDelayInSeconds = 1;
       }
       if (voteMinDurationInSeconds == null) {
         voteMinDurationInSeconds = 5;
+      }
+      if (cityName == null) {
+        cityName = R.city.name;
       }
       if (!R.administrator) {
         return false;
@@ -859,41 +904,65 @@
         console.log("setVoteParameters(negativeVoteThreshold, positiveVoteThreshold=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5)");
         return;
       }
-      R.setNegativeVoteThreshold(negativeVoteThreshold);
-      R.setPositiveVoteThreshold(positiveVoteThreshold);
-      R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds);
-      R.setVoteMinDuration(0, 0, voteMinDurationInSeconds);
+      R.setVoteThresholds(negativeVoteThreshold, positiveVoteThreshold, negativeVoteThresholdTile, positiveVoteThresholdTile, cityName);
+      R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds, cityName);
+      R.setVoteMinDuration(0, 0, voteMinDurationInSeconds, cityName);
     };
-    R.setSelectedDrawingsToCity = function(city) {
-      var args;
-      args = {
-        pk: R.s.pk,
-        city: {
-          name: city
-        }
-      };
+    R.setCityNextEventDateAndLocation = function(date, location, cityName) {
+      if (cityName == null) {
+        cityName = R.city.name;
+      }
+      if (!R.administrator) {
+        return false;
+      }
       $.ajax({
         method: "POST",
         url: "ajaxCall/",
         data: {
           data: JSON.stringify({
-            "function": 'setDrawingToCity',
-            args: args
+            "function": 'setCityNextEventDateAndLocation',
+            args: {
+              cityName: cityName,
+              date: date,
+              location: location
+            }
           })
         }
       }).done(checkError);
     };
-    R.updateDrawings = function() {
+    R.setCityDimensions = function(width, height, strokeWidth, cityName) {
+      if (cityName == null) {
+        cityName = R.city.name;
+      }
+      if (!R.administrator) {
+        return false;
+      }
       $.ajax({
         method: "POST",
         url: "ajaxCall/",
         data: {
           data: JSON.stringify({
-            "function": 'updateDrawings',
-            args: {}
+            "function": 'setCityDimensions',
+            args: {
+              cityName: cityName,
+              width: width,
+              height: height,
+              strokeWidth: strokeWidth
+            }
           })
         }
       }).done(checkError);
+    };
+    R.updateDrawingBoxes = function() {
+      var drawing, j, len, ref;
+      if (!R.administrator) {
+        return false;
+      }
+      ref = R.drawings;
+      for (j = 0, len = ref.length; j < len; j++) {
+        drawing = ref[j];
+        drawing.updateBox();
+      }
     };
     R.validateDrawing = function() {
       var ref;
@@ -925,6 +994,39 @@
             args: {
               png: imageURL,
               pk: R.s.pk
+            }
+          })
+        }
+      }).done(checkError);
+    };
+    R.bannUser = function(username, reportDrawings, reportTiles, removeVotes, removeComments) {
+      if (reportDrawings == null) {
+        reportDrawings = false;
+      }
+      if (reportTiles == null) {
+        reportTiles = false;
+      }
+      if (removeVotes == null) {
+        removeVotes = false;
+      }
+      if (removeComments == null) {
+        removeComments = false;
+      }
+      if (!R.administrator) {
+        return false;
+      }
+      $.ajax({
+        method: "POST",
+        url: "ajaxCall/",
+        data: {
+          data: JSON.stringify({
+            "function": 'bannUser',
+            args: {
+              username: username,
+              reportDrawings: reportDrawings,
+              reportTiles: reportTiles,
+              removeVotes: removeVotes,
+              removeComments: removeComments
             }
           })
         }
@@ -1030,7 +1132,7 @@
           }
           if (event.key === 'p') {
             args = {
-              city: R.city,
+              cityName: R.city.name,
               clientId: draft.id,
               date: Date.now(),
               title: 'TEST',
@@ -1066,7 +1168,6 @@
     };
     R.updateDrawingSVGs = function() {
       var args, drawing, id, item, j, len, ref, ref1;
-      R.Drawing.addPaths();
       ref = R.drawings;
       for (j = 0, len = ref.length; j < len; j++) {
         drawing = ref[j];
@@ -1245,6 +1346,37 @@
           })
         }
       }).done(checkError);
+    };
+    R.countParticipants = function() {
+      var area, nMonths, nParticipants;
+      nParticipants = 100;
+      nMonths = 1;
+      area = 0;
+      while (area < 10000) {
+        area += nParticipants;
+        console.log('month: ', nMonths, ', area: ', area, ', n participants: ', nParticipants);
+        nParticipants *= 2;
+        nMonths++;
+      }
+    };
+    R.dataURItoBlob = function(dataURI) {
+      var ab, blob, byteString, i, ia, j, mimeString, ref;
+      byteString = atob(dataURI.split(',')[1]);
+      mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+      ab = new ArrayBuffer(byteString.length);
+      ia = new Uint8Array(ab);
+      for (i = j = 0, ref = byteString.length - 1; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      blob = new Blob([ab], {
+        type: mimeString
+      });
+      return blob;
+    };
+    R.saveImageDataURL = function(dataURL, imageName) {
+      var furl;
+      furl = dataURItoBlob(dataURL);
+      return saveAs(furl, imageName);
     };
     R.Utils = Utils;
     return Utils;

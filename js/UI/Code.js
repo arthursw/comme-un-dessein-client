@@ -217,7 +217,7 @@
 
       FileManager.prototype.checkHasFork = function() {
         if ((R.githubLogin != null) && R.githubLogin !== '') {
-          this.request('https://api.github.com/repos/' + R.githubLogin + '/comme-un-dessein-client/', this.checkHasForkCallback);
+          this.request('https://api.github.com/repos/' + R.githubLogin + '/wetu-client/', this.checkHasForkCallback);
         }
       };
 
@@ -342,7 +342,7 @@
         if (event != null) {
           event.preventDefault();
         }
-        this.request('https://api.github.com/repos/arthursw/comme-un-dessein-client/forks', this.displayForks);
+        this.request('https://api.github.com/repos/arthursw/wetu-client/forks', this.displayForks);
       };
 
       FileManager.prototype.loadMainRepository = function(event) {
@@ -401,7 +401,7 @@
         if (event != null) {
           event.preventDefault();
         }
-        this.request('https://api.github.com/repos/' + R.githubLogin + '/comme-un-dessein-client/forks', this.forkCreationResponse, 'post');
+        this.request('https://api.github.com/repos/' + R.githubLogin + '/wetu-client/forks', this.forkCreationResponse, 'post');
       };
 
       FileManager.prototype.getFileName = function(file) {
@@ -520,7 +520,7 @@
           owner = this.owner;
         }
         console.log('load ' + path + ' of ' + owner);
-        this.request('https://api.github.com/repos/' + owner + '/comme-un-dessein-client/contents/' + path, callback);
+        this.request('https://api.github.com/repos/' + owner + '/wetu-client/contents/' + path, callback);
       };
 
       FileManager.prototype.openFile = function(file) {
@@ -781,7 +781,7 @@
         if ((data != null ? data.owner : void 0) != null) {
           this.owner = data.owner;
         }
-        this.request('https://api.github.com/repos/' + this.owner + '/comme-un-dessein-client/branches/master', this.runLastCommit);
+        this.request('https://api.github.com/repos/' + this.owner + '/wetu-client/branches/master', this.runLastCommit);
       };
 
       FileManager.prototype.onCommitClicked = function(event) {
@@ -987,7 +987,7 @@
           body: data.body
         };
         R.loader.showLoadingBar();
-        this.request('https://api.github.com/repos/arthursw/comme-un-dessein-client/pulls', this.checkPullRequest, 'post', data);
+        this.request('https://api.github.com/repos/arthursw/wetu-client/pulls', this.checkPullRequest, 'post', data);
       };
 
       FileManager.prototype.checkPullRequest = function(message) {
@@ -1082,7 +1082,7 @@
           callback = this.getTreeAndSetCommit;
         }
         this.showLoader();
-        this.request('https://api.github.com/repos/' + owner + '/comme-un-dessein-client/branches/master', callback);
+        this.request('https://api.github.com/repos/' + owner + '/wetu-client/branches/master', callback);
       };
 
       FileManager.prototype.getTree = function(master, callback) {
@@ -1237,7 +1237,7 @@
         }
         R.loader.showLoadingBar();
         tree = this.filterTree();
-        this.request('https://api.github.com/repos/' + this.owner + '/comme-un-dessein-client/git/trees', this.createCommit, 'post', {
+        this.request('https://api.github.com/repos/' + this.owner + '/wetu-client/git/trees', this.createCommit, 'post', {
           tree: tree
         });
       };
@@ -1253,7 +1253,7 @@
           tree: tree.sha,
           parents: [this.commit.lastCommitSha]
         };
-        this.request('https://api.github.com/repos/' + this.owner + '/comme-un-dessein-client/git/commits', this.updateHead, 'post', data);
+        this.request('https://api.github.com/repos/' + this.owner + '/wetu-client/git/commits', this.updateHead, 'post', data);
       };
 
       FileManager.prototype.updateHead = function(commit) {
@@ -1262,7 +1262,7 @@
           return;
         }
         this.commit.lastCommitSha = commit.sha;
-        this.request('https://api.github.com/repos/' + this.owner + '/comme-un-dessein-client/git/refs/heads/master', this.checkCommit, 'patch', {
+        this.request('https://api.github.com/repos/' + this.owner + '/wetu-client/git/refs/heads/master', this.checkCommit, 'patch', {
           sha: commit.sha
         });
       };

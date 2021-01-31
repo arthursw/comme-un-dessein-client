@@ -1,4 +1,4 @@
-define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2', 'bootstrap'], (P, R, CS, _, $, tinycolor, bs) ->
+define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinycolor2', 'bootstrap', 'fileSaver'], (P, R, CS, _, $, tinycolor, bs, fileSaver) ->
 
 	# window._ = _
 	window?.tinycolor = tinycolor
@@ -506,6 +506,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 			middlePoint: previousPosition.add(delta.divide(2))
 			type: type
 			count: count
+			originalEvent: event
 		return paperEvent
 
 	# Test if the special key is pressed. Special key is command key on a mac, and control key on other systems.
@@ -667,8 +668,8 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 			return if @precision < 16 then Math.round(val * @multiplier) / @multiplier else val
 		pair: (val1, val2, separator) ->
 			return @number(val1) + (separator or ',') + @number(val2)
-		point: (val, separator) ->
-			return @number(val.x) + (separator or ',') + @number(val.y)
+		point: (val, separator, unit='') ->
+			return @number(val.x) + unit + (separator or ',') + @number(val.y) + unit
 		size: (val, separator) ->
 			return @number(val.width) + (separator or ',') + @number(val.height)
 		rectangle: (val, separator) ->
@@ -683,7 +684,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		return val >= -EPSILON && val <= EPSILON
 
 	# Taken from paper.js SvgExport.js
-	Utils.getSVGTransform = (matrix, coordinates=false, center=null) ->
+	Utils.getSVGTransform = (matrix, coordinates=false, center=null, unit=null) ->
 		# Use new Base() so we can use Base#set() on it.
 		attrs = new P.Base()
 		trans = matrix.getTranslation()
@@ -709,7 +710,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 				scale = decomposed.scaling
 				skew = decomposed.skewing
 				if trans and !trans.isZero()
-					parts.push 'translate(' + Utils.formatter.point(trans) + ')'
+					parts.push 'translate(' + Utils.formatter.point(trans, null, unit) + ')'
 				if angle
 					parts.push 'rotate(' + Utils.formatter.number(angle) + ')'
 				if !Utils.isZero(scale.x - 1) or !Utils.isZero(scale.y - 1)
@@ -751,6 +752,11 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDebugMode', args: debug: debugMode } ).done(checkError)
 		return
 
+	R.setSimulateSlowResponsesMode = (simulateSlowResponsesMode)->
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setSimulateSlowResponsesMode', args: simulateSlowResponses: simulateSlowResponsesMode } ).done(checkError)
+		return
+
 	R.removeDeadReferences = ()->
 		if not R.administrator then return false
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'removeDeadReferences', args: {} } ).done(checkError)
@@ -778,48 +784,63 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingStatus', args: args } ).done(checkError)
 		return
 
-	R.setNegativeVoteThreshold = (voteThreshold)->
+	# R.setNegativeVoteThreshold = (voteThreshold, cityName=R.city.name)->
+	# 	if not R.administrator then return false
+	# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setNegativeVoteThreshold', args: { cityName: cityName, voteThreshold: voteThreshold }  } ).done(checkError)
+	# 	return
+
+	R.setVoteThresholds = (negativeVoteThreshold=2, positiveVoteThreshold=2, negativeVoteThresholdTile=2, positiveVoteThresholdTile=2, cityName=R.city.name)->
 		if not R.administrator then return false
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setNegativeVoteThreshold', args: voteThreshold: voteThreshold } ).done(checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteThresholds', args: { cityName: cityName, negativeVoteThreshold: negativeVoteThresholdTile, positiveVoteThreshold: positiveVoteThreshold, negativeVoteThresholdTile: negativeVoteThresholdTile } } ).done(checkError)
 		return
 
-	R.setPositiveVoteThreshold = (voteThreshold)->
+	R.setVoteValidationDelay = (hours, minutes, seconds, cityName=R.city.name)->
 		if not R.administrator then return false
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPositiveVoteThreshold', args: voteThreshold: voteThreshold } ).done(checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteValidationDelay', args: { cityName: cityName, hours: hours, minutes: minutes, seconds: seconds } } ).done(checkError)
 		return
 
-	R.setVoteValidationDelay = (hours, minutes, seconds)->
+	R.setVoteMinDuration = (hours, minutes, seconds, cityName=R.city.name)->
 		if not R.administrator then return false
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteValidationDelay', args: { hours: hours, minutes: minutes, seconds: seconds } } ).done(checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteMinDuration', args: { cityName: cityName, hours: hours, minutes: minutes, seconds: seconds } } ).done(checkError)
 		return
 
-	R.setVoteMinDuration = (hours, minutes, seconds)->
-		if not R.administrator then return false
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteMinDuration', args: { hours: hours, minutes: minutes, seconds: seconds } } ).done(checkError)
-		return
-
-	R.setVoteParameters = (negativeVoteThreshold, positiveVoteThreshold=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5)->
+	R.setVoteParameters = (negativeVoteThreshold=2, positiveVoteThreshold=2, negativeVoteThresholdTile=2, positiveVoteThresholdTile=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5, cityName=R.city.name)->
 		if not R.administrator then return false
 		if not negativeVoteThreshold
 			console.log("setVoteParameters(negativeVoteThreshold, positiveVoteThreshold=2, voteValidationDelayInSeconds=1, voteMinDurationInSeconds=5)")
 			return
-		R.setNegativeVoteThreshold(negativeVoteThreshold)
-		R.setPositiveVoteThreshold(positiveVoteThreshold)
-		R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds)
-		R.setVoteMinDuration(0, 0, voteMinDurationInSeconds)
+		R.setVoteThresholds(negativeVoteThreshold, positiveVoteThreshold, negativeVoteThresholdTile, positiveVoteThresholdTile, cityName)
+		R.setVoteValidationDelay(0, 0, voteValidationDelayInSeconds, cityName)
+		R.setVoteMinDuration(0, 0, voteMinDurationInSeconds, cityName)
 		return
 
-	R.setSelectedDrawingsToCity = (city)->
-		args = {
-			pk: R.s.pk
-			city: name: city
-		}
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingToCity', args: args } ).done(checkError)
+	R.setCityNextEventDateAndLocation = (date, location, cityName=R.city.name)->
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setCityNextEventDateAndLocation', args: { cityName: cityName, date: date, location: location } } ).done(checkError)
 		return
 
-	R.updateDrawings = ()->
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawings', args: {} } ).done(checkError)
+	R.setCityDimensions = (width, height, strokeWidth, cityName=R.city.name)->
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setCityDimensions', args: { cityName: cityName, width: width, height: height, strokeWidth: strokeWidth } } ).done(checkError)
 		return
+
+	R.updateDrawingBoxes = ()->
+		if not R.administrator then return false
+		for drawing in R.drawings
+			drawing.updateBox()
+		return
+
+	# R.setSelectedDrawingsToCity = (city)->
+	# 	args = {
+	# 		pk: R.s.pk
+	# 		cityName: city
+	# 	}
+	# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setDrawingToCity', args: args } ).done(checkError)
+	# 	return
+
+	# R.updateDrawings = ()->
+	# 	$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawings', args: {} } ).done(checkError)
+	# 	return
 
 	R.validateDrawing = ()->
 		if not R.s?.pk? then return
@@ -829,6 +850,11 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 	R.createDrawingThumbnail = ()->
 		imageURL = R.view.getThumbnail(R.s, 1200, 630, true, true)
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'createDrawingThumbnail', args: {png: imageURL, pk: R.s.pk} } ).done(checkError)
+		return
+
+	R.bannUser = (username, reportDrawings=false, reportTiles=false, removeVotes=false, removeComments=false)->
+		if not R.administrator then return false
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'bannUser', args: {username: username, reportDrawings: reportDrawings, reportTiles: reportTiles, removeVotes: removeVotes, removeComments: removeComments} } ).done(checkError)
 		return
 
 	R.getEmail = (username)->
@@ -892,7 +918,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 			if event.key == 'p'
 
 				args = {
-					city: R.city
+					cityName: R.city.name
 					clientId: draft.id
 					date: Date.now()
 					# pathPks: @pathPks
@@ -917,7 +943,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		return
 
 	R.updateDrawingSVGs = ()->
-		R.Drawing.addPaths()
+		# R.Drawing.addPaths()
 		for drawing in R.drawings
 			R.view.mainLayer.addChild(drawing.group)
 		for own id, item of R.items
@@ -1025,6 +1051,44 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 			confirm: confirm
 		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteItems', args: args } ).done(checkError)
 		return
+
+	R.countParticipants = ()->
+		nParticipants = 100
+		nMonths = 1
+		area = 0
+		while area < 10000
+			area += nParticipants
+			console.log('month: ', nMonths, ', area: ', area, ', n participants: ', nParticipants)
+			nParticipants *= 2
+			nMonths++
+		return
+
+	# Save data url image:
+	R.dataURItoBlob = (dataURI)->
+		# // convert base64 to raw binary data held in a string
+		# // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
+		byteString = atob(dataURI.split(',')[1])
+
+		# // separate out the mime component
+		mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+
+		# // write the bytes of the string to an ArrayBuffer
+		ab = new ArrayBuffer(byteString.length)
+
+		# // create a view into the buffer
+		ia = new Uint8Array(ab)
+
+		# // set the bytes of the buffer to the correct values
+		for i in [0 .. byteString.length-1]
+			ia[i] = byteString.charCodeAt(i)
+
+		# // write the ArrayBuffer to a blob, and you're done
+		blob = new Blob([ab], {type: mimeString})
+		return blob
+
+	R.saveImageDataURL = (dataURL, imageName)->
+		furl = dataURItoBlob(dataURL)
+		saveAs(furl, imageName)
 
 	R.Utils = Utils
 	return Utils

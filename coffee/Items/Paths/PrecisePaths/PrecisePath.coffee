@@ -52,7 +52,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		
 		# @iconURL = 'static/images/icons/inverted/editCurve.png'
 		# @iconURL = 'glyphicon-pencil'
-		@iconURL = if R.style == 'line' then 'icones_icon_pen.png' else if R.style == 'romanesco' then 'editCurve.png' else if R.style == 'hand' then 'a-pen3.png' else 'glyphicon-pencil'
+		# @iconURL = if R.style == 'line' then 'icones_icon_pen.png' else if R.style == 'romanesco' then 'editCurve.png' else if R.style == 'hand' then 'a-pen3.png' else 'glyphicon-pencil'
+		@iconURL = 'new 1/Pen.svg'
 
 		@hitOptions =
 			segments: true
@@ -288,6 +289,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				@path.selected = false
 				@path.strokeCap = if @data.strokeCap? then @data.strokeCap else 'round'
 				@path.strokeJoin = if @data.strokeJoin? then @data.strokeJoin else 'round'
+<<<<<<< HEAD
+=======
+				# @path.visible = false
+				# @controlPath.visible = true
+				# @controlPath.strokeColor = @path.strokeColor
+				# @controlPath.strokeWidth = @path.strokeWidth
+				# @controlPath.strokeCap = @path.strokeCap
+				# @controlPath.strokeJoin = @path.strokeJoin
+				# @controlPath.selected = true
+>>>>>>> f3f7b4f5b850af2c71f18b49fb4835248d3ab23a
 			return
 
 		# default updateDraw function, will be redefined by children PrecisePath
@@ -524,6 +535,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				# if @speeds? then @computeSpeed()
 
 				if R.drawingMode not in @constructor.drawingModes
+<<<<<<< HEAD
 					console.log("simplifying")
 					@controlPath.simplify()
 					# if not event.event.shiftKey
@@ -532,6 +544,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 					# else
 					# 	console.log("simplify= " + @constructor.orthoGridSize)
 					# 	@controlPath.simplify(@constructor.orthoGridSize)
+=======
+					@controlPath.simplify()
+>>>>>>> f3f7b4f5b850af2c71f18b49fb4835248d3ab23a
 
 				for segment in @controlPath.segments
 					if segment.handleIn.length>200
@@ -630,8 +645,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			if @drawn
 				if not onSvg
 					R.view.draftLayer.addChild(@path)
-				else
-					@setSVG()
+				# else
+				# 	@setSVG()
 				return
 
 			if not R.rasterizer.requestDraw(@, simplified, redrawing) then return
@@ -654,10 +669,15 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@drawingOffset = 0
 
 			# @group.parent.addChild(@path)
+<<<<<<< HEAD
 			if onSvg
 
 				@group.remove()
 				@path?.selected = true
+=======
+			# if onSvg
+			# 	@group.remove()
+>>>>>>> f3f7b4f5b850af2c71f18b49fb4835248d3ab23a
 
 			try 	# catch errors to log them in the code editor console (if user is making a script)
 				@processDrawing(redrawing)
@@ -671,19 +691,21 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 			@drawn = true
 			
-			if onSvg
-				@setSVG()
-			else
+			# if onSvg
+			# 	@setSVG()
+			# else
+
+			if not onSvg
 				R.view.draftLayer.addChild(@path)
 
 			window.pp = @path
 
 			return
-		
+
 		setSVG: ()->
-			layerName = if @drawingId? then R.items[@drawingId].getLayerName() else 'mainLayer'
-			@svg = @path.exportSVG()
-			R.svgJ.find('#'+layerName).append(@svg)
+			# layerName = if @drawingId? then R.items[@drawingId].getLayerName() else 'mainLayer'
+			# @svg = @path.exportSVG()
+			# R.svgJ.find('#'+layerName).append(@svg)
 			return
 
 		drawOnPaper: ()->
@@ -693,11 +715,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@draw(false, true, false)
 			return
 
-		drawOnSVG: ()->
-			@path.remove()
-			if not @svg?
-				@draw()
-			return
+		# drawOnSVG: ()->
+		# 	@path.remove()
+		# 	if not @svg?
+		# 		@draw()
+		# 	return
 
 		# @return [Array of Paper point] a list of point from the control path converted in the planet coordinate system
 		pathOnPlanet: ()->
@@ -709,7 +731,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		getPoints: ()->
 			points = []
 			# Hack because the tipibot controler was made for a 4000 x 3000 mm area
-			# ratio = new P.Point(4000/R.cityWidth, 3000/R.cityHeight)
+			# ratio = new P.Point(4000/R.city.width, 3000/R.city.height)
 			# for segment in @controlPath.segments
 			# 	points.push(Utils.CS.projectToPosOnPlanet(segment.point).multiply(ratio))
 			# 	points.push(Utils.CS.pointToObj(segment.handleIn).multiply(ratio))
@@ -977,7 +999,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				@selectedSegment = segment
 				@highlightSelectedPoint()
 				if update then @update('point')
-				R.socket.emit "bounce", itemId: @id, function: "addPoint", arguments: [index, point, offset, false]
+				# R.socket.emit "bounce", itemId: @id, function: "addPoint", arguments: [index, point, offset, false]
 			return segment
 
 		deletePointCommand: ()->
@@ -1003,7 +1025,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			if not @socketAction
 				R.tools.select.updateSelectionRectangle()
 				if update then @update('point')
-				R.socket.emit "bounce", itemId: @id, function: "deletePoint", arguments: [segment.index, false]
+				# R.socket.emit "bounce", itemId: @id, function: "deletePoint", arguments: [segment.index, false]
 			return location
 
 		# delete the selected point (from curve) and delete curve if there are no points anymore
@@ -1037,7 +1059,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 			if not @socketAction
 				if update then @update('segment')
-				R.socket.emit "bounce", itemId: @id, function: "modifyPoint", arguments: [segment.index, position, handleIn, handleOut, fastDraw, false]
+				# R.socket.emit "bounce", itemId: @id, function: "modifyPoint", arguments: [segment.index, position, handleIn, handleOut, fastDraw, false]
 			return
 
 		updateModifyPoint: (event)->
@@ -1125,7 +1147,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@highlightSelectedPoint()
 			if not @socketAction
 				if update then @update('point')
-				R.socket.emit "bounce", itemId: @id, function: "modifyPointType", arguments: [segment.index, rtype, false]
+				# R.socket.emit "bounce", itemId: @id, function: "modifyPointType", arguments: [segment.index, rtype, false]
 			return
 
 		modifyControlPathCommand: (previousPointsAndPlanet, newPointsAndPlanet)->
@@ -1143,7 +1165,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@draw()
 			if not @socketAction
 				if update then @update('point')
-				R.socket.emit "bounce", itemId: @id, function: "modifyControlPath", arguments: [pointsAndPlanet, false]
+				# R.socket.emit "bounce", itemId: @id, function: "modifyControlPath", arguments: [pointsAndPlanet, false]
 			return
 
 		setSmooth: (smooth)->

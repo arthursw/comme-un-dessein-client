@@ -1,13 +1,16 @@
 define ['paper', 'R'], (P, R) ->
 
 	CS = {}
+	CS.PlanetWidth = 180
+	CS.PlanetHeight = 90
+
 	# Romansco relies on different coordinate systems:
 	# - the paper view: corresponds to the canvas on the html document, top left corner of canvas is [0,0] and bottom left is [P.view.size.width, P.view.size.height]
 	# - the paper project: the infinite space, 0,0 is the origin of the infinite space, from [-inf,-inf] to [inf,inf]
-	# - the planet: the project positions are defined on a grid of cells of dimension [360*R.scale, 180*R.scale] (R.scale = 1000 by default)
-	# 				the origin of the space [0,0] is in the middle of a cell (meaning the first top left limit will be at [-180*R.scale, -90*R.scale])
+	# - the planet: the project positions are defined on a grid of cells of dimension [CS.PlanetWidth*R.scale, 180*R.scale] (R.scale = 1000 by default)
+	# 				the origin of the space [0,0] is in the middle of a cell (meaning the first top left limit will be at [-180*R.scale, -CS.PlanetHeight*R.scale])
 	# 				one cell correspond to a planet with two coordinates, objects in the database are stored and sorted in a planet (x,y) and then in a map
-	# 				the map is defined within a rectangle {x: -180, y: -90, width: 360, height: 180} in GeoJson format
+	# 				the map is defined within a rectangle {x: -180, y: -CS.PlanetHeight, width: CS.PlanetWidth, height: 180} in GeoJson format
 
 	# When loading/saving to the database: posOnPlanet <-> project
 
@@ -20,10 +23,10 @@ define ['paper', 'R'], (P, R) ->
 		# if not point.x? and not point.y? then point = arrayToPoint(point)
 
 		x = point.x / R.scale
-		planet.x = Math.floor( ( x + 180 ) / 360 )
+		planet.x = Math.floor( ( x + CS.PlanetWidth / 2 ) / CS.PlanetWidth )
 
 		y = point.y / R.scale
-		planet.y = Math.floor( ( y + 90 ) / 180 )
+		planet.y = Math.floor( ( y + CS.PlanetHeight / 2 ) / CS.PlanetHeight )
 
 		return planet
 
@@ -37,8 +40,8 @@ define ['paper', 'R'], (P, R) ->
 		# if not point.x? and not point.y? then point = arrayToPoint(point)
 
 		pos = {}
-		pos.x = point.x/R.scale - 360*planet.x
-		pos.y = point.y/R.scale - 180*planet.y
+		pos.x = point.x / R.scale - CS.PlanetWidth * planet.x
+		pos.y = point.y / R.scale - CS.PlanetHeight * planet.y
 
 		return pos
 
@@ -60,8 +63,8 @@ define ['paper', 'R'], (P, R) ->
 	# @return [Paper point] the position of *point* on *planet*
 	CS.posOnPlanetToProject = (point, planet)->
 		if not point.x? and not point.y? then point = CS.arrayToPoint(point)
-		x = planet.x*360+point.x
-		y = planet.y*180+point.y
+		x = planet.x*CS.PlanetWidth+point.x
+		y = planet.y*CS.PlanetHeight+point.y
 		x *= R.scale
 		y *= R.scale
 		return new P.Point(x,y)
@@ -97,14 +100,15 @@ define ['paper', 'R'], (P, R) ->
 	# @return [Paper point] topLeft point of the bottom right planet in project coordinates (this will be the origin of the limits)
 	CS.getLimit = ()->
 		planet = CS.projectToPlanet(CS.getTopLeftCorner())
-		return CS.posOnPlanetToProject( new P.Point(-180,-90), new P.Point(planet.x+1, planet.y+1) )
+		return CS.posOnPlanetToProject( new P.Point(-CS.PlanetWidth / 2,-CS.PlanetHeight / 2), new P.Point(planet.x+1, planet.y+1) )
 
 	# get a GeoJson valid box in planet coordinates from *rectangle*
 	# @param rectangle [Paper P.Rectangle] the rectangle to convert
 	# @return [{ points:Array<Array<2 Numbers>>, planet: Object, tl: P.Point, br: P.Point }] the resulting object
 	CS.boxFromRectangle = (rectangle)->
 		# remove margin to ignore intersections of paths which are close to the edges
-
+		if not rectangle? then return null
+		
 		planet = CS.pointToObj( CS.projectToPlanet(rectangle.topLeft) )
 
 		tlOnPlanet = CS.projectToPosOnPlanet(rectangle.topLeft, planet)
@@ -140,12 +144,12 @@ define ['paper', 'R'], (P, R) ->
 			zoom = 25
 		return zoom
 	
-	CS.pixelsPerMm = 1
+	# CS.pixelsPerMm = 1
 
-	CS.pixelToMm = (pixel)->
-		return pixel / CS.pixelsPerMm
+	# CS.pixelToMm = (pixel)->
+	# 	return pixel / CS.pixelsPerMm
 
-	CS.mmToPixel = (mm)->
-		return mm * CS.pixelsPerMm
+	# CS.mmToPixel = (mm)->
+	# 	return mm * CS.pixelsPerMm
 
 	return CS

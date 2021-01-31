@@ -16,8 +16,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		# @iconURL = 'eraser.png'
 		# @iconURL = 'glyphicon-erase'
 		# @iconURL = 'icones_icon_rubber.png'
-		@iconURL = if R.style == 'line' then 'icones_icon_rubber.png' else if R.style == 'romanesco' then 'eraser.png' else if R.style == 'hand' then 'a-eraser.png' else 'glyphicon-erase'
-		
+		# @iconURL = if R.style == 'line' then 'icones_icon_rubber.png' else if R.style == 'romanesco' then 'eraser.png' else if R.style == 'hand' then 'a-eraser.png' else 'glyphicon-erase'
+		@iconURL = 'new 1/Eraser.svg'
+
 		@cursor =
 			position:
 				x: 0, y: 0
@@ -25,13 +26,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		@drawItems = true
 
 		@emitSocket = false
+		@buttonClasses = 'dark'
 
 		# Find or create a button for the tool in the sidebar (if the button is created, add it default or favorite tool list depending on the user settings stored in local storage, and whether the tool was just created in a newly created script)
 		# set its name and icon if an icon url is provided, or create an icon with the letters of the name otherwise
 		# the icon will be made with the first two letters of the name if the name is in one word, or the first letter of each words of the name otherwise
 		constructor: (@Path, justCreated=false) ->
 			@name = @constructor.label
-			@radius = 0.1
+			@radius = 10
 			R.tools[@name] = @
 
 			# check if a button already exists (when created fom a module)
@@ -43,6 +45,67 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 
 			@pathsToDelete = []
 			@pathsToCreate = []
+
+			@sizeButton = new Button(
+				name: 'Eraser size'
+				iconURL: 'glyphicon-circle'
+				favorite: true
+				category: null
+				popover: true
+				classes: 'dark'
+				# prepend: true
+				# divType: 'div'
+			)
+			@sizeButton.cloneJ.find('span.glyphicon').css( 'background-color': 'white', 'border-radius': '50%', width: '15px', height: '15px')
+			@sizeButton.hide()
+
+			sizes = [5, 10, 20, 30]
+
+			closeSizeMenu = ()->
+				$('#size-picker').remove()
+				return
+
+			@sizeButton.cloneJ.find('.glyphicon').css( color: R.selectedColor )
+
+			@sizeButton.btnJ.click ()=>
+				position = @sizeButton.cloneJ.offset()
+				height = @sizeButton.cloneJ.outerHeight()
+				ulJ = $('<ul>').attr('id', 'size-picker').css( 'background-color': '#33383E', position: 'fixed', top: position.top + height, left: position.left )
+				for size in sizes
+					liJcss = {
+						'width': 50, 
+						'height': 50, 
+						'cursor': 'pointer', 
+						'display': 'flex', 
+						'justify-content': 'center',
+						'align-items': 'center'
+					}
+					liJ = $('<li>').attr('data-size', size).css(liJcss)
+					liJ.mouseover((event)->
+						$(this).css('background-color': '#0079BF')
+						return)
+					liJ.mouseout((event)->
+						$(this).css('background-color': 'transparent')
+						return)
+					liJ.mousedown((event)=> 
+						size = $(event.target).closest('li').attr('data-size')
+						@radius = size
+						@createCircle()
+						
+						if R.selectedTool != @
+							@select()
+
+						# @sizeButton.cloneJ.find('span.selected-size').css( background: size )
+						@sizeButton.cloneJ.find('span.glyphicon').css( width: @radius, height: @radius )
+						return)
+					iconJ = $('<div>').css( width: size, height: size, 'background-color': 'white', 'border-radius': '50%' )
+					liJ.append(iconJ)
+					ulJ.append(liJ)
+				
+				@sizeButton.cloneJ.parent().append(ulJ)
+				return
+			
+			$(window).mouseup( closeSizeMenu )
 
 			return
 
@@ -62,33 +125,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			@btnJ.removeClass('displayName')
 			return
 
-		deleteAllPaths: ()->
-			paths = R.Drawing.getDraft()?.paths or []
-			
-			# for id, path of R.paths
-			# 	if path.isDraft()
-			# 		paths.push(path)
-
-			R.drawingPanel.deleteGivenPaths(paths)
-			@setButtonErase()
-			return
-
 		# Select: add the mouse move listener on the tool (userful when creating a path in polygon mode)
 		# todo: move this to main, have a global onMouseMove handler like other handlers
 		select: (deselectItems=true, updateParameters=true)->
 
-			# if R.selectedTool != @
-			# 	@setButtonEraseAll()
-			# else
-			# 	@deleteAllPaths()
-			# 	return
+			@sizeButton.show()
 
-			# R.rasterizer.drawItems()
-
-			draft = Drawing.getDraft()
-			if draft?
-				for path in draft.paths
-					path.drawOnPaper()
 
 			$('#draftDrawing').remove()
 
@@ -104,10 +146,12 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		# Deselect: remove the mouse move listener
 		deselect: ()->
 
-			draft = Drawing.getDraft()
-			if draft?
-				for path in draft.paths
-					path.drawOnSVG()
+			@sizeButton.hide()
+
+			# draft = Drawing.getDraft()
+			# if draft?
+			# 	for path in draft.paths
+			# 		path.drawOnSVG()
 
 			# @setButtonErase()
 			super()
@@ -115,7 +159,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			if @circle?
 				@circle.remove()
 				@circle = null
-				clearInterval(@circleIntervalID)
+				@visualCircle.remove()
+				@visualCircle = null
+				# clearInterval(@circleIntervalID)
 			R.view.tool.onMouseMove = null
 			return
 
@@ -132,56 +178,51 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			# refreshRasterizer = false
 
 			draft = R.Drawing.getDraft()
-			if not draft?
+			if (not draft?) or (not @circle?)
 				return
 			
-			for item in draft.paths.slice()
+			pathIndex = 0
+			for path in draft.paths.slice()
 
-					if item.getBounds()?.intersects(@circle.bounds)
+				if path.bounds.intersects(@circle.bounds)
 
-						intersections = @circle.getCrossings(item.controlPath)
+					intersections = @circle.getCrossings(path)
+					
+					if intersections.length > 0
+
+						zIndex = path.index
+						paths = [path]
+						console.log(intersections)
 						
-						if intersections.length > 0
-
-							paths = [item.controlPath]
-							console.log(intersections)
-							
-							# @pathsToDeleteResurectors[item.id] = data: item.getDuplicateData(), constructor: item.constructor
-
-							for intersection in intersections
-								for p in paths
-									location = p.getLocationOf(intersection.point)
-									if location?
-										console.log('split: ' + location.point)
-										newP = p.split(location)
-										p.lastSegment.handleOut = null
-										p.lastSegment.data = split: true
-										if newP?
-											paths.push(newP)
-											newP.firstSegment.handleIn = null
-											newP.firstSegment.data = split: true
-
-							# refreshRasterizer = true
-							
-							item.remove()
-							# @pathsToDelete.push(item)
-
+						for intersection in intersections
 							for p in paths
-								if @isPathInCircle(p)
-									console.log('remove a path')
-									p.remove()
-								else
-									data = R.Tools.Item.Item.PrecisePath.getDataFromPath(p)
-									points = R.Tools.Item.Item.Path.pathOnPlanetFromPath(p)
-									path = new R.Tools.Item.Item.PrecisePath(Date.now(), data, null, null, points, null, R.me, draft.id)
-									path.draw(false, true, false)
-									# @pathsToCreate.push(path)
-						else
-							if @isPathInCircle(item.controlPath)
-								# @pathsToDeleteResurectors[item.id] = data: item.getDuplicateData(), constructor: item.constructor
-								item.remove()
-								# @pathsToDelete.push(item)
-								# refreshRasterizer = true
+								location = p.getLocationOf(intersection.point)
+								if location?
+									newP = p.split(location)
+									p.strokeColor = path.strokeColor
+									p.lastSegment.handleOut = null
+									if newP?
+										newP.strokeColor = path.strokeColor
+										paths.push(newP)
+										newP.firstSegment.handleIn = null
+
+						# refreshRasterizer = true
+						
+						draft.removeChild(path)
+
+						for p in paths
+							if not @isPathInCircle(p)
+								newPath = p.clone()
+								draft.addChild(newPath)
+								draft.setPathZIndex(newPath, pathIndex, zIndex)
+							p.remove()
+
+					else
+						if @isPathInCircle(path)
+							draft.removeChild(path)
+				pathIndex++
+
+			draft.computeRectangle() # only required in the end?
 
 			return
 
@@ -199,7 +240,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			@using = true
 			@updateCircle(event.point)
 
-			@circleIntervalID = setInterval(@createCircle, 20)
+			# @circleIntervalID = setInterval(@createCircle, 20)
 
 			draft = R.Drawing.getDraft()
 			@duplicateData = draft?.getDuplicateData()
@@ -225,7 +266,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		update: (event, from=R.me) ->
 			console.log("update")
 
-			@circle.position = event.point
+			@setPosition(event.point)
 
 			if not R.tracer?.draggingImage
 				@erase()
@@ -240,13 +281,29 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			if not point then return
 			@circle?.remove()
 			@circle = new P.Path.Circle(point, @radius)
-			@circle.strokeWidth = 1
-			@circle.strokeColor = '#2fa1d6'
-			@circle.strokeScaling = false
+			# @circle.strokeWidth = 1
+			# @circle.strokeColor = '#2fa1d6'
+			# @circle.strokeScaling = false
+
 			R.view.selectionLayer.addChild(@circle)
 			@circle.sendToBack()
-			if @radius < 15
-				@radius += 0.5
+
+			@visualCircle?.remove()
+			@visualCircle = new P.Path.Circle(point, @radius - R.Path.strokeWidth / 2)
+			@visualCircle.strokeWidth = 1
+			@visualCircle.strokeColor = '#2fa1d6'
+			@visualCircle.strokeScaling = false
+
+			R.view.selectionLayer.addChild(@visualCircle)
+			@visualCircle.sendToBack()
+			# if @radius < 15
+			# 	@radius += 0.5
+			return
+
+		setPosition: (point)->
+			if @circle?
+				@circle.position = point
+				@visualCircle.position = point
 			return
 
 		updateCircle: (point)->
@@ -254,7 +311,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 			if not @circle?
 				@createCircle(point)
 			else
-				@circle.position = point
+				@setPosition(point)
 			return
 
 		# Update path action (usually from a mouse move event, necessary for the polygon mode):
@@ -269,13 +326,13 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Commands/Comman
 		# @param [Paper event or REvent] (usually) mouse up event
 		# @param [String] author (username) of the event
 		end: (event, from=R.me) ->
-			@circle.position = event.point
+			@setPosition(event.point)
 			
 			if not R.tracer?.draggingImage
 				@erase()
 
-			clearInterval(@circleIntervalID)
-			@radius = 0.1
+			# clearInterval(@circleIntervalID)
+			# @radius = 0.1
 
 			draft = R.Drawing.getDraft()
 			

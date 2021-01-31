@@ -10,9 +10,9 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			@grid.name = 'grid group'
 			@layer.addChild(@grid)
 			
-			@size = new P.Size(Utils.CS.mmToPixel(R.cityWidth or 4000), Utils.CS.mmToPixel(R.cityHeight or 3000))
+			@size = new P.Size(R.city.pixelPerMm * (R.city.width or 100000), R.city.pixelPerMm * (R.city.height or 100000))
 
-			@frameSize = @size.multiply(1000)
+			@frameSize = @size.multiply(10)
 			@frameRectangle = new P.Rectangle(@frameSize.multiply(-0.5), @frameSize)
 			@limitCDRectangle = new P.Rectangle(@size.multiply(-0.5), @size)
 
@@ -32,6 +32,23 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			@update()
 
 			return
+
+		projectToGeoJSON: (point)->
+			return new P.Point(Utils.CS.PlanetWidth * point.x / @size.width, Utils.CS.PlanetHeight * point.y / @size.height)
+
+		projectToGeoJSONRectangle: (rectangle)->
+			topLeft = @projectToGeoJSON(rectangle.topLeft)
+			return new P.Rectangle(topLeft.x, topLeft.y, Utils.CS.PlanetWidth * rectangle.width / @size.width, Utils.CS.PlanetHeight * rectangle.height / @size.height)
+
+		geoJSONToProject: (point)->
+			return new P.Point(@size.width * point.x / Utils.CS.PlanetWidth, @size.height * point.y / Utils.CS.PlanetHeight)
+
+		boundsFromBox: (box)->
+			left = @size.width * box['coordinates'][0][0][0] / Utils.CS.PlanetWidth
+			top = @size.height * box['coordinates'][0][0][1] / Utils.CS.PlanetHeight
+			right = @size.width * box['coordinates'][0][2][0] / Utils.CS.PlanetWidth
+			bottom = @size.height * box['coordinates'][0][2][1] / Utils.CS.PlanetHeight
+			return new P.Rectangle(left, top, right-left, bottom-top)
 
 		createFrame: ()->
 
@@ -210,7 +227,7 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 
 			# 	ijOnPlanet = projectToPosOnPlanet(new P.Point(i*R.scale,j*R.scale))
 
-			# 	if ijOnPlanet.x == -180
+			# 	if ijOnPlanet.x == -Utils.CS.PlanetHeight
 			# 		px.strokeColor = "#00FF00"
 			# 		px.strokeWidth = 5
 			# 	else if n<4 # i-Math.floor(i)>0.0

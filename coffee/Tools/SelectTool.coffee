@@ -10,7 +10,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 		# @description = ''
 		# @iconURL = 'glyphicon-envelope'
 		# @iconURL = 'cursor.png'
-		@iconURL = if R.style == 'line' then 'icones_icon_vote.png' else if R.style == 'hand' then 'a-cursor.png' else 'cursor.png'
+		# @iconURL = if R.style == 'line' then 'icones_icon_vote.png' else if R.style == 'hand' then 'a-cursor.png' else 'cursor.png'
+		@iconURL = 'new 1/Envelope.svg'
+
 		@buttonClasses = 'displayName'
 
 		@cursor =
@@ -43,8 +45,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 				# R.commandManager.add(new Command.Deselect(undefined, updateOptions), true)
 				for item in R.selectedItems.slice()
 					item.deselect(updateOptions)
+
 				@selectionRectangle?.remove()
 				@selectionRectangle = null
+
+			if R.selectedTool == R.tools.select
+				for drawing in R.drawings
+					drawing.showVoteFlag()
+
 			P.project.activeLayer.selected = false
 			return
 
@@ -66,22 +74,35 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 				@selectionRectangle = null
 			return
 
-		select: (deselectItems=false, updateParameters=true, forceSelect=false, buttonClicked=false)->
+		select: (deselectItems=false, updateParameters=true, forceSelect=false, selectedBy='default')->
 			# R.sidebar.favoriteToolsJ.find("[data-name='Precise path']").hide()
 			# R.rasterizer.drawItems() 		# must not draw all items here since user can just wish to use an Media
 			R.tracer?.hide()
 
-			if buttonClicked
+			if selectedBy == 'button'
 				R.alertManager.alert 'Click on a drawing to vote for it', 'info'
 
 			R.canvasJ.addClass('select')
 
-			super(false, updateParameters)
+			selectedDrawingsBounds = null
+			for drawing in R.selectedItems
+				selectedDrawingsBounds = if selectedDrawingsBounds? then selectedDrawingsBounds.unite(drawing.rectangle) else drawing.rectangle
+
+			# console.log('select select tool')
+			for drawing in R.drawings
+				if drawing.getBoundsWithFlag()?.intersects(selectedDrawingsBounds) then continue
+				drawing.showVoteFlag()
+
+			super(false, updateParameters, selectedBy)
 			return
 
 		deselect: ()->
 			R.canvasJ.removeClass('select')
 			# R.canvasJ.css({cursor: 'auto'})
+
+			for drawing in R.drawings
+				drawing.hideVoteFlag()
+			console.log('deselect select tool')
 			super
 			return
 
@@ -105,9 +126,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		unhighlightItems: ()->
-			for name, item of R.items
-				if item instanceof Item.Drawing
-					item.unhighlight()
+			for drawing in R.drawings
+				drawing.unhighlight()
 			return
 
 		# Create selection rectangle path (remove if existed)
@@ -235,6 +255,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 		# must be reshaped (right not impossible to add a group of RItems to the current selection group)
 		begin: (event) ->
 			if event.event.which == 2 then return 		# if the wheel button was clicked: return
+
+			if P.view.zoom < 0.125
+				R.alertManager.alert 'Please zoom before voting', 'info'
+				return
 
 			itemWasHit = false
 

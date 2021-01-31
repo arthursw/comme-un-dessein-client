@@ -141,7 +141,7 @@
       CommandManager.prototype.setButton = function(name, enable) {
         var opacity;
         opacity = enable ? 1 : 0.25;
-        R.sidebar.favoriteToolsJ.find("[data-name='" + name + "']").css({
+        R.sidebar.favoriteToolsJ.find("[data-name='" + name + "'] img").css({
           opacity: opacity
         });
       };

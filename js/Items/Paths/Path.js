@@ -18,16 +18,19 @@
       Path.colorMap = {
         draft: '#808080',
         pending: '#005fb8',
+        pendingVotedPositive: '#009688',
+        pendingVotedNegative: '#f44336',
         emailNotConfirmed: '#005fb8',
         notConfirmed: '#E91E63',
         drawing: '#11a74f',
+        validated: '#11a74f',
         drawn: 'black',
         test: 'purple',
         rejected: '#EB5A46',
         flagged: '#EE2233'
       };
 
-      Path.strokeWidth = R.strokeWidth || Utils.CS.mmToPixel(7);
+      Path.strokeWidth = R.city.strokeWidth || R.city.pixelPerMm * 7;
 
       Path.strokeColor = 'black';
 
@@ -54,11 +57,6 @@
         copy.draw();
         if (!this.socketAction) {
           copy.save(false);
-          R.socket.emit("bounce", {
-            itemClass: this.name,
-            "function": "create",
-            "arguments": [duplicateData]
-          });
         }
         return copy;
       };
@@ -111,7 +109,6 @@
         }
         this.selectionHighlight = null;
         this.data.strokeWidth = this.constructor.strokeWidth;
-        this.data.strokeColor = this.constructor.strokeColor;
         this.data.fillColor = null;
         if (points != null) {
           this.loadPath(points);
@@ -134,13 +131,6 @@
         if (name == null) {
           name = null;
         }
-        if (this.itemListJ == null) {
-          this.itemListJ = this.getListItem();
-        }
-        if (name == null) {
-          name = this.id.substring(0, 5);
-        }
-        Path.__super__.addToListItem.call(this, this.itemListJ, name);
       };
 
       Path.prototype.getDrawing = function() {
@@ -364,11 +354,7 @@
       };
 
       Path.prototype.getStrokeColor = function() {
-        var color, d;
-        d = this.getDrawing();
-        color = new P.Color(d != null ? this.constructor.colorMap[d.status] : this.constructor.colorMap.draft);
-        this.data.strokeColor = color;
-        return color;
+        return this.data.strokeColor;
       };
 
       Path.prototype.updateStrokeColor = function() {
@@ -379,7 +365,7 @@
       };
 
       Path.prototype.initializeDrawing = function(createCanvas) {
-        var bounds, canvas, position, ref, ref1, ref2;
+        var base, bounds, canvas, position, ref, ref1, ref2;
         if (createCanvas == null) {
           createCanvas = false;
         }
@@ -388,7 +374,9 @@
         }
         this.raster = null;
         this.controlPath.strokeWidth = 10;
-        this.data.strokeColor = this.getStrokeColor();
+        if ((base = this.data).strokeColor == null) {
+          base.strokeColor = R.selectedColor;
+        }
         if ((ref1 = this.drawing) != null) {
           ref1.remove();
         }
@@ -508,7 +496,11 @@
             args = {
               clientId: draft.id,
               pk: draft.pk,
-              points: this.getPoints()
+              points: this.getPoints(),
+              data: {
+                strokeColor: this.data.strokeColor.toCSS()
+              },
+              bounds: draft.getBounds()
             };
             $.ajax({
               method: "POST",
@@ -525,6 +517,9 @@
           draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft');
           R.commandManager.add(new Command.ModifyDrawing(draft));
           draft.points = this.getPoints();
+          draft.pathData = {
+            strokeColor: this.data.strokeColor.toCSS()
+          };
           draft.addChild(this);
           draft.save();
         }
@@ -562,7 +557,7 @@
               pk: this.pk,
               points: this.pathOnPlanet(),
               data: this.getStringifiedData(),
-              box: Utils.CS.boxFromRectangle(this.getDrawingBounds())
+              bounds: this.getDrawingBounds()
             };
         }
         return args;
@@ -715,35 +710,6 @@
         };
         json = JSON.stringify(data);
         spacebrew.send("commands", "string", json);
-      };
-
-      Path.prototype.exportToSVG = function(item, filename) {
-        var blob, drawing, link, svg, url;
-        if (item == null) {
-          item = this.drawing;
-        }
-        if (filename == null) {
-          filename = "image.svg";
-        }
-        drawing = item.clone();
-        drawing.position = new P.Point(drawing.bounds.size.multiply(0.5));
-        svg = drawing.exportSVG({
-          asString: true
-        });
-        drawing.remove();
-        svg = svg.replace(new RegExp('<g', 'g'), '<svg');
-        svg = svg.replace(new RegExp('</g', 'g'), '</svg');
-        blob = new Blob([svg], {
-          type: 'image/svg+xml'
-        });
-        url = URL.createObjectURL(blob);
-        link = document.createElement("a");
-        document.body.appendChild(link);
-        link.href = url;
-        link.download = filename;
-        link.text = filename;
-        link.click();
-        document.body.removeChild(link);
       };
 
       return Path;

@@ -55,16 +55,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 		@colorMap = {
 			draft: '#808080',
 			pending: '#005fb8',
+			pendingVotedPositive: '#009688',
+			pendingVotedNegative: '#f44336',
 			emailNotConfirmed: '#005fb8',
 			notConfirmed: '#E91E63',
 			drawing: '#11a74f',
+			validated: '#11a74f',
 			drawn: 'black',
 			test: 'purple',
 			rejected: '#EB5A46',
 			flagged: '#EE2233'
 		}
 
-		@strokeWidth = R.strokeWidth or Utils.CS.mmToPixel(7)
+		@strokeWidth = R.city.strokeWidth or R.city.pixelPerMm * 7
 		@strokeColor = 'black'
 
 		# parameters are defined as in {RTool}
@@ -119,7 +122,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			copy.draw()
 			if not @socketAction
 				copy.save(false)
-				R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
+				# R.socket.emit "bounce", itemClass: @name, function: "create", arguments: [duplicateData]
 			return copy
 		
 		# @return [P.Point] the planet on which the path lies
@@ -152,6 +155,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			if not @drawingId?
 				@addToListItem()
 			else
+
 				if R.items[@drawingId]?
 					drawing = R.items[@drawingId]
 					drawing.addChild(@)
@@ -159,7 +163,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			@selectionHighlight = null
 
 			@data.strokeWidth = @constructor.strokeWidth
-			@data.strokeColor = @constructor.strokeColor
+			# @data.strokeColor = @constructor.strokeColor
 			@data.fillColor = null
 
 			if points?
@@ -172,10 +176,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			return if drawing? then drawing.containingLayer() else @group.parent
 
 		addToListItem: (@itemListJ=null, name=null)->
-			if not @itemListJ? then @itemListJ = @getListItem()
-			if not name? then name = @id.substring(0, 5)
-			super(@itemListJ, name)
 			return
+			# if not @itemListJ? then @itemListJ = @getListItem()
+			# if not name? then name = @id.substring(0, 5)
+			# super(@itemListJ, name)
+			# return
 
 		getDrawing: ()->
 			return if @drawingId? then R.items[@drawingId] else null
@@ -397,6 +402,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 
 			@controlPath ?= new P.Path()
 			@group.addChild(@controlPath)
+
 			@controlPath.name = "controlPath"
 			@controlPath.controller = @
 			@controlPath.strokeWidth = 10
@@ -405,17 +411,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			@controlPath.strokeCap = 'round'
 			@controlPath.strokeJoin = 'round'
 			@controlPath.visible = false
+
 			return
 
 		getStrokeColor: ()->
-			d = @getDrawing()
-			color = new P.Color(if d? then @constructor.colorMap[d.status] else @constructor.colorMap.draft)
+			# d = @getDrawing()
+			# color = new P.Color(if d? then @constructor.colorMap[d.status] else @constructor.colorMap.draft)
 			# if @owner != R.me
 				# color.brightness *= 0.8
-			@data.strokeColor = color
+			# @data.strokeColor = color
 			# @data.dashArray = if @owner != R.me then [1, @constructor.strokeWidth+1] else []
 			# @data.strokeCap = if @owner != R.me then 'square' else 'round'
-			return color
+			return @data.strokeColor
 
 		updateStrokeColor: ()->
 			@drawing?.strokeColor = @getStrokeColor()
@@ -439,11 +446,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 
 			@controlPath.strokeWidth = 10
 
-			@data.strokeColor = @getStrokeColor()
+			# @data.strokeColor = @getStrokeColor()
+			@data.strokeColor ?= R.selectedColor
 
 			# create drawing group and initialize it with @data
 			@drawing?.remove()
 			@drawing = new P.Group()
+
 			@drawing.name = "drawing"
 			@drawing.strokeColor = @data.strokeColor
 			@drawing.strokeWidth = @data.strokeWidth
@@ -578,11 +587,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 						clientId: draft.id
 						pk: draft.pk
 						points: @getPoints()
+						data: { strokeColor: @data.strokeColor.toCSS() }
+						bounds: draft.getBounds()
 					$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'addPathToDrawing', args: args } ).done(@saveCallback)
 			else
 				draft = new Item.Drawing(null, null, null, null, R.me, Date.now(), null, null, 'draft')
 				R.commandManager.add(new Command.ModifyDrawing(draft))
 				draft.points = @getPoints()
+				draft.pathData = { strokeColor: @data.strokeColor.toCSS() }
 				draft.addChild(@)
 				draft.save()
 
@@ -590,8 +602,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 
 			# args =
 			# 	clientId: @id
-			# 	city: R.city
-			# 	box: Utils.CS.boxFromRectangle( @getDrawingBounds() )
+			# 	cityName: R.city.name
+			# 	bounds: @getDrawingBounds()
 			# 	points: @pathOnPlanet()
 			# 	data: @getStringifiedData()
 			# 	date: @date
@@ -629,7 +641,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 						pk: @pk
 						points: @pathOnPlanet()
 						data: @getStringifiedData()
-						box: Utils.CS.boxFromRectangle( @getDrawingBounds() )
+						bounds: @getDrawingBounds()
 			return args
 
 		# update the RPath in the database
@@ -779,8 +791,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			spacebrew.send("commands", "string", json)
 			return
 
-		exportToSVG: (item, filename)->
+		# exportToSVG: (item, filename)->
 
+<<<<<<< HEAD
 			item ?= @drawing
 			filename ?= "image.svg"
 			# export to svg
@@ -789,23 +802,32 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 
 			svg = drawing.exportSVG( asString: true )
 			drawing.remove()
+=======
+		# 	item ?= @drawing
+		# 	filename ?= "image.svg"
+		# 	# export to svg
+		# 	drawing = item.clone()
+		# 	drawing.position = new P.Point(drawing.rectangle.size.multiply(0.5))
+		# 	svg = drawing.exportSVG( asString: true )
+		# 	drawing.remove()
+>>>>>>> f3f7b4f5b850af2c71f18b49fb4835248d3ab23a
 
-			svg = svg.replace(new RegExp('<g', 'g'), '<svg')
-			svg = svg.replace(new RegExp('</g', 'g'), '</svg')
+		# 	svg = svg.replace(new RegExp('<g', 'g'), '<svg')
+		# 	svg = svg.replace(new RegExp('</g', 'g'), '</svg')
 
-			# url = "data:image/svg+xml;utf8," + encodeURIComponent(svg)
-			blob = new Blob([svg], {type: 'image/svg+xml'})
-			url = URL.createObjectURL(blob)
+		# 	# url = "data:image/svg+xml;utf8," + encodeURIComponent(svg)
+		# 	blob = new Blob([svg], {type: 'image/svg+xml'})
+		# 	url = URL.createObjectURL(blob)
 
-			link = document.createElement("a")
-			document.body.appendChild(link)
-			link.href = url
-			link.download = filename
-			link.text = filename
-			link.click()
-			document.body.removeChild(link)
+		# 	link = document.createElement("a")
+		# 	document.body.appendChild(link)
+		# 	link.href = url
+		# 	link.download = filename
+		# 	link.text = filename
+		# 	link.click()
+		# 	document.body.removeChild(link)
 
-			return
+		# 	return
 
 	Item.Path = Path
 	R.Path = Path

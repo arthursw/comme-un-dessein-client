@@ -7,7 +7,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 		@description = ''
 		# @iconURL = 'hand.png'
 		# @iconURL = 'glyphicon-move'
-		@iconURL = if R.style == 'line' then 'icones_icon_hand.png' else if R.style == 'hand' then 'a-hand1.png' else 'hand.png'
+		# @iconURL = if R.style == 'line' then 'icones_icon_hand.png' else if R.style == 'hand' then 'a-hand1.png' else 'hand.png'
+		@iconURL = 'new 1/Hand.svg'
 
 		@favorite = true
 		@category = ''
@@ -25,21 +26,21 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 			return
 
 		# Select tool and disable Div interactions (to be able to scroll even when user clicks on them, for exmaple disable textarea default behaviour)
-		select: (deselectItems=false, updateParameters=true, fromMiddleMouseButton=false)->
-			super(deselectItems, updateParameters, fromMiddleMouseButton)
-			R.tracer?.hide()
+		select: (deselectItems=false, updateParameters=true, forceSelect=false, selectedBy='default')->
+			super(deselectItems, updateParameters, selectedBy)
+			# R.tracer?.hide()
 			R.stageJ.addClass("moveTool")
 
-			for div in R.divs
-				div.disableInteraction()
+			# for div in R.divs
+			# 	div.disableInteraction()
 			return
 
 		# Reactivate Div interactions
 		deselect: ()->
 			super()
 			R.stageJ.removeClass("moveTool")
-			for div in R.divs
-				div.enableInteraction()
+			# for div in R.divs
+			# 	div.enableInteraction()
 			return
 
 		begin: (event) ->

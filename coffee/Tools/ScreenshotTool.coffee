@@ -10,7 +10,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'zeroClipboard', 'View/Select
 
 		@label = 'Screenshot'
 		@description = ''
-		@iconURL = 'screenshot.png'
+		# @iconURL = 'screenshot.png'
+		@iconURL = 'new 1/Image.svg'
+		
 		@cursor =
 			position:
 				x: 0, y: 0

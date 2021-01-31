@@ -15,7 +15,7 @@
 
       SelectTool.popover = false;
 
-      SelectTool.iconURL = R.style === 'line' ? 'icones_icon_vote.png' : R.style === 'hand' ? 'a-cursor.png' : 'cursor.png';
+      SelectTool.iconURL = 'new 1/Envelope.svg';
 
       SelectTool.buttonClasses = 'displayName';
 
@@ -49,7 +49,7 @@
       }
 
       SelectTool.prototype.deselectAll = function(updateOptions) {
-        var i, item, len, ref, ref1;
+        var drawing, i, item, j, len, len1, ref, ref1, ref2;
         if (updateOptions == null) {
           updateOptions = true;
         }
@@ -63,6 +63,13 @@
             ref1.remove();
           }
           this.selectionRectangle = null;
+        }
+        if (R.selectedTool === R.tools.select) {
+          ref2 = R.drawings;
+          for (j = 0, len1 = ref2.length; j < len1; j++) {
+            drawing = ref2[j];
+            drawing.showVoteFlag();
+          }
         }
         P.project.activeLayer.selected = false;
       };
@@ -94,8 +101,8 @@
         }
       };
 
-      SelectTool.prototype.select = function(deselectItems, updateParameters, forceSelect, buttonClicked) {
-        var ref;
+      SelectTool.prototype.select = function(deselectItems, updateParameters, forceSelect, selectedBy) {
+        var drawing, i, j, len, len1, ref, ref1, ref2, ref3, selectedDrawingsBounds;
         if (deselectItems == null) {
           deselectItems = false;
         }
@@ -105,21 +112,42 @@
         if (forceSelect == null) {
           forceSelect = false;
         }
-        if (buttonClicked == null) {
-          buttonClicked = false;
+        if (selectedBy == null) {
+          selectedBy = 'default';
         }
         if ((ref = R.tracer) != null) {
           ref.hide();
         }
-        if (buttonClicked) {
+        if (selectedBy === 'button') {
           R.alertManager.alert('Click on a drawing to vote for it', 'info');
         }
         R.canvasJ.addClass('select');
-        SelectTool.__super__.select.call(this, false, updateParameters);
+        selectedDrawingsBounds = null;
+        ref1 = R.selectedItems;
+        for (i = 0, len = ref1.length; i < len; i++) {
+          drawing = ref1[i];
+          selectedDrawingsBounds = selectedDrawingsBounds != null ? selectedDrawingsBounds.unite(drawing.rectangle) : drawing.rectangle;
+        }
+        ref2 = R.drawings;
+        for (j = 0, len1 = ref2.length; j < len1; j++) {
+          drawing = ref2[j];
+          if ((ref3 = drawing.getBoundsWithFlag()) != null ? ref3.intersects(selectedDrawingsBounds) : void 0) {
+            continue;
+          }
+          drawing.showVoteFlag();
+        }
+        SelectTool.__super__.select.call(this, false, updateParameters, selectedBy);
       };
 
       SelectTool.prototype.deselect = function() {
+        var drawing, i, len, ref;
         R.canvasJ.removeClass('select');
+        ref = R.drawings;
+        for (i = 0, len = ref.length; i < len; i++) {
+          drawing = ref[i];
+          drawing.hideVoteFlag();
+        }
+        console.log('deselect select tool');
         SelectTool.__super__.deselect.apply(this, arguments);
       };
 
@@ -131,13 +159,11 @@
       };
 
       SelectTool.prototype.unhighlightItems = function() {
-        var item, name, ref;
-        ref = R.items;
-        for (name in ref) {
-          item = ref[name];
-          if (item instanceof Item.Drawing) {
-            item.unhighlight();
-          }
+        var drawing, i, len, ref;
+        ref = R.drawings;
+        for (i = 0, len = ref.length; i < len; i++) {
+          drawing = ref[i];
+          drawing.unhighlight();
         }
       };
 
@@ -255,6 +281,10 @@
       SelectTool.prototype.begin = function(event) {
         var controller, hitResult, itemWasHit, name, path, ref, ref1, ref2;
         if (event.event.which === 2) {
+          return;
+        }
+        if (P.view.zoom < 0.125) {
+          R.alertManager.alert('Please zoom before voting', 'info');
           return;
         }
         itemWasHit = false;

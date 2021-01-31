@@ -10,10 +10,11 @@
         this.onClickWhenLoaded = bind(this.onClickWhenLoaded, this);
         this.onClickWhenNotLoaded = bind(this.onClickWhenNotLoaded, this);
         this.fileLoaded = bind(this.fileLoaded, this);
-        var categories, category, classes, divType, favorite, favoriteBtnJ, hJ, i, iconRootURL, iconURL, ignoreFavorite, j, len, len1, liJ, name, onClick, order, parentJ, prepend, shortName, shortNameJ, toolNameJ, ulJ, word, words;
+        var categories, category, classes, divType, favorite, favoriteBtnJ, hJ, i, iconRootURL, iconSVG, iconURL, ignoreFavorite, j, len, len1, liJ, name, onClick, order, parentJ, prepend, shortName, shortNameJ, toolNameJ, ulJ, word, words;
         this.visible = true;
         name = parameters.name;
         iconURL = parameters.iconURL;
+        iconSVG = parameters.iconSVG;
         favorite = parameters.favorite;
         ignoreFavorite = parameters.ignoreFavorite;
         category = parameters.category;
@@ -53,7 +54,9 @@
         if (parameters.disableHover && this.deviceHasTouch()) {
           this.btnJ.addClass('no-hover');
         }
-        if ((iconURL != null) && iconURL !== '') {
+        if (iconSVG != null) {
+          this.btnJ.append(iconSVG);
+        } else if ((iconURL != null) && iconURL !== '') {
           if (iconURL.indexOf('glyphicon') === 0) {
             this.btnJ.append('<span class="glyphicon ' + iconURL + '" alt="' + name + '-icon">');
             if (parameters.transform != null) {

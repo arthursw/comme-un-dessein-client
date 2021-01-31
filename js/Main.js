@@ -34,24 +34,27 @@
       }
       modal.show();
     };
+    R.loadActiveDrawings = true;
     $(document).ready(function() {
-      var canvasJ, cityFinished, cityMessage, cityName, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
+      var canvasJ, cityName, deleteAccountWarning, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
       canvasJ = $('#canvas');
       R.administrator = canvasJ.attr('data-is-admin') === 'True';
-      R.city = {
-        owner: null,
-        site: null,
-        finished: false
-      };
+      R.application = canvasJ.attr('data-application');
+      R.isCommeUnDessein = R.application === 'COMME_UN_DESSEIN';
+      if (R.city == null) {
+        R.city = {};
+      }
+      R.city.owner = null;
+      R.city.site = null;
+      R.city.mode = canvasJ.attr('data-city-mode');
       cityName = canvasJ.attr('data-city');
-      cityFinished = canvasJ.attr('data-city-finished');
-      cityMessage = canvasJ.attr('data-city-message');
+      R.useSVG = R.isCommeUnDessein && canvasJ.attr('data-city-use-svg') === 'True';
       if (cityName.length > 0) {
         R.city.name = cityName;
       }
-      R.city.finished = cityFinished === 'True';
+      R.city.finished = canvasJ.attr('data-city-finished') === 'True';
       if (R.city.finished) {
-        showEndModal(cityMessage, R.city.name);
+        showEndModal(canvasJ.attr('data-city-message'), R.city.name);
       }
       updateContent = function() {
         $("body").localize();
@@ -196,10 +199,12 @@
       R.commandManager = new CommandManager();
       R.toolManager = new ToolManager();
       R.drawingPanel = new DrawingPanel();
-      R.view.initializePosition();
-      R.sidebar.initialize();
+      R.toolManager.createChangeImageButton();
+      R.toolManager.createAutoTraceButton();
       R.toolManager.createDeleteButton();
       R.toolManager.createSubmitButton();
+      R.view.initializePosition();
+      R.sidebar.initialize();
       if (R.city.name === 'world') {
         R.loader.hideLoadingBar();
         R.tools.select.btn.cloneJ.hide();
@@ -218,12 +223,10 @@
           window.setPageFullyLoaded(true);
         }
       }
-      if (R.initialZoom == null) {
-        R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true);
-      }
       if (R.city.name !== 'world') {
         require(['Items/Paths/PrecisePaths/PrecisePath'], function() {
-          return R.loader.loadSVG();
+          R.loader.loadDraft();
+          R.loader.loadVotes();
         });
       }
       $('#about-link').click(function(event) {
@@ -260,6 +263,205 @@
         modal.show();
         event.preventDefault();
         event.stopPropagation();
+        return -1;
+      });
+      $('#user-login-group').click(function(event) {
+        var modal;
+        modal = Modal.createModal({
+          title: 'Sign in / up',
+          postSubmit: 'hide'
+        });
+        modal.addText('Loading');
+        $.get("accounts/login/", (function(_this) {
+          return function(data) {
+            var doc, parser;
+            parser = new DOMParser();
+            doc = parser.parseFromString(data.html, "text/html");
+            modal.modalBodyJ.html(doc.getElementById('login_form'));
+            $('#id_login').attr('placeholder', "Nom d'utilisateur ou email");
+            $('#id_username').attr('placeholder', "Nom d'utilisateur");
+            $('label[for="id_remember"]').text('se souvenir de moi').css({
+              'margin-left': '10px'
+            }).parent().css({
+              'display': 'flex',
+              'flex-direction': 'row-reverse'
+            });
+            modal.modalJ.find(".modal-footer").hide();
+            localStorage.setItem('just-logged-in', 'true');
+            localStorage.setItem('selected-edition', location.pathname);
+          };
+        })(this));
+        modal.show();
+        event.preventDefault();
+        event.stopPropagation();
+        return -1;
+      });
+      deleteAccountWarning = (function(_this) {
+        return function(previousModal) {
+          var deleteAccount, deleteAccountCallback;
+          deleteAccountCallback = function(result) {
+            if (!R.loader.checkError(result)) {
+              return;
+            }
+            R.alertManager.alert('Your account has successfully been deleted', 'info');
+            setTimeout((function() {
+              return location.pathname = "/accounts/logout/";
+            }), 2500);
+          };
+          deleteAccount = function() {
+            $.ajax({
+              method: "POST",
+              url: "ajaxCall/",
+              data: {
+                data: JSON.stringify({
+                  "function": 'deleteUser',
+                  args: {}
+                })
+              }
+            }).done(deleteAccountCallback);
+          };
+          previousModal.modalJ.on('hidden.bs.modal', function() {
+            var modal;
+            modal = Modal.createModal({
+              title: 'Delete account',
+              submitButtonText: 'Delete account',
+              submitButtonIcon: 'glyphicon-trash',
+              submit: deleteAccount
+            });
+            modal.addText('Are you sure you want to delete your account?', 'Are you sure you want to delete your account');
+            modal.addText('Your drawings will not be deleted', 'Your drawings will not be deleted', false, {
+              email: 'idlv.contact@gmail.com'
+            });
+            modal.modalJ.find('[name="submit"]').removeClass('btn-primary').addClass('btn-danger');
+            return modal.show();
+          });
+        };
+      })(this);
+      $('#modify-user-profile').click(function(event) {
+        var changeUserCallback, confirmedText, dailyText, emailConfirmed, emailFrequencyLabel, emailFrequencyLabelJ, emailFrequencyPJ, emailFrequencySelectJ, emailFrequencySelectorJ, emailJ, manageEmails, modal, monthlyText, neverText, onlyIfRelevant, resetPassword, submitChangeProfile, userEmail, usernameJ, weeklyText;
+        event.preventDefault();
+        event.stopPropagation();
+        changeUserCallback = function(result) {
+          if (!R.loader.checkError(result)) {
+            return;
+          }
+          R.alertManager.alert('Your profile has successfully been updated', 'info');
+          R.me = result.username;
+        };
+        submitChangeProfile = function() {
+          var args;
+          username = $('#modal-Username').find('input').val();
+          args = {
+            username: username
+          };
+          $.ajax({
+            method: "POST",
+            url: "ajaxCall/",
+            data: {
+              data: JSON.stringify({
+                "function": 'changeUser',
+                args: args
+              })
+            }
+          }).done(changeUserCallback);
+        };
+        modal = Modal.createModal({
+          title: 'Profile',
+          submitButtonText: 'Modify username',
+          submitButtonIcon: 'glyphicon-user',
+          submit: submitChangeProfile
+        });
+        usernameJ = modal.addTextInput({
+          name: 'Username',
+          id: 'profile-username',
+          placeholder: i18next.t('Username'),
+          className: '',
+          label: 'Username',
+          type: 'text'
+        });
+        usernameJ.find('input').val(R.me);
+        emailConfirmed = R.canvasJ.attr('data-email-confirmed');
+        confirmedText = '(' + i18next.t(emailConfirmed ? 'Confirmed' : 'Not confirmed') + ')';
+        emailJ = modal.addTextInput({
+          name: 'Email',
+          id: 'profile-email',
+          placeholder: 'Email',
+          className: '',
+          label: 'Email ' + confirmedText,
+          type: 'email'
+        });
+        userEmail = R.canvasJ.attr('data-user-email');
+        emailJ.find('input').val(userEmail).attr('disabled', 'true');
+        emailFrequencyLabel = i18next.t('Email notification frequency');
+        dailyText = i18next.t('Daily');
+        weeklyText = i18next.t('Weekly');
+        monthlyText = i18next.t('Monthly');
+        neverText = i18next.t('Never');
+        onlyIfRelevant = i18next.t('You will only receive email if you have new notifications');
+        emailFrequencySelectorJ = $('<div id="email-frequency-container"></div>');
+        emailFrequencyLabelJ = $('<label for="mail-frequency">' + emailFrequencyLabel + ':</label>');
+        emailFrequencySelectJ = $("<select id=\"mail-frequency\" style=\"margin-left: 10px;\">\n\n	<option value=\"daily\">" + dailyText + "</option>\n<option value=\"weekly\">" + weeklyText + "</option>\n<option value=\"monthly\">" + monthlyText + "</option>\n<option value=\"never\">" + neverText + "</option>\n\n</select>");
+        emailFrequencyPJ = $('<p>' + onlyIfRelevant + '.</p>');
+        emailFrequencySelectorJ.append(emailFrequencyLabelJ);
+        emailFrequencySelectorJ.append(emailFrequencySelectJ);
+        emailFrequencySelectorJ.append(emailFrequencyPJ);
+        emailFrequencySelectJ.on('change', (function(_this) {
+          return function() {
+            var args;
+            args = {
+              emailFrequency: emailFrequencySelectJ.val()
+            };
+            $.ajax({
+              method: "POST",
+              url: "ajaxCall/",
+              data: {
+                data: JSON.stringify({
+                  "function": 'changeUserEmailFrequency',
+                  args: args
+                })
+              }
+            }).done(function(result) {
+              if (!R.loader.checkError(result)) {
+                return;
+              }
+              R.alertManager.alert('Your profile has successfully been updated', 'info');
+            });
+          };
+        })(this));
+        modal.addCustomContent({
+          divJ: emailFrequencySelectorJ
+        });
+        manageEmails = (function(_this) {
+          return function() {
+            window.location = '/accounts/email/';
+          };
+        })(this);
+        modal.addButton({
+          name: 'Manage emails',
+          icon: 'glyphicon-envelope',
+          type: 'info',
+          submit: manageEmails
+        });
+        resetPassword = (function(_this) {
+          return function() {
+            window.location = '/accounts/password/reset/';
+          };
+        })(this);
+        modal.addButton({
+          name: 'Reset password',
+          icon: 'glyphicon-lock',
+          type: 'info',
+          submit: resetPassword
+        });
+        modal.addButton({
+          name: 'Delete account',
+          icon: 'glyphicon-trash',
+          type: 'danger',
+          submit: function() {
+            return deleteAccountWarning(modal);
+          }
+        });
+        modal.show();
         return -1;
       });
       if (R.city.name === 'world') {

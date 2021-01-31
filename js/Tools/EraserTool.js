@@ -11,7 +11,7 @@
 
       EraserTool.label = 'Eraser';
 
-      EraserTool.iconURL = R.style === 'line' ? 'icones_icon_rubber.png' : R.style === 'romanesco' ? 'eraser.png' : R.style === 'hand' ? 'a-eraser.png' : 'glyphicon-erase';
+      EraserTool.iconURL = 'new 1/Eraser.svg';
 
       EraserTool.cursor = {
         position: {
@@ -25,19 +25,101 @@
 
       EraserTool.emitSocket = false;
 
+      EraserTool.buttonClasses = 'dark';
+
       function EraserTool(Path, justCreated) {
+        var closeSizeMenu, sizes;
         this.Path = Path;
         if (justCreated == null) {
           justCreated = false;
         }
         this.createCircle = bind(this.createCircle, this);
         this.name = this.constructor.label;
-        this.radius = 0.1;
+        this.radius = 10;
         R.tools[this.name] = this;
         this.btnJ = R.sidebar.favoriteToolsJ.find('li[data-name="' + this.name + '"]');
         EraserTool.__super__.constructor.call(this, this.btnJ.length === 0);
         this.pathsToDelete = [];
         this.pathsToCreate = [];
+        this.sizeButton = new Button({
+          name: 'Eraser size',
+          iconURL: 'glyphicon-circle',
+          favorite: true,
+          category: null,
+          popover: true,
+          classes: 'dark'
+        });
+        this.sizeButton.cloneJ.find('span.glyphicon').css({
+          'background-color': 'white',
+          'border-radius': '50%',
+          width: '15px',
+          height: '15px'
+        });
+        this.sizeButton.hide();
+        sizes = [5, 10, 20, 30];
+        closeSizeMenu = function() {
+          $('#size-picker').remove();
+        };
+        this.sizeButton.cloneJ.find('.glyphicon').css({
+          color: R.selectedColor
+        });
+        this.sizeButton.btnJ.click((function(_this) {
+          return function() {
+            var height, i, iconJ, len, liJ, liJcss, position, size, ulJ;
+            position = _this.sizeButton.cloneJ.offset();
+            height = _this.sizeButton.cloneJ.outerHeight();
+            ulJ = $('<ul>').attr('id', 'size-picker').css({
+              'background-color': '#33383E',
+              position: 'fixed',
+              top: position.top + height,
+              left: position.left
+            });
+            for (i = 0, len = sizes.length; i < len; i++) {
+              size = sizes[i];
+              liJcss = {
+                'width': 50,
+                'height': 50,
+                'cursor': 'pointer',
+                'display': 'flex',
+                'justify-content': 'center',
+                'align-items': 'center'
+              };
+              liJ = $('<li>').attr('data-size', size).css(liJcss);
+              liJ.mouseover(function(event) {
+                $(this).css({
+                  'background-color': '#0079BF'
+                });
+              });
+              liJ.mouseout(function(event) {
+                $(this).css({
+                  'background-color': 'transparent'
+                });
+              });
+              liJ.mousedown(function(event) {
+                size = $(event.target).closest('li').attr('data-size');
+                _this.radius = size;
+                _this.createCircle();
+                if (R.selectedTool !== _this) {
+                  _this.select();
+                }
+                _this.sizeButton.cloneJ.find('span.glyphicon').css({
+                  width: _this.radius,
+                  height: _this.radius
+                });
+              });
+              iconJ = $('<div>').css({
+                width: size,
+                height: size,
+                'background-color': 'white',
+                'border-radius': '50%'
+              });
+              liJ.append(iconJ);
+              ulJ.append(liJ);
+            }
+            _this.sizeButton.cloneJ.parent().append(ulJ);
+          };
+        })(this));
+        $(window).mouseup(closeSizeMenu);
         return;
       }
 
@@ -57,29 +139,14 @@
         this.btnJ.removeClass('displayName');
       };
 
-      EraserTool.prototype.deleteAllPaths = function() {
-        var paths, ref;
-        paths = ((ref = R.Drawing.getDraft()) != null ? ref.paths : void 0) || [];
-        R.drawingPanel.deleteGivenPaths(paths);
-        this.setButtonErase();
-      };
-
       EraserTool.prototype.select = function(deselectItems, updateParameters) {
-        var draft, i, len, path, ref;
         if (deselectItems == null) {
           deselectItems = true;
         }
         if (updateParameters == null) {
           updateParameters = true;
         }
-        draft = Drawing.getDraft();
-        if (draft != null) {
-          ref = draft.paths;
-          for (i = 0, len = ref.length; i < len; i++) {
-            path = ref[i];
-            path.drawOnPaper();
-          }
-        }
+        this.sizeButton.show();
         $('#draftDrawing').remove();
         EraserTool.__super__.select.apply(this, arguments);
         R.view.tool.onMouseMove = this.move;
@@ -88,21 +155,14 @@
       EraserTool.prototype.updateParameters = function() {};
 
       EraserTool.prototype.deselect = function() {
-        var draft, i, len, path, ref;
-        draft = Drawing.getDraft();
-        if (draft != null) {
-          ref = draft.paths;
-          for (i = 0, len = ref.length; i < len; i++) {
-            path = ref[i];
-            path.drawOnSVG();
-          }
-        }
+        this.sizeButton.hide();
         EraserTool.__super__.deselect.call(this);
         this.finish();
         if (this.circle != null) {
           this.circle.remove();
           this.circle = null;
-          clearInterval(this.circleIntervalID);
+          this.visualCircle.remove();
+          this.visualCircle = null;
         }
         R.view.tool.onMouseMove = null;
       };
@@ -122,18 +182,20 @@
       };
 
       EraserTool.prototype.erase = function() {
-        var data, draft, i, intersection, intersections, item, j, k, l, len, len1, len2, len3, location, newP, p, path, paths, points, ref, ref1;
+        var draft, i, intersection, intersections, j, k, l, len, len1, len2, len3, location, newP, newPath, p, path, pathIndex, paths, ref, zIndex;
         draft = R.Drawing.getDraft();
-        if (draft == null) {
+        if ((draft == null) || (this.circle == null)) {
           return;
         }
+        pathIndex = 0;
         ref = draft.paths.slice();
         for (i = 0, len = ref.length; i < len; i++) {
-          item = ref[i];
-          if ((ref1 = item.getBounds()) != null ? ref1.intersects(this.circle.bounds) : void 0) {
-            intersections = this.circle.getCrossings(item.controlPath);
+          path = ref[i];
+          if (path.bounds.intersects(this.circle.bounds)) {
+            intersections = this.circle.getCrossings(path);
             if (intersections.length > 0) {
-              paths = [item.controlPath];
+              zIndex = path.index;
+              paths = [path];
               console.log(intersections);
               for (j = 0, len1 = intersections.length; j < len1; j++) {
                 intersection = intersections[j];
@@ -141,42 +203,36 @@
                   p = paths[k];
                   location = p.getLocationOf(intersection.point);
                   if (location != null) {
-                    console.log('split: ' + location.point);
                     newP = p.split(location);
+                    p.strokeColor = path.strokeColor;
                     p.lastSegment.handleOut = null;
-                    p.lastSegment.data = {
-                      split: true
-                    };
                     if (newP != null) {
+                      newP.strokeColor = path.strokeColor;
                       paths.push(newP);
                       newP.firstSegment.handleIn = null;
-                      newP.firstSegment.data = {
-                        split: true
-                      };
                     }
                   }
                 }
               }
-              item.remove();
+              draft.removeChild(path);
               for (l = 0, len3 = paths.length; l < len3; l++) {
                 p = paths[l];
-                if (this.isPathInCircle(p)) {
-                  console.log('remove a path');
-                  p.remove();
-                } else {
-                  data = R.Tools.Item.Item.PrecisePath.getDataFromPath(p);
-                  points = R.Tools.Item.Item.Path.pathOnPlanetFromPath(p);
-                  path = new R.Tools.Item.Item.PrecisePath(Date.now(), data, null, null, points, null, R.me, draft.id);
-                  path.draw(false, true, false);
+                if (!this.isPathInCircle(p)) {
+                  newPath = p.clone();
+                  draft.addChild(newPath);
+                  draft.setPathZIndex(newPath, pathIndex, zIndex);
                 }
+                p.remove();
               }
             } else {
-              if (this.isPathInCircle(item.controlPath)) {
-                item.remove();
+              if (this.isPathInCircle(path)) {
+                draft.removeChild(path);
               }
             }
           }
+          pathIndex++;
         }
+        draft.computeRectangle();
       };
 
       EraserTool.prototype.begin = function(event, from, data) {
@@ -195,7 +251,6 @@
         }
         this.using = true;
         this.updateCircle(event.point);
-        this.circleIntervalID = setInterval(this.createCircle, 20);
         draft = R.Drawing.getDraft();
         this.duplicateData = draft != null ? draft.getDuplicateData() : void 0;
       };
@@ -206,14 +261,14 @@
           from = R.me;
         }
         console.log("update");
-        this.circle.position = event.point;
+        this.setPosition(event.point);
         if (!((ref = R.tracer) != null ? ref.draggingImage : void 0)) {
           this.erase();
         }
       };
 
       EraserTool.prototype.createCircle = function(point) {
-        var ref, ref1;
+        var ref, ref1, ref2;
         if (point == null) {
           point = (ref = this.circle) != null ? ref.position : void 0;
         }
@@ -224,13 +279,23 @@
           ref1.remove();
         }
         this.circle = new P.Path.Circle(point, this.radius);
-        this.circle.strokeWidth = 1;
-        this.circle.strokeColor = '#2fa1d6';
-        this.circle.strokeScaling = false;
         R.view.selectionLayer.addChild(this.circle);
         this.circle.sendToBack();
-        if (this.radius < 15) {
-          this.radius += 0.5;
+        if ((ref2 = this.visualCircle) != null) {
+          ref2.remove();
+        }
+        this.visualCircle = new P.Path.Circle(point, this.radius - R.Path.strokeWidth / 2);
+        this.visualCircle.strokeWidth = 1;
+        this.visualCircle.strokeColor = '#2fa1d6';
+        this.visualCircle.strokeScaling = false;
+        R.view.selectionLayer.addChild(this.visualCircle);
+        this.visualCircle.sendToBack();
+      };
+
+      EraserTool.prototype.setPosition = function(point) {
+        if (this.circle != null) {
+          this.circle.position = point;
+          this.visualCircle.position = point;
         }
       };
 
@@ -238,7 +303,7 @@
         if (this.circle == null) {
           this.createCircle(point);
         } else {
-          this.circle.position = point;
+          this.setPosition(point);
         }
       };
 
@@ -251,12 +316,10 @@
         if (from == null) {
           from = R.me;
         }
-        this.circle.position = event.point;
+        this.setPosition(event.point);
         if (!((ref = R.tracer) != null ? ref.draggingImage : void 0)) {
           this.erase();
         }
-        clearInterval(this.circleIntervalID);
-        this.radius = 0.1;
         draft = R.Drawing.getDraft();
         if (draft != null) {
           if (this.duplicateData != null) {

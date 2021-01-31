@@ -54,6 +54,8 @@ define [
 		modal.show()
 		return
 
+	R.loadActiveDrawings = true
+
 	# loadCity = (cityName)->
 	# 	R.city.name = cityName
 
@@ -88,24 +90,24 @@ define [
 		canvasJ = $('#canvas')
 
 		R.administrator = canvasJ.attr('data-is-admin') == 'True'
-		
-		R.city = 
-			owner: null
-			# name: 'EcosystemeUrbain'
-			site: null
-			finished: false
+		R.application = canvasJ.attr('data-application')
+		R.isCommeUnDessein = R.application == 'COMME_UN_DESSEIN'
+
+		R.city ?= {}
+		R.city.owner = null
+		R.city.site = null
+		R.city.mode = canvasJ.attr('data-city-mode')
 
 		cityName = canvasJ.attr('data-city')
-		cityFinished = canvasJ.attr('data-city-finished')
-		cityMessage = canvasJ.attr('data-city-message')
+		R.useSVG = R.isCommeUnDessein and canvasJ.attr('data-city-use-svg') == 'True'
 
 		if cityName.length > 0
 			R.city.name = cityName
 
-		R.city.finished = cityFinished == 'True'
+		R.city.finished = canvasJ.attr('data-city-finished') == 'True'
 			
 		if R.city.finished
-			showEndModal(cityMessage, R.city.name)
+			showEndModal(canvasJ.attr('data-city-message'), R.city.name)
 
 		# chooseRandomMode = false
 
@@ -327,11 +329,15 @@ define [
 		# R.codeEditor = new CodeEditor()
 		R.drawingPanel = new DrawingPanel()
 		# R.fontManager = new FontManager()
+
+		R.toolManager.createChangeImageButton()
+		R.toolManager.createAutoTraceButton()
+		R.toolManager.createDeleteButton()
+		R.toolManager.createSubmitButton()
+		
 		R.view.initializePosition()
 		R.sidebar.initialize()
 
-		R.toolManager.createDeleteButton()
-		R.toolManager.createSubmitButton()
 		
 		if R.city.name == 'world'
 			R.loader.hideLoadingBar()
@@ -387,11 +393,14 @@ define [
 		# rect = R.raph.rect(-2000, -1500, 4000, 3000)
 		# rect.attr("fill", "#f00")
 
-		if not R.initialZoom?
-			R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true)
 
 		if R.city.name != 'world'
-			require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> R.loader.loadSVG() )
+			require(['Items/Paths/PrecisePaths/PrecisePath'], ()-> 
+				# R.loader.loadRasters()
+				# R.loader.loadSVG()
+				R.loader.loadDraft()
+				R.loader.loadVotes()
+				return)
 
 		# Improve about links
 
@@ -416,6 +425,167 @@ define [
 			event.stopPropagation()
 			return -1
 
+		# Sign in / up popup
+
+		$('#user-login-group').click (event)->
+
+			modal = Modal.createModal( 
+				title: 'Sign in / up', 
+				postSubmit: 'hide')
+
+			modal.addText('Loading')
+
+			$.get( "accounts/login/", ( data )=>
+				parser = new DOMParser()
+				doc = parser.parseFromString(data.html, "text/html")
+				modal.modalBodyJ.html( doc.getElementById('login_form') )
+				
+				$('#id_login').attr('placeholder', "Nom d'utilisateur ou email")
+				$('#id_username').attr('placeholder', "Nom d'utilisateur")
+				$('label[for="id_remember"]').text('se souvenir de moi').css({'margin-left': '10px'}).parent().css( { 'display': 'flex', 'flex-direction': 'row-reverse' } )
+				
+				modal.modalJ.find(".modal-footer").hide()
+
+				localStorage.setItem('just-logged-in', 'true')
+				localStorage.setItem('selected-edition', location.pathname)
+
+				return
+			)
+			
+
+			modal.show()
+
+			event.preventDefault()
+			event.stopPropagation()
+
+			return -1
+
+
+		deleteAccountWarning = (previousModal)=>
+
+			deleteAccountCallback = (result)->
+				if not R.loader.checkError(result) then return
+				R.alertManager.alert 'Your account has successfully been deleted', 'info'
+				setTimeout( (()-> location.pathname = "/accounts/logout/"), 2500 )
+				return
+
+			deleteAccount = ()=>
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'deleteUser', args: {} } ).done(deleteAccountCallback)
+				return
+
+
+			previousModal.modalJ.on('hidden.bs.modal', ()-> 
+				modal = Modal.createModal( 
+					title: 'Delete account', 
+					submitButtonText: 'Delete account', 
+					submitButtonIcon: 'glyphicon-trash',
+					submit: deleteAccount)
+
+				modal.addText('Are you sure you want to delete your account?', 'Are you sure you want to delete your account')
+				modal.addText('Your drawings will not be deleted', 'Your drawings will not be deleted', false, email: 'idlv.contact@gmail.com')
+
+				modal.modalJ.find('[name="submit"]').removeClass('btn-primary').addClass('btn-danger')
+				modal.show()
+				)
+
+
+			return
+
+		$('#modify-user-profile').click (event)->
+
+			event.preventDefault()
+			event.stopPropagation()
+
+			changeUserCallback = (result)->
+				if not R.loader.checkError(result) then return
+				R.alertManager.alert 'Your profile has successfully been updated', 'info'
+				R.me = result.username
+				# R.canvasJ.attr('data-user-email', result.email)
+				return
+
+			submitChangeProfile = ()->
+				username = $('#modal-Username').find('input').val()
+				# email = $('#modal-Email').find('input').val()
+				
+				args = 
+					username: username
+					# email: email
+
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'changeUser', args: args } ).done(changeUserCallback)
+
+				return
+
+			modal = Modal.createModal( 
+				title: 'Profile', 
+				submitButtonText: 'Modify username', 
+				submitButtonIcon: 'glyphicon-user',
+				submit: submitChangeProfile)
+			
+			usernameJ = modal.addTextInput(name: 'Username', id: 'profile-username', placeholder: i18next.t('Username'), className: '', label: 'Username', type: 'text')
+			usernameJ.find('input').val(R.me)
+			
+			emailConfirmed = R.canvasJ.attr('data-email-confirmed')
+			confirmedText = '(' + i18next.t( if emailConfirmed then 'Confirmed' else 'Not confirmed') + ')'
+			emailJ = modal.addTextInput(name: 'Email', id: 'profile-email', placeholder: 'Email', className: '', label: 'Email ' + confirmedText, type: 'email')
+			userEmail = R.canvasJ.attr('data-user-email')
+			emailJ.find('input').val(userEmail).attr('disabled', 'true')
+
+			emailFrequencyLabel = i18next.t('Email notification frequency')
+			dailyText = i18next.t('Daily')
+			weeklyText = i18next.t('Weekly')
+			monthlyText = i18next.t('Monthly')
+			neverText = i18next.t('Never')
+			onlyIfRelevant = i18next.t('You will only receive email if you have new notifications')
+
+			emailFrequencySelectorJ = $('<div id="email-frequency-container"></div>')
+
+			emailFrequencyLabelJ = $('<label for="mail-frequency">' + emailFrequencyLabel + ':</label>')
+			emailFrequencySelectJ = $("""
+				<select id="mail-frequency" style="margin-left: 10px;">
+
+					<option value="daily">""" + dailyText + """</option>
+					<option value="weekly">""" + weeklyText + """</option>
+					<option value="monthly">""" + monthlyText + """</option>
+					<option value="never">""" + neverText + """</option>
+
+				</select>""")
+			emailFrequencyPJ = $('<p>' + onlyIfRelevant + '.</p>')
+
+			emailFrequencySelectorJ.append(emailFrequencyLabelJ)
+			emailFrequencySelectorJ.append(emailFrequencySelectJ)
+			emailFrequencySelectorJ.append(emailFrequencyPJ)
+			
+			emailFrequencySelectJ.on('change', ()=> 
+
+				args = 
+					emailFrequency: emailFrequencySelectJ.val()
+
+				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'changeUserEmailFrequency', args: args } ).done((result)=> 
+					if not R.loader.checkError(result) then return
+					R.alertManager.alert 'Your profile has successfully been updated', 'info'
+					return)
+
+				return)
+
+			modal.addCustomContent(divJ: emailFrequencySelectorJ)
+
+			manageEmails = ()=>
+				window.location = '/accounts/email/'
+				return
+			modal.addButton(name: 'Manage emails', icon: 'glyphicon-envelope', type: 'info', submit: manageEmails)
+
+			resetPassword = ()=>
+				window.location = '/accounts/password/reset/'
+				return
+			modal.addButton(name: 'Reset password', icon: 'glyphicon-lock', type: 'info', submit: resetPassword)
+			
+
+			modal.addButton(name: 'Delete account', icon: 'glyphicon-trash', type: 'danger', submit: ()-> deleteAccountWarning(modal))
+
+			modal.show()
+
+
+			return -1
 
 		# $('#terms-of-service-link').click (event)->
 			

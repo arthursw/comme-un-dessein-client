@@ -106,7 +106,7 @@
       }
 
       Modal.prototype.addText = function(text, textKey, escapeValue, options) {
-        var content;
+        var content, divJ;
         if (textKey == null) {
           textKey = null;
         }
@@ -127,7 +127,9 @@
         }
         options.interpolation.escapeValue = escapeValue;
         content = i18next.t(textKey, options);
-        this.modalBodyJ.append("<p data-i18n-options='" + (JSON.stringify(options)) + "' data-i18n='[html]" + textKey + "'>" + content + "</p>");
+        divJ = $("<p data-i18n-options='" + (JSON.stringify(options)) + "' data-i18n='[html]" + textKey + "'>" + content + "</p>");
+        this.modalBodyJ.append(divJ);
+        return divJ;
       };
 
       Modal.prototype.addTextInput = function(args) {
@@ -346,6 +348,7 @@
         if (args.extractor != null) {
           this.extractors[args.name] = args;
         }
+        return args.divJ;
       };
 
       Modal.prototype.addButton = function(args) {
@@ -364,6 +367,13 @@
               _this.hide();
             };
           })(this));
+        }
+        if (args.addToBody) {
+          this.addCustomContent({
+            name: args.name,
+            divJ: buttonJ
+          });
+          return buttonJ;
         }
         submitButtonJ = this.modalJ.find('.modal-footer .btn-primary[name="submit"]');
         if (submitButtonJ.length > 0) {
@@ -393,7 +403,7 @@
 
       Modal.prototype.addProgressBar = function() {
         var progressJ;
-        progressJ = $(" <div class=\"progress modal-progress-bar\">\n	<div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width: 100%\">\n		<span class=\"sr-only\">Loading...</span>\n	</div>\n</div>");
+        progressJ = $(" <div class=\"progress modal-progress-bar\">\n	<div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width: 100%\">\n		<span class=\"sr-only\" data-i18n=\"Loading\">Loading...</span>\n	</div>\n</div>");
         this.modalBodyJ.append(progressJ);
         return progressJ;
       };

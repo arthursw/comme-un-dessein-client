@@ -58,7 +58,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtre
 
 				@checkHasFork()
 
-			# $.get('https://api.github.com/repos/arthursw/comme-un-dessein-client/contents/', @loadFiles)
+			# $.get('https://api.github.com/repos/arthursw/wetu-client/contents/', @loadFiles)
 			# @state = '' + Math.random()
 			# parameters =
 			# 	client_id: '4140c547598d6588fd37'
@@ -174,7 +174,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtre
 
 		checkHasFork: ()->
 			if R.githubLogin? and R.githubLogin != ''
-				@request('https://api.github.com/repos/' + R.githubLogin + '/comme-un-dessein-client/', @checkHasForkCallback)
+				@request('https://api.github.com/repos/' + R.githubLogin + '/wetu-client/', @checkHasForkCallback)
 			return
 
 		checkHasForkCallback: (fork)=>
@@ -187,7 +187,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtre
 			return
 		#
 		# getForks: (callback)->
-		# 	@request('https://api.github.com/repos/arthursw/comme-un-dessein-client/forks', callback)
+		# 	@request('https://api.github.com/repos/arthursw/wetu-client/forks', callback)
 		# 	return
 
 		forkRowClicked: (event, field, value, row, $element)=>
@@ -265,7 +265,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtre
 
 		listForks: (event)=>
 			event?.preventDefault()
-			@request('https://api.github.com/repos/arthursw/comme-un-dessein-client/forks', @displayForks)
+			@request('https://api.github.com/repos/arthursw/wetu-client/forks', @displayForks)
 			# @getForks(@displayForks)
 			return
 
@@ -301,7 +301,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtre
 
 		createFork: (event)=>
 			event?.preventDefault()
-			@request('https://api.github.com/repos/' + R.githubLogin + '/comme-un-dessein-client/forks', @forkCreationResponse, 'post')
+			@request('https://api.github.com/repos/' + R.githubLogin + '/wetu-client/forks', @forkCreationResponse, 'post')
 			return
 
 		# Navigate in files
@@ -374,7 +374,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtre
 
 		loadFile: (path, callback, owner=@owner)->
 			console.log 'load ' + path + ' of ' + owner
-			@request('https://api.github.com/repos/' + owner + '/comme-un-dessein-client/contents/'+path, callback)
+			@request('https://api.github.com/repos/' + owner + '/wetu-client/contents/'+path, callback)
 			return
 
 		openFile: (file)=>
@@ -597,7 +597,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtre
 		# 			delete file.newPath
 		# 		R.alertManager.alert('Successfully committed ' + file.name + '.', 'success')
 		# 		return
-		# 	@request('https://api.github.com/repos/' + @owner + '/comme-un-dessein-client/contents/'+file.path, callback, method, data)
+		# 	@request('https://api.github.com/repos/' + @owner + '/wetu-client/contents/'+file.path, callback, method, data)
 		# 	return
 		#
 		# createFile: (file, commitMessage)->
@@ -630,7 +630,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtre
 
 		runFork: (data)=>
 			if data?.owner? then @owner = data.owner
-			@request('https://api.github.com/repos/' + @owner + '/comme-un-dessein-client/branches/master', @runLastCommit)
+			@request('https://api.github.com/repos/' + @owner + '/wetu-client/branches/master', @runLastCommit)
 			return
 
 		onCommitClicked: (event)=>
@@ -780,7 +780,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtre
 				base: 'master'
 				body: data.body
 			R.loader.showLoadingBar()
-			@request('https://api.github.com/repos/arthursw/comme-un-dessein-client/pulls', @checkPullRequest, 'post', data)
+			@request('https://api.github.com/repos/arthursw/wetu-client/pulls', @checkPullRequest, 'post', data)
 			return
 
 		checkPullRequest: (message)=>
@@ -813,12 +813,12 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtre
 		# 	head = @checkError(head)
 		# 	if not head then return
 		# 	@commit.head = sha: head.sha, url: head.url
-		# 	@request('https://api.github.com/repos/' + @owner + '/comme-un-dessein-client/git/commits/'+head.object.sha, @runLastCommit)
+		# 	@request('https://api.github.com/repos/' + @owner + '/wetu-client/git/commits/'+head.object.sha, @runLastCommit)
 		# 	return
 		#
 		# getHead: ()->
 		# 	@commit = {}
-		# 	@request('https://api.github.com/repos/' + @owner + '/comme-un-dessein-client/git/refs/heads/master', @getLastCommit)
+		# 	@request('https://api.github.com/repos/' + @owner + '/wetu-client/git/refs/heads/master', @getLastCommit)
 		# 	return
 
 		# jqTree events
@@ -867,7 +867,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtre
 
 		getMasterBranch: (owner='arthursw', callback=@getTreeAndSetCommit)->
 			@showLoader()
-			@request('https://api.github.com/repos/' + owner + '/comme-un-dessein-client/branches/master', callback)
+			@request('https://api.github.com/repos/' + owner + '/wetu-client/branches/master', callback)
 			return
 
 		getTree: (master, callback)=>
@@ -984,7 +984,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtre
 			if not @compileCoffee() then return
 			R.loader.showLoadingBar()
 			tree = @filterTree()
-			@request('https://api.github.com/repos/' + @owner + '/comme-un-dessein-client/git/trees', @createCommit, 'post', tree: tree)
+			@request('https://api.github.com/repos/' + @owner + '/wetu-client/git/trees', @createCommit, 'post', tree: tree)
 			return
 
 		createCommit: (tree)=>
@@ -994,14 +994,14 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'coffeescript-compiler', 'jqtre
 				message: @commit.message
 				tree: tree.sha
 				parents: [@commit.lastCommitSha]
-			@request('https://api.github.com/repos/' + @owner + '/comme-un-dessein-client/git/commits', @updateHead, 'post', data)
+			@request('https://api.github.com/repos/' + @owner + '/wetu-client/git/commits', @updateHead, 'post', data)
 			return
 
 		updateHead: (commit)=>
 			commit = @checkError(commit)
 			if not commit then return
 			@commit.lastCommitSha = commit.sha
-			@request('https://api.github.com/repos/' + @owner + '/comme-un-dessein-client/git/refs/heads/master', @checkCommit, 'patch', sha: commit.sha)
+			@request('https://api.github.com/repos/' + @owner + '/wetu-client/git/refs/heads/master', @checkCommit, 'patch', sha: commit.sha)
 			return
 
 		checkCommit: (response)=>

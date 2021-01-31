@@ -17,6 +17,10 @@ define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, i
 		# initialize socket:
 		initialize: ()->
 
+			@userToPaths = new Map()
+			@userToColor = new Map()
+			@fadeTailsIntervalID = null
+
 			# initialize jQuery objects
 			@chatJ = $("#chatContent")
 			@chatMainJ = @chatJ.find("#chatMain")
@@ -173,6 +177,10 @@ define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, i
 
 			@socket.on "drawing change", @onDrawingChange
 
+			@socket.on "draw begin", @onDrawBegin
+			@socket.on "draw update", @onDrawUpdate
+			@socket.on "draw end", @onDrawEnd
+
 			if R.tipibot
 				setTimeout(@connectToTipibot, 3000)
 
@@ -194,7 +202,7 @@ define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, i
 						if R.loader.drawingPaths.length == 0
 							if not @requestedNextDrawing
 								args = 
-									city: R.city
+									cityName: R.city.name
 								$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'getNextValidatedDrawing', args: args } ).done((results)=>
 									@requestedNextDrawing = false
 									if results.message == 'no path' then return
@@ -331,6 +339,76 @@ define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, i
 
 		onDrawingChange: (data) ->
 			R.drawingPanel.onDrawingChange(data)
+			return
+
+		fadeTailsInterval: ()=>
+			nAlivePaths = 0
+			@userToPaths.forEach (paths, user) =>
+				for path in paths.slice()
+					path.scale(0.9)
+					path.position = path.position.add(path.data.direction)
+					path.data.lives--
+					path.strokeColor.alpha -= 0.1
+					path.fillColor.alpha -= 0.1
+					if path.data.lives == 0
+						path.remove()
+						paths.splice(paths.indexOf(path), 1)
+					else
+						nAlivePaths++
+			if nAlivePaths == 0
+				clearInterval(@fadeTailsIntervalID)
+				@fadeTailsIntervalID = null
+			return
+
+		createPath: (point, color)->
+			# path = new P.Path()
+			path = new P.Path.Circle(point, 3)
+			# path.strokeWidth = 0.5 # R.Item.Path.strokeWidth
+			# path.strokeColor = R.selectionBlue
+			# path.fillColor = R.selectionBlue
+			path.strokeColor = color
+			path.fillColor = color
+			path.strokeColor.alpha = 1
+			path.fillColor.alpha = 1
+			path.data.direction = P.Point.random().subtract(0.5).multiply(3)
+			path.strokeCap = 'round'
+			path.strokeJoin = 'round'
+			path.data.lives = 10
+			# path.add(point)
+			return path
+
+		onDrawBegin: (user, point)=>
+			if user == R.me then return
+			paths = @userToPaths.get(user)
+			if not paths?
+				paths = []
+				@userToPaths.set(user, paths)
+
+			color = @userToColor.get(user)
+			if not color?
+			    color = new P.Color({hue: Math.floor(Math.random()*360/10)*10, saturation: 0.35, brightness: 0.95});
+				@userToColor.set(user, color)
+
+			path = @createPath(point, color)
+			paths.push(path)
+			if not @fadeTailsIntervalID
+				@fadeTailsIntervalID = setInterval(@fadeTailsInterval, 100)
+			return
+
+		onDrawUpdate: (user, point)=>
+			if user == R.me then return
+			paths = @userToPaths.get(user)
+			if paths?
+				# paths[paths.length - 1].add(point)
+				path = @createPath(point, @userToColor.get(user))
+				paths.push(path)
+			return
+
+		onDrawEnd: (user, point)=>
+			if user == R.me then return
+			# paths = @userToPaths.get(user)
+			# if paths?
+			# 	paths[paths.length - 1].add(point)
 			return
 
 		onBounce: (data) ->

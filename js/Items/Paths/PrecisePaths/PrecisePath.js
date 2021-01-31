@@ -11,7 +11,7 @@
 
       PrecisePath.label = 'Precise path';
 
-      PrecisePath.iconURL = R.style === 'line' ? 'icones_icon_pen.png' : R.style === 'romanesco' ? 'editCurve.png' : R.style === 'hand' ? 'a-pen3.png' : 'glyphicon-pencil';
+      PrecisePath.iconURL = 'new 1/Pen.svg';
 
       PrecisePath.hitOptions = {
         segments: true,
@@ -506,7 +506,10 @@
         }
         if (this.controlPath.segments.length >= 2) {
           if (ref1 = R.drawingMode, indexOf.call(this.constructor.drawingModes, ref1) < 0) {
+<<<<<<< HEAD
             console.log("simplifying");
+=======
+>>>>>>> f3f7b4f5b850af2c71f18b49fb4835248d3ab23a
             this.controlPath.simplify();
           }
           ref2 = this.controlPath.segments;
@@ -607,8 +610,6 @@
         if (this.drawn) {
           if (!onSvg) {
             R.view.draftLayer.addChild(this.path);
-          } else {
-            this.setSVG();
           }
           return;
         }
@@ -628,12 +629,15 @@
         reminder = nf - nIteration;
         offset = reminder * step / 2;
         this.drawingOffset = 0;
+<<<<<<< HEAD
         if (onSvg) {
           this.group.remove();
           if ((ref = this.path) != null) {
             ref.selected = true;
           }
         }
+=======
+>>>>>>> f3f7b4f5b850af2c71f18b49fb4835248d3ab23a
         try {
           this.processDrawing(redrawing);
         } catch (error1) {
@@ -646,20 +650,13 @@
           this.simplifiedModeOff();
         }
         this.drawn = true;
-        if (onSvg) {
-          this.setSVG();
-        } else {
+        if (!onSvg) {
           R.view.draftLayer.addChild(this.path);
         }
         window.pp = this.path;
       };
 
-      PrecisePath.prototype.setSVG = function() {
-        var layerName;
-        layerName = this.drawingId != null ? R.items[this.drawingId].getLayerName() : 'mainLayer';
-        this.svg = this.path.exportSVG();
-        R.svgJ.find('#' + layerName).append(this.svg);
-      };
+      PrecisePath.prototype.setSVG = function() {};
 
       PrecisePath.prototype.drawOnPaper = function() {
         if (this.svg != null) {
@@ -667,13 +664,6 @@
           this.svg = null;
         }
         this.draw(false, true, false);
-      };
-
-      PrecisePath.prototype.drawOnSVG = function() {
-        this.path.remove();
-        if (this.svg == null) {
-          this.draw();
-        }
       };
 
       PrecisePath.prototype.pathOnPlanet = function() {
@@ -890,11 +880,6 @@
           if (update) {
             this.update('point');
           }
-          R.socket.emit("bounce", {
-            itemId: this.id,
-            "function": "addPoint",
-            "arguments": [index, point, offset, false]
-          });
         }
         return segment;
       };
@@ -939,11 +924,6 @@
           if (update) {
             this.update('point');
           }
-          R.socket.emit("bounce", {
-            itemId: this.id,
-            "function": "deletePoint",
-            "arguments": [segment.index, false]
-          });
         }
         return location;
       };
@@ -987,11 +967,6 @@
           if (update) {
             this.update('segment');
           }
-          R.socket.emit("bounce", {
-            itemId: this.id,
-            "function": "modifyPoint",
-            "arguments": [segment.index, position, handleIn, handleOut, fastDraw, false]
-          });
         }
       };
 
@@ -1097,11 +1072,6 @@
           if (update) {
             this.update('point');
           }
-          R.socket.emit("bounce", {
-            itemId: this.id,
-            "function": "modifyPointType",
-            "arguments": [segment.index, rtype, false]
-          });
         }
       };
 
@@ -1128,11 +1098,6 @@
           if (update) {
             this.update('point');
           }
-          R.socket.emit("bounce", {
-            itemId: this.id,
-            "function": "modifyControlPath",
-            "arguments": [pointsAndPlanet, false]
-          });
         }
       };
 
