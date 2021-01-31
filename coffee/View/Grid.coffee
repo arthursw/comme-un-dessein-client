@@ -38,7 +38,8 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 
 		projectToGeoJSONRectangle: (rectangle)->
 			topLeft = @projectToGeoJSON(rectangle.topLeft)
-			return new P.Rectangle(topLeft.x, topLeft.y, Utils.CS.PlanetWidth * rectangle.width / @size.width, Utils.CS.PlanetHeight * rectangle.height / @size.height)
+			bottomRight = @projectToGeoJSON(rectangle.bottomRight)
+			return new P.Rectangle(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y)
 
 		geoJSONToProject: (point)->
 			return new P.Point(@size.width * point.x / Utils.CS.PlanetWidth, @size.height * point.y / Utils.CS.PlanetHeight)
