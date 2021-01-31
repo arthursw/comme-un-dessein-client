@@ -133,7 +133,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			points = []
 			planet = @getPlanetFromPath(path)
 			for segment in path.segments
-				p = Utils.CS.projectToPosOnPlanet(segment.point, planet)
+				# p = Utils.CS.projectToPosOnPlanet(segment.point, planet)
+				p = R.view.grid.projectToGeoJSON(segment.point)
 				points.push( Utils.CS.pointToArray(p) )
 			return points
 
@@ -749,7 +750,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 			points = []
 			planet = @getPlanet()
 			for segment in controlSegments
-				p = Utils.CS.projectToPosOnPlanet(segment.point, planet)
+				# p = Utils.CS.projectToPosOnPlanet(segment.point, planet)
+				p = R.view.grid.projectToGeoJSON(segment.point)
 				points.push( Utils.CS.pointToArray(p) )
 			return points
 

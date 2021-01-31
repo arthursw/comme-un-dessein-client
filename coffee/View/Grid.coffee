@@ -169,7 +169,7 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			left = bounds.left
 			top = bounds.top
 
-			while left<bounds.right or top<bounds.bottom
+			while left < bounds.right or top < bounds.bottom
 
 				px = new P.Path()
 				px.name = "grid px"

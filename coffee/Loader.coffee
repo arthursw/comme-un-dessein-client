@@ -815,7 +815,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 
 						# convert points from planet coordinates to project coordinates
 						for point in path.points.coordinates
-							points.push( Utils.CS.posOnPlanetToProject(point, planet) )
+							# points.push( Utils.CS.posOnPlanetToProject(point, planet) )
+							points.push( R.view.grid.geoJSONToProject(point) )
 
 						# create the RPath with the corresponding RTool
 						rpath = null
@@ -934,7 +935,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				controlPath = new P.Path()
 
 				for point, i in points by 4
-					controlPath.add(Utils.CS.posOnPlanetToProject(point, planet))
+					# controlPath.add(Utils.CS.posOnPlanetToProject(point, planet))
+					controlPath.add(R.view.grid.geoJSONToProject(point))
 					controlPath.lastSegment.handleIn = new P.Point(points[i+1])
 					controlPath.lastSegment.handleOut = new P.Point(points[i+2])
 					controlPath.lastSegment.rtype = points[i+3]

@@ -882,8 +882,11 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			planet = new P.Point(R.loadedBox.planetX, R.loadedBox.planetY)
 
-			tl = Utils.CS.posOnPlanetToProject(R.loadedBox.box.coordinates[0][0], planet)
-			br = Utils.CS.posOnPlanetToProject(R.loadedBox.box.coordinates[0][2], planet)
+			# tl = Utils.CS.posOnPlanetToProject(R.loadedBox.box.coordinates[0][0], planet)
+			# br = Utils.CS.posOnPlanetToProject(R.loadedBox.box.coordinates[0][2], planet)
+			
+			tl = R.view.grid.geoJSONToProject(R.loadedBox.box.coordinates[0][0])
+			tl = R.view.grid.geoJSONToProject(R.loadedBox.box.coordinates[0][2])
 
 			boxRectangle = new P.Rectangle(tl, br)
 			pos = boxRectangle.center

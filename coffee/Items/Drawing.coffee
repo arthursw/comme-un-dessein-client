@@ -114,7 +114,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		getPathPoints: (path)->
 			points = []
 			for segment in path.segments
-				points.push(Utils.CS.projectToPosOnPlanet(segment.point))
+				# points.push(Utils.CS.projectToPosOnPlanet(segment.point))
+				points.push(R.view.grid.projectToGeoJSON(segment.point)) # Utils.CS.projectToPosOnPlanet(segment.point))
 				points.push(Utils.CS.pointToObj(segment.handleIn))
 				points.push(Utils.CS.pointToObj(segment.handleOut))
 				points.push(segment.rtype)
@@ -131,7 +132,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				planet = new P.Point(0, 0)
 			path = new P.Path()
 			for point, i in points by 4
-				path.add(Utils.CS.posOnPlanetToProject(point, planet))
+				path.add(Utils.CS.geoJSONToProject(point))
+				# path.add(Utils.CS.posOnPlanetToProject(point, planet))
 				path.lastSegment.handleIn = new P.Point(points[i+1])
 				path.lastSegment.handleOut = new P.Point(points[i+2])
 				path.lastSegment.rtype = points[i+3]

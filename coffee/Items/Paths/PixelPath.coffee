@@ -64,7 +64,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		@getPointsFromPath: (path)->
 			points = []
 			for segment in path.segments
-				points.push(Utils.CS.projectToPosOnPlanet(segment.point))
+				points.push(R.view.grid.projectToGeoJSON(segment.point))
+				# points.push(Utils.CS.projectToPosOnPlanet(segment.point))
 			return points
 
 		@getPointsAndPlanetFromPath: (path)->
@@ -85,7 +86,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 		setControlPath: (points, planet)->
 			for point, i in points
-				@controlPath.add(Utils.CS.posOnPlanetToProject(point, planet))
+				# @controlPath.add(Utils.CS.posOnPlanetToProject(point, planet))
+				@controlPath.add(R.view.grid.geoJSONToProject(point))
 			return
 
 		# redefine {RPath#loadPath}
@@ -303,7 +305,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		getPoints: ()->
 			points = []
 			for segment in @controlPath.segments
-				points.push(Utils.CS.projectToPosOnPlanet(segment.point))
+				# points.push(Utils.CS.projectToPosOnPlanet(segment.point))
+				points.push(R.view.grid.projectToGeoJSON(segment.point))
 				points.push(Utils.CS.pointToObj(segment.handleIn))
 				points.push(Utils.CS.pointToObj(segment.handleOut))
 				points.push(segment.rtype)
