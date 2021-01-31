@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "R.js",
+  "sourceRoot": "..",
+  "sources": [
+    "coffee/R.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;EAAA,MAAA,CAAO,EAAP,EAAW,SAAA;AAEV,QAAA;IAAA,IAAG,kDAAA,IAAgB,kBAAnB;MACC,MAAM,CAAC,CAAP,GAAW,GADZ;;IAGA,CAAA,uDAAI,MAAM,CAAE,WAAR,IAAa;IACjB,CAAC,CAAC,OAAF,GAAY;IAGZ,CAAC,CAAC,WAAF,GAAgB;IAChB,CAAC,CAAC,YAAF,GAAiB;IACjB,CAAC,CAAC,aAAF,GAAkB;AAElB,WAAO;EAbG,CAAX;AAAA"
+}

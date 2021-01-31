@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "Global.js",
+  "sourceRoot": "../..",
+  "sources": [
+    "coffee/Utils/Global.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;;AAAA"
+}

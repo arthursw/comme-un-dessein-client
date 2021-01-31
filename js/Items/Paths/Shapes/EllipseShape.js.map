@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "EllipseShape.js",
+  "sourceRoot": "../../../..",
+  "sources": [
+    "coffee/Items/Paths/Shapes/EllipseShape.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;AAAA,MAAA;;;EAAA,MAAA,CAAO,CAAC,OAAD,EAAU,GAAV,EAAe,aAAf,EAA8B,0BAA9B,CAAP,EAAmE,SAAC,CAAD,EAAI,CAAJ,EAAO,KAAP,EAAc,KAAd;AAGlE,QAAA;IAAM;;;;;;;MACL,YAAC,CAAA,KAAD,GAAS,CAAC,CAAC,IAAI,CAAC;;MAChB,YAAC,CAAA,QAAD,GAAY;;MACZ,YAAC,CAAA,KAAD,GAAS;;MACT,YAAC,CAAA,WAAD,GAAe;;MAEf,YAAC,CAAA,OAAD,GAAW;;MACX,YAAC,CAAA,eAAD,GAAmB;;MACnB,YAAC,CAAA,eAAD,GAAmB;;;;OARO;AAY3B,WAAO;EAf2D,CAAnE;AAAA"
+}
