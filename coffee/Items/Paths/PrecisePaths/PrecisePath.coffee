@@ -123,7 +123,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		@getPointsFromPath: (path)->
 			points = []
 			for segment in path.segments
-				points.push(Utils.CS.projectToPosOnPlanet(segment.point))
+				# points.push(Utils.CS.projectToPosOnPlanet(segment.point))
+				
 				points.push(Utils.CS.pointToObj(segment.handleIn))
 				points.push(Utils.CS.pointToObj(segment.handleOut))
 				points.push(segment.rtype)
@@ -150,7 +151,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 		setControlPath: (points, planet)->
 			for point, i in points by 4
-				@controlPath.add(Utils.CS.posOnPlanetToProject(point, planet))
+				# @controlPath.add(Utils.CS.posOnPlanetToProject(point, planet))
+				@controlPath.add(R.view.grid.geoJSONToProject(point))
 				@controlPath.lastSegment.handleIn = new P.Point(points[i+1])
 				@controlPath.lastSegment.handleOut = new P.Point(points[i+2])
 				@controlPath.lastSegment.rtype = points[i+3]
@@ -739,7 +741,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			# 	points.push(segment.rtype)
 
 			for segment in @controlPath.segments
-				points.push(Utils.CS.projectToPosOnPlanet(segment.point))
+				# points.push(Utils.CS.projectToPosOnPlanet(segment.point))
+				points.push(R.view.grid.projectToGeoJSON(segment.point))
 				points.push(Utils.CS.pointToObj(segment.handleIn))
 				points.push(Utils.CS.pointToObj(segment.handleOut))
 				points.push(segment.rtype)
