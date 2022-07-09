@@ -46,88 +46,26 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 	#     - the remaining step (which is shorter) is split in half and distributed among the first and last step
 	#     - updateDraw() is called in a loop to draw the whole drawing along the control path at once, in {PrecisePath#draw}
 
-	class PrecisePath extends Path
-		@label = 'Precise path'
-		# @description = '' # "This path offers precise controls, one can modify points along with their handles and their type."
-		
-		# @iconURL = 'static/images/icons/inverted/editCurve.png'
-		# @iconURL = 'glyphicon-pencil'
-		# @iconURL = if R.style == 'line' then 'icones_icon_pen.png' else if R.style == 'romanesco' then 'editCurve.png' else if R.style == 'hand' then 'a-pen3.png' else 'glyphicon-pencil'
-		@iconURL = 'new 1/Pen.svg'
+	class PixelPath extends Path
+		@label = 'Pixel path'
+		@description = "This draws a pattern at each pixel of the path."
+		@iconURL = 'glyphicon-pencil'
 
-		@hitOptions =
-			segments: true
-			stroke: true
-			fill: true
-			curves: true
-			handles: true
-			tolerance: 5
-
-		@secureStep = 25
-		@polygonMode = true
-		@orthoGridSize = 20
-		@lineOrthoGridSize = 2
-		@pixelGridSize = 10
-
-		@drawingModes = ['orthoDiag', 'ortho', 'lineOrthoDiag', 'pixel', 'cross', 'dot', 'line']
-		@pixelModes = ['pixel', 'dot', 'cross']
-		@snappedModes = ['orthoDiag', 'ortho', 'lineOrthoDiag', 'pixel', 'cross', 'dot']
-		@lineModes = ['line', 'lineOrthoDiag']
+		@orthoGridSize = 10
 
 		@initializeParameters: ()->
 
 			parameters = super()
-
-			if @polygonMode
-				parameters['Items'].polygonMode =
-					type: 'checkbox'
-					label: 'Polygon mode'
-					default: R.polygonMode
-					onChange: (value)-> R.polygonMode = value
-
-			parameters['Edit curve'] =
-				smooth:
-					type: 'checkbox'
-					label: 'Smooth'
-					default: false
-					onChange: (value)-> item.setSmooth?(value) for item in R.selectedItems; return
-				pointType:
-					type: 'dropdown'
-					label: 'P.Point type'
-					values: ['smooth', 'corner', 'point']
-					default: 'smooth'
-					addController: true
-					onChange: (value)-> item.modifyPointTypeCommand?(value) for item in R.selectedItems; return
-				deletePoint:
-					type: 'button'
-					label: 'Delete point'
-					default: ()-> item.deletePointCommand?() for item in R.selectedItems; return
-				simplify:
-					type: 'button'
-					label: 'Simplify'
-					default: (value)-> item.simplifyControlPath?(value) for item in R.selectedItems; return
-					onChange: (value)-> return
-				showSelectionRectangle:
-					type: 'checkbox'
-					label: 'Selection box'
-					default: false
-					onChange: (event) => R.tools.select.setSelectionRectangleVisibility(event)
-
 			return parameters
 
 		@parameters = @initializeParameters()
 		@createTool(@)
 
-		@securePath = false
-
 		@getPointsFromPath: (path)->
 			points = []
 			for segment in path.segments
+				points.push(R.view.grid.projectToGeoJSON(segment.point))
 				# points.push(Utils.CS.projectToPosOnPlanet(segment.point))
-				
-				points.push(Utils.CS.pointToObj(segment.handleIn))
-				points.push(Utils.CS.pointToObj(segment.handleOut))
-				points.push(segment.rtype)
 			return points
 
 		@getPointsAndPlanetFromPath: (path)->
@@ -144,18 +82,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# overload {RPath#constructor}
 		constructor: (@date=null, @data=null, @id=null, @pk=null, points=null, @lock=null, @owner=null, @drawingId=null) ->
 			super(@date, @data, @id, @pk, points, @lock, @owner, @drawingId)
-			if @constructor.polygonMode then @data.polygonMode = R.polygonMode
-			@rotation = @data.rotation = 0
-			# @data.showSelectionRectangle = true
 			return
 
 		setControlPath: (points, planet)->
-			for point, i in points by 4
+			for point, i in points
 				# @controlPath.add(Utils.CS.posOnPlanetToProject(point, planet))
 				@controlPath.add(R.view.grid.geoJSONToProject(point))
-				@controlPath.lastSegment.handleIn = new P.Point(points[i+1])
-				@controlPath.lastSegment.handleOut = new P.Point(points[i+2])
-				@controlPath.lastSegment.rtype = points[i+3]
 			return
 
 		# redefine {RPath#loadPath}
@@ -167,40 +99,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@setControlPath(@data.points, @data.planet)
 			@rectangle = @controlPath.bounds.clone()
 
-			if @data.smooth then @controlPath.smooth()
-
-			# R.rasterizer.loadItem(@)
+			R.rasterizer.loadItem(@)
 
 			if not @constructor.securePath
 				return
 
-			# check if points fit to the newly created control path:
-			# - flatten a copy of the control path, as it was flattened when the path was saved
-			# - check if *points* correspond to the points on this flattened path
-			flattenedPath = @controlPath.copyTo(P.project)
-			flattenedPath.flatten(@constructor.secureStep)
-			distanceMax = @constructor.secureDistance*@constructor.secureDistance
-
-			# only check 10 random points to speed up security check
-			for i in [1 .. 10]
-				index = Math.floor(Math.random()*points.length)
-				recordedPoint = new P.Point(points[index])
-				resultingPoint = flattenedPath.segments[index].point
-				if recordedPoint.getDistance(resultingPoint, true)>distanceMax
-					# @remove()
-					flattenedPath.strokeColor = 'red'
-					P.view.center = flattenedPath.bounds.center
-					console.log "Error: invalid path"
-					return
-
-			flattenedPath.remove()
-
-			return
-
-		deselectPoint: ()->
-			@selectedSegment = null
-			@selectedHandle = null
-			@removeSelectionHighlight()
 			return
 
 		performHitTest: (point, options=@constructor.hitOptions)->
@@ -209,124 +112,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@controlPath.visible = false
 			return hitResult
 
-		# redefine hit test to test not only on the selection rectangle, but also on the control path
-		# @param point [P.Point] the point to test
-		# @param hitOptions [Object] the [paper hit test options](http://paperjs.org/reference/item/#hittest-point)
-		hitTest: (event)->
-
-			@deselectPoint()
-
-			wasSelected = @selected
-			hitResult = super(event)
-			if not wasSelected or not hitResult? then return
-
-			specialKey = R.specialKey(event)
-			@selectedSegment = hitResult.segment
-
-			modifyPoint = false
-			if hitResult.type == 'segment'
-
-				if specialKey and hitResult.item == @controlPath
-					@selectedSegment = hitResult.segment
-					@deletePointCommand()
-				else
-					if hitResult.item == @controlPath
-						@selectedSegment = hitResult.segment
-						modifyPoint = true
-
-			if not @data.smooth
-				if hitResult.type is "handle-in"
-					@selectedHandle = hitResult.segment.handleIn
-					modifyPoint = true
-				else if hitResult.type is "handle-out"
-					@selectedHandle = hitResult.segment.handleOut
-					modifyPoint = true
-
-			if modifyPoint
-				R.commandManager.beginAction(new Command.ModifyPoint(@), event)
-
-			return
-
-		# initializeSelection: (event, hitResult) ->
-		# 	super(event, hitResult)
-		#
-		# 	specialKey = R.specialKey(event)
-		#
-		# 	if hitResult.type == 'segment'
-		#
-		# 		if specialKey and hitResult.item == @controlPath
-		# 			@selectionState = segment: hitResult.segment
-		# 			@deletePointCommand()
-		# 		else
-		# 			if hitResult.item == @controlPath
-		# 				@selectionState = segment: hitResult.segment
-		#
-		# 	if not @data.smooth
-		# 		if hitResult.type is "handle-in"
-		# 			@selectionState = segment: hitResult.segment, handle: hitResult.segment.handleIn
-		# 		else if hitResult.type is "handle-out"
-		# 			@selectionState = segment: hitResult.segment, handle: hitResult.segment.handleOut
-		#
-		# 	@highlightSelectedPoint()
-		#
-		# 	return
-
-
-		# initialize drawing
-		# @param createCanvas [Boolean] (optional, default to true) whether to create a child canavs *@canvasRaster*
-		initializeDrawing: (createCanvas=false)->
-			@data.step ?= 20 	# developers do not need to put @data.step in the parameters, but there must be a default value
-			@drawingOffset = 0
-			super(createCanvas)
-			return
-
 		# default beginDraw function, will be redefined by children PrecisePath
 		# @param redrawing [Boolean] (optional) whether the path is being redrawn or the user draws the path (the path is being loaded/updated or the user is drawing it with the mouse)
 
 		beginDraw: (redrawing=false)->
 			@initializeDrawing(false)
-			if R.drawingMode not in @constructor.pixelModes
-				@path = @addPath()
-				@path.segments = @controlPath.segments
-				@path.selected = false
-				@path.strokeCap = if @data.strokeCap? then @data.strokeCap else 'round'
-				@path.strokeJoin = if @data.strokeJoin? then @data.strokeJoin else 'round'
-				# @path.visible = false
-				# @controlPath.visible = true
-				# @controlPath.strokeColor = @path.strokeColor
-				# @controlPath.strokeWidth = @path.strokeWidth
-				# @controlPath.strokeCap = @path.strokeCap
-				# @controlPath.strokeJoin = @path.strokeJoin
-				# @controlPath.selected = true
 			return
 
 		# default updateDraw function, will be redefined by children PrecisePath
 		# @param offset [Number] the offset along the control path to begin drawing
 		# @param step [Boolean] whether it is a key step or not (we must draw something special or not)
 		updateDraw: (segment, step, redrawing)->
-			if @ignoreDrawingMode or R.drawingMode not in @constructor.pixelModes and R.drawingMode not in @constructor.lineModes
-				@path.add(@controlPath.lastSegment)
-			else if R.drawingMode == 'line' or R.drawingMode == 'lineOrthoDiag'
-				if @path.segments.length < 2
-					@path.add(@controlPath.lastSegment)
-				@path.lastSegment.point = @controlPath.lastSegment.point
-			else if R.drawingMode == 'dot'
-				circle = @addPath(new P.Path.Circle(segment.point, @constructor.pixelGridSize/2), false)
-				circle.fillColor = @data.strokeColor
-				# circle.strokeColor = @data.strokeColor
-			else if R.drawingMode == 'pixel'
-				square = @addPath(new P.Path.Rectangle(segment.point.subtract(@constructor.pixelGridSize/2-0.5), segment.point.add(@constructor.pixelGridSize/2-0.5)), false)
-				square.fillColor = @data.strokeColor
-			else if R.drawingMode == 'cross'
-				cross = @addPath()
-				cross.add(segment.point.subtract(@constructor.pixelGridSize/2))
-				cross.add(segment.point.add(@constructor.pixelGridSize/2))
-				cross.strokeWidth = 3
-				cross = @addPath()
-				cross.add(segment.point.add(new P.Point(-@constructor.pixelGridSize/2, @constructor.pixelGridSize/2)))
-				cross.add(segment.point.add(new P.Point(@constructor.pixelGridSize/2, -@constructor.pixelGridSize/2)))
-				cross.strokeWidth = 3
-
+			circle = @addPath(new P.Path.Circle(segment.point, @data.strokeWidth/16))
+			circle.fillColor = @data.strokeColor
 			return
 
 		# default endDraw function, will be redefined by children PrecisePath
@@ -338,10 +136,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			return
 
 		checkUpdateDrawing: (segment, redrawing=true)->
-			if R.drawingMode in @constructor.pixelModes
-				@updateDraw(segment)
-			else if not redrawing
-				@updateDraw(segment)
+			@updateDraw(segment)
 			return
 
 		# continue drawing the path along the control path if necessary:
@@ -373,34 +168,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# @param event [Event] the mouse event
 		beginCreate: (point, event)->
 			super()
+			console.log('beginCreate')
 
-			if not @data.polygonMode 				# in normal mode: just initialize the control path and begin drawing
-				@addControlPath()
-				if R.drawingMode in @constructor.snappedModes
-					if R.drawingMode == 'lineOrthoDiag'
-						draft = R.Drawing.getDraft()
-						if draft?
-							hitResult = draft.group.hitTest(point, { tolerance: 6, segments: true, fill: false, stroke: false, curves: false, handles: false, position: false, bounds: false, guides: false, selected: false })
-							if hitResult?.point?
-								point = hitResult.point
-
-					@controlPath.add(Utils.Snap.snap2D(point, if R.drawingMode == 'lineOrthoDiag' then @constructor.lineOrthoGridSize else @constructor.orthoGridSize))
-				else 
-					@controlPath.add(point)
-				if R.drawingMode in @constructor.lineModes
-					@controlPath.add(@controlPath.firstSegment.point)
-				@rectangle = @controlPath.bounds.clone()
-				@beginDraw(false)
-			else 									# in polygon mode:
-				if not @controlPath?					# if the user just started the creation (first point, on mouse down)
-					@addControlPath()
-					@controlPath.add(point)
-					@rectangle = @controlPath.bounds.clone()
-					@controlPath.add(point) 			# add twice the first point because the last point will follow the mouse (in polygon mode)
-					@beginDraw(false)
-				else 									# if the user already added some points: just add the point to the control path
-					@controlPath.add(point)
-				@controlPath.lastSegment.rtype = 'point'
+			@addControlPath()
+			@controlPath.add(Utils.Snap.snap2D(point, @constructor.orthoGridSize))
+			@rectangle = @controlPath.bounds.clone()
+			@beginDraw(false)
 			return
 
 		# redefine {RPath#updateCreate}
@@ -416,83 +189,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# @param point [P.Point] the point to add
 		# @param event [Event] the mouse event
 		updateCreate: (point, event)->
-			if not @data.polygonMode
 
-				# if R.drawingMode != 'line'
-				# 	if @controlPath.lastSegment.point.getDistance(point, true) < 10
-				# 		return
+			if @controlPath.lastSegment.point.getDistance(point, true) < 20
+				return
 
-				# console.log 'updateCreate'
+			console.log('updateCreate')
+			target = Utils.Snap.snap2D(point, @constructor.orthoGridSize)
+			@controlPath.add(target)
 
-				updateDrawing = true
-				if @ignoreDrawingMode
-					@controlPath.add(point)
-				else
+			@checkUpdateDrawing(@controlPath.lastSegment, false)
 
-					if R.drawingMode == 'orthoDiag'
-						target = Utils.Snap.snap2D(point, @constructor.orthoGridSize)
-						delta = target.subtract(@controlPath.lastSegment.point)
-
-						if delta.x != 0 and delta.y != 0 and Math.abs(delta.x) != Math.abs(delta.y)
-
-							if Math.abs(delta.x) > Math.abs(delta.y)
-								@controlPath.add(@controlPath.lastSegment.point.x + Math.sign(delta.x)*(Math.abs(delta.x)-Math.abs(delta.y)), @controlPath.lastSegment.point.y)
-							else
-								@controlPath.add(@controlPath.lastSegment.point.x, @controlPath.lastSegment.point.y + Math.sign(delta.y)*(Math.abs(delta.y)-Math.abs(delta.x)))
-							@path.add(@controlPath.lastSegment)
-						else if @controlPath.segments.length > 2
-							# replace last step by slope (if any)
-							previousDelta = @controlPath.lastSegment.point.subtract(@controlPath.segments[@controlPath.segments.length-2].point)
-							if previousDelta.x == 0
-								if delta.y == 0
-									@controlPath.lastSegment.remove()
-									@path.lastSegment.remove()
-							else if previousDelta.y == 0
-								if delta.x == 0
-									@controlPath.lastSegment.remove()
-									@path.lastSegment.remove()
-						@controlPath.add(target)
-					else if R.drawingMode == 'ortho'
-						target = Utils.Snap.snap2D(point, @constructor.orthoGridSize)
-						delta = target.subtract(@controlPath.lastSegment.point)
-
-						if delta.x != 0 and delta.y != 0
-							if Math.abs(delta.x) > Math.abs(delta.y)
-								@controlPath.add(target.x, @controlPath.lastSegment.point.y)
-							else
-								@controlPath.add(@controlPath.lastSegment.point.x, target.y)
-							@path.add(@controlPath.lastSegment)
-						@controlPath.add(target)
-					else if R.drawingMode in @constructor.pixelModes
-						target = Utils.Snap.snap2D(point, @constructor.pixelGridSize)
-						if not @controlPath.lastSegment.point.equals(target)
-							@controlPath.add(target)
-						else
-							updateDrawing = false
-					else if R.drawingMode == 'line'
-						@controlPath.lastSegment.point = point
-					else if R.drawingMode == 'lineOrthoDiag'
-
-						delta = point.subtract(@controlPath.firstSegment.point)
-						delta.angle = Utils.Snap.snap1D(delta.angle, 45)
-						@controlPath.lastSegment.point = Utils.Snap.snap2D(@controlPath.firstSegment.point.add(delta), @constructor.lineOrthoGridSize)
-					else
-						@controlPath.add(point)
-
-				if updateDrawing
-					@checkUpdateDrawing(@controlPath.lastSegment, false)
-			else
-				# update the [handleIn](http://paperjs.org/reference/segment/#handlein) and handleOut of the last segment
-				lastSegment = @controlPath.lastSegment
-				previousSegment = lastSegment.previous
-				previousSegment.rtype = 'smooth'
-				previousSegment.handleOut = point.subtract(previousSegment.point)
-				if lastSegment != @controlPath.firstSegment
-					previousSegment.handleIn = previousSegment.handleOut.multiply(-1)
-				lastSegment.handleIn = lastSegment.handleOut = null
-				lastSegment.point = point
-
-				@draw(true, false) 		# draw in simplified (quick) mode
 			return
 
 		# update create action: only used when in polygon mode
@@ -500,9 +206,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# called on mouse move
 		# @param event [Event] the mouse event
 		createMove: (event)->
-			console.log 'createMove'
 			@controlPath.lastSegment.point = event.point
-
+			console.log 'create move'
 			@draw(true, false)
 			return
 
@@ -513,55 +218,20 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# @param point [P.Point] the point to add
 		# @param event [Event] the mouse event
 		endCreate: (point, event)->
-			console.log 'endCreate'
 			if @data.polygonMode then return 	# in polygon mode, finish is called by the path tool
 
-			if @controlPath.segments.length < 2 
-				@controlPath.add(@controlPath.firstSegment.point.add(0.5))
-
-			allPointsAreEqual = true
-			point = null
-			for segment in @controlPath.segments
-				if point? and not point.equals(segment.point)
-					allPointsAreEqual = false
-					break
-				point = segment.point
-			
-			if allPointsAreEqual
-				@controlPath.lastSegment.point = @controlPath.lastSegment.point.add(0.5)
-
-			if @controlPath.segments.length >= 2
-				# if @speeds? then @computeSpeed()
-
-				if R.drawingMode not in @constructor.drawingModes
-					@controlPath.simplify()
-
-				for segment in @controlPath.segments
-					if segment.handleIn.length>200
-						segment.handleIn = segment.handleIn.normalize().multiply(100)
-						console.log 'ADJUSTING HANDLE LENGTH'
-					if segment.handleOut.length>200
-						segment.handleOut = segment.handleOut.normalize().multiply(100)
-						console.log 'ADJUSTING HANDLE LENGTH'
-				# if @speeds? then @updateSpeed()
+			console.log('endCreate')
 			@finish()
 			super()
+
 			return
 
 		# finish path creation:
 		# @param loading [Boolean] (optional) whether the path is being loaded or being created by user
 		finish: ()->
-			if @data.polygonMode
-				@controlPath.lastSegment.remove()
-				@controlPath.lastSegment.handleOut = null
 
 			if @controlPath.segments.length<2
 				@updateCreate(@controlPath.firstSegment.point.add(new P.Point(0.25,0.25)), null)
-				# @remove()
-				# return false
-
-			if @data.smooth then @controlPath.smooth()
-
 			
 			@endDraw()
 			
@@ -580,38 +250,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 			return true
 
-		# in simplified mode, the path is drawn quickly, with less details
-		# all parameters which are critical in terms of drawing time are set to *parameter.simplified*
-		simplifiedModeOn: ()->
-			@previousData = {}
-			for folderName, folder of @constructor.parameters
-				for name, parameter of folder
-					if parameter.simplified? and @data[name]?
-						@previousData[name] = @data[name]
-						@data[name] = parameter.simplified
-			return
-
-		# retrieve parameters values we had before drawing in simplified mode
-		simplifiedModeOff: ()->
-			for folderName, folder of @constructor.parameters
-				for name, parameter of folder
-					if parameter.simplified? and @data[name]? and @previousData[name]?
-						@data[name] = @previousData[name]
-						delete @previousData[name]
-			return
-
 		processDrawing: (redrawing)->
 			@beginDraw(redrawing)
-
-			# # update drawing (@updateDraw()) every *step* along the control path
-			# # n=0
-			# while offset<controlPathLength
-
-			# 	@updateDraw(offset)
-			# 	offset += step
-
-			# 	# if n%10==0 then R.updateLoadingBar(offset/controlPathLength)
-			# 	# n++
 
 			for segment, i in @controlPath.segments
 				if i==0 then continue
@@ -628,37 +268,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		# - end drawing (@endDraw())
 		# because the path are rendered on rasters, path are not drawn on load unless they are animated
 		# @param simplified [Boolean] whether to draw in simplified mode or not (much faster)
-		draw: (simplified=false, redrawing=true, onSvg=true)->
+		draw: (simplified=false, redrawing=true)->
 
-			if @drawn
-				if not onSvg
-					R.view.draftLayer.addChild(@path)
-				# else
-				# 	@setSVG()
-				return
+			if @drawn then return
 
-			# if not R.rasterizer.requestDraw(@, simplified, redrawing) then return
+			if not R.rasterizer.requestDraw(@, simplified, redrawing) then return
 			# if R.rasterizer.disableDrawing then return
 
 			if @controlPath.segments.length < 2 then return
 
 			if simplified then @simplifiedModeOn()
 
-			# initialize dawing along control path
-			# the control path is divided into n steps of fixed length, the last step will be smaller than others
-			# to have a better result, the last (shorter) step is split in half and set as the first and the last step
-			step = @data.step
-			controlPathLength = @controlPath.length
-			nf = controlPathLength/step
-			nIteration  = Math.floor(nf)
-			reminder = nf-nIteration
-			offset = reminder*step/2
-
 			@drawingOffset = 0
-
-			# @group.parent.addChild(@path)
-			# if onSvg
-			# 	@group.remove()
 
 			try 	# catch errors to log them in the code editor console (if user is making a script)
 				@processDrawing(redrawing)
@@ -671,36 +292,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				@simplifiedModeOff()
 
 			@drawn = true
-			
-			# if onSvg
-			# 	@setSVG()
-			# else
-
-			if not onSvg
-				R.view.draftLayer.addChild(@path)
-
-			window.pp = @path
 
 			return
-
-		setSVG: ()->
-			# layerName = if @drawingId? then R.items[@drawingId].getLayerName() else 'mainLayer'
-			# @svg = @path.exportSVG()
-			# R.svgJ.find('#'+layerName).append(@svg)
-			return
-
-		drawOnPaper: ()->
-			if @svg?
-				@svg.remove()
-				@svg = null
-			@draw(false, true, false)
-			return
-
-		# drawOnSVG: ()->
-		# 	@path.remove()
-		# 	if not @svg?
-		# 		@draw()
-		# 	return
 
 		# @return [Array of Paper point] a list of point from the control path converted in the planet coordinate system
 		pathOnPlanet: ()->
@@ -711,14 +304,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 		getPoints: ()->
 			points = []
-			# Hack because the tipibot controler was made for a 4000 x 3000 mm area
-			# ratio = new P.Point(4000/R.city.width, 3000/R.city.height)
-			# for segment in @controlPath.segments
-			# 	points.push(Utils.CS.projectToPosOnPlanet(segment.point).multiply(ratio))
-			# 	points.push(Utils.CS.pointToObj(segment.handleIn).multiply(ratio))
-			# 	points.push(Utils.CS.pointToObj(segment.handleOut).multiply(ratio))
-			# 	points.push(segment.rtype)
-
 			for segment in @controlPath.segments
 				# points.push(Utils.CS.projectToPosOnPlanet(segment.point))
 				points.push(R.view.grid.projectToGeoJSON(segment.point))
@@ -981,7 +566,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				@selectedSegment = segment
 				@highlightSelectedPoint()
 				if update then @update('point')
-				# R.socket.emit "bounce", itemId: @id, function: "addPoint", arguments: [index, point, offset, false]
+				R.socket.emit "bounce", itemId: @id, function: "addPoint", arguments: [index, point, offset, false]
 			return segment
 
 		deletePointCommand: ()->
@@ -1007,7 +592,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			if not @socketAction
 				R.tools.select.updateSelectionRectangle()
 				if update then @update('point')
-				# R.socket.emit "bounce", itemId: @id, function: "deletePoint", arguments: [segment.index, false]
+				R.socket.emit "bounce", itemId: @id, function: "deletePoint", arguments: [segment.index, false]
 			return location
 
 		# delete the selected point (from curve) and delete curve if there are no points anymore
@@ -1041,7 +626,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 			if not @socketAction
 				if update then @update('segment')
-				# R.socket.emit "bounce", itemId: @id, function: "modifyPoint", arguments: [segment.index, position, handleIn, handleOut, fastDraw, false]
+				R.socket.emit "bounce", itemId: @id, function: "modifyPoint", arguments: [segment.index, position, handleIn, handleOut, fastDraw, false]
 			return
 
 		updateModifyPoint: (event)->
@@ -1083,7 +668,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 					segment.point.x += event.delta.x
 					segment.point.y += event.delta.y
 
-			# Item.Lock.highlightValidity(@, null, true)
+			Item.Lock.highlightValidity(@, null, true)
 			@modifyPoint(segment, segment.point, segment.handleIn, segment.handleOut, true, false)
 
 			return
@@ -1129,7 +714,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@highlightSelectedPoint()
 			if not @socketAction
 				if update then @update('point')
-				# R.socket.emit "bounce", itemId: @id, function: "modifyPointType", arguments: [segment.index, rtype, false]
+				R.socket.emit "bounce", itemId: @id, function: "modifyPointType", arguments: [segment.index, rtype, false]
 			return
 
 		modifyControlPathCommand: (previousPointsAndPlanet, newPointsAndPlanet)->
@@ -1147,7 +732,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@draw()
 			if not @socketAction
 				if update then @update('point')
-				# R.socket.emit "bounce", itemId: @id, function: "modifyControlPath", arguments: [pointsAndPlanet, false]
+				R.socket.emit "bounce", itemId: @id, function: "modifyControlPath", arguments: [pointsAndPlanet, false]
 			return
 
 		setSmooth: (smooth)->
@@ -1170,7 +755,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 		simplifyControlPath: ()->
 			previousPointsAndPlanet = @getPointsAndPlanet()
 
-			console.log('simplifyControlPath simplify')
 			@controlPath?.simplify()
 			@draw()
 			@update()
@@ -1188,18 +772,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			# 		@selectionRectangle?.visible = @data.showSelectionRectangle
 			return
 
-		getDrawing: ()->
-			return R.Drawing.getDraft()
-
 		# overload {RPath#remove}, but in addition: remove the selected point highlight and the canvas raster
 		remove: ()->
 			console.log("Remove precise path")
-			
-			@svg?.remove()
-
-			@getDrawing()?.removeChild(@)
-			@path.remove()
-
 			@canvasRaster?.remove()
 			@canvasRaster = null
 			if @liJ?
@@ -1208,5 +783,4 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			return
 
 	Item.PrecisePath = PrecisePath
-	Item.Path.PrecisePath = PrecisePath
 	return PrecisePath
