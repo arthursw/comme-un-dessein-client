@@ -341,5 +341,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Camera.js.map

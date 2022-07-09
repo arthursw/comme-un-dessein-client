@@ -415,10 +415,6 @@
               }
               id = 'rasterizeItem-' + item.od;
               itemMustBeRasterized = ((ref2 = data["function"]) !== 'setPK' && ref2 !== 'create') && !item.drawing.visible;
-              if ((R.updateTimeout[id] == null) && itemMustBeRasterized) {
-                R.rasterizer.drawItems();
-                R.rasterizer.rasterize(item, true);
-              }
               item.drawing.visible = true;
               item.socketAction = true;
               rFunction.apply(item, data["arguments"]);
@@ -438,11 +434,7 @@
         }
       };
 
-      Socket.prototype.rasterizeItem = function() {
-        if (!item.currentCommand) {
-          R.rasterizer.rasterize(item);
-        }
-      };
+      Socket.prototype.rasterizeItem = function() {};
 
       Socket.prototype.getChatRoom = function() {
         return 'Comme un dessein';
@@ -455,5 +447,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Socket.js.map

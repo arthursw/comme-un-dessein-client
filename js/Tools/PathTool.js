@@ -367,8 +367,26 @@
         path.updateCreate(event.point, event, false);
       };
 
+      PathTool.prototype.showPathError = function(event, from) {
+        var p;
+        if (from == null) {
+          from = R.me;
+        }
+        p = this.currentPath.clone();
+        p.strokeColor = 'red';
+        R.view.mainLayer.addChild(p);
+        setTimeout(((function(_this) {
+          return function() {
+            return p.remove();
+          };
+        })(this)), 1000);
+        event.point = this.currentPath.lastSegment.point;
+        this.end(event, from);
+        this.showDraftLimits();
+      };
+
       PathTool.prototype.update = function(event, from) {
-        var draftIsOutsideFrame, draftIsTooBig, draftLimit, p;
+        var draftIsOutsideFrame, draftIsTooBig, draftLimit;
         if (from == null) {
           from = R.me;
         }
@@ -384,17 +402,7 @@
           } else if (draftIsOutsideFrame) {
             R.alertManager.alert('Your path must be in the drawing area', 'error');
           }
-          p = this.currentPath.clone();
-          p.strokeColor = 'red';
-          R.view.mainLayer.addChild(p);
-          setTimeout(((function(_this) {
-            return function() {
-              return p.remove();
-            };
-          })(this)), 1000);
-          event.point = this.currentPath.lastSegment.point;
-          this.end(event, from);
-          this.showDraftLimits();
+          this.showPathError(event, from);
           return;
         }
         this.currentPath.add(event.point);
@@ -475,5 +483,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=PathTool.js.map

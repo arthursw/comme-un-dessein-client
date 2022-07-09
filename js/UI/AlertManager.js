@@ -201,5 +201,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=AlertManager.js.map

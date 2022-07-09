@@ -1,4 +1,4 @@
-dependencies = ['paper', 'R',  'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Paths/Path', 'Items/Divs/Div' ]
+dependencies = ['paper', 'R',  'Utils/Utils', 'View/Grid', 'View/ExquisiteCorpseMask', 'Commands/Command', 'Items/Paths/Path' ]
 if document?
 	dependencies.push('i18next')
 	dependencies.push('hammerjs')
@@ -6,7 +6,7 @@ if document?
 	# dependencies.push('tween')
 	dependencies.push('jquery-hammer')
 
-define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, mousewheel) ->
+define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Command, Path, i18next, Hammer, mousewheel) ->
 
 	class View
 		
@@ -49,7 +49,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			
 			paper.settings.hitTolerance = 5
 
-			R.scale = 1000.0
+			# R.scale = 1000.0
 			P.view.zoom = 1 # 0.01
 			@previousPosition = P.view.center
 
@@ -61,6 +61,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 			@mainLayer.activate()
 			
+			if R.city.mode == 'ExquisiteCorpse'
+				@exquisiteCorpseMask = new ExquisiteCorpseMask(@grid)
+
 			R.canvasJ.dblclick( (event) -> R.selectedTool?.doubleClick?(event) )
 			# cancel default delete key behaviour (not really working)
 			R.canvasJ.keydown( (event) -> if event.key == 46 then event.preventDefault(); return false )
@@ -121,6 +124,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# @firstHashChange = true
 
 			@createThumbnailProject()
+
+			
 			return
 		
 		createThumbnailProject: ()->
@@ -295,7 +300,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 						child.controller.draw?()
 						child.controller.rasterize?()
 
-				R.rasterizer.refresh()
+				# R.rasterizer.refresh()
 
 				SVGLayerJ = document.getElementById(item.name)
 				SVGLayerJ.setAttribute('visibility', if visible then 'visible' else 'hidden')
@@ -380,10 +385,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			if not R.administrator
 				@rejectedLayer.visible = false
 			else
-				@testLayer = new P.Layer()
-				@testLayer.name  = 'testLayer'
-				@testLayer.strokeColor = Path.colorMap['test']
-				@testLayer.strokeWidth = Path.strokeWidth
+				# @testLayer = new P.Layer()
+				# @testLayer.name  = 'testLayer'
+				# @testLayer.strokeColor = Path.colorMap['test']
+				# @testLayer.strokeWidth = Path.strokeWidth
 				@flaggedLayer.strokeColor = Path.colorMap['flagged']
 
 			@draftListJ = @createLayerListItem('Draft', @draftLayer, true)
@@ -544,9 +549,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 						restrictedAreaShrinked = @restrictedArea.expand(newView.size.multiply(-1)) # restricted area shrinked by P.view.size
 
-						if restrictedAreaShrinked.width<0
+						if restrictedAreaShrinked.width < 0
 							restrictedAreaShrinked.left = restrictedAreaShrinked.right = @restrictedArea.center.x
-						if restrictedAreaShrinked.height<0
+						if restrictedAreaShrinked.height < 0
 							restrictedAreaShrinked.top = restrictedAreaShrinked.bottom = @restrictedArea.center.y
 
 						newView.center.x = Utils.clamp(restrictedAreaShrinked.left, newView.center.x, restrictedAreaShrinked.right)
@@ -564,7 +569,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			for div in R.divs 										# update RDivs positions
 				div.updateTransform()
 
-			R.rasterizer.move()
+			# R.rasterizer.move()
 			@grid.update() 											# update grid
 			R.loader.loadRasters()
 
@@ -786,7 +791,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 
 		# User has choosen a city from world: display @grid.frame (gray background) and update @restrictedArea
 		loadCity: ()->
-			@gird.createFrame()
+			# @grid.createFrame()
 			@initializePosition()
 			return
 
@@ -794,6 +799,10 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			point = Utils.Event.GetPoint(event)
 			point.y -= 62 # the stage is at 62 pixel
 			point = P.view.viewToProject(point)
+			
+			canDrawOrVote = R.view.exquisiteCorpseMask.mouseBegin({point: point})
+			if not canDrawOrVote then return
+
 			rectangle = new P.Rectangle(point, point)
 			rectangle = rectangle.expand(5)
 			
@@ -812,7 +821,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		# update @entireArea and @restrictedArea according to site settings
 		# update sidebar according to site settings
 		initializePosition: ()->
-
+			
 			# R.githubLogin = R.canvasJ.attr("data-github-login")
 			R.city ?= {}
 			R.city.city = if R.canvasJ.attr("data-city") != '' then R.canvasJ.attr("data-city") else undefined
@@ -864,7 +873,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 			# R.discussionJ.css('bottom': '0')
 			# R.discussionJ.append('<div id="discussion-view">')
 			
-
+			@exquisiteCorpseMask?.createMask()
 			
 
 			# check if canvas has an attribute 'data-box'
@@ -1017,10 +1026,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 					R.tools.select.select()
 				when 't'
 					R.showToolBox()
-				when 'r'
-					# if R.specialKey(event) # Ctrl + R is already used to reload the page
-					if event.modifiers.shift
-						R.rasterizer.rasterizeImmediately()
+				# when 'r'
+				# 	# if R.specialKey(event) # Ctrl + R is already used to reload the page
+				# 	if event.modifiers.shift R.rasterizer.rasterizeImmediately()
 
 			event.preventDefault()
 			return
@@ -1031,7 +1039,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 		onFrame: (event)=>
 			# TWEEN.update(event.time)
 
-			R.rasterizer?.updateLoadingBar?(event.time)
+			# R.rasterizer?.updateLoadingBar?(event.time)
 
 			R.selectedTool?.onFrame?(event)
 
@@ -1107,7 +1115,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, Command, Path, Div, i18nex
 				paperEvent = Utils.Event.jEventToPaperEvent(event, @previousMousePosition, @initialMousePosition, 'mousemove')
 				R.selectedTool?.move?(paperEvent)
 
-			Div.updateHiddenDivs(event)
+			# Div.updateHiddenDivs(event)
 
 			# update selected RDivs
 			# if R.previousPoint?

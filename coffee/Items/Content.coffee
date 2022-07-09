@@ -285,10 +285,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item' ], (P, R, Utils, Item) ->
 			if not super() then return false
 
 			bounds = @getBounds()
-			if bounds? and bounds.area > R.rasterizer.maxArea()
-				R.alertManager.alert("The item is too big", "Warning")
-				@remove()
-				return false
+			# if bounds? and bounds.area > R.rasterizer.maxArea()
+			# 	R.alertManager.alert("The item is too big", "Warning")
+			# 	@remove()
+			# 	return false
 
 			# locks = Item.Lock.getLocksWhichIntersect(bounds)
 

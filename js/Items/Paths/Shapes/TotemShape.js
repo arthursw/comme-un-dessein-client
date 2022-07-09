@@ -81,5 +81,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=TotemShape.js.map

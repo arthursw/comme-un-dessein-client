@@ -88,5 +88,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=ImageProcessor.js.map

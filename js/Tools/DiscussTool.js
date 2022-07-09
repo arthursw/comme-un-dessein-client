@@ -189,5 +189,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=DiscussTool.js.map

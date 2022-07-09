@@ -14,5 +14,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=R.js.map

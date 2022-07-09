@@ -53,5 +53,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=RectangleShape.js.map

@@ -9,7 +9,6 @@
 
       RasterizerManager.prototype.initializeRasterizers = function() {
         this.rasterizers = {};
-        R.rasterizer = new Rasterizer();
         this.addRasterizerParameters();
       };
 
@@ -25,7 +24,6 @@
         Rasterizer.Tile.loadingBarJ = divJ;
         parameters = {
           renderingMode: {
-            "default": R.rasterizer.constructor.TYPE,
             values: renderingModes,
             label: 'Render mode',
             onFinishChange: this.setRasterizerType
@@ -35,10 +33,6 @@
             label: 'Rasterize items',
             onFinishChange: function(value) {
               var controller, i, len, ref1;
-              R.rasterizer.rasterizeItems = value;
-              if (!value) {
-                R.rasterizer.renderInView = true;
-              }
               ref1 = this.rasterizerFolder.datFolder.__controllers;
               for (i = 0, len = ref1.length; i < len; i++) {
                 controller = ref1[i];
@@ -55,31 +49,23 @@
           renderInView: {
             "default": false,
             label: 'Render in view',
-            onFinishChange: function(value) {
-              R.rasterizer.renderInView = value;
-            }
+            onFinishChange: function(value) {}
           },
           autoRasterization: {
             "default": 'deferred',
             values: ['immediate', 'deferred', 'disabled'],
             label: 'Auto rasterization',
-            onFinishChange: function(value) {
-              R.rasterizer.autoRasterization = value;
-            }
+            onFinishChange: function(value) {}
           },
           rasterizationDelay: {
             "default": 800,
             min: 0,
             max: 10000,
             lable: 'Delay',
-            onFinishChange: function(value) {
-              R.rasterizer.rasterizationDelay = value;
-            }
+            onFinishChange: function(value) {}
           },
           rasterizeImmediately: {
-            "default": function() {
-              R.rasterizer.rasterizeImmediately();
-            },
+            "default": function() {},
             label: 'Rasterize'
           }
         };
@@ -103,14 +89,12 @@
           }
         }
         R.loader.unload();
-        R.rasterizer = this.rasterizers[type];
         ref3 = this.rasterizerFolder.datFolder.__controllers;
         for (k = 0, len2 = ref3.length; k < len2; k++) {
           controller = ref3[k];
           if (R.rasterizer[controller.property] != null) {
             onFinishChange = controller.__onFinishChange;
             controller.__onFinishChange = function() {};
-            controller.setValue(R.rasterizer[controller.property]);
             controller.__onFinishChange = onFinishChange;
           }
         }
@@ -129,13 +113,9 @@
         });
       };
 
-      RasterizerManager.prototype.hideRasters = function() {
-        R.rasterizer.hideRasters();
-      };
+      RasterizerManager.prototype.hideRasters = function() {};
 
-      RasterizerManager.prototype.showRasters = function() {
-        R.rasterizer.showRasters();
-      };
+      RasterizerManager.prototype.showRasters = function() {};
 
       return RasterizerManager;
 
@@ -144,5 +124,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=RasterizerManager.js.map

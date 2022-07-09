@@ -279,12 +279,16 @@
       };
 
       SelectTool.prototype.begin = function(event) {
-        var controller, hitResult, itemWasHit, name, path, ref, ref1, ref2;
+        var canDrawOrVote, controller, hitResult, itemWasHit, name, path, ref, ref1, ref2;
         if (event.event.which === 2) {
           return;
         }
         if (P.view.zoom < 0.125) {
           R.alertManager.alert('Please zoom before voting', 'info');
+          return;
+        }
+        canDrawOrVote = R.view.exquisiteCorpseMask.mouseBegin(event);
+        if (!canDrawOrVote) {
           return;
         }
         itemWasHit = false;
@@ -404,5 +408,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=SelectTool.js.map

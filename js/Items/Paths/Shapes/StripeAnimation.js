@@ -197,5 +197,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=StripeAnimation.js.map

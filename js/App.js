@@ -28,14 +28,14 @@
 
   if ((parameters != null) && (parameters['repository-owner'] != null) && (parameters['repository-commit'] != null)) {
     prefix = parameters['repository-use-cdn'] != null ? '//cdn.' : '//';
-    baseUrl = prefix + 'rawgit.com/' + parameters['repository-owner'] + '/wetu-client/' + parameters['repository-commit'] + '/js';
+    baseUrl = prefix + 'rawgit.com/' + parameters['repository-owner'] + '/comme-un-dessein-client/' + parameters['repository-commit'] + '/js';
     repository = {
       owner: parameters['repository-owner'],
       commit: parameters['repository-commit']
     };
     libs = location.origin + '/static/libs/';
   } else {
-    baseUrl = '../static/wetu-client/js';
+    baseUrl = '../static/comme-un-dessein-client/js';
   }
 
   requirejs.config({
@@ -122,6 +122,24 @@
     } else {
       R.city.height = null;
     }
+    R.city.tileWidth = canvasJ.attr('data-city-tile-width');
+    if (_.isString(R.city.tileWidth)) {
+      R.city.tileWidth = parseFloat(R.city.tileWidth.replace(',', '.'));
+    } else {
+      R.city.tileWidth = null;
+    }
+    R.city.tileHeight = canvasJ.attr('data-city-tile-height');
+    if (_.isString(R.city.tileHeight)) {
+      R.city.tileHeight = parseFloat(R.city.tileHeight.replace(',', '.'));
+    } else {
+      R.city.tileHeight = null;
+    }
+    R.city.nTilesMax = canvasJ.attr('data-city-n-tiles-max');
+    if (_.isString(R.city.nTilesMax)) {
+      R.city.nTilesMax = parseInt(R.city.nTilesMax);
+    } else {
+      R.city.nTilesMax = null;
+    }
     R.city.pixelPerMm = canvasJ.attr('data-city-pixel-per-mm');
     if (_.isString(R.city.pixelPerMm)) {
       R.city.pixelPerMm = parseFloat(R.city.pixelPerMm.replace(',', '.'));
@@ -170,5 +188,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=App.js.map

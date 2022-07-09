@@ -9,11 +9,11 @@
     ChooseTool = (function(superClass) {
       extend(ChooseTool, superClass);
 
-      ChooseTool.paperMargins = 16;
+      ChooseTool.tileMargins = 16;
 
-      ChooseTool.paperWidth = 210 - ChooseTool.paperMargins;
+      ChooseTool.tileWidth = 210 - ChooseTool.tileMargins;
 
-      ChooseTool.paperHeight = 297 - ChooseTool.paperMargins;
+      ChooseTool.tileHeight = 297 - ChooseTool.tileMargins;
 
       ChooseTool.nSheetsPerTile = 2;
 
@@ -45,6 +45,10 @@
         var activeLayer;
         if (!R.isCommeUnDessein) {
           ChooseTool.__super__.constructor.call(this, true);
+        }
+        if ((R.city.tileWidth != null) && (R.city.tileHeight != null)) {
+          this.constructor.tileWidth = R.city.tileWidth;
+          this.constructor.tileHeight = R.city.tileHeight;
         }
         activeLayer = P.project.activeLayer;
         this.tileRectangles = new P.Layer();
@@ -102,7 +106,7 @@
           } else {
             this.lines.addChild(line);
           }
-          x += this.constructor.paperWidth;
+          x += this.constructor.tileWidth * R.city.pixelPerMm;
           n++;
         }
         y = rectangle.top;
@@ -121,7 +125,7 @@
           } else {
             this.lines.addChild(line);
           }
-          y += this.constructor.paperHeight;
+          y += this.constructor.tileHeight * R.city.pixelPerMm;
           n++;
         }
       };
@@ -191,18 +195,20 @@
       ChooseTool.prototype.update = function(event) {};
 
       ChooseTool.prototype.move = function(event) {
-        var bottom, height, left, margin, ref, right, top, width;
+        var bottom, canvas, eventTarget, height, left, margin, ref, ref1, right, top, width;
         if (R.isCommeUnDessein) {
           return;
         }
-        if (((ref = event.originalEvent) != null ? ref.target : void 0) !== document.getElementById('canvas')) {
+        canvas = document.getElementById('canvas');
+        eventTarget = ((ref = event.originalEvent) != null ? ref.target : void 0) || ((ref1 = event.event) != null ? ref1.target : void 0);
+        if (eventTarget !== canvas) {
           return;
         }
         if (this.ignoreMouseMoves) {
           return;
         }
-        width = this.constructor.paperWidth * this.constructor.nSheetsPerTile;
-        height = this.constructor.paperHeight * this.constructor.nSheetsPerTile;
+        width = this.constructor.tileWidth * R.city.pixelPerMm * this.constructor.nSheetsPerTile;
+        height = this.constructor.tileHeight * R.city.pixelPerMm * this.constructor.nSheetsPerTile;
         if (this.highlight == null) {
           margin = 5;
           this.highlight = new P.Path.Rectangle(margin, margin, width - margin, height - margin);
@@ -225,8 +231,8 @@
 
       ChooseTool.prototype.projectToXY = function(point) {
         var height, left, tileX, tileY, top, width;
-        width = this.constructor.paperWidth * this.constructor.nSheetsPerTile;
-        height = this.constructor.paperHeight * this.constructor.nSheetsPerTile;
+        width = this.constructor.tileWidth * R.city.pixelPerMm * this.constructor.nSheetsPerTile;
+        height = this.constructor.tileHeight * R.city.pixelPerMm * this.constructor.nSheetsPerTile;
         left = R.view.grid.limitCDRectangle.left;
         top = R.view.grid.limitCDRectangle.top;
         tileX = Math.floor((point.x - left) / width);
@@ -242,8 +248,8 @@
         if (!R.view.grid.limitCDRectangle.contains(event.point)) {
           return;
         }
-        width = this.constructor.paperWidth * this.constructor.nSheetsPerTile;
-        height = this.constructor.paperHeight * this.constructor.nSheetsPerTile;
+        width = this.constructor.tileWidth * R.city.pixelPerMm * this.constructor.nSheetsPerTile;
+        height = this.constructor.tileHeight * R.city.pixelPerMm * this.constructor.nSheetsPerTile;
         left = R.view.grid.limitCDRectangle.left;
         top = R.view.grid.limitCDRectangle.top;
         right = R.view.grid.limitCDRectangle.right;
@@ -352,8 +358,8 @@
         if ((tilesRow != null) && tilesRow.get(tile.x)) {
           return;
         }
-        width = this.constructor.paperWidth * this.constructor.nSheetsPerTile;
-        height = this.constructor.paperHeight * this.constructor.nSheetsPerTile;
+        width = this.constructor.tileWidth * R.city.pixelPerMm * this.constructor.nSheetsPerTile;
+        height = this.constructor.tileHeight * R.city.pixelPerMm * this.constructor.nSheetsPerTile;
         left = R.view.grid.limitCDRectangle.left;
         top = R.view.grid.limitCDRectangle.top;
         tileRectangle = P.Path.Rectangle(left + tile.x * width, top + tile.y * height, width, height);
@@ -545,5 +551,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=ChooseTool.js.map

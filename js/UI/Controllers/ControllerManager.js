@@ -49,7 +49,6 @@
             var div, k, len, ref;
             P.view.zoom = value / 100.0;
             R.view.grid.update();
-            R.rasterizer.move();
             ref = R.divs;
             for (k = 0, len = ref.length; k < len; k++) {
               div = ref[k];
@@ -463,5 +462,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=ControllerManager.js.map

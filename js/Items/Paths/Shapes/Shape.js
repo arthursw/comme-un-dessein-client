@@ -47,7 +47,6 @@
         this.initializeControlPath();
         this.controlPath.rotation = this.rotation;
         this.initialize();
-        R.rasterizer.loadItem(this);
         distanceMax = this.constructor.secureDistance * this.constructor.secureDistance;
         for (i = j = 0, len = points.length; j < len; i = ++j) {
           point = points[i];
@@ -77,9 +76,6 @@
           simplified = false;
         }
         this.drawn = false;
-        if (!R.rasterizer.requestDraw(this, simplified)) {
-          return;
-        }
         if (!R.catchErrors) {
           this.process();
         } else {
@@ -179,5 +175,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Shape.js.map

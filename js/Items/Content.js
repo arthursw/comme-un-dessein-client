@@ -252,11 +252,6 @@
           return false;
         }
         bounds = this.getBounds();
-        if ((bounds != null) && bounds.area > R.rasterizer.maxArea()) {
-          R.alertManager.alert("The item is too big", "Warning");
-          this.remove();
-          return false;
-        }
         return true;
       };
 
@@ -286,5 +281,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Content.js.map

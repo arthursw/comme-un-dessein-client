@@ -37,5 +37,3 @@
   }
 
 }).call(this);
-
-//# sourceMappingURL=Spaghetti.js.map

@@ -44,7 +44,6 @@
       function Rasterizer() {
         this.rasterizeCallback = bind(this.rasterizeCallback, this);
         this.rasterizeImmediately = bind(this.rasterizeImmediately, this);
-        R.rasterizerManager.rasterizers[this.constructor.TYPE] = this;
         this.rasterizeItems = true;
         return;
       }
@@ -1165,5 +1164,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Rasterizer.js.map

@@ -4,7 +4,6 @@ define [
 	'Loader'
 	'Socket'
 	'City'
-	'Rasterizers/RasterizerManager'
 	'UI/Sidebar'
 	'UI/Toolbar'
 	'UI/DrawingPanel'
@@ -16,13 +15,12 @@ define [
 	'View/View'
 	'View/Timelapse'
 	'Tools/ToolManager'
-	'RasterizerBot'
 	'i18next'
 	'i18nextXHRBackendID'
 	'i18nextBrowserLanguageDetectorID'
 	'jqueryI18next'
 	'moment'
-], (R, Utils, Loader, Socket, CityManager, RasterizerManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, CommandManager, View, Timelapse, ToolManager, RasterizerBot, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
+], (R, Utils, Loader, Socket, CityManager, Sidebar, Toolbar, DrawingPanel, Modal, Button, AlertManager, CommandManager, View, Timelapse, ToolManager, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, jqueryI18next, moment) ->
 
 	showEndModal = (message, cityName)->
 
@@ -288,7 +286,7 @@ define [
 		# R.areasToUpdateRectangles = {} 			# debug map: area to update pk -> rectangle path
 
 		if location.pathname == '/rasterizer/'
-			R.rasterizerBot = new RasterizerBot(@)
+			# R.rasterizerBot = new RasterizerBot(@)
 			R.loader = new Loader.RasterizerLoader()
 		else
 			R.loader = new Loader()
@@ -319,8 +317,8 @@ define [
 		# 	# R.controllerManager = new ControllerManager()
 		# 	# R.controllerManager.createGlobalControllers()
 		
-		R.rasterizerManager = new RasterizerManager()
-		R.rasterizerManager.initializeRasterizers()
+		# R.rasterizerManager = new RasterizerManager()
+		# R.rasterizerManager.initializeRasterizers()
 		R.view.createBackground()
 		
 		R.commandManager = new CommandManager()
@@ -334,6 +332,7 @@ define [
 		R.toolManager.createAutoTraceButton()
 		R.toolManager.createDeleteButton()
 		R.toolManager.createSubmitButton()
+		R.loader.initializeTileManager()
 		
 		R.view.initializePosition()
 		R.sidebar.initialize()

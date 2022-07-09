@@ -160,5 +160,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Grid.js.map

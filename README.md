@@ -1,6 +1,6 @@
-# Wetu-client-code
+# CommeUnDessein-client-code
 
-The client code of Wetu - a collaborative application experiment
+The client code of CommeUnDessein - a collaborative application experiment
 
 Compile: 
 

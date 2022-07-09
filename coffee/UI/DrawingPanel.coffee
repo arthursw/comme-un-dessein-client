@@ -1121,8 +1121,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			modal.addText("How would you like to print this tile ?", "How would you like to print this tile")
 			modal.addText("If you choose to print on a single sheet, you will need to paint it twice as big.", "Scale up the tile")
 
-			width = R.Tools.Choose.paperWidth * R.Tools.Choose.nSheetsPerTile
-			height = R.Tools.Choose.paperHeight * R.Tools.Choose.nSheetsPerTile
+			width = R.Tools.Choose.tileWidth * R.Tools.Choose.nSheetsPerTile
+			height = R.Tools.Choose.tileHeight * R.Tools.Choose.nSheetsPerTile
 
 			modal.addText("The tile dimensions must be: " + width + ' x ' + height + 'mm.', "The tile dimensions must be", false, {width: width, height: height})
 
@@ -1138,7 +1138,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@printSheets(false)
 			return
 
-		print: (project, rectangles, dashedFrames, paperWidth, paperHeight)=>
+		print: (project, rectangles, dashedFrames, tileWidth, tileHeight)=>
 
 			newWindow = window.open("about:blank", "_new")
 
@@ -1159,9 +1159,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 					dashedFrames[n].visible = true
 					svg = @tileProject.exportSVG()
 
-					svg.setAttribute('width', paperWidth + 'mm')
-					svg.setAttribute('height', paperHeight + 'mm')
-					svg.setAttribute('viewBox', '0 0 ' + paperWidth + ' ' + paperHeight)
+					svg.setAttribute('width', Math.round(tileWidth / R.city.pixelPerMm) + 'mm')
+					svg.setAttribute('height', Math.round(tileHeight / R.city.pixelPerMm) + 'mm')
+					svg.setAttribute('viewBox', '0 0 ' + tileWidth + ' ' + tileHeight)
 
 					newWindow.document.write(svg.outerHTML)
 					if n < rectangles.length - 1
@@ -1190,10 +1190,10 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			# scale = 96/2.54/10
 
 			nSheetsPerTile = if singleSheet then 1 else R.Tools.Choose.nSheetsPerTile
-			paperWidth = R.Tools.Choose.paperWidth
-			paperHeight = R.Tools.Choose.paperHeight
-			width = paperWidth * nSheetsPerTile
-			height = paperHeight * nSheetsPerTile
+			tileWidth = R.Tools.Choose.tileWidth * R.city.pixelPerMm
+			tileHeight = R.Tools.Choose.tileHeight * R.city.pixelPerMm
+			width = tileWidth * nSheetsPerTile
+			height = tileHeight * nSheetsPerTile
 
 			# @tileProject.view.viewSize.width = width * scale / nSheetsPerTile
 			# @tileProject.view.viewSize.height = height * scale / nSheetsPerTile
@@ -1246,14 +1246,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			nDrawingsToLoad = drawingsToLoad.length
 
 			if nDrawingsToLoad == 0
-				@print(project, rectangles, dashedFrames, paperWidth, paperHeight)
+				@print(project, rectangles, dashedFrames, tileWidth, tileHeight)
 
 			for drawing in drawingsToLoad
 				drawing.loadSVGToPrint( (svg)=> 
 					@tileProject.importSVG(svg)
 					nDrawingsToLoad--
 					if nDrawingsToLoad <= 0
-						@print(project, rectangles, dashedFrames, paperWidth, paperHeight)
+						@print(project, rectangles, dashedFrames, tileWidth, tileHeight)
 
 					return
 					)

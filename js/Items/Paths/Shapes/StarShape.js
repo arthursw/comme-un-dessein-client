@@ -94,5 +94,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=StarShape.js.map

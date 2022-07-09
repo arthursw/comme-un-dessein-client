@@ -8,9 +8,9 @@
     CS.projectToPlanet = function(point) {
       var planet, x, y;
       planet = {};
-      x = point.x / R.scale;
+      x = CS.PlanetWidth * point.x / (R.city.width * R.city.pixelPerMm);
       planet.x = Math.floor((x + CS.PlanetWidth / 2) / CS.PlanetWidth);
-      y = point.y / R.scale;
+      y = CS.PlanetHeight * point.y / (R.city.height * R.city.pixelPerMm);
       planet.y = Math.floor((y + CS.PlanetHeight / 2) / CS.PlanetHeight);
       return planet;
     };
@@ -20,8 +20,8 @@
         planet = CS.projectToPlanet(point);
       }
       pos = {};
-      pos.x = point.x / R.scale - CS.PlanetWidth * planet.x;
-      pos.y = point.y / R.scale - CS.PlanetHeight * planet.y;
+      pos.x = CS.PlanetWidth * point.x / (R.city.width * R.city.pixelPerMm) - CS.PlanetWidth * planet.x;
+      pos.y = CS.PlanetHeight * point.y / (R.city.height * R.city.pixelPerMm) - CS.PlanetHeight * planet.y;
       return pos;
     };
     CS.projectToPlanetJson = function(point) {
@@ -40,8 +40,8 @@
       }
       x = planet.x * CS.PlanetWidth + point.x;
       y = planet.y * CS.PlanetHeight + point.y;
-      x *= R.scale;
-      y *= R.scale;
+      x *= R.city.width * R.city.pixelPerMm / CS.PlanetWidth;
+      y *= R.city.height * R.city.pixelPerMm / CS.PlanetHeight;
       return new P.Point(x, y);
     };
     CS.arrayToPoint = function(array) {
@@ -115,5 +115,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=CoordinateSystems.js.map

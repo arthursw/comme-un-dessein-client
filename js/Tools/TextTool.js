@@ -54,5 +54,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=TextTool.js.map

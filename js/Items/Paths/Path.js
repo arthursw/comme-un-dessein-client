@@ -4,7 +4,7 @@
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathTool', 'Commands/Command'], function(P, R, Utils, Item, Content, PathTool, Command) {
+  define(['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathTool', 'Tools/ExquisiteCorpseTool', 'Commands/Command'], function(P, R, Utils, Item, Content, PathTool, ExquisiteCorpseTool, Command) {
     var Path;
     Path = (function(superClass) {
       extend(Path, superClass);
@@ -45,7 +45,7 @@
       Path.parameters = Path.initializeParameters();
 
       Path.createTool = function(Path) {
-        new R.Tools.Path(Path);
+        R.tools.path = R.city.mode !== 'ExquisiteCorpse' ? new R.Tools.Path(Path) : new R.Tools.ExquisiteCorpse(Path);
       };
 
       Path.create = function(duplicateData) {
@@ -721,5 +721,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Path.js.map

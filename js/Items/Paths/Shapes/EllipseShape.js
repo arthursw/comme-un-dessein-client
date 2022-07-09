@@ -33,5 +33,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=EllipseShape.js.map

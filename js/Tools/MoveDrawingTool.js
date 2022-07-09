@@ -105,5 +105,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=MoveDrawingTool.js.map

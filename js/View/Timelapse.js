@@ -581,5 +581,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Timelapse.js.map

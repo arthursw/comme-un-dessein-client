@@ -393,6 +393,20 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 			# if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "update", arguments: [event, R.me]
 			return
 		
+		showPathError: (event, from=R.me)->
+
+			p = @currentPath.clone()
+			p.strokeColor = 'red'
+			R.view.mainLayer.addChild(p)
+			setTimeout((()=> p.remove()), 1000)
+
+			event.point = @currentPath.lastSegment.point
+			@end(event, from)
+
+			@showDraftLimits()
+
+			return
+		
 		update: (event, from=R.me) ->
 			if not @currentPath? then return
 
@@ -408,16 +422,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 					@constructor.displayDraftIsTooBigError()
 				else if draftIsOutsideFrame
 					R.alertManager.alert 'Your path must be in the drawing area', 'error'
-
-				p = @currentPath.clone()
-				p.strokeColor = 'red'
-				R.view.mainLayer.addChild(p)
-				setTimeout((()=> p.remove()), 1000)
-
-				event.point = @currentPath.lastSegment.point
-				@end(event, from)
-
-				@showDraftLimits()
+				@showPathError(event, from)
 
 				return
 
@@ -431,63 +436,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 		moveBackup: (event) ->
 			if R.currentPaths[R.me]?.data?.polygonMode then R.currentPaths[R.me].createMove?(event)
 			return
-<<<<<<< HEAD
-
-		createPath: (event, from)->
-			path = R.currentPaths[from]
-			if not path? then return 		# when the path has been deleted because too big
-			if not path.group then return
-
-			if R.me? and from==R.me 						# if user is the author of the event: select and save path and emit event on websocket
-
-				# if path.rectangle.area == 0
-				# 	path.remove()
-				# 	delete R.currentPaths[from]
-				# 	return
-
-				# bounds = path.getBounds()
-				# locks = Lock.getLocksWhichIntersect(bounds)
-				# for lock in locks
-				# 	if lock.rectangle.contains(bounds)
-				# 		if lock.owner == R.me
-				# 			lock.addItem(path)
-				# 		else
-				# 			R.alertManager.alert("The path intersects with a lock", "Warning")
-				# 			path.remove()
-				# 			delete R.currentPaths[from]
-				# 			return
-				# if path.getDrawingBounds().area > R.rasterizer.maxArea()
-				# 	R.alertManager.alert("The path is too big", "Warning")
-				# 	path.remove()
-				# 	delete R.currentPaths[from]
-				# 	return
-
-				# if @constructor.emitSocket and R.me? and from==R.me then R.socket.emit "bounce", tool: @name, function: "createPath", arguments: [event, R.me]
-
-				if (not R.me?) or not _.isString(R.me)
-					R.alertManager.alert("You must log in before drawing, your drawing won't be saved", "Info")
-					return
-
-
-				path.save(true)
-
-				path.rasterize()
-				
-				R.rasterizer.rasterize(path)
-
-				R.toolManager.updateButtonsVisibility()
-
-
-				# path.select(false)
-			else
-				path.endCreate(event.point, event)
-			
-			delete R.currentPaths[from]
-			
-=======
 		
 		move: (event) ->
->>>>>>> f3f7b4f5b850af2c71f18b49fb4835248d3ab23a
 			return
 
 		# createPath: (event, from)->
@@ -676,4 +626,5 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 			return
 
 	R.Tools.Path = PathTool
+	
 	return PathTool

@@ -2,9 +2,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 
 	class ChooseTool extends Tool
 
-		@paperMargins = 16
-		@paperWidth = 210 - @paperMargins
-		@paperHeight = 297 - @paperMargins
+		@tileMargins = 16
+		@tileWidth = 210 - @tileMargins
+		@tileHeight = 297 - @tileMargins
 		@nSheetsPerTile = 2
 		@nSecondsPerTile = 0.25
 
@@ -26,6 +26,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 		constructor: () ->
 			if not R.isCommeUnDessein
 				super(true)
+			
+			if R.city.tileWidth? and R.city.tileHeight?
+				@constructor.tileWidth = R.city.tileWidth
+				@constructor.tileHeight = R.city.tileHeight
 
 			activeLayer = P.project.activeLayer
 			@tileRectangles = new P.Layer()
@@ -75,7 +79,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 					@oddLines.addChild(line)
 				else
 					@lines.addChild(line)
-				x += @constructor.paperWidth
+				x += @constructor.tileWidth * R.city.pixelPerMm
 				n++
 			y = rectangle.top
 			n = 0
@@ -92,7 +96,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 					@oddLines.addChild(line)
 				else
 					@lines.addChild(line)
-				y += @constructor.paperHeight
+				y += @constructor.tileHeight * R.city.pixelPerMm
 				n++
 			return
 
@@ -136,12 +140,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 
 		move: (event) ->
 			if R.isCommeUnDessein then return
-			if event.originalEvent?.target != document.getElementById('canvas') then return
+			canvas = document.getElementById('canvas')
+			eventTarget = event.originalEvent?.target or event.event?.target
+			if eventTarget != canvas then return
 
 			if @ignoreMouseMoves then return
 
-			width = @constructor.paperWidth * @constructor.nSheetsPerTile
-			height = @constructor.paperHeight * @constructor.nSheetsPerTile
+			width = @constructor.tileWidth * R.city.pixelPerMm * @constructor.nSheetsPerTile
+			height = @constructor.tileHeight * R.city.pixelPerMm * @constructor.nSheetsPerTile
 
 			if not @highlight?
 				margin = 5
@@ -169,8 +175,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			return
 
 		projectToXY: (point)->
-			width = @constructor.paperWidth * @constructor.nSheetsPerTile
-			height = @constructor.paperHeight * @constructor.nSheetsPerTile
+			width = @constructor.tileWidth * R.city.pixelPerMm * @constructor.nSheetsPerTile
+			height = @constructor.tileHeight * R.city.pixelPerMm * @constructor.nSheetsPerTile
 
 			left = R.view.grid.limitCDRectangle.left
 			top = R.view.grid.limitCDRectangle.top
@@ -183,8 +189,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			if R.isCommeUnDessein then return
 			if not R.view.grid.limitCDRectangle.contains(event.point) then return
 
-			width = @constructor.paperWidth * @constructor.nSheetsPerTile
-			height = @constructor.paperHeight * @constructor.nSheetsPerTile
+			width = @constructor.tileWidth * R.city.pixelPerMm * @constructor.nSheetsPerTile
+			height = @constructor.tileHeight * R.city.pixelPerMm * @constructor.nSheetsPerTile
 
 			left = R.view.grid.limitCDRectangle.left
 			top = R.view.grid.limitCDRectangle.top
@@ -280,8 +286,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 			if tilesRow? and tilesRow.get(tile.x)
 				return
 
-			width = @constructor.paperWidth * @constructor.nSheetsPerTile
-			height = @constructor.paperHeight * @constructor.nSheetsPerTile
+			width = @constructor.tileWidth * R.city.pixelPerMm * @constructor.nSheetsPerTile
+			height = @constructor.tileHeight * R.city.pixelPerMm * @constructor.nSheetsPerTile
 
 			left = R.view.grid.limitCDRectangle.left
 			top = R.view.grid.limitCDRectangle.top

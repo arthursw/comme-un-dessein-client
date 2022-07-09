@@ -260,6 +260,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Commands/Comma
 				R.alertManager.alert 'Please zoom before voting', 'info'
 				return
 
+			canDrawOrVote = R.view.exquisiteCorpseMask.mouseBegin(event)
+			if not canDrawOrVote then return
+			
 			itemWasHit = false
 
 			if @selectionRectangle?

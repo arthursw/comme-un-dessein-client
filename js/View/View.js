@@ -3,7 +3,7 @@
   var dependencies,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  dependencies = ['paper', 'R', 'Utils/Utils', 'View/Grid', 'Commands/Command', 'Items/Paths/Path', 'Items/Divs/Div'];
+  dependencies = ['paper', 'R', 'Utils/Utils', 'View/Grid', 'View/ExquisiteCorpseMask', 'Commands/Command', 'Items/Paths/Path'];
 
   if (typeof document !== "undefined" && document !== null) {
     dependencies.push('i18next');
@@ -12,7 +12,7 @@
     dependencies.push('jquery-hammer');
   }
 
-  define('View/View', dependencies, function(P, R, Utils, Grid, Command, Path, Div, i18next, Hammer, mousewheel) {
+  define('View/View', dependencies, function(P, R, Utils, Grid, ExquisiteCorpseMask, Command, Path, i18next, Hammer, mousewheel) {
     var View;
     View = (function() {
       View.thumbnailSize = 300;
@@ -55,7 +55,6 @@
         this.backgroundRectangle = null;
         this.areasToUpdateLayer.visible = false;
         paper.settings.hitTolerance = 5;
-        R.scale = 1000.0;
         P.view.zoom = 1;
         this.previousPosition = P.view.center;
         this.restrictedArea = null;
@@ -63,6 +62,9 @@
         this.entireAreas = [];
         this.grid = new Grid();
         this.mainLayer.activate();
+        if (R.city.mode === 'ExquisiteCorpse') {
+          this.exquisiteCorpseMask = new ExquisiteCorpseMask(this.grid);
+        }
         R.canvasJ.dblclick(function(event) {
           var ref;
           return (ref = R.selectedTool) != null ? typeof ref.doubleClick === "function" ? ref.doubleClick(event) : void 0 : void 0;
@@ -301,7 +303,6 @@
                 }
               }
             }
-            R.rasterizer.refresh();
             SVGLayerJ = document.getElementById(item.name);
             SVGLayerJ.setAttribute('visibility', visible ? 'visible' : 'hidden');
             eyeIconJ = itemListJ.find("span.eye");
@@ -382,10 +383,6 @@
         if (!R.administrator) {
           this.rejectedLayer.visible = false;
         } else {
-          this.testLayer = new P.Layer();
-          this.testLayer.name = 'testLayer';
-          this.testLayer.strokeColor = Path.colorMap['test'];
-          this.testLayer.strokeWidth = Path.strokeWidth;
           this.flaggedLayer.strokeColor = Path.colorMap['flagged'];
         }
         this.draftListJ = this.createLayerListItem('Draft', this.draftLayer, true);
@@ -567,7 +564,6 @@
           div = ref[i];
           div.updateTransform();
         }
-        R.rasterizer.move();
         this.grid.update();
         R.loader.loadRasters();
         newEntireArea = null;
@@ -736,15 +732,20 @@
       };
 
       View.prototype.loadCity = function() {
-        this.gird.createFrame();
         this.initializePosition();
       };
 
       View.prototype.selectDrawings = function(event) {
-        var drawing, drawingsToSelect, i, j, len, len1, point, rectangle, ref, ref1;
+        var canDrawOrVote, drawing, drawingsToSelect, i, j, len, len1, point, rectangle, ref, ref1;
         point = Utils.Event.GetPoint(event);
         point.y -= 62;
         point = P.view.viewToProject(point);
+        canDrawOrVote = R.view.exquisiteCorpseMask.mouseBegin({
+          point: point
+        });
+        if (!canDrawOrVote) {
+          return;
+        }
         rectangle = new P.Rectangle(point, point);
         rectangle = rectangle.expand(5);
         drawingsToSelect = [];
@@ -763,7 +764,7 @@
       };
 
       View.prototype.initializePosition = function() {
-        var boxRectangle, br, controller, defsJ, discussionGroup, discussionSVG, folder, folderName, i, len, patternRejectsJ, patternValidateJ, planet, pos, ref, ref1, site, siteString, svg, svgNS, tl;
+        var boxRectangle, br, controller, defsJ, discussionGroup, discussionSVG, folder, folderName, i, len, patternRejectsJ, patternValidateJ, planet, pos, ref, ref1, ref2, site, siteString, svg, svgNS, tl;
         if (R.city == null) {
           R.city = {};
         }
@@ -806,6 +807,9 @@
           'pointer-events': 'none'
         });
         R.discussionJ.insertBefore(R.canvasJ);
+        if ((ref = this.exquisiteCorpseMask) != null) {
+          ref.createMask();
+        }
         if (R.loadedBox == null) {
           if (R.initialZoom == null) {
             R.view.fitRectangle(R.view.grid.limitCD.bounds.expand(0), true);
@@ -835,12 +839,12 @@
           R.sidebar.hide();
         } else {
           R.sidebar.sidebarJ.find("div.panel.panel-default:not(:last)").hide();
-          ref = R.gui.__folders;
-          for (folderName in ref) {
-            folder = ref[folderName];
-            ref1 = folder.__controllers;
-            for (i = 0, len = ref1.length; i < len; i++) {
-              controller = ref1[i];
+          ref1 = R.gui.__folders;
+          for (folderName in ref1) {
+            folder = ref1[folderName];
+            ref2 = folder.__controllers;
+            for (i = 0, len = ref2.length; i < len; i++) {
+              controller = ref2[i];
               if (controller.name !== 'Zoom') {
                 folder.remove(controller);
                 folder.__controllers.remove(controller);
@@ -950,30 +954,20 @@
             break;
           case 't':
             R.showToolBox();
-            break;
-          case 'r':
-            if (event.modifiers.shift) {
-              R.rasterizer.rasterizeImmediately();
-            }
         }
         event.preventDefault();
       };
 
       View.prototype.onFrame = function(event) {
-        var i, item, len, ref, ref1, ref2;
-        if ((ref = R.rasterizer) != null) {
-          if (typeof ref.updateLoadingBar === "function") {
-            ref.updateLoadingBar(event.time);
+        var i, item, len, ref, ref1;
+        if ((ref = R.selectedTool) != null) {
+          if (typeof ref.onFrame === "function") {
+            ref.onFrame(event);
           }
         }
-        if ((ref1 = R.selectedTool) != null) {
-          if (typeof ref1.onFrame === "function") {
-            ref1.onFrame(event);
-          }
-        }
-        ref2 = R.animatedItems;
-        for (i = 0, len = ref2.length; i < len; i++) {
-          item = ref2[i];
+        ref1 = R.animatedItems;
+        for (i = 0, len = ref1.length; i < len; i++) {
+          item = ref1[i];
           item.onFrame(event);
         }
       };
@@ -1031,7 +1025,6 @@
             }
           }
         }
-        Div.updateHiddenDivs(event);
         if ((ref3 = R.codeEditor) != null) {
           ref3.onMouseMove(event);
         }
@@ -1095,5 +1088,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=View.js.map

@@ -1085,5 +1085,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Drawing.js.map

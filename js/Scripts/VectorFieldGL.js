@@ -56,5 +56,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=VectorFieldGL.js.map

@@ -21,7 +21,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool' ], (P, R, Utils, Tool) ->
 			return
 
 		select: (deselectItems=true, updateParameters=true)->
-			R.rasterizer.drawItems()
+			# R.rasterizer.drawItems()
 			super
 			return
 

@@ -20,5 +20,3 @@
   })(document, 'script', 'twitter-wjs');
 
 }).call(this);
-
-//# sourceMappingURL=Twitter.js.map

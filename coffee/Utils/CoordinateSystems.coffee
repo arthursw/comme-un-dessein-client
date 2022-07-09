@@ -22,10 +22,10 @@ define ['paper', 'R'], (P, R) ->
 		planet = {}
 		# if not point.x? and not point.y? then point = arrayToPoint(point)
 
-		x = point.x / R.scale
+		x = CS.PlanetWidth * point.x / (R.city.width * R.city.pixelPerMm)
 		planet.x = Math.floor( ( x + CS.PlanetWidth / 2 ) / CS.PlanetWidth )
 
-		y = point.y / R.scale
+		y = CS.PlanetHeight * point.y / (R.city.height * R.city.pixelPerMm)
 		planet.y = Math.floor( ( y + CS.PlanetHeight / 2 ) / CS.PlanetHeight )
 
 		return planet
@@ -40,8 +40,8 @@ define ['paper', 'R'], (P, R) ->
 		# if not point.x? and not point.y? then point = arrayToPoint(point)
 
 		pos = {}
-		pos.x = point.x / R.scale - CS.PlanetWidth * planet.x
-		pos.y = point.y / R.scale - CS.PlanetHeight * planet.y
+		pos.x = CS.PlanetWidth * point.x / (R.city.width * R.city.pixelPerMm) - CS.PlanetWidth * planet.x
+		pos.y = CS.PlanetHeight * point.y / (R.city.height * R.city.pixelPerMm) - CS.PlanetHeight * planet.y
 
 		return pos
 
@@ -63,10 +63,10 @@ define ['paper', 'R'], (P, R) ->
 	# @return [Paper point] the position of *point* on *planet*
 	CS.posOnPlanetToProject = (point, planet)->
 		if not point.x? and not point.y? then point = CS.arrayToPoint(point)
-		x = planet.x*CS.PlanetWidth+point.x
-		y = planet.y*CS.PlanetHeight+point.y
-		x *= R.scale
-		y *= R.scale
+		x = planet.x * CS.PlanetWidth + point.x
+		y = planet.y * CS.PlanetHeight + point.y
+		x *= R.city.width * R.city.pixelPerMm / CS.PlanetWidth
+		y *= R.city.height * R.city.pixelPerMm / CS.PlanetHeight
 		return new P.Point(x,y)
 
 	# @return [Paper point] point extracted from *array*
@@ -143,13 +143,5 @@ define ['paper', 'R'], (P, R) ->
 		else
 			zoom = 25
 		return zoom
-	
-	# CS.pixelsPerMm = 1
-
-	# CS.pixelToMm = (pixel)->
-	# 	return pixel / CS.pixelsPerMm
-
-	# CS.mmToPixel = (mm)->
-	# 	return mm * CS.pixelsPerMm
 
 	return CS

@@ -23,7 +23,6 @@
         if (updateParameters == null) {
           updateParameters = true;
         }
-        R.rasterizer.drawItems();
         ItemTool.__super__.select.apply(this, arguments);
       };
 
@@ -110,5 +109,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=ItemTool.js.map

@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathTool', 'Commands/Command' ], (P, R, Utils, Item, Content, PathTool, Command) ->
+define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathTool', 'Tools/ExquisiteCorpseTool', 'Commands/Command' ], (P, R, Utils, Item, Content, PathTool, ExquisiteCorpseTool, Command) ->
 
 	# todo: Actions, undo & redo...
 	# todo: strokeWidth min = 0?
@@ -113,7 +113,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 		@parameters = @initializeParameters()
 
 		@createTool: (Path)->
-			new R.Tools.Path(Path)
+			R.tools.path = if R.city.mode != 'ExquisiteCorpse' then new R.Tools.Path(Path) else new R.Tools.ExquisiteCorpse(Path)
 			return
 
 		@create: (duplicateData)->
@@ -793,16 +793,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 
 		# exportToSVG: (item, filename)->
 
-<<<<<<< HEAD
-			item ?= @drawing
-			filename ?= "image.svg"
-			# export to svg
-			drawing = item.clone()
-			drawing.position = new P.Point(drawing.bounds.size.multiply(0.5))
-
-			svg = drawing.exportSVG( asString: true )
-			drawing.remove()
-=======
 		# 	item ?= @drawing
 		# 	filename ?= "image.svg"
 		# 	# export to svg
@@ -810,7 +800,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Content', 'Tools/PathT
 		# 	drawing.position = new P.Point(drawing.rectangle.size.multiply(0.5))
 		# 	svg = drawing.exportSVG( asString: true )
 		# 	drawing.remove()
->>>>>>> f3f7b4f5b850af2c71f18b49fb4835248d3ab23a
 
 		# 	svg = svg.replace(new RegExp('<g', 'g'), '<svg')
 		# 	svg = svg.replace(new RegExp('</g', 'g'), '</svg')

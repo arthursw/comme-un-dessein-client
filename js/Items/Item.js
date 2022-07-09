@@ -347,7 +347,6 @@
         R.s = this;
         R.selectedItems.push(this);
         R.tools.select.updateSelectionRectangle();
-        R.rasterizer.selectItem(this);
         this.zindex = this.group.index;
         if (this.group.parent !== R.view.selectionLayer || (this.parentBeforeSelection == null)) {
           this.parentBeforeSelection = this.group.parent;
@@ -368,7 +367,6 @@
         Utils.Array.remove(R.selectedItems, this);
         R.tools.select.updateSelectionRectangle();
         if (this.group != null) {
-          R.rasterizer.deselectItem(this);
           if ((ref = this.parentBeforeSelection) != null) {
             ref.insertChild(this.zindex, this.group);
           }
@@ -460,5 +458,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Item.js.map

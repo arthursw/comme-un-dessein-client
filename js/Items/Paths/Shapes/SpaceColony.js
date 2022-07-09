@@ -413,5 +413,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=SpaceColony.js.map

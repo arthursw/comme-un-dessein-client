@@ -99,5 +99,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=MoveTool.js.map

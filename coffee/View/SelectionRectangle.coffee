@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Drawing', 'Items/Divs/Div', 'Commands/Command' ], (P, R, Utils, Tool, Item, Content, Drawing, Div, Command) ->
+define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Items/Content', 'Items/Drawing', 'Commands/Command' ], (P, R, Utils, Tool, Item, Content, Drawing, Command) ->
 
 	class SelectionRectangle
 
@@ -172,7 +172,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Items/Content'
 					visible = false
 					break
 			@setVisibility(visible)
-			Div.showDivs()
+			# Div.showDivs()
 			return
 
 		updatePath: ()->
@@ -206,7 +206,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Items/Item', 'Items/Content'
 			@group.remove()
 			@rectangle = null
 			R.tools.select.selectionRectangle = null
-			Div.showDivs()
+			# Div.showDivs()
 			return
 
 		# translate

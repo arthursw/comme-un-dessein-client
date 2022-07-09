@@ -648,7 +648,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 			# if updateOptions
 			# 	R.controllerManager.updateParametersForSelectedItems()
 
-			R.rasterizer.selectItem(@)
+			# R.rasterizer.selectItem(@)
 
 			@zindex = @group.index
 
@@ -674,7 +674,7 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Tools/ItemTool' ], (P,
 
 			if @group? 	# @group is null when item is removed (called from @remove())
 
-				R.rasterizer.deselectItem(@)
+				# R.rasterizer.deselectItem(@)
 
 				@parentBeforeSelection?.insertChild(@zindex, @group)
 

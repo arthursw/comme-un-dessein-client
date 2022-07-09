@@ -1080,8 +1080,8 @@
         });
         modal.addText("How would you like to print this tile ?", "How would you like to print this tile");
         modal.addText("If you choose to print on a single sheet, you will need to paint it twice as big.", "Scale up the tile");
-        width = R.Tools.Choose.paperWidth * R.Tools.Choose.nSheetsPerTile;
-        height = R.Tools.Choose.paperHeight * R.Tools.Choose.nSheetsPerTile;
+        width = R.Tools.Choose.tileWidth * R.Tools.Choose.nSheetsPerTile;
+        height = R.Tools.Choose.tileHeight * R.Tools.Choose.nSheetsPerTile;
         modal.addText("The tile dimensions must be: " + width + ' x ' + height + 'mm.', "The tile dimensions must be", false, {
           width: width,
           height: height
@@ -1097,7 +1097,7 @@
         this.printSheets(false);
       };
 
-      DrawingPanel.prototype.print = function(project, rectangles, dashedFrames, paperWidth, paperHeight) {
+      DrawingPanel.prototype.print = function(project, rectangles, dashedFrames, tileWidth, tileHeight) {
         var createDocument, newWindow, print;
         newWindow = window.open("about:blank", "_new");
         print = (function(_this) {
@@ -1119,9 +1119,9 @@
               }
               dashedFrames[n].visible = true;
               svg = _this.tileProject.exportSVG();
-              svg.setAttribute('width', paperWidth + 'mm');
-              svg.setAttribute('height', paperHeight + 'mm');
-              svg.setAttribute('viewBox', '0 0 ' + paperWidth + ' ' + paperHeight);
+              svg.setAttribute('width', Math.round(tileWidth / R.city.pixelPerMm) + 'mm');
+              svg.setAttribute('height', Math.round(tileHeight / R.city.pixelPerMm) + 'mm');
+              svg.setAttribute('viewBox', '0 0 ' + tileWidth + ' ' + tileHeight);
               newWindow.document.write(svg.outerHTML);
               if (n < rectangles.length - 1) {
                 newWindow.document.write('<p style="page-break-before: always"></p>');
@@ -1136,15 +1136,15 @@
       };
 
       DrawingPanel.prototype.printSheets = function(singleSheet) {
-        var dashedFrame, dashedFrames, drawing, drawingsToLoad, height, i, j, k, len, len1, len2, nDrawingsToLoad, nSheetsPerTile, paperHeight, paperWidth, project, r, rectangle, rectangles, ref, ref1, width;
+        var dashedFrame, dashedFrames, drawing, drawingsToLoad, height, i, j, k, len, len1, len2, nDrawingsToLoad, nSheetsPerTile, project, r, rectangle, rectangles, ref, ref1, tileHeight, tileWidth, width;
         project = P.project;
         this.tileProject.activate();
         this.tileProject.activeLayer.removeChildren();
         nSheetsPerTile = singleSheet ? 1 : R.Tools.Choose.nSheetsPerTile;
-        paperWidth = R.Tools.Choose.paperWidth;
-        paperHeight = R.Tools.Choose.paperHeight;
-        width = paperWidth * nSheetsPerTile;
-        height = paperHeight * nSheetsPerTile;
+        tileWidth = R.Tools.Choose.tileWidth * R.city.pixelPerMm;
+        tileHeight = R.Tools.Choose.tileHeight * R.city.pixelPerMm;
+        width = tileWidth * nSheetsPerTile;
+        height = tileHeight * nSheetsPerTile;
         this.tileProject.view.viewSize.width = width / nSheetsPerTile;
         this.tileProject.view.viewSize.height = height / nSheetsPerTile;
         this.tileProject.view.scrollBy(this.tileRectangle.center.subtract(this.tileProject.view.center));
@@ -1191,7 +1191,7 @@
         }
         nDrawingsToLoad = drawingsToLoad.length;
         if (nDrawingsToLoad === 0) {
-          this.print(project, rectangles, dashedFrames, paperWidth, paperHeight);
+          this.print(project, rectangles, dashedFrames, tileWidth, tileHeight);
         }
         for (k = 0, len2 = drawingsToLoad.length; k < len2; k++) {
           drawing = drawingsToLoad[k];
@@ -1200,7 +1200,7 @@
               _this.tileProject.importSVG(svg);
               nDrawingsToLoad--;
               if (nDrawingsToLoad <= 0) {
-                _this.print(project, rectangles, dashedFrames, paperWidth, paperHeight);
+                _this.print(project, rectangles, dashedFrames, tileWidth, tileHeight);
               }
             };
           })(this));
@@ -2139,5 +2139,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=DrawingPanel.js.map

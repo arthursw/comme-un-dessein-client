@@ -35,6 +35,10 @@
         return;
       }
 
+      Loader.prototype.initializeTileManager = function() {
+        this.tileManager = R.city.mode !== 'ExquisiteCorpse' ? R.tools.choose : R.view.exquisiteCorpseMask;
+      };
+
       Loader.prototype.initializeLoadingBar = function() {
         var opts, target;
         opts = {
@@ -126,7 +130,6 @@
           item.remove();
         }
         R.items = {};
-        R.rasterizer.clearRasters();
         this.previousLoadPosition = null;
       };
 
@@ -205,7 +208,7 @@
         };
         if (this.loadingType === 'screen-ignore-loaded' || this.loadingType === 'tiles-ignore-loaded') {
           args.drawingsToIgnore = Array.from(R.pkToDrawing.keys());
-          args.tilesToIgnore = R.tools.choose.tilePks;
+          args.tilesToIgnore = this.tileManager.tilePks;
         }
         $.ajax({
           method: "POST",
@@ -230,16 +233,18 @@
           return;
         }
         this.createDrawings(results);
-        if (R.application === 'ESPERO') {
-          tiles = JSON.parse(results.tiles);
+        if (R.application === 'ESPERO' || R.city.mode === 'ExquisiteCorpse') {
+          tiles = results.tiles instanceof Array ? results.tiles : JSON.parse(results.tiles);
           for (j = 0, len = tiles.length; j < len; j++) {
             tile = tiles[j];
-            R.tools.choose.createTile(tile);
+            this.tileManager.createTile(tile);
           }
-          discussions = JSON.parse(results.discussions);
-          for (k = 0, len1 = discussions.length; k < len1; k++) {
-            discussion = discussions[k];
-            R.tools.discuss.createDiscussion(discussion);
+          if (results.discussions != null) {
+            discussions = JSON.parse(results.discussions);
+            for (k = 0, len1 = discussions.length; k < len1; k++) {
+              discussion = discussions[k];
+              R.tools.discuss.createDiscussion(discussion);
+            }
           }
         }
       };
@@ -377,7 +382,7 @@
             };
           })(this));
         }
-        R.tools.choose.removeTiles(limits);
+        this.tileManager.removeTiles(limits);
         this.rasters.forEach((function(_this) {
           return function(rastersOfScale, s) {
             if (s !== scaleNumber) {
@@ -482,6 +487,11 @@
             }
           }
         }
+        if (results.nTiles != null) {
+          R.userProfile = {
+            nTiles: results.nTiles
+          };
+        }
       };
 
       Loader.prototype.dispatchLoadFinished = function() {
@@ -539,15 +549,11 @@
       };
 
       Loader.prototype.moduleLoaded = function(args) {
-        var base;
         this.createPath(args);
         delete this.pathsToCreate[args.id];
         if (Utils.isEmpty(this.pathsToCreate)) {
           this.hideDrawingBar();
           this.hideLoadingBar();
-          if (typeof (base = R.rasterizer).checkRasterizeAreasToUpdate === "function") {
-            base.checkRasterizeAreasToUpdate(true);
-          }
         }
       };
 
@@ -579,7 +585,7 @@
           date = (ref = item.date) != null ? ref.$date : void 0;
           data = (item.data != null) && item.data.length > 0 ? JSON.parse(item.data) : null;
           lock = item.lock != null ? R.items[item.lock] : null;
-          switch (item.rType) {
+          switch (item.rtype) {
             case 'Path':
               path = item;
               if (path.owner == null) {
@@ -617,9 +623,6 @@
               if (newPath != null) {
                 newItems.push(newPath);
               }
-              break;
-            case 'AreaToUpdate':
-              R.rasterizer.addAreaToUpdate(Utils.CS.rectangleFromBox(item).expand(5));
               break;
             case 'Drawing':
               drawing = new Item.Drawing(null, data, id, item._id.$oid, item.owner, date, item.title, item.description, item.status, item.pathList, item.svg);
@@ -663,22 +666,9 @@
         if (results.qZoom == null) {
           results.qZoom = 1;
         }
-        if (results.rasters != null) {
-          R.rasterizer.load(results.rasters, results.qZoom);
-        }
         this.removeDeletedItems(results.deletedItems);
         itemsToLoad = this.parseNewItems(results.items);
         newItems = this.createNewItems(itemsToLoad);
-        R.rasterizer.setQZoomToUpdate(results.qZoom);
-        if (rasterizeItems) {
-          R.rasterizer.rasterize(newItems);
-          R.rasterizer.rasterizeRectangle();
-        }
-        if (rasterizeAreasToUpdate) {
-          if ((results.rasters == null) || results.rasters.length === 0) {
-            R.rasterizer.checkRasterizeAreasToUpdate();
-          }
-        }
         Item.Div.updateZindex(R.sortedDivs);
         this.endLoading();
       };
@@ -858,5 +848,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Loader.js.map

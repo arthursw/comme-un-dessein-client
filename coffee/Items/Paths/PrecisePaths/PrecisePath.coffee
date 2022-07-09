@@ -167,7 +167,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 
 			if @data.smooth then @controlPath.smooth()
 
-			R.rasterizer.loadItem(@)
+			# R.rasterizer.loadItem(@)
 
 			if not @constructor.securePath
 				return
@@ -289,8 +289,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				@path.selected = false
 				@path.strokeCap = if @data.strokeCap? then @data.strokeCap else 'round'
 				@path.strokeJoin = if @data.strokeJoin? then @data.strokeJoin else 'round'
-<<<<<<< HEAD
-=======
 				# @path.visible = false
 				# @controlPath.visible = true
 				# @controlPath.strokeColor = @path.strokeColor
@@ -298,7 +296,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				# @controlPath.strokeCap = @path.strokeCap
 				# @controlPath.strokeJoin = @path.strokeJoin
 				# @controlPath.selected = true
->>>>>>> f3f7b4f5b850af2c71f18b49fb4835248d3ab23a
 			return
 
 		# default updateDraw function, will be redefined by children PrecisePath
@@ -517,7 +514,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			console.log 'endCreate'
 			if @data.polygonMode then return 	# in polygon mode, finish is called by the path tool
 
-			if @controlPath.segments.length<2
+			if @controlPath.segments.length < 2 
 				@controlPath.add(@controlPath.firstSegment.point.add(0.5))
 
 			allPointsAreEqual = true
@@ -531,22 +528,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			if allPointsAreEqual
 				@controlPath.lastSegment.point = @controlPath.lastSegment.point.add(0.5)
 
-			if @controlPath.segments.length>=2
+			if @controlPath.segments.length >= 2
 				# if @speeds? then @computeSpeed()
 
 				if R.drawingMode not in @constructor.drawingModes
-<<<<<<< HEAD
-					console.log("simplifying")
 					@controlPath.simplify()
-					# if not event.event.shiftKey
-					# 	@controlPath.simplify()
-					# 	console.log("simplify= none")
-					# else
-					# 	console.log("simplify= " + @constructor.orthoGridSize)
-					# 	@controlPath.simplify(@constructor.orthoGridSize)
-=======
-					@controlPath.simplify()
->>>>>>> f3f7b4f5b850af2c71f18b49fb4835248d3ab23a
 
 				for segment in @controlPath.segments
 					if segment.handleIn.length>200
@@ -649,7 +635,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 				# 	@setSVG()
 				return
 
-			if not R.rasterizer.requestDraw(@, simplified, redrawing) then return
+			# if not R.rasterizer.requestDraw(@, simplified, redrawing) then return
 			# if R.rasterizer.disableDrawing then return
 
 			if @controlPath.segments.length < 2 then return
@@ -669,15 +655,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'Items/Paths/Path', 'Commands
 			@drawingOffset = 0
 
 			# @group.parent.addChild(@path)
-<<<<<<< HEAD
-			if onSvg
-
-				@group.remove()
-				@path?.selected = true
-=======
 			# if onSvg
 			# 	@group.remove()
->>>>>>> f3f7b4f5b850af2c71f18b49fb4835248d3ab23a
 
 			try 	# catch errors to log them in the code editor console (if user is making a script)
 				@processDrawing(redrawing)

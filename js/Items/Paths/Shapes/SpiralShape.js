@@ -112,5 +112,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=SpiralShape.js.map

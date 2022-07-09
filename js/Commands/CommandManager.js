@@ -286,5 +286,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=CommandManager.js.map

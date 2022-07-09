@@ -363,5 +363,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=EraserTool.js.map

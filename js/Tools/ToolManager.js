@@ -278,6 +278,10 @@
           onClick: (function(_this) {
             return function() {
               var ref;
+              if (R.city.mode === 'ExquisiteCorpse' && !R.view.exquisiteCorpseMask.isDraftOnBounds()) {
+                R.alertManager.alert('Your path must fit in a single of your tiles', 'error');
+                return;
+              }
               if ((ref = R.tracer) != null) {
                 ref.hide();
               }
@@ -437,5 +441,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=ToolManager.js.map

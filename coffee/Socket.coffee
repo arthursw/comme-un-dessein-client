@@ -441,9 +441,9 @@ define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, i
 
 						itemMustBeRasterized = data.function not in ['setPK', 'create'] and not item.drawing.visible
 
-						if not R.updateTimeout[id]? and itemMustBeRasterized
-							R.rasterizer.drawItems()
-							R.rasterizer.rasterize(item, true)
+						# if not R.updateTimeout[id]? and itemMustBeRasterized
+						# 	# R.rasterizer.drawItems()
+						# 	# R.rasterizer.rasterize(item, true)
 
 						item.drawing.visible = true
 
@@ -462,7 +462,7 @@ define ['paper', 'R', 'Utils/Utils', 'socket.ioID', 'i18next' ], (P, R, Utils, i
 			return
 
 		rasterizeItem: ()->
-			if not item.currentCommand then R.rasterizer.rasterize(item)
+			# if not item.currentCommand then R.rasterizer.rasterize(item)
 			return
 
 		getChatRoom: ()->

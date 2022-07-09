@@ -202,7 +202,6 @@
         if (this.data.smooth) {
           this.controlPath.smooth();
         }
-        R.rasterizer.loadItem(this);
         if (!this.constructor.securePath) {
           return;
         }
@@ -506,10 +505,6 @@
         }
         if (this.controlPath.segments.length >= 2) {
           if (ref1 = R.drawingMode, indexOf.call(this.constructor.drawingModes, ref1) < 0) {
-<<<<<<< HEAD
-            console.log("simplifying");
-=======
->>>>>>> f3f7b4f5b850af2c71f18b49fb4835248d3ab23a
             this.controlPath.simplify();
           }
           ref2 = this.controlPath.segments;
@@ -597,7 +592,7 @@
       };
 
       PrecisePath.prototype.draw = function(simplified, redrawing, onSvg) {
-        var controlPathLength, error, error1, nIteration, nf, offset, ref, reminder, step;
+        var controlPathLength, error, error1, nIteration, nf, offset, reminder, step;
         if (simplified == null) {
           simplified = false;
         }
@@ -613,9 +608,6 @@
           }
           return;
         }
-        if (!R.rasterizer.requestDraw(this, simplified, redrawing)) {
-          return;
-        }
         if (this.controlPath.segments.length < 2) {
           return;
         }
@@ -629,15 +621,6 @@
         reminder = nf - nIteration;
         offset = reminder * step / 2;
         this.drawingOffset = 0;
-<<<<<<< HEAD
-        if (onSvg) {
-          this.group.remove();
-          if ((ref = this.path) != null) {
-            ref.selected = true;
-          }
-        }
-=======
->>>>>>> f3f7b4f5b850af2c71f18b49fb4835248d3ab23a
         try {
           this.processDrawing(redrawing);
         } catch (error1) {
@@ -1172,5 +1155,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=PrecisePath.js.map

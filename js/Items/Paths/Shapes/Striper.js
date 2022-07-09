@@ -774,5 +774,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Striper.js.map

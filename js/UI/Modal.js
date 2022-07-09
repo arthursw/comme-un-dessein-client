@@ -458,5 +458,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Modal.js.map

@@ -243,5 +243,3 @@
   });
 
 }).call(this);
-
-//# sourceMappingURL=Toolbar.js.map

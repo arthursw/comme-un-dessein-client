@@ -14,15 +14,9 @@ dependencies = [
 	'Tools/DiscussTool'
 	'UI/Modal'
 	'i18next'
-	# 'Tools/TextTool'
-	# 'Tools/GradientTool'
 ]
 
-# if document?
-	# dependencies.push('Tools/ScreenshotTool')
-	# dependencies.push('Tools/CarTool')
-
-define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, MoveDrawingTool, ItemTool, Tracer, ChooseTool, DiscussTool, Modal, i18next) -> # , TextTool, GradientTool, CarTool) ->
+define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, MoveDrawingTool, ItemTool, Tracer, ChooseTool, DiscussTool, Modal, i18next) ->
 
 	class ToolManager
 		
@@ -554,6 +548,9 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				parentJ: $('#submit-drawing-button')
 				ignoreFavorite: true
 				onClick: ()=>
+					if R.city.mode == 'ExquisiteCorpse' and not R.view.exquisiteCorpseMask.isDraftOnBounds()
+						R.alertManager.alert 'Your path must fit in a single of your tiles', 'error'
+						return
 					R.tracer?.hide()
 					R.drawingPanel.submitDrawingClicked()
 					return
