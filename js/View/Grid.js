@@ -30,9 +30,10 @@
       };
 
       Grid.prototype.projectToGeoJSONRectangle = function(rectangle) {
-        var topLeft;
+        var bottomRight, topLeft;
         topLeft = this.projectToGeoJSON(rectangle.topLeft);
-        return new P.Rectangle(topLeft.x, topLeft.y, Utils.CS.PlanetWidth * rectangle.width / this.size.width, Utils.CS.PlanetHeight * rectangle.height / this.size.height);
+        bottomRight = this.projectToGeoJSON(rectangle.bottomRight);
+        return new P.Rectangle(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
       };
 
       Grid.prototype.geoJSONToProject = function(point) {

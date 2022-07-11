@@ -287,7 +287,7 @@
           R.alertManager.alert('Please zoom before voting', 'info');
           return;
         }
-        canDrawOrVote = R.view.exquisiteCorpseMask.mouseBegin(event);
+        canDrawOrVote = R.view.exquisiteCorpseMask != null ? R.view.exquisiteCorpseMask.mouseBegin(event) : true;
         if (!canDrawOrVote) {
           return;
         }

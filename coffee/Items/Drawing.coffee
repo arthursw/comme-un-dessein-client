@@ -132,7 +132,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				planet = new P.Point(0, 0)
 			path = new P.Path()
 			for point, i in points by 4
-				path.add(Utils.CS.geoJSONToProject(point))
+				path.add(R.view.grid.geoJSONToProject(point))
 				# path.add(Utils.CS.posOnPlanetToProject(point, planet))
 				path.lastSegment.handleIn = new P.Point(points[i+1])
 				path.lastSegment.handleOut = new P.Point(points[i+2])

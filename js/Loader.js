@@ -600,7 +600,7 @@
               ref1 = path.points.coordinates;
               for (k = 0, len1 = ref1.length; k < len1; k++) {
                 point = ref1[k];
-                points.push(Utils.CS.posOnPlanetToProject(point, planet));
+                points.push(R.view.grid.geoJSONToProject(point));
               }
               rpath = null;
               newPath = null;
@@ -695,7 +695,7 @@
           controlPath = new P.Path();
           for (i = k = 0, len1 = points.length; k < len1; i = k += 4) {
             point = points[i];
-            controlPath.add(Utils.CS.posOnPlanetToProject(point, planet));
+            controlPath.add(R.view.grid.geoJSONToProject(point));
             controlPath.lastSegment.handleIn = new P.Point(points[i + 1]);
             controlPath.lastSegment.handleOut = new P.Point(points[i + 2]);
             controlPath.lastSegment.rtype = points[i + 3];

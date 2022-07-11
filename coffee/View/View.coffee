@@ -799,8 +799,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 			point = Utils.Event.GetPoint(event)
 			point.y -= 62 # the stage is at 62 pixel
 			point = P.view.viewToProject(point)
-			
-			canDrawOrVote = R.view.exquisiteCorpseMask.mouseBegin({point: point})
+			event.point = point
+			canDrawOrVote = if R.view.exquisiteCorpseMask? then R.view.exquisiteCorpseMask.mouseBegin(event) else true
 			if not canDrawOrVote then return
 
 			rectangle = new P.Rectangle(point, point)

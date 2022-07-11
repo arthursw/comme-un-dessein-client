@@ -72,7 +72,7 @@
         ref = path.segments;
         for (i = 0, len = ref.length; i < len; i++) {
           segment = ref[i];
-          p = Utils.CS.projectToPosOnPlanet(segment.point, planet);
+          p = R.view.grid.projectToGeoJSON(segment.point);
           points.push(Utils.CS.pointToArray(p));
         }
         return points;
@@ -651,7 +651,7 @@
         planet = this.getPlanet();
         for (i = 0, len = controlSegments.length; i < len; i++) {
           segment = controlSegments[i];
-          p = Utils.CS.projectToPosOnPlanet(segment.point, planet);
+          p = R.view.grid.projectToGeoJSON(segment.point);
           points.push(Utils.CS.pointToArray(p));
         }
         return points;

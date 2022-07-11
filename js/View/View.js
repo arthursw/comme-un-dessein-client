@@ -740,9 +740,8 @@
         point = Utils.Event.GetPoint(event);
         point.y -= 62;
         point = P.view.viewToProject(point);
-        canDrawOrVote = R.view.exquisiteCorpseMask.mouseBegin({
-          point: point
-        });
+        event.point = point;
+        canDrawOrVote = R.view.exquisiteCorpseMask != null ? R.view.exquisiteCorpseMask.mouseBegin(event) : true;
         if (!canDrawOrVote) {
           return;
         }
@@ -820,8 +819,8 @@
           return;
         }
         planet = new P.Point(R.loadedBox.planetX, R.loadedBox.planetY);
-        tl = Utils.CS.posOnPlanetToProject(R.loadedBox.box.coordinates[0][0], planet);
-        br = Utils.CS.posOnPlanetToProject(R.loadedBox.box.coordinates[0][2], planet);
+        tl = R.view.grid.geoJSONToProject(R.loadedBox.box.coordinates[0][0]);
+        br = R.view.grid.geoJSONToProject(R.loadedBox.box.coordinates[0][2]);
         boxRectangle = new P.Rectangle(tl, br);
         pos = boxRectangle.center;
         this.moveTo(pos);

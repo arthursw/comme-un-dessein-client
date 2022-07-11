@@ -150,7 +150,7 @@
         ref = path.segments;
         for (j = 0, len = ref.length; j < len; j++) {
           segment = ref[j];
-          points.push(Utils.CS.projectToPosOnPlanet(segment.point));
+          points.push(R.view.grid.projectToGeoJSON(segment.point));
           points.push(Utils.CS.pointToObj(segment.handleIn));
           points.push(Utils.CS.pointToObj(segment.handleOut));
           points.push(segment.rtype);
@@ -185,7 +185,7 @@
         path = new P.Path();
         for (i = j = 0, len = points.length; j < len; i = j += 4) {
           point = points[i];
-          path.add(Utils.CS.posOnPlanetToProject(point, planet));
+          path.add(R.view.grid.geoJSONToProject(point));
           path.lastSegment.handleIn = new P.Point(points[i + 1]);
           path.lastSegment.handleOut = new P.Point(points[i + 2]);
           path.lastSegment.rtype = points[i + 3];
