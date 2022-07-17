@@ -911,6 +911,26 @@
         }
       };
 
+      Tracer.prototype.setStrokeColor = function(item, rasterPart) {
+        var child, j, len, path, point, ref;
+        if (item.className === 'Shape') {
+          path = item.toPath();
+          item.remove();
+          item = path;
+        }
+        if (item.className === 'Path') {
+          point = rasterPart.globalToLocal(item.getPointAt(item.length / 2));
+          item.strokeColor = rasterPart.getPixel(point);
+        } else {
+          console.log(item.children);
+          ref = item.children;
+          for (j = 0, len = ref.length; j < len; j++) {
+            child = ref[j];
+            this.setStrokeColor(child, rasterPart);
+          }
+        }
+      };
+
       Tracer.prototype.addSvgToDraft = function(svg, colors) {
         var draft, regex, subst, svgPaper;
         svg = svg.replace('<?xml version="1.0" standalone="yes"?>\n', '');

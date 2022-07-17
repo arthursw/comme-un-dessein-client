@@ -7,6 +7,7 @@ dependencies = [
 	'Tools/SelectTool'
 	'Tools/PathTool'
 	'Tools/EraserTool'
+	'Tools/ColorTool'
 	'Tools/MoveDrawingTool'
 	'Tools/ItemTool'
 	'Tools/Tracer'
@@ -16,7 +17,7 @@ dependencies = [
 	'i18next'
 ]
 
-define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, MoveDrawingTool, ItemTool, Tracer, ChooseTool, DiscussTool, Modal, i18next) ->
+define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ColorTool, MoveDrawingTool, ItemTool, Tracer, ChooseTool, DiscussTool, Modal, i18next) ->
 
 	class ToolManager
 		
@@ -53,6 +54,9 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			
 			R.tools.eraser = new R.Tools.Eraser()
 			R.tools.eraser.btn.hide()
+
+			R.tools.colorTool = new R.Tools.ColorTool()
+			R.tools.colorTool.btn.hide()
 			
 			R.tools.moveDrawing = new R.Tools.MoveDrawing()
 			R.tools.moveDrawing.btn.hide()
@@ -399,9 +403,9 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			black = '#000000'
 			@colors = [red, blue, green, yellow, brown, black]
 
-			if R.isCommeUnDessein
-				R.selectedColor = black
-				return
+			# if R.isCommeUnDessein
+			# 	R.selectedColor = black
+			# 	return
 
 			R.selectedColor = green
 
@@ -452,7 +456,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 						color = $(event.target).attr('data-color')
 						R.selectedColor = color
 						
-						if R.selectedTool != R.tools["Precise path"]
+						if R.selectedTool != R.tools["Precise path"] and R.selectedTool != R.tools.colorTool
 							R.tools["Precise path"].select()
 
 						# @colorBtn.cloneJ.find('span.selected-color').css( background: color )
@@ -640,7 +644,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			# 		pathTool.btn.removeClass('btn-warning')
 			# 		voteTool.btn.removeClass('btn-warning')
 
-			if R.selectedTool == R.tools['Precise path'] or R.selectedTool == R.tools.eraser or R.selectedTool == R.tools.moveDrawing
+			if R.selectedTool == R.tools['Precise path'] or R.selectedTool == R.tools.eraser or R.selectedTool == R.tools.moveDrawing or R.selectedTool == R.tools.colorTool
 				@colorBtn?.show()
 				@redoBtn.show()
 				@undoBtn.show()
@@ -648,6 +652,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				@deleteButton.show()
 				R.tracer?.showButton()
 				R.tools.eraser.btn.show()
+				R.tools.colorTool.btn.show()
 				R.tools.moveDrawing.btn.show()
 			else
 				@colorBtn?.hide()
@@ -657,6 +662,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				@deleteButton.hide()
 				R.tracer?.hideButton()
 				R.tools.eraser.btn.hide()
+				R.tools.colorTool.btn.hide()
 				R.tools.moveDrawing.btn.hide()
 
 			draft ?= R.Drawing.getDraft()

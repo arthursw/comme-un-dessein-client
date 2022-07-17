@@ -120,10 +120,10 @@
       ExquisiteCorpseMask.prototype.mouseBegin = function(event) {
         var tile;
         tile = this.getTileAt(event.point);
-        if (tile.visible) {
+        if (tile != null ? tile.visible : void 0) {
           this.createChooseTileModal(event, tile);
         }
-        return !tile.visible;
+        return !(tile != null ? tile.visible : void 0);
       };
 
       ExquisiteCorpseMask.prototype.isDraftOnBounds = function() {

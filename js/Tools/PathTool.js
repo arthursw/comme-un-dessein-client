@@ -59,7 +59,7 @@
         if (tolerance == null) {
           tolerance = 0;
         }
-        return (draftBounds != null) && draftBounds.width > this.maxDraftSize - tolerance || draftBounds.height > this.maxDraftSize - tolerance;
+        return (draftBounds != null) && draftBounds.width > this.maxDraftSize * R.city.pixelPerMm - tolerance || draftBounds.height > this.maxDraftSize * R.city.pixelPerMm - tolerance;
       };
 
       PathTool.displayDraftIsTooBigError = function() {
@@ -293,7 +293,7 @@
           return null;
         }
         viewBounds = R.view.grid.limitCD.bounds.clone();
-        this.draftLimit = draftBounds.expand(2 * (this.constructor.maxDraftSize - draftBounds.width), 2 * (this.constructor.maxDraftSize - draftBounds.height));
+        this.draftLimit = draftBounds.expand(2 * (this.constructor.maxDraftSize * R.city.pixelPerMm - draftBounds.width), 2 * (this.constructor.maxDraftSize * R.city.pixelPerMm - draftBounds.height));
         this.limit = new P.Group();
         l1 = new P.Path.Rectangle(viewBounds.topLeft, new P.Point(viewBounds.right, this.draftLimit.top));
         l2 = new P.Path.Rectangle(new P.Point(viewBounds.left, this.draftLimit.top), new P.Point(this.draftLimit.left, this.draftLimit.bottom));

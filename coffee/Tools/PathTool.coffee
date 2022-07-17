@@ -37,7 +37,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 			return @draftBoundsIsTooBig(draftBounds, tolerance)
 
 		@draftBoundsIsTooBig: (draftBounds, tolerance=0)->
-			return draftBounds? and draftBounds.width > @maxDraftSize - tolerance or draftBounds.height > @maxDraftSize - tolerance
+			return draftBounds? and draftBounds.width > @maxDraftSize * R.city.pixelPerMm - tolerance or draftBounds.height > @maxDraftSize * R.city.pixelPerMm - tolerance
 
 		@displayDraftIsTooBigError: ()->
 			R.alertManager.alert 'Your drawing is too big', 'error'
@@ -290,7 +290,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 			if not draftBounds? or draftBounds.area == 0 then return null
 
 			viewBounds = R.view.grid.limitCD.bounds.clone()
-			@draftLimit = draftBounds.expand(2 * (@constructor.maxDraftSize - draftBounds.width), 2 * (@constructor.maxDraftSize - draftBounds.height))
+			@draftLimit = draftBounds.expand(2 * (@constructor.maxDraftSize * R.city.pixelPerMm - draftBounds.width), 2 * (@constructor.maxDraftSize  * R.city.pixelPerMm - draftBounds.height))
 			
 			# draftLimitRectangle = new P.Path.Rectangle(@draftLimit)
 			# @limit = R.view.grid.limitCD.clone().subtract(draftLimitRectangle)

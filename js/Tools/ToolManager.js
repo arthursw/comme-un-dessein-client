@@ -2,9 +2,9 @@
 (function() {
   var dependencies;
 
-  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/MoveDrawingTool', 'Tools/ItemTool', 'Tools/Tracer', 'Tools/ChooseTool', 'Tools/DiscussTool', 'UI/Modal', 'i18next'];
+  dependencies = ['R', 'Utils/Utils', 'Tools/Tool', 'UI/Button', 'Tools/MoveTool', 'Tools/SelectTool', 'Tools/PathTool', 'Tools/EraserTool', 'Tools/ColorTool', 'Tools/MoveDrawingTool', 'Tools/ItemTool', 'Tools/Tracer', 'Tools/ChooseTool', 'Tools/DiscussTool', 'UI/Modal', 'i18next'];
 
-  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, MoveDrawingTool, ItemTool, Tracer, ChooseTool, DiscussTool, Modal, i18next) {
+  define('Tools/ToolManager', dependencies, function(R, Utils, Tool, Button, MoveTool, SelectTool, PathTool, EraserTool, ColorTool, MoveDrawingTool, ItemTool, Tracer, ChooseTool, DiscussTool, Modal, i18next) {
     var ToolManager;
     ToolManager = (function() {
       ToolManager.minZoomPow = -7;
@@ -35,6 +35,8 @@
         this.createColorButtons();
         R.tools.eraser = new R.Tools.Eraser();
         R.tools.eraser.btn.hide();
+        R.tools.colorTool = new R.Tools.ColorTool();
+        R.tools.colorTool.btn.hide();
         R.tools.moveDrawing = new R.Tools.MoveDrawing();
         R.tools.moveDrawing.btn.hide();
         R.tracer = new Tracer();
@@ -176,10 +178,6 @@
         brown = '#795548';
         black = '#000000';
         this.colors = [red, blue, green, yellow, brown, black];
-        if (R.isCommeUnDessein) {
-          R.selectedColor = black;
-          return;
-        }
         R.selectedColor = green;
         this.colorBtn = new Button({
           name: 'Colors',
@@ -219,7 +217,7 @@
               }).mousedown(function(event) {
                 color = $(event.target).attr('data-color');
                 R.selectedColor = color;
-                if (R.selectedTool !== R.tools["Precise path"]) {
+                if (R.selectedTool !== R.tools["Precise path"] && R.selectedTool !== R.tools.colorTool) {
                   R.tools["Precise path"].select();
                 }
                 _this.colorBtn.cloneJ.find('path.color').attr({
@@ -368,7 +366,7 @@
         if (draft == null) {
           draft = null;
         }
-        if (R.selectedTool === R.tools['Precise path'] || R.selectedTool === R.tools.eraser || R.selectedTool === R.tools.moveDrawing) {
+        if (R.selectedTool === R.tools['Precise path'] || R.selectedTool === R.tools.eraser || R.selectedTool === R.tools.moveDrawing || R.selectedTool === R.tools.colorTool) {
           if ((ref = this.colorBtn) != null) {
             ref.show();
           }
@@ -380,6 +378,7 @@
             ref1.showButton();
           }
           R.tools.eraser.btn.show();
+          R.tools.colorTool.btn.show();
           R.tools.moveDrawing.btn.show();
         } else {
           if ((ref2 = this.colorBtn) != null) {
@@ -393,6 +392,7 @@
             ref3.hideButton();
           }
           R.tools.eraser.btn.hide();
+          R.tools.colorTool.btn.hide();
           R.tools.moveDrawing.btn.hide();
         }
         if (draft == null) {

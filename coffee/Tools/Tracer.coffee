@@ -844,19 +844,19 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 					@addPathsToDraft(child, draft)
 			return
 
-		# setStrokeColor: (item, rasterPart)->
-		# 	if item.className == 'Shape'
-		# 		path = item.toPath()
-		# 		item.remove()
-		# 		item = path
-		# 	if item.className == 'Path'
-		# 		point = rasterPart.globalToLocal(item.getPointAt(item.length/2))
-		# 		item.strokeColor = rasterPart.getPixel(point)
-		# 	else
-		# 		console.log(item.children)
-		# 		for child in item.children
-		# 			@setStrokeColor(child, rasterPart)
-		# 	return
+		setStrokeColor: (item, rasterPart)->
+			if item.className == 'Shape'
+				path = item.toPath()
+				item.remove()
+				item = path
+			if item.className == 'Path'
+				point = rasterPart.globalToLocal(item.getPointAt(item.length/2))
+				item.strokeColor = rasterPart.getPixel(point)
+			else
+				console.log(item.children)
+				for child in item.children
+					@setStrokeColor(child, rasterPart)
+			return
 
 		addSvgToDraft: (svg, colors)->
 			# svgsPaper = new paper.Group()

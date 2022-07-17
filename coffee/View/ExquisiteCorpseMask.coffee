@@ -111,9 +111,9 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'i18next'], (P, R, Utils, Modal
 
 		mouseBegin: (event)=>
 			tile = @getTileAt(event.point)
-			if tile.visible
+			if tile?.visible
 				@createChooseTileModal(event, tile)
-			return not tile.visible
+			return not tile?.visible
 		
 		isDraftOnBounds: ()->
 			bounds = R.Drawing.getDraft()?.getBounds()
