@@ -93,10 +93,13 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'i18next'], (P, R, Utils, Modal
 		removeTiles: (limits)->
 			return
 		
-		mouseMove: (event)->
-			
+		resetTilesHighlight: (event)->
 			for tile in @tileGroup.children
 				tile.fillColor = R.selectionBlue
+
+		mouseMove: (event)->
+			
+			@resetTilesHighlight()
 
 			tile = @getTileAt(event.point)
 

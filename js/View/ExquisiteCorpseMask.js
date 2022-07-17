@@ -102,13 +102,20 @@
 
       ExquisiteCorpseMask.prototype.removeTiles = function(limits) {};
 
-      ExquisiteCorpseMask.prototype.mouseMove = function(event) {
-        var i, len, ref, sb, tile;
+      ExquisiteCorpseMask.prototype.resetTilesHighlight = function(event) {
+        var i, len, ref, results, tile;
         ref = this.tileGroup.children;
+        results = [];
         for (i = 0, len = ref.length; i < len; i++) {
           tile = ref[i];
-          tile.fillColor = R.selectionBlue;
+          results.push(tile.fillColor = R.selectionBlue);
         }
+        return results;
+      };
+
+      ExquisiteCorpseMask.prototype.mouseMove = function(event) {
+        var sb, tile;
+        this.resetTilesHighlight();
         tile = this.getTileAt(event.point);
         sb = new P.Color(R.selectionBlue);
         sb.setLightness(sb.getLightness() + 0.3);

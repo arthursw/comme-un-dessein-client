@@ -622,7 +622,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			return
 
 		updateButtonsVisibility: (draft=null)->
-			
+			R.view.exquisiteCorpseMask?.resetTilesHighlight()
 
 			# pathTool = R.tools['Precise path']
 			# voteTool = R.tools.select

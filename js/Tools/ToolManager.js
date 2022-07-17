@@ -362,34 +362,37 @@
       };
 
       ToolManager.prototype.updateButtonsVisibility = function(draft) {
-        var ref, ref1, ref2, ref3;
+        var ref, ref1, ref2, ref3, ref4;
         if (draft == null) {
           draft = null;
         }
+        if ((ref = R.view.exquisiteCorpseMask) != null) {
+          ref.resetTilesHighlight();
+        }
         if (R.selectedTool === R.tools['Precise path'] || R.selectedTool === R.tools.eraser || R.selectedTool === R.tools.moveDrawing || R.selectedTool === R.tools.colorTool) {
-          if ((ref = this.colorBtn) != null) {
-            ref.show();
+          if ((ref1 = this.colorBtn) != null) {
+            ref1.show();
           }
           this.redoBtn.show();
           this.undoBtn.show();
           this.submitButton.show();
           this.deleteButton.show();
-          if ((ref1 = R.tracer) != null) {
-            ref1.showButton();
+          if ((ref2 = R.tracer) != null) {
+            ref2.showButton();
           }
           R.tools.eraser.btn.show();
           R.tools.colorTool.btn.show();
           R.tools.moveDrawing.btn.show();
         } else {
-          if ((ref2 = this.colorBtn) != null) {
-            ref2.hide();
+          if ((ref3 = this.colorBtn) != null) {
+            ref3.hide();
           }
           this.redoBtn.hide();
           this.undoBtn.hide();
           this.submitButton.hide();
           this.deleteButton.hide();
-          if ((ref3 = R.tracer) != null) {
-            ref3.hideButton();
+          if ((ref4 = R.tracer) != null) {
+            ref4.hideButton();
           }
           R.tools.eraser.btn.hide();
           R.tools.colorTool.btn.hide();
