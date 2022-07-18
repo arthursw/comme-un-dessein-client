@@ -5,7 +5,7 @@
   define(['paper', 'R', 'Utils/Utils', 'UI/Modal', 'i18next'], function(P, R, Utils, Modal, i18next) {
     var ExquisiteCorpseMask;
     ExquisiteCorpseMask = (function() {
-      ExquisiteCorpseMask.margin = 20 * R.city.pixelPerMm;
+      ExquisiteCorpseMask.margin = 100 * R.city.pixelPerMm;
 
       function ExquisiteCorpseMask(grid) {
         this.grid = grid;

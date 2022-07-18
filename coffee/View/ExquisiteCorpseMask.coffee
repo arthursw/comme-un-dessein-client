@@ -2,7 +2,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'i18next'], (P, R, Utils, Modal
 
 	class ExquisiteCorpseMask
 		
-		@margin = 20 * R.city.pixelPerMm
+		@margin = 100 * R.city.pixelPerMm
 
 		constructor: (@grid)->
 			@tiles = new Map()
