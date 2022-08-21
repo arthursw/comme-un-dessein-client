@@ -5,7 +5,7 @@
     Camera = (function() {
       function Camera() {}
 
-      Camera.threeSize = 900;
+      Camera.threeSize = window.innerWidth;
 
       Camera.initialized = false;
 
@@ -29,8 +29,8 @@
         Camera.scene = new THREE.Scene();
         Camera.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
         Camera.stream = null;
-        threeWidth = Camera.threeSize;
-        threeHeight = Camera.threeSize;
+        threeWidth = window.innerWidth;
+        threeHeight = window.innerWidth;
         minDimension = Math.min(threeWidth, threeHeight);
         Camera.canvas = document.createElement("canvas");
         $(Camera.canvas).css({
@@ -239,7 +239,7 @@
       Camera.resizePlane = function() {
         var newPlaneGeometry, ts;
         if (Camera.texture.image && Camera.texture.image.naturalWidth > 0 && Camera.texture.image.naturalHeight > 0) {
-          ts = Camera.threeSize;
+          ts = window.innerWidth;
           newPlaneGeometry = new THREE.PlaneGeometry(texture.image.naturalWidth / ts, texture.image.naturalHeight / ts);
           geometry.vertices = newPlaneGeometry.vertices;
           geometry.verticesNeedUpdate = true;
@@ -248,8 +248,8 @@
 
       Camera.onWindowResize = function() {
         var minDimension, threeHeight, threeWidth;
-        threeWidth = Camera.threeSize;
-        threeHeight = Camera.threeSize;
+        threeWidth = window.innerWidth;
+        threeHeight = window.innerWidth;
         minDimension = Math.min(threeWidth, threeHeight);
         Camera.renderer.setSize(minDimension, minDimension);
         Camera.effectComposer.setSize(minDimension, minDimension);

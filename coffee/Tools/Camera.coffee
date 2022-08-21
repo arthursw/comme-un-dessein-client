@@ -2,7 +2,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
 
 	class Camera
 
-        @threeSize = 900
+        @threeSize = window.innerWidth
         @initialized = false
 
         @initialize: ()=>
@@ -28,10 +28,10 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             @camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
             @stream = null
 
-            # threeWidth = window.innerWidth
-            # threeHeight = window.innerHeight
-            threeWidth = @threeSize
-            threeHeight = @threeSize
+            threeWidth = window.innerWidth
+            threeHeight = window.innerWidth # innerHeight
+            # threeWidth = @threeSize
+            # threeHeight = @threeSize
             minDimension = Math.min(threeWidth, threeHeight)
 
             # Create the WebGL renderer and add it to the document
@@ -279,17 +279,17 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             if@texture.image and @texture.image.naturalWidth > 0 and @texture.image.naturalHeight > 0
                 # Note: must multiply by two to have real size ; but here we want to get half the size
                 # newPlaneGeometry = new THREE.PlaneGeometry(texture.image.naturalWidth / window.innerWidth, texture.image.naturalHeight / window.innerHeight)
-                ts = @threeSize
+                ts = window.innerWidth # @threeSize
                 newPlaneGeometry = new THREE.PlaneGeometry(texture.image.naturalWidth / ts, texture.image.naturalHeight / ts)
                 geometry.vertices = newPlaneGeometry.vertices;
                 geometry.verticesNeedUpdate = true;
             return
 
         @onWindowResize: ()=>
-            # threeWidth = window.innerWidth
-            # threeHeight = window.innerHeight
-            threeWidth = @threeSize
-            threeHeight = @threeSize
+            threeWidth = window.innerWidth
+            threeHeight = window.innerWidth # innerHeight
+            # threeWidth = @threeSize
+            # threeHeight = @threeSize
             minDimension = Math.min(threeWidth, threeHeight)
             @renderer.setSize(minDimension, minDimension)
             @effectComposer.setSize(minDimension, minDimension)
