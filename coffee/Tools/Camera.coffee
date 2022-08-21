@@ -117,6 +117,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             @paletteShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: paletteShader.trim() } )
             @effectComposer.addPass(@paletteShaderPass)
             console.log('create @paletteShaderPass:', @paletteShaderPass)
+            @paletteShaderPass.enabled = false
 
             @separateColorsShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: separateColorsShader.trim() } )
             @effectComposer.addPass(@separateColorsShaderPass)
@@ -132,8 +133,8 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             @effectComposer.addPass(@stripesShaderPass)
             @stripesShaderPass.enabled = false
 
-            # @adaptiveThresholdShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: adaptiveThresholdShader.trim() } )
-            # @effectComposer.addPass(@adaptiveThresholdShaderPass)
+            @adaptiveThresholdShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: adaptiveThresholdShader.trim() } )
+            @effectComposer.addPass(@adaptiveThresholdShaderPass)
 
             window.addEventListener("resize", @onWindowResize, false)
             $('#camera').prepend(@canvas)

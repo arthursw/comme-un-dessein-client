@@ -127,6 +127,7 @@
         });
         Camera.effectComposer.addPass(Camera.paletteShaderPass);
         console.log('create @paletteShaderPass:', Camera.paletteShaderPass);
+        Camera.paletteShaderPass.enabled = false;
         Camera.separateColorsShaderPass = new THREE.ShaderPass({
           uniforms: Camera.uniforms,
           vertexShader: vertexShader.trim(),
@@ -150,6 +151,12 @@
         });
         Camera.effectComposer.addPass(Camera.stripesShaderPass);
         Camera.stripesShaderPass.enabled = false;
+        Camera.adaptiveThresholdShaderPass = new THREE.ShaderPass({
+          uniforms: Camera.uniforms,
+          vertexShader: vertexShader.trim(),
+          fragmentShader: adaptiveThresholdShader.trim()
+        });
+        Camera.effectComposer.addPass(Camera.adaptiveThresholdShaderPass);
         window.addEventListener("resize", Camera.onWindowResize, false);
         $('#camera').prepend(Camera.canvas);
         Camera.animate();
