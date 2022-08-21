@@ -120,44 +120,6 @@
         Camera.effectComposer = new THREE.EffectComposer(Camera.renderer);
         Camera.renderPass = new THREE.RenderPass(Camera.scene, Camera.camera);
         Camera.effectComposer.addPass(Camera.renderPass);
-        Camera.paletteShaderPass = new THREE.ShaderPass({
-          uniforms: Camera.uniforms,
-          vertexShader: vertexShader.trim(),
-          fragmentShader: paletteShader.trim()
-        });
-        Camera.effectComposer.addPass(Camera.paletteShaderPass);
-        console.log('create @paletteShaderPass:', Camera.paletteShaderPass);
-        Camera.paletteShaderPass.enabled = false;
-        Camera.separateColorsShaderPass = new THREE.ShaderPass({
-          uniforms: Camera.uniforms,
-          vertexShader: vertexShader.trim(),
-          fragmentShader: separateColorsShader.trim()
-        });
-        Camera.effectComposer.addPass(Camera.separateColorsShaderPass);
-        Camera.separateColorsShaderPass.enabled = false;
-        Camera.erodeShaderPass = new THREE.ShaderPass({
-          uniforms: Camera.uniforms,
-          vertexShader: vertexShader.trim(),
-          fragmentShader: erodeShader.trim()
-        });
-        Camera.effectComposer.addPass(Camera.erodeShaderPass);
-        Camera.effectComposer.addPass(Camera.erodeShaderPass);
-        Camera.effectComposer.addPass(Camera.erodeShaderPass);
-        Camera.erodeShaderPass.enabled = false;
-        Camera.stripesShaderPass = new THREE.ShaderPass({
-          uniforms: Camera.uniforms,
-          vertexShader: vertexShader.trim(),
-          fragmentShader: stripesShader.trim()
-        });
-        Camera.effectComposer.addPass(Camera.stripesShaderPass);
-        Camera.stripesShaderPass.enabled = false;
-        Camera.adaptiveThresholdShaderPass = new THREE.ShaderPass({
-          uniforms: Camera.uniforms,
-          vertexShader: vertexShader.trim(),
-          fragmentShader: adaptiveThresholdShader.trim()
-        });
-        Camera.effectComposer.addPass(Camera.adaptiveThresholdShaderPass);
-        Camera.adaptiveThresholdShaderPass.enabled = false;
         window.addEventListener("resize", Camera.onWindowResize, false);
         $('#camera').prepend(Camera.canvas);
         Camera.animate();
@@ -183,8 +145,6 @@
           if (Camera.sliders == null) {
             Camera.sliders = {};
           }
-          Camera.initializeSliders('saturation');
-          Camera.initializeSliders('lightness');
           Camera.initialized = true;
           $('#camera').mousemove(function(event) {
             event.preventDefault();
@@ -270,16 +230,8 @@
       };
 
       Camera.takePhoto = function() {
-        Camera.paletteShaderPass.enabled = true;
-        Camera.separateColorsShaderPass.enabled = true;
-        Camera.erodeShaderPass.enabled = true;
-        Camera.stripesShaderPass.enabled = true;
         Camera.effectComposer.render();
         R.tracer.imageURL = Camera.renderer.domElement.toDataURL();
-        Camera.paletteShaderPass.enabled = true;
-        Camera.separateColorsShaderPass.enabled = false;
-        Camera.erodeShaderPass.enabled = false;
-        Camera.stripesShaderPass.enabled = false;
         Camera.remove();
         R.tracer.setEditImageMode();
       };
@@ -334,7 +286,6 @@
         Camera.geometry = null;
         Camera.effectComposer = null;
         Camera.renderPass = null;
-        Camera.paletteShaderPass = null;
       };
 
       return Camera;

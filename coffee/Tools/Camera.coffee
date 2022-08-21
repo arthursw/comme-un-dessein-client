@@ -114,28 +114,28 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             # renderPass.clear = false;
             @effectComposer.addPass(@renderPass)
 
-            @paletteShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: paletteShader.trim() } )
-            @effectComposer.addPass(@paletteShaderPass)
-            console.log('create @paletteShaderPass:', @paletteShaderPass)
-            @paletteShaderPass.enabled = false
+            # @paletteShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: paletteShader.trim() } )
+            # @effectComposer.addPass(@paletteShaderPass)
+            # console.log('create @paletteShaderPass:', @paletteShaderPass)
+            # @paletteShaderPass.enabled = false
 
-            @separateColorsShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: separateColorsShader.trim() } )
-            @effectComposer.addPass(@separateColorsShaderPass)
-            @separateColorsShaderPass.enabled = false
+            # @separateColorsShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: separateColorsShader.trim() } )
+            # @effectComposer.addPass(@separateColorsShaderPass)
+            # @separateColorsShaderPass.enabled = false
 
-            @erodeShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: erodeShader.trim() } )
-            @effectComposer.addPass(@erodeShaderPass)
-            @effectComposer.addPass(@erodeShaderPass)
-            @effectComposer.addPass(@erodeShaderPass)
-            @erodeShaderPass.enabled = false
+            # @erodeShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: erodeShader.trim() } )
+            # @effectComposer.addPass(@erodeShaderPass)
+            # @effectComposer.addPass(@erodeShaderPass)
+            # @effectComposer.addPass(@erodeShaderPass)
+            # @erodeShaderPass.enabled = false
 
-            @stripesShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: stripesShader.trim() } )
-            @effectComposer.addPass(@stripesShaderPass)
-            @stripesShaderPass.enabled = false
+            # @stripesShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: stripesShader.trim() } )
+            # @effectComposer.addPass(@stripesShaderPass)
+            # @stripesShaderPass.enabled = false
 
-            @adaptiveThresholdShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: adaptiveThresholdShader.trim() } )
-            @effectComposer.addPass(@adaptiveThresholdShaderPass)
-            @adaptiveThresholdShaderPass.enabled = false
+            # @adaptiveThresholdShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: adaptiveThresholdShader.trim() } )
+            # @effectComposer.addPass(@adaptiveThresholdShaderPass)
+            # @adaptiveThresholdShaderPass.enabled = true
 
             window.addEventListener("resize", @onWindowResize, false)
             $('#camera').prepend(@canvas)
@@ -168,8 +168,8 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
                 $('#take-photo').click(@takePhoto)
 
                 @sliders ?= {}
-                @initializeSliders('saturation')
-                @initializeSliders('lightness')
+                # @initializeSliders('saturation')
+                # @initializeSliders('lightness')
                 @initialized = true
 
                 $('#camera').mousemove((event)=> 
@@ -227,21 +227,22 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             return
 
         @takePhoto: ()=>
-            @paletteShaderPass.enabled = true
-            # @paletteShaderPass.uniforms.label.value = true
+            # @paletteShaderPass.enabled = true
+            # # @paletteShaderPass.uniforms.label.value = true
 
-            @separateColorsShaderPass.enabled = true
-            @erodeShaderPass.enabled = true
-            @stripesShaderPass.enabled = true
+            # @separateColorsShaderPass.enabled = true
+            # @erodeShaderPass.enabled = true
+            # @stripesShaderPass.enabled = true
+            # @adaptiveThresholdShaderPass.enabled = false
 
             @effectComposer.render()
             R.tracer.imageURL = @renderer.domElement.toDataURL()
 
-            @paletteShaderPass.enabled = true
+            # @paletteShaderPass.enabled = true
                 
-            @separateColorsShaderPass.enabled = false
-            @erodeShaderPass.enabled = false
-            @stripesShaderPass.enabled = false
+            # @separateColorsShaderPass.enabled = false
+            # @erodeShaderPass.enabled = false
+            # @stripesShaderPass.enabled = false
 
             # @paletteShaderPass.uniforms.label.value = false
             @remove()
@@ -319,7 +320,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             @geometry = null
             @effectComposer = null
             @renderPass = null
-            @paletteShaderPass = null
+            # @paletteShaderPass = null
             return
 
 		constructor: ()->
