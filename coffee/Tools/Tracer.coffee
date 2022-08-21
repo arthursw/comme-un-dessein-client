@@ -1003,6 +1003,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 		autoTraceSized: (bounds=null)=>
 			
 			@rasterPartRectangle = if bounds? then bounds else @raster.bounds
+
 			@subRasterRectangle = new P.Rectangle(0, 0, @raster.width, @raster.height)
 			
 			if bounds?
@@ -1016,13 +1017,15 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@rasterPart = null
 			try
 				@rasterPart = @raster.getSubRaster(@subRasterRectangle)
-
+				
 				maxRasterSize = @constructor.maxRasterSize
 
 				if @rasterPart.width > maxRasterSize or @rasterPart.height > maxRasterSize
 					@scaleRatio = if @rasterPart.width > @rasterPart.height then maxRasterSize/@rasterPart.width else maxRasterSize/@rasterPart.height
-					@rasterPart.width *= @scaleRatio
-					@rasterPart.height *= @scaleRatio
+				else
+					@scaleRatio = 1
+				@rasterPart.width *= @scaleRatio
+				@rasterPart.height *= @scaleRatio
 
 				# @rasterPart.smoothing = false
 				# @rasterPart.width *= 2
@@ -1075,8 +1078,10 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			return
 		
 		addPathsToDraft: (item, draft)->
+			foundPath = false
 			for child in item.children.slice()
 				if child instanceof P.Path
+					foundPath = true
 					child.strokeWidth = R.Path.strokeWidth
 					if item.strokeColor? and not child.strokeColor?
 						child.strokeColor = item.strokeColor
@@ -1086,8 +1091,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 					# console.log(child.strokeColor, child.strokeWidth)
 					draft.addChild(child, false, false)
 				else if child.children?
-					@addPathsToDraft(child, draft)
-			return
+					foundPath = foundPath or @addPathsToDraft(child, draft)
+			return foundPath
 
 		setStrokeColor: (item, rasterPart)->
 			if item.className == 'Shape'
@@ -1127,9 +1132,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			# svgsPaper.addChild(svgPaper)
 			
 			svgPaper.translate(@rasterPartRectangle.topLeft)
-			if @scaleRatio?
-				svgPaper.scale(1/@scaleRatio, @rasterPartRectangle.topLeft)
-				@scaleRatio = null
+			svgPaper.scale(1/@scaleRatio, @rasterPartRectangle.topLeft)
 			svgPaper.scale(@rasterPartRectangle.width / @subRasterRectangle.width, @rasterPartRectangle.topLeft)
 			# svgPaper.fitBounds(@rasterPartRectangle)
 
@@ -1140,7 +1143,9 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			draft = R.Item.Drawing.getDraft()
 			R.commandManager.add(new Command.ModifyDrawing(draft))
 
-			@addPathsToDraft(svgPaper, draft)
+			foundPath = @addPathsToDraft(svgPaper, draft)
+			if not foundPath
+				R.alertManager.alert 'The traced image is empty', 'error'
 			draft.computeRectangle()
 			
 			draft.updatePaths()

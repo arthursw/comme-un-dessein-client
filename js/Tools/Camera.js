@@ -5,7 +5,7 @@
     Camera = (function() {
       function Camera() {}
 
-      Camera.threeSize = window.innerWidth;
+      Camera.threeSize = Math.min(window.innerWidth, window.innerHeight);
 
       Camera.initialized = false;
 
@@ -14,14 +14,14 @@
         require(['three'], function(THREE) {
           window.THREE = THREE;
           console.log('three loaded');
-          require(['EffectComposer', 'RenderPass', 'ShaderPass', 'paletteShader', 'adaptiveThresholdShader', 'separateColorsShader', 'stripesShader', 'erodeShader', 'vertexShader', 'gui'], function(EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI) {
+          require(['EffectComposer', 'RenderPass', 'ShaderPass', 'paletteShader', 'adaptiveThresholdShader', 'thresholdShader', 'separateColorsShader', 'stripesShader', 'erodeShader', 'vertexShader', 'gui'], function(EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, thresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI) {
             console.log('everything else loaded');
-            Camera.initializeThreeJS(THREE, EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI);
+            Camera.initializeThreeJS(THREE, EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, thresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI);
           });
         });
       };
 
-      Camera.initializeThreeJS = function(THREE, EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI) {
+      Camera.initializeThreeJS = function(THREE, EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, thresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI) {
         var black, blue, brown, c, color, colorVectorArray, colors, constraints, green, i, len, minDimension, red, threeHeight, threeWidth, white, yellow;
         console.log('initializeThreeJS');
         $('#camera').show();
@@ -30,7 +30,7 @@
         Camera.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
         Camera.stream = null;
         threeWidth = window.innerWidth;
-        threeHeight = window.innerWidth;
+        threeHeight = window.innerHeight;
         minDimension = Math.min(threeWidth, threeHeight);
         Camera.canvas = document.createElement("canvas");
         $(Camera.canvas).css({
@@ -97,6 +97,9 @@
           C: {
             value: 0.05
           },
+          threshold: {
+            value: 0.5
+          },
           windowSize: {
             value: 15
           },
@@ -120,6 +123,20 @@
         Camera.effectComposer = new THREE.EffectComposer(Camera.renderer);
         Camera.renderPass = new THREE.RenderPass(Camera.scene, Camera.camera);
         Camera.effectComposer.addPass(Camera.renderPass);
+        Camera.thresholdShaderPass = new THREE.ShaderPass({
+          uniforms: Camera.uniforms,
+          vertexShader: vertexShader.trim(),
+          fragmentShader: thresholdShader.trim()
+        });
+        Camera.effectComposer.addPass(Camera.thresholdShaderPass);
+        Camera.thresholdShaderPass.enabled = true;
+        Camera.stripesShaderPass = new THREE.ShaderPass({
+          uniforms: Camera.uniforms,
+          vertexShader: vertexShader.trim(),
+          fragmentShader: stripesShader.trim()
+        });
+        Camera.effectComposer.addPass(Camera.stripesShaderPass);
+        Camera.stripesShaderPass.enabled = false;
         window.addEventListener("resize", Camera.onWindowResize, false);
         $('#camera').prepend(Camera.canvas);
         Camera.animate();
@@ -230,6 +247,8 @@
       };
 
       Camera.takePhoto = function() {
+        Camera.thresholdShaderPass.enabled = true;
+        Camera.stripesShaderPass.enabled = true;
         Camera.effectComposer.render();
         R.tracer.imageURL = Camera.renderer.domElement.toDataURL();
         Camera.remove();
@@ -239,7 +258,7 @@
       Camera.resizePlane = function() {
         var newPlaneGeometry, ts;
         if (Camera.texture.image && Camera.texture.image.naturalWidth > 0 && Camera.texture.image.naturalHeight > 0) {
-          ts = window.innerWidth;
+          ts = Math.min(window.innerWidth, window.innerHeight);
           newPlaneGeometry = new THREE.PlaneGeometry(texture.image.naturalWidth / ts, texture.image.naturalHeight / ts);
           geometry.vertices = newPlaneGeometry.vertices;
           geometry.verticesNeedUpdate = true;
@@ -249,7 +268,7 @@
       Camera.onWindowResize = function() {
         var minDimension, threeHeight, threeWidth;
         threeWidth = window.innerWidth;
-        threeHeight = window.innerWidth;
+        threeHeight = window.innerHeight;
         minDimension = Math.min(threeWidth, threeHeight);
         Camera.renderer.setSize(minDimension, minDimension);
         Camera.effectComposer.setSize(minDimension, minDimension);

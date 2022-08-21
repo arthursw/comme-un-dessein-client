@@ -2,7 +2,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
 
 	class Camera
 
-        @threeSize = window.innerWidth
+        @threeSize = Math.min(window.innerWidth, window.innerHeight) # 900
         @initialized = false
 
         @initialize: ()=>
@@ -10,14 +10,14 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             require ['three'], (THREE)=>
                 window.THREE = THREE
                 console.log('three loaded')
-                require ['EffectComposer', 'RenderPass', 'ShaderPass', 'paletteShader', 'adaptiveThresholdShader', 'separateColorsShader', 'stripesShader', 'erodeShader', 'vertexShader', 'gui'], (EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI) =>
+                require ['EffectComposer', 'RenderPass', 'ShaderPass', 'paletteShader', 'adaptiveThresholdShader', 'thresholdShader', 'separateColorsShader', 'stripesShader', 'erodeShader', 'vertexShader', 'gui'], (EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, thresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI) =>
                     console.log('everything else loaded')
-                    @initializeThreeJS(THREE, EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI)
+                    @initializeThreeJS(THREE, EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, thresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI)
                     return
                 return
             return
         
-        @initializeThreeJS: (THREE, EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI)=>
+        @initializeThreeJS: (THREE, EffectComposer, RenderPass, ShaderPass, paletteShader, adaptiveThresholdShader, thresholdShader, separateColorsShader, stripesShader, erodeShader, vertexShader, GUI)=>
             console.log('initializeThreeJS')
 
             $('#camera').show()
@@ -29,7 +29,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             @stream = null
 
             threeWidth = window.innerWidth
-            threeHeight = window.innerWidth # innerHeight
+            threeHeight = window.innerHeight
             # threeWidth = @threeSize
             # threeHeight = @threeSize
             minDimension = Math.min(threeWidth, threeHeight)
@@ -95,6 +95,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
                 saturation: { value: 0.0 },
                 lightness: { value: 0.0 },
                 C: { value: 0.05 },
+                threshold: { value: 0.5 },
                 windowSize: { value: 15 },
                 stripeWidth: { value: 5 },
                 mousePosition: { value: new THREE.Vector2(0.5, 0.5) }
@@ -128,14 +129,19 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             # @effectComposer.addPass(@erodeShaderPass)
             # @effectComposer.addPass(@erodeShaderPass)
             # @erodeShaderPass.enabled = false
-
-            # @stripesShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: stripesShader.trim() } )
-            # @effectComposer.addPass(@stripesShaderPass)
-            # @stripesShaderPass.enabled = false
-
+            
             # @adaptiveThresholdShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: adaptiveThresholdShader.trim() } )
             # @effectComposer.addPass(@adaptiveThresholdShaderPass)
-            # @adaptiveThresholdShaderPass.enabled = true
+            # @adaptiveThresholdShaderPass.enabled = false
+
+            @thresholdShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: thresholdShader.trim() } )
+            @effectComposer.addPass(@thresholdShaderPass)
+            @thresholdShaderPass.enabled = true
+
+            @stripesShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: stripesShader.trim() } )
+            @effectComposer.addPass(@stripesShaderPass)
+            @stripesShaderPass.enabled = false
+
 
             window.addEventListener("resize", @onWindowResize, false)
             $('#camera').prepend(@canvas)
@@ -232,8 +238,9 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
 
             # @separateColorsShaderPass.enabled = true
             # @erodeShaderPass.enabled = true
-            # @stripesShaderPass.enabled = true
-            # @adaptiveThresholdShaderPass.enabled = false
+            # @adaptiveThresholdShaderPass.enabled = true
+            @thresholdShaderPass.enabled = true
+            @stripesShaderPass.enabled = true
 
             @effectComposer.render()
             R.tracer.imageURL = @renderer.domElement.toDataURL()
@@ -279,7 +286,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             if@texture.image and @texture.image.naturalWidth > 0 and @texture.image.naturalHeight > 0
                 # Note: must multiply by two to have real size ; but here we want to get half the size
                 # newPlaneGeometry = new THREE.PlaneGeometry(texture.image.naturalWidth / window.innerWidth, texture.image.naturalHeight / window.innerHeight)
-                ts = window.innerWidth # @threeSize
+                ts = Math.min(window.innerWidth, window.innerHeight) # @threeSize
                 newPlaneGeometry = new THREE.PlaneGeometry(texture.image.naturalWidth / ts, texture.image.naturalHeight / ts)
                 geometry.vertices = newPlaneGeometry.vertices;
                 geometry.verticesNeedUpdate = true;
@@ -287,7 +294,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
 
         @onWindowResize: ()=>
             threeWidth = window.innerWidth
-            threeHeight = window.innerWidth # innerHeight
+            threeHeight = window.innerHeight
             # threeWidth = @threeSize
             # threeHeight = @threeSize
             minDimension = Math.min(threeWidth, threeHeight)

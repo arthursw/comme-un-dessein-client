@@ -74,6 +74,7 @@
       'stripesShader': libs + 'three/shaders/stripes',
       'erodeShader': libs + 'three/shaders/erode',
       'adaptiveThresholdShader': libs + 'three/shaders/adaptiveThreshold',
+      'thresholdShader': libs + 'three/shaders/threshold',
       'vertexShader': libs + 'three/shaders/vertex'
     },
     shim: {

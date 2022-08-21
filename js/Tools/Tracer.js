@@ -1002,9 +1002,11 @@
           maxRasterSize = this.constructor.maxRasterSize;
           if (this.rasterPart.width > maxRasterSize || this.rasterPart.height > maxRasterSize) {
             this.scaleRatio = this.rasterPart.width > this.rasterPart.height ? maxRasterSize / this.rasterPart.width : maxRasterSize / this.rasterPart.height;
-            this.rasterPart.width *= this.scaleRatio;
-            this.rasterPart.height *= this.scaleRatio;
+          } else {
+            this.scaleRatio = 1;
           }
+          this.rasterPart.width *= this.scaleRatio;
+          this.rasterPart.height *= this.scaleRatio;
           console.log(this.rasterPart.width);
           png = this.rasterPart.toDataURL();
           this.rasterPart.remove();
@@ -1073,11 +1075,13 @@
       };
 
       Tracer.prototype.addPathsToDraft = function(item, draft) {
-        var child, j, len, ref;
+        var child, foundPath, j, len, ref;
+        foundPath = false;
         ref = item.children.slice();
         for (j = 0, len = ref.length; j < len; j++) {
           child = ref[j];
           if (child instanceof P.Path) {
+            foundPath = true;
             child.strokeWidth = R.Path.strokeWidth;
             if ((item.strokeColor != null) && (child.strokeColor == null)) {
               child.strokeColor = item.strokeColor;
@@ -1086,9 +1090,10 @@
             child.strokeJoin = 'round';
             draft.addChild(child, false, false);
           } else if (child.children != null) {
-            this.addPathsToDraft(child, draft);
+            foundPath = foundPath || this.addPathsToDraft(child, draft);
           }
         }
+        return foundPath;
       };
 
       Tracer.prototype.setStrokeColor = function(item, rasterPart) {
@@ -1112,7 +1117,7 @@
       };
 
       Tracer.prototype.addSvgToDraft = function(svg, colors) {
-        var draft, regex, subst, svgPaper;
+        var draft, foundPath, regex, subst, svgPaper;
         svg = svg.replace('<?xml version="1.0" standalone="yes"?>\n', '');
         regex = /style="stroke:([#\d\w]+); fill:none;"/gm;
         subst = 'stroke="$1" stroke-width="' + R.Path.strokeWidth + '"';
@@ -1122,17 +1127,17 @@
           string: true
         }));
         svgPaper.translate(this.rasterPartRectangle.topLeft);
-        if (this.scaleRatio != null) {
-          svgPaper.scale(1 / this.scaleRatio, this.rasterPartRectangle.topLeft);
-          this.scaleRatio = null;
-        }
+        svgPaper.scale(1 / this.scaleRatio, this.rasterPartRectangle.topLeft);
         svgPaper.scale(this.rasterPartRectangle.width / this.subRasterRectangle.width, this.rasterPartRectangle.topLeft);
         svgPaper.strokeCap = 'round';
         svgPaper.strokeJoin = 'round';
         svgPaper.strokeWidth = R.Path.strokeWidth;
         draft = R.Item.Drawing.getDraft();
         R.commandManager.add(new Command.ModifyDrawing(draft));
-        this.addPathsToDraft(svgPaper, draft);
+        foundPath = this.addPathsToDraft(svgPaper, draft);
+        if (!foundPath) {
+          R.alertManager.alert('The traced image is empty', 'error');
+        }
         draft.computeRectangle();
         draft.updatePaths();
         svgPaper.remove();
