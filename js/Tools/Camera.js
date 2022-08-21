@@ -157,14 +157,13 @@
           fragmentShader: adaptiveThresholdShader.trim()
         });
         Camera.effectComposer.addPass(Camera.adaptiveThresholdShaderPass);
+        Camera.adaptiveThresholdShaderPass.enabled = false;
         window.addEventListener("resize", Camera.onWindowResize, false);
         $('#camera').prepend(Camera.canvas);
         Camera.animate();
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           constraints = {
             video: {
-              width: 300,
-              height: 300,
               facingMode: 'environment'
             }
           };

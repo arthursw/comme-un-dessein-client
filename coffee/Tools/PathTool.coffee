@@ -159,8 +159,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 
 			R.view.tool.onMouseMove = null
 			
-			if R.tracer?.traceAutomatically
-				R.tracer.closeRaster()
+			# if R.tracer?.traceAutomatically
+			# 	R.tracer.closeRaster()
 			
 			# R.toolManager.leaveDrawingMode()
 			return

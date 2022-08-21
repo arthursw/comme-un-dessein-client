@@ -153,14 +153,10 @@
       PathTool.prototype.updateParameters = function() {};
 
       PathTool.prototype.deselect = function() {
-        var ref;
         PathTool.__super__.deselect.call(this);
         this.finish();
         this.hideDraftLimits();
         R.view.tool.onMouseMove = null;
-        if ((ref = R.tracer) != null ? ref.traceAutomatically : void 0) {
-          R.tracer.closeRaster();
-        }
       };
 
       PathTool.prototype.beginBackup = function(event, from, data) {

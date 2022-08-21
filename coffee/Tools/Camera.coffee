@@ -135,6 +135,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
 
             @adaptiveThresholdShaderPass = new THREE.ShaderPass( { uniforms: @uniforms, vertexShader: vertexShader.trim(), fragmentShader: adaptiveThresholdShader.trim() } )
             @effectComposer.addPass(@adaptiveThresholdShaderPass)
+            @adaptiveThresholdShaderPass.enabled = false
 
             window.addEventListener("resize", @onWindowResize, false)
             $('#camera').prepend(@canvas)
@@ -142,7 +143,8 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             
             if navigator.mediaDevices and navigator.mediaDevices.getUserMedia
 
-                constraints = { video: { width: 300, height: 300, facingMode: 'environment' } }
+                # constraints = { video: { width: 300, height: 300, facingMode: 'environment' } }
+                constraints = { video: { facingMode: 'environment' } }
 
                 navigator.mediaDevices.getUserMedia( constraints ).then( ( stream ) =>
                     # apply the stream to the video element used in the texture
