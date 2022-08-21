@@ -306,6 +306,8 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			if args.submit?
 				buttonJ.click (event)=>
 					args.submit(@data)
+					if args.preventDefaultSubmit?
+						return
 					buttonJ.remove()
 					@hide()
 					return

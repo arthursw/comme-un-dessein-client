@@ -32,11 +32,16 @@
         }
         R.tools.move = new R.Tools.Move();
         R.tools.select = new R.Tools.Select();
-        this.createColorButtons();
+        R.selectedColor = 'black';
+        if (R.useColors) {
+          this.createColorButtons();
+        }
         R.tools.eraser = new R.Tools.Eraser();
         R.tools.eraser.btn.hide();
-        R.tools.colorTool = new R.Tools.ColorTool();
-        R.tools.colorTool.btn.hide();
+        if (R.useColors) {
+          R.tools.colorTool = new R.Tools.ColorTool();
+          R.tools.colorTool.btn.hide();
+        }
         R.tools.moveDrawing = new R.Tools.MoveDrawing();
         R.tools.moveDrawing.btn.hide();
         R.tracer = new Tracer();
@@ -351,7 +356,6 @@
 
       ToolManager.prototype.showTracerButtons = function() {
         if (R.tracer.isVisible()) {
-          this.changeImageButton.show();
           this.autoTraceButton.show();
         }
       };
@@ -362,7 +366,7 @@
       };
 
       ToolManager.prototype.updateButtonsVisibility = function(draft) {
-        var ref, ref1, ref2, ref3, ref4;
+        var ref, ref1, ref2, ref3, ref4, ref5, ref6;
         if (draft == null) {
           draft = null;
         }
@@ -381,21 +385,25 @@
             ref2.showButton();
           }
           R.tools.eraser.btn.show();
-          R.tools.colorTool.btn.show();
+          if ((ref3 = R.tools.colorTool) != null) {
+            ref3.btn.show();
+          }
           R.tools.moveDrawing.btn.show();
         } else {
-          if ((ref3 = this.colorBtn) != null) {
-            ref3.hide();
+          if ((ref4 = this.colorBtn) != null) {
+            ref4.hide();
           }
           this.redoBtn.hide();
           this.undoBtn.hide();
           this.submitButton.hide();
           this.deleteButton.hide();
-          if ((ref4 = R.tracer) != null) {
-            ref4.hideButton();
+          if ((ref5 = R.tracer) != null) {
+            ref5.hideButton();
           }
           R.tools.eraser.btn.hide();
-          R.tools.colorTool.btn.hide();
+          if ((ref6 = R.tools.colorTool) != null) {
+            ref6.btn.hide();
+          }
           R.tools.moveDrawing.btn.hide();
         }
         if (draft == null) {

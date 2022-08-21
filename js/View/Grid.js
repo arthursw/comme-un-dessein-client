@@ -50,9 +50,14 @@
       };
 
       Grid.prototype.createFrame = function() {
-        var child, i, l1, l2, l3, l4, len, ref;
+        var child, i, l1, l2, l3, l4, len, ref, ref1;
+        if ((ref = this.frame) != null) {
+          ref.remove();
+        }
         this.frame = new P.Group();
         this.frame.fillColor = '#252525';
+        this.frame.strokeColor = '#252525';
+        this.frame.strokeWidth = 2;
         l1 = new P.Path.Rectangle(this.frameRectangle.topLeft, new P.Point(this.frameRectangle.right, this.limitCDRectangle.top));
         l2 = new P.Path.Rectangle(new P.Point(this.frameRectangle.left, this.limitCDRectangle.top), new P.Point(this.limitCDRectangle.left, this.limitCDRectangle.bottom));
         l3 = new P.Path.Rectangle(new P.Point(this.limitCDRectangle.right, this.limitCDRectangle.top), new P.Point(this.frameRectangle.right, this.limitCDRectangle.bottom));
@@ -61,10 +66,12 @@
         this.frame.addChild(l2);
         this.frame.addChild(l3);
         this.frame.addChild(l4);
-        ref = this.frame.children;
-        for (i = 0, len = ref.length; i < len; i++) {
-          child = ref[i];
+        ref1 = this.frame.children;
+        for (i = 0, len = ref1.length; i < len; i++) {
+          child = ref1[i];
           child.fillColor = '#252525';
+          child.strokeColor = '#252525';
+          child.strokeWidth = 2;
         }
         this.layer.addChild(this.frame);
       };
@@ -91,8 +98,8 @@
         if (limit.x >= P.view.bounds.left && limit.x <= P.view.bounds.right) {
           this.limitPathV = new P.Path();
           this.limitPathV.name = 'limitPathV';
-          this.limitPathV.strokeColor = 'green';
-          this.limitPathV.strokeWidth = 5;
+          this.limitPathV.strokeColor = '#252525';
+          this.limitPathV.strokeWidth = 1;
           this.limitPathV.add(limit.x, P.view.bounds.top);
           this.limitPathV.add(limit.x, P.view.bounds.bottom);
           this.grid.addChild(this.limitPathV);
@@ -100,8 +107,8 @@
         if (limit.y >= P.view.bounds.top && limit.y <= P.view.bounds.bottom) {
           this.limitPathH = new P.Path();
           this.limitPathH.name = 'limitPathH';
-          this.limitPathH.strokeColor = 'green';
-          this.limitPathH.strokeWidth = 5;
+          this.limitPathH.strokeColor = '#252525';
+          this.limitPathH.strokeWidth = 1;
           this.limitPathH.add(P.view.bounds.left, limit.y);
           this.limitPathH.add(P.view.bounds.right, limit.y);
           this.grid.addChild(this.limitPathH);

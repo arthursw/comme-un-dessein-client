@@ -3,7 +3,7 @@
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     hasProp = {}.hasOwnProperty;
 
-  define(['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Drawing', 'Items/Discussion', 'Items/Divs/Text'], function(P, R, Utils, Command, Item, ModuleLoader, Drawing, Discussion, Text) {
+  define(['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Drawing', 'Items/Discussion', 'Items/Divs/Text', 'UI/Modal'], function(P, R, Utils, Command, Item, ModuleLoader, Drawing, Discussion, Text, Modal) {
     var Loader;
     Loader = (function() {
       Loader.maxNumPoints = 1000;
@@ -752,7 +752,7 @@
       };
 
       Loader.prototype.checkError = function(result) {
-        var j, len, option, options, ref;
+        var j, len, manageEmails, modal, option, options, ref;
         if (result == null) {
           return true;
         }
@@ -765,6 +765,31 @@
           if (result.message === 'invalid_url') {
             R.alertManager.alert("Your URL is invalid or does not point to an existing page", "error");
           } else {
+            if (result.message === 'Please confirm your email') {
+              this.hideLoadingBar();
+              modal = Modal.createModal({
+                title: 'Please confirm your email',
+                submit: ((function(_this) {
+                  return function() {
+                    return console.log('confirm');
+                  };
+                })(this))
+              });
+              modal.addText(result.message);
+              manageEmails = (function(_this) {
+                return function() {
+                  window.location = '/accounts/email/';
+                };
+              })(this);
+              modal.addButton({
+                name: 'Manage emails',
+                icon: 'glyphicon-envelope',
+                type: 'info',
+                submit: manageEmails
+              });
+              modal.show();
+              return;
+            }
             options = [];
             if (result.messageOptions != null) {
               ref = result.messageOptions;

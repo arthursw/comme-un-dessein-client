@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Drawing', 'Items/Discussion', 'Items/Divs/Text' ], (P, R, Utils, Command, Item, ModuleLoader, Drawing, Discussion, Text) ->
+define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Drawing', 'Items/Discussion', 'Items/Divs/Text', 'UI/Modal' ], (P, R, Utils, Command, Item, ModuleLoader, Drawing, Discussion, Text, Modal) ->
 # define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/ModuleLoader', 'Items/Lock', 'Items/Divs/Div', 'Items/Divs/Media', 'Items/Drawing', 'Items/Divs/Text' ], (P, R, Utils, Command, Item, ModuleLoader, Lock, Div, Media, Drawing, Text) ->
 	# --- load --- #
 
@@ -686,6 +686,19 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				if result.message == 'invalid_url'
 					R.alertManager.alert("Your URL is invalid or does not point to an existing page", "error")
 				else
+					if result.message == 'Please confirm your email'
+						
+						@hideLoadingBar()
+
+						modal = Modal.createModal( title: 'Please confirm your email', submit: (()=>console.log('confirm')) )
+						modal.addText(result.message)
+						manageEmails = ()=>
+							window.location = '/accounts/email/'
+							return
+						modal.addButton(name: 'Manage emails', icon: 'glyphicon-envelope', type: 'info', submit: manageEmails)
+						modal.show()
+						
+						return
 					options = []
 					if result.messageOptions?
 						for option in result.messageOptions

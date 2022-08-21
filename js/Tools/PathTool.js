@@ -153,10 +153,14 @@
       PathTool.prototype.updateParameters = function() {};
 
       PathTool.prototype.deselect = function() {
+        var ref;
         PathTool.__super__.deselect.call(this);
         this.finish();
         this.hideDraftLimits();
         R.view.tool.onMouseMove = null;
+        if ((ref = R.tracer) != null ? ref.traceAutomatically : void 0) {
+          R.tracer.closeRaster();
+        }
       };
 
       PathTool.prototype.beginBackup = function(event, from, data) {
@@ -210,7 +214,7 @@
       };
 
       PathTool.prototype.begin = function(event, from, data) {
-        var bounds, intersection, ref, ref1;
+        var bounds, draftIsOutsideFrame, intersection, ref, ref1, ref2;
         if (from == null) {
           from = R.me;
         }
@@ -223,13 +227,21 @@
         if ((ref = R.tracer) != null ? ref.draggingImage : void 0) {
           return;
         }
+        if ((ref1 = R.tracer) != null ? ref1.tracingAutomatically : void 0) {
+          return;
+        }
         if (P.view.zoom < 0.5) {
           R.alertManager.alert('Please zoom before drawing', 'info');
           return;
         }
+        draftIsOutsideFrame = !R.view.contains(event.point);
+        if (draftIsOutsideFrame) {
+          R.alertManager.alert('Your path must be in the drawing area', 'error');
+          return;
+        }
         if ((this.draftLimit != null) && !this.draftLimit.contains(event.point)) {
           this.constructor.displayDraftIsTooBigError();
-          bounds = (ref1 = R.Drawing.getDraft()) != null ? ref1.getBounds() : void 0;
+          bounds = (ref2 = R.Drawing.getDraft()) != null ? ref2.getBounds() : void 0;
           if (bounds != null) {
             intersection = R.view.getViewBounds(true).intersect(bounds);
             if (intersection.width < 0 || intersection.height < 0 || intersection.area < 10000) {
@@ -245,9 +257,6 @@
           this.currentPath.strokeColor = R.selectedColor;
           this.currentPath.strokeCap = 'round';
           this.currentPath.strokeJoin = 'round';
-          this.currentPath.shadowColor = 'lightblue';
-          this.currentPath.shadowBlur = 10;
-          this.currentPath.shadowOffset = new P.Point(0, 0);
           this.currentPath.add(event.point);
         }
         this.using = true;
@@ -292,7 +301,7 @@
         if ((draftBounds == null) || draftBounds.area === 0) {
           return null;
         }
-        viewBounds = R.view.grid.limitCD.bounds.clone();
+        viewBounds = R.view.grid.frameRectangle;
         this.draftLimit = draftBounds.expand(2 * (this.constructor.maxDraftSize * R.city.pixelPerMm - draftBounds.width), 2 * (this.constructor.maxDraftSize * R.city.pixelPerMm - draftBounds.height));
         this.limit = new P.Group();
         l1 = new P.Path.Rectangle(viewBounds.topLeft, new P.Point(viewBounds.right, this.draftLimit.top));
@@ -429,7 +438,9 @@
           return;
         }
         this.using = false;
-        this.currentPath.add(event.point);
+        if (this.currentPath.segments.length > 0) {
+          this.currentPath.add(event.point);
+        }
         draftLimit = this.showDraftLimits();
         if ((this.draftLimit != null) && !this.draftLimit.contains(this.currentPath.bounds)) {
           this.constructor.displayDraftIsTooBigError();

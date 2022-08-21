@@ -840,6 +840,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 			svg = P.project.exportSVG()
 			R.svgJ = $(svg)
 			R.svgJ.insertAfter(R.canvasJ)
+			R.svgJ.find('#grid').remove()
 			defsJ = $('<defs>')
 			patternValidateJ = $("<pattern id='pattern-validate' width='8' height='8' patternUnits='userSpaceOnUse'>")
 			patternValidateJ.append("<path d='M-2 10L10 -2ZM10 6L6 10ZM-2 2L2 -2' stroke='green' stroke-width='4.5'/>")
@@ -1059,6 +1060,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 			# R.backgroundCanvas.height = window.innerHeight
 			# R.backgroundCanvasJ.width(window.innerWidth)
 			# R.backgroundCanvasJ.height(window.innerHeight)
+			R.svgJ.attr('width', R.stageJ.innerWidth())
+			R.svgJ.attr('height', R.stageJ.innerHeight())
+			
 			@grid.update()
 			# $(".mCustomScrollbar").mCustomScrollbar("update")
 			@moveBy(new P.Point())
@@ -1066,8 +1070,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 			# R.canvasJ.width(window.innerWidth)
 			# R.canvasJ.height(window.innerHeight-50)
 			
-			R.svgJ.attr('width', R.stageJ.innerWidth())
-			R.svgJ.attr('height', R.stageJ.innerHeight())
+			
 			# R.selectionCanvasJ.width(window.innerWidth)
 			# R.selectionCanvasJ.height(window.innerHeight)
 			# R.selectionProject.P.view.viewSize = new P.Size(window.innerWidth, window.innerHeight)

@@ -593,7 +593,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@svgString = svg
 
 			imageData = R.view.getThumbnail(@, bounds.width, bounds.height, true, false)
-			console.log(imageData)
 
 			args = {
 				pk: @pk

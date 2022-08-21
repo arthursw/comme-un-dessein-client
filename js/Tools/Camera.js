@@ -60,7 +60,7 @@
         white = '#FFFFFF';
         black = '#000000';
         colors = [red, blue, green, yellow, brown, black, white];
-        if (R.isCommeUnDessein) {
+        if (R.isCommeUnDessein || !R.useColors) {
           colors = [black, black, black, black, black, black, white];
         }
         colorVectorArray = [];
@@ -158,7 +158,7 @@
             video: {
               width: 300,
               height: 300,
-              facingMode: 'user'
+              facingMode: 'environment'
             }
           };
           navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {

@@ -86,6 +86,8 @@ define [
 	$(document).ready () ->
 		
 		canvasJ = $('#canvas')
+		
+		R.Modal = Modal
 
 		R.administrator = canvasJ.attr('data-is-admin') == 'True'
 		R.application = canvasJ.attr('data-application')
@@ -98,6 +100,7 @@ define [
 
 		cityName = canvasJ.attr('data-city')
 		R.useSVG = R.isCommeUnDessein and canvasJ.attr('data-city-use-svg') == 'True'
+		R.useColors = canvasJ.attr('data-city-use-colors') == 'True'
 
 		if cityName.length > 0
 			R.city.name = cityName
@@ -330,6 +333,7 @@ define [
 
 		R.toolManager.createChangeImageButton()
 		R.toolManager.createAutoTraceButton()
+		# R.toolManager.createSetImagePositionButton()
 		R.toolManager.createDeleteButton()
 		R.toolManager.createSubmitButton()
 		R.loader.initializeTileManager()
@@ -523,7 +527,7 @@ define [
 			usernameJ = modal.addTextInput(name: 'Username', id: 'profile-username', placeholder: i18next.t('Username'), className: '', label: 'Username', type: 'text')
 			usernameJ.find('input').val(R.me)
 			
-			emailConfirmed = R.canvasJ.attr('data-email-confirmed')
+			emailConfirmed = R.canvasJ.attr('data-email-confirmed') == 'True'
 			confirmedText = '(' + i18next.t( if emailConfirmed then 'Confirmed' else 'Not confirmed') + ')'
 			emailJ = modal.addTextInput(name: 'Email', id: 'profile-email', placeholder: 'Email', className: '', label: 'Email ' + confirmedText, type: 'email')
 			userEmail = R.canvasJ.attr('data-user-email')

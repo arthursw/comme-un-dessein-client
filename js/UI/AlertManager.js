@@ -13,7 +13,7 @@
         this.show = bind(this.show, this);
         this.alertsContainer = $("#CommeUnDessein_alerts");
         this.alertsContainer.find('button.show').click(this.show);
-        this.alertsContainer.on({
+        this.alertsContainer.find('button.show').on({
           touchstart: this.show
         });
         this.alerts = [];
@@ -40,6 +40,8 @@
         return;
       }
 
+      AlertManager.prototype.scrollAlert = function(alertJ) {};
+
       AlertManager.prototype.showAlert = function(index) {
         var alertData, alertJ, messageOptions, newAlertJ, previousType, ref, ref1, text;
         if (this.alerts.length <= 0 || index < 0 || index >= this.alerts.length) {
@@ -64,6 +66,7 @@
         newAlertJ.insertAfter(alertJ);
         alertJ.remove();
         this.alertsContainer.find(".alert-number").text(this.currentAlert + 1);
+        this.scrollAlert(newAlertJ);
       };
 
       AlertManager.prototype.alert = function(message, type, delay, messageOptions) {
@@ -93,6 +96,9 @@
         if (this.alerts.length > 0) {
           this.alertsContainer.addClass("activated");
           $('body').addClass("alert-activated");
+          if (this.alertsContainer.hasClass('top')) {
+            $('body').addClass("r-alert-top");
+          }
         }
         this.showAlert(this.alerts.length - 1);
         this.show();
@@ -145,13 +151,16 @@
             alertJ.css({
               'background-color': 'white'
             });
-            alertJ.animate({
-              'background-color': backgroundColor
-            }, 250);
+            setTimeout((function() {
+              return alertJ.css({
+                'background-color': backgroundColor
+              });
+            }), 150);
           };
         })(this);
         blink();
         this.blinkIntervalID = setInterval(blink, 300);
+        this.scrollAlert(alertJ);
       };
 
       AlertManager.prototype.hideDeferred = function(delay) {

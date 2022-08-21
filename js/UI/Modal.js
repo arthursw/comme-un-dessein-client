@@ -363,6 +363,9 @@
           buttonJ.click((function(_this) {
             return function(event) {
               args.submit(_this.data);
+              if (args.preventDefaultSubmit != null) {
+                return;
+              }
               buttonJ.remove();
               _this.hide();
             };

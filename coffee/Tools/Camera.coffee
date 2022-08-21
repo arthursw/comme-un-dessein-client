@@ -78,7 +78,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             white = '#FFFFFF'
             black = '#000000'
             colors = [red, blue, green, yellow, brown, black, white]
-            if R.isCommeUnDessein
+            if R.isCommeUnDessein or not R.useColors
                 colors = [black, black, black, black, black, black, white]
             colorVectorArray = []
 
@@ -141,7 +141,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             
             if navigator.mediaDevices and navigator.mediaDevices.getUserMedia
 
-                constraints = { video: { width: 300, height: 300, facingMode: 'user' } }
+                constraints = { video: { width: 300, height: 300, facingMode: 'environment' } }
 
                 navigator.mediaDevices.getUserMedia( constraints ).then( ( stream ) =>
                     # apply the stream to the video element used in the texture

@@ -776,6 +776,7 @@
         svg = P.project.exportSVG();
         R.svgJ = $(svg);
         R.svgJ.insertAfter(R.canvasJ);
+        R.svgJ.find('#grid').remove();
         defsJ = $('<defs>');
         patternValidateJ = $("<pattern id='pattern-validate' width='8' height='8' patternUnits='userSpaceOnUse'>");
         patternValidateJ.append("<path d='M-2 10L10 -2ZM10 6L6 10ZM-2 2L2 -2' stroke='green' stroke-width='4.5'/>");
@@ -974,10 +975,10 @@
       View.prototype.onWindowResize = function(event) {
         var ref;
         P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight());
-        this.grid.update();
-        this.moveBy(new P.Point());
         R.svgJ.attr('width', R.stageJ.innerWidth());
         R.svgJ.attr('height', R.stageJ.innerHeight());
+        this.grid.update();
+        this.moveBy(new P.Point());
         R.toolbar.updateArrowsVisibility();
         R.drawingPanel.onWindowResize();
         if ((ref = R.timelapse) != null) {

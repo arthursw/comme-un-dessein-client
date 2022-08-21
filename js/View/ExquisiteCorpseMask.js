@@ -158,9 +158,18 @@
       };
 
       ExquisiteCorpseMask.prototype.createChooseTileModal = function(event, tile) {
-        var divJ, modal, nTiles, nTilesLeft, ref;
+        var divJ, emailConfirmed, modal, nTiles, nTilesLeft, ref;
+        if (!R.userAuthenticated) {
+          R.alertManager.alert('Log in before choosing a tile', 'info');
+          return;
+        }
+        emailConfirmed = R.canvasJ.attr('data-email-confirmed') === 'True';
+        if (!emailConfirmed) {
+          R.alertManager.alert('Please confirm your email', 'error');
+          return;
+        }
         nTiles = ((ref = R.userProfile) != null ? ref.nTiles : void 0) || 0;
-        nTilesLeft = R.city.nTilesMax - R.userProfile.nTiles;
+        nTilesLeft = R.city.nTilesMax - nTiles;
         if (nTilesLeft <= 0) {
           modal = Modal.createModal({
             id: 'choose-tile',

@@ -38,6 +38,7 @@
     $(document).ready(function() {
       var canvasJ, cityName, deleteAccountWarning, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
       canvasJ = $('#canvas');
+      R.Modal = Modal;
       R.administrator = canvasJ.attr('data-is-admin') === 'True';
       R.application = canvasJ.attr('data-application');
       R.isCommeUnDessein = R.application === 'COMME_UN_DESSEIN';
@@ -49,6 +50,7 @@
       R.city.mode = canvasJ.attr('data-city-mode');
       cityName = canvasJ.attr('data-city');
       R.useSVG = R.isCommeUnDessein && canvasJ.attr('data-city-use-svg') === 'True';
+      R.useColors = canvasJ.attr('data-city-use-colors') === 'True';
       if (cityName.length > 0) {
         R.city.name = cityName;
       }
@@ -378,7 +380,7 @@
           type: 'text'
         });
         usernameJ.find('input').val(R.me);
-        emailConfirmed = R.canvasJ.attr('data-email-confirmed');
+        emailConfirmed = R.canvasJ.attr('data-email-confirmed') === 'True';
         confirmedText = '(' + i18next.t(emailConfirmed ? 'Confirmed' : 'Not confirmed') + ')';
         emailJ = modal.addTextInput({
           name: 'Email',

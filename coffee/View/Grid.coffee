@@ -52,9 +52,11 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			return new P.Rectangle(left, top, right-left, bottom-top)
 
 		createFrame: ()->
-
+			@frame?.remove()
 			@frame = new P.Group()
 			@frame.fillColor = '#252525'
+			@frame.strokeColor = '#252525'
+			@frame.strokeWidth = 2
 
 			l1 = new P.Path.Rectangle(@frameRectangle.topLeft, new P.Point(@frameRectangle.right, @limitCDRectangle.top))
 			l2 = new P.Path.Rectangle(new P.Point(@frameRectangle.left, @limitCDRectangle.top), new P.Point(@limitCDRectangle.left, @limitCDRectangle.bottom))
@@ -68,6 +70,8 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 
 			for child in @frame.children
 				child.fillColor = '#252525'
+				child.strokeColor = '#252525'
+				child.strokeWidth = 2
 
 			@layer.addChild(@frame)
 			
@@ -90,6 +94,7 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 
 
 		updateLimitPaths: ()->
+			
 			limit = Utils.CS.getLimit()
 
 			@limitPathV = null
@@ -98,8 +103,8 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			if limit.x >= P.view.bounds.left and limit.x <= P.view.bounds.right
 				@limitPathV = new P.Path()
 				@limitPathV.name = 'limitPathV'
-				@limitPathV.strokeColor = 'green'
-				@limitPathV.strokeWidth = 5
+				@limitPathV.strokeColor = '#252525'
+				@limitPathV.strokeWidth = 1
 				@limitPathV.add(limit.x, P.view.bounds.top)
 				@limitPathV.add(limit.x, P.view.bounds.bottom)
 				@grid.addChild(@limitPathV)
@@ -107,8 +112,8 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			if limit.y >= P.view.bounds.top and limit.y <= P.view.bounds.bottom
 				@limitPathH = new P.Path()
 				@limitPathH.name = 'limitPathH'
-				@limitPathH.strokeColor = 'green'
-				@limitPathH.strokeWidth = 5
+				@limitPathH.strokeColor = '#252525'
+				@limitPathH.strokeWidth = 1
 				@limitPathH.add(P.view.bounds.left, limit.y)
 				@limitPathH.add(P.view.bounds.right, limit.y)
 				@grid.addChild(@limitPathH)

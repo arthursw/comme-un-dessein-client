@@ -12,6 +12,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@createTracerButton()
 			@initializeGlobalDragAndDrop()
 			@imageProcessor = new ImageProcessor()
+			@traceAutomatically = false
 			return
 		
 		onDragEnter: ()=>
@@ -31,7 +32,9 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				event.dataTransfer.effectAllowed = "move";
 				# $('#dropMessage').addClass('top')
 				console.log('dragenter')
-				R.alertManager.alert 'Drop your image here to trace it', 'info'
+				if not @dropImageAlertTimeout?
+					R.alertManager.alert 'Drop your image here to trace it', 'info'
+					@dropImageAlertTimeout = setTimeout (()->@dropImageAlertTimeout = null), 1000
 				return)
 			document.body.addEventListener('dragover', (event)=>
 				event.stopPropagation()
@@ -68,21 +71,134 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			return
 		
 		restoreImageOrOpenModal: ()=>
-			if @tracerGroup?.visible
-				@openImageModal(false, true)
-				return
+			# if @tracerGroup?.visible
+			# 	@openTraceTypeModal(false, true)
+			# 	return
 
 			@imageURL = localStorage.getItem('rater-url')
-			closedRaster = localStorage.getItem('closed-raster') == 'true'
-			if !closedRaster and @imageURL? and @imageURL != ''
-				rasterBoundsJSON = localStorage.getItem('rater-bounds')
-				if rasterBoundsJSON?
-					rasterBounds = JSON.parse(rasterBoundsJSON)
-					@createRasterController(new P.Rectangle(rasterBounds))
+			@openTraceTypeModal(true)
+			# closedRaster = localStorage.getItem('closed-raster') == 'true'
+			# if !closedRaster and @imageURL? and @imageURL != ''
+			# 	rasterBoundsJSON = localStorage.getItem('rater-bounds')
+			# 	if rasterBoundsJSON?
+			# 		rasterBounds = JSON.parse(rasterBoundsJSON)
+			# 		@createRasterController(new P.Rectangle(rasterBounds))
+			# 	else
+			# 		@openTraceTypeModal(closedRaster)
+			# else
+			# 	@openTraceTypeModal(closedRaster)
+			return
+		
+		# onTraceTypeModalSubmit: ()=>
+		# 	return
+
+		hideDraftButtons: ()=>
+			@removeDraftTextJ.hide()
+			@svgJ.hide()
+			# @validateDraftButtonJ.hide()
+			@keepDraftButtonJ.hide()
+			@removeDraftButtonJ.hide()
+			return
+
+		openTraceTypeModal: (closedRaster, keepRaster=false, imageDropped=false)=>
+			
+			@modal = Modal.createModal( 
+				id: 'trace-type',
+				title: "Trace"
+				# submit: @onTraceTypeModalSubmit, 
+				# submitButtonText: 'Trace'
+				)
+
+			autoTraceLabel = i18next.t('Trace automatically')
+			
+			# autoTraceInputJ = $('''
+			# <button class="trace-type-btn cd-row cd-center btn-success">
+
+			autoTraceInputJ = $('''
+			<button class="trace-type-btn cd-row cd-center btn-primary">
+				<label>'''+autoTraceLabel+'''</label>
+				<video autoplay loop width="200">
+
+					<source src="/static/videos/AutoTrace.webm"
+							type="video/webm">
+
+					<source src="/static/videos/AutoTrace.mp4"
+							type="video/mp4">
+				</video>
+			</button>
+			''')
+			@modal.addCustomContent( { name: 'autotrace-choice', divJ: autoTraceInputJ } )
+
+			autoTraceInputJ.click ()=>
+				# @modal.hide()
+				@traceAutomatically = true
+				if imageDropped
+					@onModalSubmit()
 				else
-					@openImageModal(closedRaster)
-			else
-				@openImageModal(closedRaster)
+					autoTraceInputJ.hide()
+					manualTraceInputJ.hide()
+					@openImageModal(closedRaster, keepRaster)
+				return
+			
+			manualTraceLabel = i18next.t('Trace manually')
+
+			manualTraceInputJ = $('''
+			<button class="trace-type-btn cd-row cd-center btn-primary">
+				<label>'''+manualTraceLabel+'''</label>
+				<video autoplay loop width="200">
+
+					<source src="/static/videos/ManualTrace.webm"
+							type="video/webm">
+
+					<source src="/static/videos/ManualTrace.mp4"
+							type="video/mp4">
+				</video>
+			</button>
+			''')
+			@modal.addCustomContent( { name: 'manual-choice', divJ: manualTraceInputJ } )
+			manualTraceInputJ.click ()=>
+				@traceAutomatically = false
+				# @modal.hide()
+				if imageDropped
+					@onModalSubmit()
+				else
+					autoTraceInputJ.hide()
+					manualTraceInputJ.hide()
+					@openImageModal(closedRaster, keepRaster)
+				return
+
+			if R.Drawing.draft?.paths?.length > 0
+				autoTraceInputJ.hide()
+				manualTraceInputJ.hide()
+				@removeDraftTextJ = @modal.addText('Do you want to keep current drawing?')
+				divJ = $('<div>')
+				divJ.css('display': 'flex', 'flex-direction': 'row', 'margin': '10px', 'align-items': 'center', 'justify-content': 'center')
+				svg = R.view.getThumbnail(R.Drawing.draft)
+				svg.setAttribute('viewBox', '0 0 300 300')
+				svg.setAttribute('width', '250')
+				svg.setAttribute('height', '250')
+				divJ.append(svg)
+				@svgJ = @modal.addCustomContent( name: 'svg', divJ: divJ)
+				# @validateDraftButtonJ = @modal.addButton( addToBody: true, type: 'success', name: 'Yes, validate drawing', submit: (()=> 
+				# 	R.toolManager.submitButton.click()) )
+				@removeDraftButtonJ = @modal.addButton( addToBody: true, type: 'danger', name: 'No', preventDefaultSubmit: true, submit: (()=>
+					@hideDraftButtons()
+					autoTraceInputJ.show()
+					manualTraceInputJ.show()
+					R.toolManager.deleteButton.click()) )
+				@keepDraftButtonJ = @modal.addButton( addToBody: true, type: 'primary', name: 'Yes', preventDefaultSubmit: true, submit: (()=>
+					@hideDraftButtons()
+					autoTraceInputJ.show()
+					manualTraceInputJ.show()) )
+				for elemJ in [@removeDraftButtonJ, @keepDraftButtonJ]
+					if not elemJ? then continue
+					elemJ.css( 'margin-bottom': '10px', 'font-size': 'large' ).find('.glyphicon').css( 'padding-right': '10px' )
+					elemJ.addClass('btn-lg')
+			@modal.modalBodyJ.css( 'display': 'flex', 'flex-direction': 'column' )
+			@modal.modalJ.find(".modal-footer").hide()
+
+			@modal.show()
+			
 			return
 		
 		onModalSubmit: ()=>	
@@ -96,12 +212,12 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				@removeRaster()
 			@imageFile = null
 			@imageURL = null
-			@modal = Modal.createModal( 
-				id: 'import-image',
-				title: "Import image to trace", 
-				submit: @onModalSubmit, 
-				submitButtonText: 'Trace'
-				)
+			# @modal = Modal.createModal( 
+			# 	id: 'import-image',
+			# 	title: "Import image to trace", 
+			# 	submit: @onModalSubmit, 
+			# 	submitButtonText: 'Trace'
+			# 	)
 
 			inputJ = $('<input type="file" multiple accept="image/*">')
 			@modal.addCustomContent( { name: 'tracerFileInput', divJ: inputJ } )
@@ -109,10 +225,10 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			inputJ.get(0).addEventListener('change', @handleFiles, false)
 			inputJ.hide()
 			
-
-			@photoFromCameraButtonJ = @modal.addButton( addToBody: true, type: 'success', name: 'Take a photo with the camera', icon: 'glyphicon-facetime-video' ) # 'glyphicon-camera' )
+			deviceType = Utils.getDeviceType()
+			@photoFromCameraButtonJ = @modal.addButton( addToBody: true, type: 'primary', name: 'Take a photo with the camera', icon: 'glyphicon-facetime-video' ) # 'glyphicon-camera' )
 			@photoFromCameraButtonJ.click Camera.initialize
-			@imageFromComputerButtonJ = @modal.addButton( addToBody: true, type: 'warning', name: 'Select an image on your computer', icon: 'glyphicon-folder-open' )
+			@imageFromComputerButtonJ = @modal.addButton( addToBody: true, type: 'primary', name: 'Choose an image on your ' + deviceType, icon: 'glyphicon-folder-open' )
 			@imageFromComputerButtonJ.click ()=> 
 				inputJ.click()
 				# @photoFromCameraButtonJ.hide()
@@ -122,15 +238,23 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				# @modal.modalJ.find(".modal-footer").show()
 				# @modal.hide()
 				return
-			@imageFromURLButtonJ = @modal.addButton( addToBody: true, type: 'info', name: 'Import image from URL', icon: 'glyphicon-link' )
+			
+			# if not @traceAutomatically
+			# 	@imageFromURLButtonJ = @modal.addButton( addToBody: true, type: 'info', name: 'Import image from URL', icon: 'glyphicon-link' )
+			
 			if closedRaster
 				@reloadPreviousImageButtonJ = @modal.addButton( addToBody: true, type: 'primary', name: 'Reload previous image', icon: 'glyphicon-picture' )
 				@reloadPreviousImageButtonJ.click ()=>
-					localStorage.setItem('closed-raster', 'false')
-					@restoreImageOrOpenModal()
+					# localStorage.setItem('closed-raster', 'false')
+					# @restoreImageOrOpenModal()
+					rasterBoundsJSON = localStorage.getItem('rater-bounds')
+					@imageURL = localStorage.getItem('rater-url')
+					if rasterBoundsJSON?
+						rasterBounds = JSON.parse(rasterBoundsJSON)
+						@createRasterController(new P.Rectangle(rasterBounds))
 					return
 
-			@dragDropTextJ = @modal.addText('or drop and image on this page', 'or drop and image on this page')
+			@dragDropTextJ = @modal.addText('or drop an image on this page', 'or drop an image on this page')
 			@dragDropTextJ.css( 'text-align': 'center' )
 
 			for elemJ in [@photoFromCameraButtonJ, @imageFromComputerButtonJ, @imageFromURLButtonJ, @reloadPreviousImageButtonJ]
@@ -158,7 +282,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@urlInputJ = @modal.addTextInput({name: 'imageURL', placeholder: 'http://exemple.fr/belle-image.png', type: 'url', submitShortcut: true, label: 'Import image from URL', required: true, errorMessage: i18next.t( 'The URL is invalid' ) })
 			@urlInputJ.hide()
 
-			@imageFromURLButtonJ.click ()=> 
+			@imageFromURLButtonJ?.click ()=> 
 				@urlInputJ.show()
 				@photoFromCameraButtonJ.hide()
 				@imageFromComputerButtonJ.hide()
@@ -206,13 +330,13 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 
 			# @manualTraceButtonJ = @modal.modalJ.find('.modal-footer .btn-primary[name="submit"]')
 			
-			@modal.modalBodyJ.css( 'display': 'flex', 'flex-direction': 'column' )
+			
 
 			# @disableSubmitButtons()
 
-			@modal.show()
+			# @modal.show()
 
-			@modal.modalJ.find(".modal-footer").hide()
+			# @modal.modalJ.find(".modal-footer").hide()
 			
 			return
 
@@ -307,6 +431,14 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				@moves.addChild(handle)
 			return
 		
+		closeRaster: ()->
+			@removeRaster()
+			localStorage.setItem('closed-raster', 'true')
+			@draggingImage = false
+			@traceAutomatically = false
+			@tracingAutomatically = false
+			return
+		
 		drawCorners: (bounds, size, sign, signRotations, signOffsets)=>
 
 			if @corners?
@@ -347,10 +479,13 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 					cross2.strokeColor = 'black'
 					handle.addChild(cross2)
 					handle.on('mousedown', ()=>
+						@closeRaster()
 						@draggingImage = true
-						@removeRaster()
-						localStorage.setItem('closed-raster', 'true')
 						return)
+					handle.on('mouseup', ()=>
+						@draggingImage = false
+						return
+					)
 					handle.on('mouseenter', (event)=>
 						if not R.selectedTool?.using
 							R.stageJ.css('cursor', 'pointer')
@@ -381,6 +516,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 						newLength = event.point.getDistance(center)
 
 						bounds = @raster.bounds.expand(size)
+						# @rasterCropCenter = center
 						@drawMoves(bounds, size, sign, signRotations, signOffsets)
 						# @drawButtons(bounds, size)
 
@@ -389,8 +525,10 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 							@raster.data[pos].position = bounds[pos]
 						@corners.bringToFront()
 						
-						if @rasterParts?
-							@createRasterParts()
+						# if @rasterParts?
+						# 	@createRasterParts()
+						@createRasterCrop(true)
+						# @updateValidationButtons()
 						@saveBoundsToLocalStorage()
 						return)
 					handle.on('mouseup', (event)=>
@@ -407,6 +545,10 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 						return)
 				
 				@corners.addChild(handle)
+			
+			@createRasterCrop(true)
+			# @updateValidationButtons()
+			@saveBoundsToLocalStorage()
 			return
 
 		# createButtonText: (button, text)=>
@@ -455,7 +597,10 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 		# 	autoTraceButtonGroup = @createButton(autoTraceRectangle, 'green', 'Trace automatically', @autoTrace)
 
 		# 	return
-
+		
+		# setImagePosition: ()=>
+		# 	return
+		
 		drawHandles: ()=>
 			if not @tracerGroup? then return
 
@@ -490,11 +635,21 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				'bottomCenter': new paper.Point(0, -4 / P.view.zoom),
 				'leftCenter': new paper.Point(4 / P.view.zoom, 0),
 			}
+			
 			@drawMoves(bounds, size, sign, signRotations, signOffsets)
 			@drawCorners(bounds, size, sign, signRotations, signOffsets)
 			# @drawButtons(bounds, size)
 
 			return
+		
+		# updateValidationButtons: ()=>
+		# 	if @raster.bounds.width > R.Tools.Path.maxDraftSize or @raster.bounds.height > R.Tools.Path.maxDraftSize
+		# 		R.toolManager?.autoTraceButton.hide()
+		# 		R.toolManager?.setImagePositionButton.show()
+		# 	else
+		# 		R.toolManager?.autoTraceButton.show()
+		# 		R.toolManager?.setImagePositionButton.hide()
+		# 	return
 
 		rasterOnLoad: (bounds=null)->
 
@@ -503,7 +658,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			if bounds?
 				@raster.fitBounds(bounds)
 			else
-				viewBounds = R.view.getViewBounds()
+				viewBounds = R.view.grid.limitCDRectangle.intersect(R.view.getViewBounds())
+				# viewBounds = R.view.getViewBounds()
 
 				@raster.position = viewBounds.center
 				if @raster.bounds.width > viewBounds.width
@@ -515,10 +671,15 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 
 			localStorage.setItem('rater-url', @raster.source)
 			@saveBoundsToLocalStorage()
-
+			@rasterCropCenter = @raster.bounds.center
 			@drawHandles()
-			R.toolManager?.showTracerButtons()
-
+			if @traceAutomatically
+				# @updateValidationButtons()
+				R.toolManager?.showTracerButtons()
+			
+			if not @unzoomToFitRaster()
+				@unzoomToFitRaster(false)
+				
 			return
 
 		rasterOnError: (event)=>
@@ -585,7 +746,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 
 			@photoFromCameraButtonJ.hide()
 			@imageFromComputerButtonJ.hide()
-			@imageFromURLButtonJ.hide()
+			@imageFromURLButtonJ?.hide()
 			@reloadPreviousImageButtonJ?.hide()
 			@dragDropTextJ.hide()
 			@modal.modalJ.find(".modal-footer").show()
@@ -671,10 +832,22 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@onModalSubmit()
 			return
 
+		unzoomToFitRaster: (snap=true)->
+			previousZoom = null
+
+			while not P.view.bounds.contains(@raster.bounds.expand(100)) and previousZoom != P.view.zoom
+				previousZoom = P.view.zoom
+				R.toolManager.zoom(-1, snap)
+			
+			return P.view.bounds.contains(@raster.bounds.expand(100))
+		
 		createRasterController: (bounds=null)=>
 			@modal?.hide()
 			if not @imageURL? then return
-
+			
+			if @traceAutomatically
+				@tracingAutomatically = true
+			
 			@imageFile = null
 
 			@removeRaster()
@@ -697,6 +870,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 
 			@raster.onLoad = ()=> @rasterOnLoad(bounds)
 
+			R.view.moveTo(@raster.bounds.center)
+
 			return
 
 		appendSVG: (svgstr)=>
@@ -705,50 +880,107 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			svgContainer.innerHTML = svgstr
 			return
 		
-		createRasterParts: ()->
+		setRasterCrop: (event)=>
+			@rasterCropCenter = event.point
+			@createRasterCrop()
+			return
+
+		getRasterCropRectangle: ()->
+			if @raster.bounds.width < R.Tools.Path.maxDraftSize and @raster.bounds.height < R.Tools.Path.maxDraftSize
+				return null
 			maxDraftSize = R.Tools.Path.maxDraftSize
-			nRectanglesWidth = Math.floor(@raster.bounds.width / maxDraftSize) + 1
-			nRectanglesHeight = Math.floor(@raster.bounds.height / maxDraftSize) + 1
-
-			totalRectangle = new P.Rectangle(@raster.bounds.left, @raster.bounds.top, nRectanglesWidth * maxDraftSize, nRectanglesHeight * maxDraftSize)
-			totalRectangle.center = @raster.bounds.center
-
+			width = Math.min(maxDraftSize, @raster.bounds.width)
+			height = Math.min(maxDraftSize, @raster.bounds.height)
+			rectangle = new P.Rectangle(@rasterCropCenter.subtract(width/2, height/2), new P.Size(width, height))
+			return rectangle
+		
+		createRasterCrop: (warnIfTooBig=false)->
+			if not @traceAutomatically
+				return
+			
 			@rasterParts?.remove()
+			if @raster.bounds.width < R.Tools.Path.maxDraftSize and @raster.bounds.height < R.Tools.Path.maxDraftSize
+				return
+			
+			if warnIfTooBig and not @cropPositionAlertTimeout?
+				delay = 10000
+				@cropPositionAlertTimeout = setTimeout (()=> @cropPositionAlertTimeout = null), delay
+				R.alertManager.alert('Click on the image where you want to crop it', "info", delay)
+			
 			@rasterParts = new P.Group()
 
-			for nx in [0 .. nRectanglesWidth-1]
-				for ny in [0 .. nRectanglesHeight-1]
-					rectangle = new P.Rectangle(totalRectangle.left + nx * maxDraftSize, totalRectangle.top + ny * maxDraftSize, maxDraftSize, maxDraftSize)
-					rectangle = @raster.bounds.intersect(rectangle)
-					rectanglePath = P.Path.Rectangle(rectangle)
-					rectanglePath.fillColor = @constructor.handleColor
-					rectanglePath.strokeColor = 'white'
-					rectanglePath.opacity = 0.8
-					rectanglePath.on('mouseenter', (event)=>
-						event.target.opacity = 0.05
-						R.stageJ.css('cursor', 'pointer')
-						return
-					)
-					rectanglePath.on('mouseleave', (event)=>
-						R.selectedTool?.updateCursor()
-						event.target.opacity = 0.8
-						return
-					)
-					rectanglePath.on('mousedown', (event)=>
-						@draggingImage = true
-						return
-					)
-					rectanglePath.on('click', (event)=>
-						@autoTraceSized(event.target.bounds)
-						@rasterParts.remove()
-						@draggingImage = false
-						return
-					)
-					@rasterParts.addChild(rectanglePath)
+			bounds = new P.Path.Rectangle(@raster.bounds)
+			@rasterCropCenter ?= @raster.bounds.center
+			rectangle = new P.Path.Rectangle(@getRasterCropRectangle())
+			frame = bounds.subtract(rectangle)
+			frame.strokeWidth = 1
+			frame.fillColor = @constructor.handleColor
+			frame.strokeColor = 'white'
+			frame.opacity = 0.8
+			@rasterParts.addChild(frame)
+			bounds.fillColor = 'black'
+			bounds.opacity = 0
+			bounds.on('mouseenter', (event)=>
+				R.stageJ.css('cursor', 'pointer')
+				return
+			)
+			bounds.on('mouseleave', (event)=>
+				R.selectedTool?.updateCursor()
+				return
+			)
+			R.stageJ.css('cursor', 'pointer')
+			bounds.on('mousedown', @setRasterCrop)
+			bounds.on('mousedrag', @setRasterCrop)
+			@rasterParts.addChild(bounds)
+			rectangle.remove()
 
 			@tracerGroup.addChild(@rasterParts)
-
 			return
+
+		# createRasterParts: ()->
+		# 	maxDraftSize = R.Tools.Path.maxDraftSize
+		# 	nRectanglesWidth = Math.floor(@raster.bounds.width / maxDraftSize) + 1
+		# 	nRectanglesHeight = Math.floor(@raster.bounds.height / maxDraftSize) + 1
+
+		# 	totalRectangle = new P.Rectangle(@raster.bounds.left, @raster.bounds.top, nRectanglesWidth * maxDraftSize, nRectanglesHeight * maxDraftSize)
+		# 	totalRectangle.center = @raster.bounds.center
+
+		# 	@rasterParts?.remove()
+		# 	@rasterParts = new P.Group()
+
+		# 	for nx in [0 .. nRectanglesWidth-1]
+		# 		for ny in [0 .. nRectanglesHeight-1]
+		# 			rectangle = new P.Rectangle(totalRectangle.left + nx * maxDraftSize, totalRectangle.top + ny * maxDraftSize, maxDraftSize, maxDraftSize)
+		# 			rectangle = @raster.bounds.intersect(rectangle)
+		# 			rectanglePath = P.Path.Rectangle(rectangle)
+		# 			rectanglePath.fillColor = @constructor.handleColor
+		# 			rectanglePath.strokeColor = 'white'
+		# 			rectanglePath.opacity = 0.8
+		# 			rectanglePath.on('mouseenter', (event)=>
+		# 				event.target.opacity = 0.05
+		# 				R.stageJ.css('cursor', 'pointer')
+		# 				return
+		# 			)
+		# 			rectanglePath.on('mouseleave', (event)=>
+		# 				R.selectedTool?.updateCursor()
+		# 				event.target.opacity = 0.8
+		# 				return
+		# 			)
+		# 			rectanglePath.on('mousedown', (event)=>
+		# 				@draggingImage = true
+		# 				return
+		# 			)
+		# 			rectanglePath.on('click', (event)=>
+		# 				@autoTraceSized(event.target.bounds)
+		# 				@rasterParts.remove()
+		# 				@draggingImage = false
+		# 				return
+		# 			)
+		# 			@rasterParts.addChild(rectanglePath)
+
+		# 	@tracerGroup.addChild(@rasterParts)
+
+		# 	return
 		
 		autoTrace: ()=>
 
@@ -758,12 +990,14 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			# @modal.modalJ.find('.modal-dialog').width(window.innerWidth)
 			# @vectorizer.vectorize(@imageFile, @imageURL, C, windowSize)
 
-			if @raster.bounds.width > R.Tools.Path.maxDraftSize or @raster.bounds.height > R.Tools.Path.maxDraftSize
-				R.alertManager.alert 'The image is too big to fit in one drawing', 'info'
-				@createRasterParts()
-				return
-			
-			@autoTraceSized()
+			# if @raster.bounds.width > R.Tools.Path.maxDraftSize or @raster.bounds.height > R.Tools.Path.maxDraftSize
+			# 	R.alertManager.alert 'The image is too big to fit in one drawing', 'info'
+			# 	@createRasterParts()
+			# 	return
+			rectangle = @getRasterCropRectangle()
+			if rectangle?
+				rectangle = @raster.bounds.intersect(rectangle)
+			@autoTraceSized(rectangle)
 			return
 
 		autoTraceSized: (bounds=null)=>
@@ -783,6 +1017,13 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			try
 				@rasterPart = @raster.getSubRaster(@subRasterRectangle)
 
+				maxRasterSize = @constructor.maxRasterSize
+
+				if @rasterPart.width > maxRasterSize or @rasterPart.height > maxRasterSize
+					@scaleRatio = if @rasterPart.width > @rasterPart.height then maxRasterSize/@rasterPart.width else maxRasterSize/@rasterPart.height
+					@rasterPart.width *= @scaleRatio
+					@rasterPart.height *= @scaleRatio
+
 				# @rasterPart.smoothing = false
 				# @rasterPart.width *= 2
 				# @rasterPart.height *= 2
@@ -792,14 +1033,16 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				@rasterPart.remove()
 				@rasterPart = null
 				colors = []
-				for color in R.toolManager.colors
-					c = new paper.Color(color)
-					colors.push([Math.round(c.red*255), Math.round(c.green*255), Math.round(c.blue*255), 255])
+				if R.useColors
+					for color in R.toolManager.colors
+						c = new paper.Color(color)
+						colors.push([Math.round(c.red*255), Math.round(c.green*255), Math.round(c.blue*255), 255])
 				args = {
 					png: png,
 					colors: colors
 				}
 				
+				R.loader.showLoadingBar()
 				$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'autoTrace', args: args } ).done(@autoTraceCallback)
 				
 			catch err
@@ -819,14 +1062,16 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			return
 		
 		autoTraceCallback: (result)=>
+			R.loader.hideLoadingBar()
 			if result.state == "error"
 				@modal?.hide()
 				# @rasterPart?.remove()
 				# @rasterPart = null
-				R.alertManager.alert(result.error, "error")
+				R.alertManager.alert(result.message, "error")
 				return
 			@modal?.hide()
 			@addSvgToDraft(result.svg, result.colors)
+			@closeRaster()
 			return
 		
 		addPathsToDraft: (item, draft)->
@@ -882,6 +1127,9 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			# svgsPaper.addChild(svgPaper)
 			
 			svgPaper.translate(@rasterPartRectangle.topLeft)
+			if @scaleRatio?
+				svgPaper.scale(1/@scaleRatio, @rasterPartRectangle.topLeft)
+				@scaleRatio = null
 			svgPaper.scale(@rasterPartRectangle.width / @subRasterRectangle.width, @rasterPartRectangle.topLeft)
 			# svgPaper.fitBounds(@rasterPartRectangle)
 
@@ -924,7 +1172,9 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 						@imageURL = readerEvent.target.result
 						# @urlInputJ.val(@imageURL)
 						# @enableSubmitButtons()
-						@setEditImageMode()
+						# @setEditImageMode()
+						# @onModalSubmit()
+						@openTraceTypeModal(true, false, true)
 						# @submitURL(imageURL: readerEvent.target.result)
 						return
 					reader.readAsDataURL(file)
@@ -949,7 +1199,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 						# @imageContainerJ.append(@image)
 						# $(@image).css( 'max-width': '500px', display: 'block', margin: 'auto' )
 						# @submitURL(imageURL: readerEvent.target.result)
-						@setEditImageMode()
+						# @setEditImageMode()
+						@onModalSubmit()
 						return
 					reader.readAsDataURL(file)
 
@@ -959,8 +1210,9 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 
 		showButton: ()->
 			@tracerBtn?.show()
-			if @tracerGroup?
+			if @tracerGroup? and @traceAutomatically
 				R.toolManager?.showTracerButtons()
+				# @updateValidationButtons()
 			return
 		
 		hideButton: ()->
@@ -982,7 +1234,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 		mouseUp: (event)->
 			@draggingImage = false
 			@scalingImage = false
-			R.selectedTool?.updateCursor()
+			if not @traceAutomatically
+				R.selectedTool?.updateCursor()
 			return
 		
 		update: ()->

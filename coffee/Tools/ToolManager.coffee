@@ -50,14 +50,17 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			R.tools.move = new R.Tools.Move()
 			# R.tools.screenshot = new R.Tools.Screenshot()
 			R.tools.select = new R.Tools.Select()
-			@createColorButtons()
+			R.selectedColor = 'black'
+			if R.useColors
+				@createColorButtons()
 			
 			R.tools.eraser = new R.Tools.Eraser()
 			R.tools.eraser.btn.hide()
 
-			R.tools.colorTool = new R.Tools.ColorTool()
-			R.tools.colorTool.btn.hide()
-			
+			if R.useColors
+				R.tools.colorTool = new R.Tools.ColorTool()
+				R.tools.colorTool.btn.hide()
+				
 			R.tools.moveDrawing = new R.Tools.MoveDrawing()
 			R.tools.moveDrawing.btn.hide()
 
@@ -595,6 +598,20 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 			})
 			@changeImageButton.hide()
 			return
+
+		# createSetImagePositionButton: ()->
+		# 	@setImagePositionButton = new Button({
+		# 		name: 'Set image position'
+		# 		iconURL: 'new 1/Check.svg'
+		# 		classes: 'btn-info displayName'
+		# 		parentJ: $('#submit-drawing-button')
+		# 		ignoreFavorite: true
+		# 		onClick: ()=>
+		# 			R.tracer?.setImagePosition()
+		# 			return
+		# 	})
+		# 	@setImagePositionButton.hide()
+		# 	return
 		
 		createAutoTraceButton: ()->
 			@autoTraceButton = new Button({
@@ -612,12 +629,14 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 		
 		showTracerButtons: ()->
 			if R.tracer.isVisible()
-				@changeImageButton.show()
+				# @changeImageButton.show()
+				# @setImagePositionButton.show()
 				@autoTraceButton.show()
 			return
 		
 		hideTracerButtons: ()->
 			@changeImageButton.hide()
+			# @setImagePositionButton.hide()
 			@autoTraceButton.hide()
 			return
 
@@ -652,7 +671,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				@deleteButton.show()
 				R.tracer?.showButton()
 				R.tools.eraser.btn.show()
-				R.tools.colorTool.btn.show()
+				R.tools.colorTool?.btn.show()
 				R.tools.moveDrawing.btn.show()
 			else
 				@colorBtn?.hide()
@@ -662,7 +681,7 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				@deleteButton.hide()
 				R.tracer?.hideButton()
 				R.tools.eraser.btn.hide()
-				R.tools.colorTool.btn.hide()
+				R.tools.colorTool?.btn.hide()
 				R.tools.moveDrawing.btn.hide()
 
 			draft ?= R.Drawing.getDraft()

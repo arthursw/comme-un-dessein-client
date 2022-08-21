@@ -640,7 +640,6 @@
         svg = this.getSVG();
         this.svgString = svg;
         imageData = R.view.getThumbnail(this, bounds.width, bounds.height, true, false);
-        console.log(imageData);
         args = {
           pk: this.pk,
           clientId: this.id,

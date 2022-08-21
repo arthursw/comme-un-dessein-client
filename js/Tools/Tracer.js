@@ -15,6 +15,7 @@
         this.autoTraceCallback = bind(this.autoTraceCallback, this);
         this.autoTraceSized = bind(this.autoTraceSized, this);
         this.autoTrace = bind(this.autoTrace, this);
+        this.setRasterCrop = bind(this.setRasterCrop, this);
         this.appendSVG = bind(this.appendSVG, this);
         this.createRasterController = bind(this.createRasterController, this);
         this.filterImage = bind(this.filterImage, this);
@@ -32,6 +33,8 @@
         this.updateImageURLfromInput = bind(this.updateImageURLfromInput, this);
         this.openImageModal = bind(this.openImageModal, this);
         this.onModalSubmit = bind(this.onModalSubmit, this);
+        this.openTraceTypeModal = bind(this.openTraceTypeModal, this);
+        this.hideDraftButtons = bind(this.hideDraftButtons, this);
         this.restoreImageOrOpenModal = bind(this.restoreImageOrOpenModal, this);
         this.onDragOver = bind(this.onDragOver, this);
         this.onDragEnter = bind(this.onDragEnter, this);
@@ -41,6 +44,7 @@
         this.createTracerButton();
         this.initializeGlobalDragAndDrop();
         this.imageProcessor = new ImageProcessor();
+        this.traceAutomatically = false;
         return;
       }
 
@@ -61,7 +65,12 @@
             event.preventDefault();
             event.dataTransfer.effectAllowed = "move";
             console.log('dragenter');
-            R.alertManager.alert('Drop your image here to trace it', 'info');
+            if (_this.dropImageAlertTimeout == null) {
+              R.alertManager.alert('Drop your image here to trace it', 'info');
+              _this.dropImageAlertTimeout = setTimeout((function() {
+                return this.dropImageAlertTimeout = null;
+              }), 1000);
+            }
           };
         })(this));
         document.body.addEventListener('dragover', (function(_this) {
@@ -96,24 +105,134 @@
       };
 
       Tracer.prototype.restoreImageOrOpenModal = function() {
-        var closedRaster, rasterBounds, rasterBoundsJSON, ref;
-        if ((ref = this.tracerGroup) != null ? ref.visible : void 0) {
-          this.openImageModal(false, true);
-          return;
-        }
         this.imageURL = localStorage.getItem('rater-url');
-        closedRaster = localStorage.getItem('closed-raster') === 'true';
-        if (!closedRaster && (this.imageURL != null) && this.imageURL !== '') {
-          rasterBoundsJSON = localStorage.getItem('rater-bounds');
-          if (rasterBoundsJSON != null) {
-            rasterBounds = JSON.parse(rasterBoundsJSON);
-            this.createRasterController(new P.Rectangle(rasterBounds));
-          } else {
-            this.openImageModal(closedRaster);
-          }
-        } else {
-          this.openImageModal(closedRaster);
+        this.openTraceTypeModal(true);
+      };
+
+      Tracer.prototype.hideDraftButtons = function() {
+        this.removeDraftTextJ.hide();
+        this.svgJ.hide();
+        this.keepDraftButtonJ.hide();
+        this.removeDraftButtonJ.hide();
+      };
+
+      Tracer.prototype.openTraceTypeModal = function(closedRaster, keepRaster, imageDropped) {
+        var autoTraceInputJ, autoTraceLabel, divJ, elemJ, j, len, manualTraceInputJ, manualTraceLabel, ref, ref1, ref2, svg;
+        if (keepRaster == null) {
+          keepRaster = false;
         }
+        if (imageDropped == null) {
+          imageDropped = false;
+        }
+        this.modal = Modal.createModal({
+          id: 'trace-type',
+          title: "Trace"
+        });
+        autoTraceLabel = i18next.t('Trace automatically');
+        autoTraceInputJ = $('<button class="trace-type-btn cd-row cd-center btn-primary">\n	<label>' + autoTraceLabel + '</label>\n	<video autoplay loop width="200">\n\n		<source src="/static/videos/AutoTrace.webm"\n				type="video/webm">\n\n		<source src="/static/videos/AutoTrace.mp4"\n				type="video/mp4">\n	</video>\n</button>');
+        this.modal.addCustomContent({
+          name: 'autotrace-choice',
+          divJ: autoTraceInputJ
+        });
+        autoTraceInputJ.click((function(_this) {
+          return function() {
+            _this.traceAutomatically = true;
+            if (imageDropped) {
+              _this.onModalSubmit();
+            } else {
+              autoTraceInputJ.hide();
+              manualTraceInputJ.hide();
+              _this.openImageModal(closedRaster, keepRaster);
+            }
+          };
+        })(this));
+        manualTraceLabel = i18next.t('Trace manually');
+        manualTraceInputJ = $('<button class="trace-type-btn cd-row cd-center btn-primary">\n	<label>' + manualTraceLabel + '</label>\n	<video autoplay loop width="200">\n\n		<source src="/static/videos/ManualTrace.webm"\n				type="video/webm">\n\n		<source src="/static/videos/ManualTrace.mp4"\n				type="video/mp4">\n	</video>\n</button>');
+        this.modal.addCustomContent({
+          name: 'manual-choice',
+          divJ: manualTraceInputJ
+        });
+        manualTraceInputJ.click((function(_this) {
+          return function() {
+            _this.traceAutomatically = false;
+            if (imageDropped) {
+              _this.onModalSubmit();
+            } else {
+              autoTraceInputJ.hide();
+              manualTraceInputJ.hide();
+              _this.openImageModal(closedRaster, keepRaster);
+            }
+          };
+        })(this));
+        if (((ref = R.Drawing.draft) != null ? (ref1 = ref.paths) != null ? ref1.length : void 0 : void 0) > 0) {
+          autoTraceInputJ.hide();
+          manualTraceInputJ.hide();
+          this.removeDraftTextJ = this.modal.addText('Do you want to keep current drawing?');
+          divJ = $('<div>');
+          divJ.css({
+            'display': 'flex',
+            'flex-direction': 'row',
+            'margin': '10px',
+            'align-items': 'center',
+            'justify-content': 'center'
+          });
+          svg = R.view.getThumbnail(R.Drawing.draft);
+          svg.setAttribute('viewBox', '0 0 300 300');
+          svg.setAttribute('width', '250');
+          svg.setAttribute('height', '250');
+          divJ.append(svg);
+          this.svgJ = this.modal.addCustomContent({
+            name: 'svg',
+            divJ: divJ
+          });
+          this.removeDraftButtonJ = this.modal.addButton({
+            addToBody: true,
+            type: 'danger',
+            name: 'No',
+            preventDefaultSubmit: true,
+            submit: ((function(_this) {
+              return function() {
+                _this.hideDraftButtons();
+                autoTraceInputJ.show();
+                manualTraceInputJ.show();
+                return R.toolManager.deleteButton.click();
+              };
+            })(this))
+          });
+          this.keepDraftButtonJ = this.modal.addButton({
+            addToBody: true,
+            type: 'primary',
+            name: 'Yes',
+            preventDefaultSubmit: true,
+            submit: ((function(_this) {
+              return function() {
+                _this.hideDraftButtons();
+                autoTraceInputJ.show();
+                return manualTraceInputJ.show();
+              };
+            })(this))
+          });
+          ref2 = [this.removeDraftButtonJ, this.keepDraftButtonJ];
+          for (j = 0, len = ref2.length; j < len; j++) {
+            elemJ = ref2[j];
+            if (elemJ == null) {
+              continue;
+            }
+            elemJ.css({
+              'margin-bottom': '10px',
+              'font-size': 'large'
+            }).find('.glyphicon').css({
+              'padding-right': '10px'
+            });
+            elemJ.addClass('btn-lg');
+          }
+        }
+        this.modal.modalBodyJ.css({
+          'display': 'flex',
+          'flex-direction': 'column'
+        });
+        this.modal.modalJ.find(".modal-footer").hide();
+        this.modal.show();
       };
 
       Tracer.prototype.onModalSubmit = function() {
@@ -121,7 +240,7 @@
       };
 
       Tracer.prototype.openImageModal = function(closedRaster, keepRaster) {
-        var elemJ, inputJ, j, len, marginContainerJ, ref;
+        var deviceType, elemJ, inputJ, j, len, marginContainerJ, ref, ref1;
         if (keepRaster == null) {
           keepRaster = false;
         }
@@ -130,12 +249,6 @@
         }
         this.imageFile = null;
         this.imageURL = null;
-        this.modal = Modal.createModal({
-          id: 'import-image',
-          title: "Import image to trace",
-          submit: this.onModalSubmit,
-          submitButtonText: 'Trace'
-        });
         inputJ = $('<input type="file" multiple accept="image/*">');
         this.modal.addCustomContent({
           name: 'tracerFileInput',
@@ -146,17 +259,18 @@
         });
         inputJ.get(0).addEventListener('change', this.handleFiles, false);
         inputJ.hide();
+        deviceType = Utils.getDeviceType();
         this.photoFromCameraButtonJ = this.modal.addButton({
           addToBody: true,
-          type: 'success',
+          type: 'primary',
           name: 'Take a photo with the camera',
           icon: 'glyphicon-facetime-video'
         });
         this.photoFromCameraButtonJ.click(Camera.initialize);
         this.imageFromComputerButtonJ = this.modal.addButton({
           addToBody: true,
-          type: 'warning',
-          name: 'Select an image on your computer',
+          type: 'primary',
+          name: 'Choose an image on your ' + deviceType,
           icon: 'glyphicon-folder-open'
         });
         this.imageFromComputerButtonJ.click((function(_this) {
@@ -164,12 +278,6 @@
             inputJ.click();
           };
         })(this));
-        this.imageFromURLButtonJ = this.modal.addButton({
-          addToBody: true,
-          type: 'info',
-          name: 'Import image from URL',
-          icon: 'glyphicon-link'
-        });
         if (closedRaster) {
           this.reloadPreviousImageButtonJ = this.modal.addButton({
             addToBody: true,
@@ -179,12 +287,17 @@
           });
           this.reloadPreviousImageButtonJ.click((function(_this) {
             return function() {
-              localStorage.setItem('closed-raster', 'false');
-              _this.restoreImageOrOpenModal();
+              var rasterBounds, rasterBoundsJSON;
+              rasterBoundsJSON = localStorage.getItem('rater-bounds');
+              _this.imageURL = localStorage.getItem('rater-url');
+              if (rasterBoundsJSON != null) {
+                rasterBounds = JSON.parse(rasterBoundsJSON);
+                _this.createRasterController(new P.Rectangle(rasterBounds));
+              }
             };
           })(this));
         }
-        this.dragDropTextJ = this.modal.addText('or drop and image on this page', 'or drop and image on this page');
+        this.dragDropTextJ = this.modal.addText('or drop an image on this page', 'or drop an image on this page');
         this.dragDropTextJ.css({
           'text-align': 'center'
         });
@@ -212,20 +325,22 @@
           errorMessage: i18next.t('The URL is invalid')
         });
         this.urlInputJ.hide();
-        this.imageFromURLButtonJ.click((function(_this) {
-          return function() {
-            var ref1;
-            _this.urlInputJ.show();
-            _this.photoFromCameraButtonJ.hide();
-            _this.imageFromComputerButtonJ.hide();
-            _this.imageFromURLButtonJ.hide();
-            if ((ref1 = _this.reloadPreviousImageButtonJ) != null) {
-              ref1.hide();
-            }
-            _this.dragDropTextJ.hide();
-            _this.modal.modalJ.find(".modal-footer").show();
-          };
-        })(this));
+        if ((ref1 = this.imageFromURLButtonJ) != null) {
+          ref1.click((function(_this) {
+            return function() {
+              var ref2;
+              _this.urlInputJ.show();
+              _this.photoFromCameraButtonJ.hide();
+              _this.imageFromComputerButtonJ.hide();
+              _this.imageFromURLButtonJ.hide();
+              if ((ref2 = _this.reloadPreviousImageButtonJ) != null) {
+                ref2.hide();
+              }
+              _this.dragDropTextJ.hide();
+              _this.modal.modalJ.find(".modal-footer").show();
+            };
+          })(this));
+        }
         this.urlInputJ.find('input').change(this.updateImageURLfromInputDeferred).bind("paste", this.updateImageURLfromInputDeferred).keyup(this.updateImageURLfromInputDeferred);
         this.imageContainerJ = this.modal.addCustomContent({
           divJ: $('<div id="processed-image">')
@@ -251,12 +366,6 @@
         this.ignoreCropButtonJ.click(this.ignoreCropImage);
         this.cropButtonJ.hide();
         this.ignoreCropButtonJ.hide();
-        this.modal.modalBodyJ.css({
-          'display': 'flex',
-          'flex-direction': 'column'
-        });
-        this.modal.show();
-        this.modal.modalJ.find(".modal-footer").hide();
       };
 
       Tracer.prototype.updateImageURLfromInput = function() {
@@ -369,6 +478,14 @@
         }
       };
 
+      Tracer.prototype.closeRaster = function() {
+        this.removeRaster();
+        localStorage.setItem('closed-raster', 'true');
+        this.draggingImage = false;
+        this.traceAutomatically = false;
+        this.tracingAutomatically = false;
+      };
+
       Tracer.prototype.drawCorners = function(bounds, size, sign, signRotations, signOffsets) {
         var arrow, base, box, cross1, cross2, handle, handlePath, handlePos, j, len, pos, ref;
         if (this.corners != null) {
@@ -411,9 +528,13 @@
             handle.addChild(cross2);
             handle.on('mousedown', (function(_this) {
               return function() {
+                _this.closeRaster();
                 _this.draggingImage = true;
-                _this.removeRaster();
-                localStorage.setItem('closed-raster', 'true');
+              };
+            })(this));
+            handle.on('mouseup', (function(_this) {
+              return function() {
+                _this.draggingImage = false;
               };
             })(this));
             handle.on('mouseenter', (function(_this) {
@@ -461,9 +582,7 @@
                   _this.raster.data[pos].position = bounds[pos];
                 }
                 _this.corners.bringToFront();
-                if (_this.rasterParts != null) {
-                  _this.createRasterParts();
-                }
+                _this.createRasterCrop(true);
                 _this.saveBoundsToLocalStorage();
               };
             })(this));
@@ -493,6 +612,8 @@
           }
           this.corners.addChild(handle);
         }
+        this.createRasterCrop(true);
+        this.saveBoundsToLocalStorage();
       };
 
       Tracer.prototype.drawHandles = function() {
@@ -540,7 +661,7 @@
         if (bounds != null) {
           this.raster.fitBounds(bounds);
         } else {
-          viewBounds = R.view.getViewBounds();
+          viewBounds = R.view.grid.limitCDRectangle.intersect(R.view.getViewBounds());
           this.raster.position = viewBounds.center;
           if (this.raster.bounds.width > viewBounds.width) {
             this.raster.scaling = new paper.Point(viewBounds.width / (this.raster.bounds.width + this.raster.bounds.width * 0.25));
@@ -552,9 +673,15 @@
         this.raster.applyMatrix = false;
         localStorage.setItem('rater-url', this.raster.source);
         this.saveBoundsToLocalStorage();
+        this.rasterCropCenter = this.raster.bounds.center;
         this.drawHandles();
-        if ((ref = R.toolManager) != null) {
-          ref.showTracerButtons();
+        if (this.traceAutomatically) {
+          if ((ref = R.toolManager) != null) {
+            ref.showTracerButtons();
+          }
+        }
+        if (!this.unzoomToFitRaster()) {
+          this.unzoomToFitRaster(false);
         }
       };
 
@@ -647,15 +774,17 @@
       };
 
       Tracer.prototype.setEditImageMode = function() {
-        var ref;
+        var ref, ref1;
         this.modal.modalJ.find('.modal-footer button[name="submit"]').hide();
         this.setFullscreen();
         this.addRasterCropControls();
         this.photoFromCameraButtonJ.hide();
         this.imageFromComputerButtonJ.hide();
-        this.imageFromURLButtonJ.hide();
-        if ((ref = this.reloadPreviousImageButtonJ) != null) {
+        if ((ref = this.imageFromURLButtonJ) != null) {
           ref.hide();
+        }
+        if ((ref1 = this.reloadPreviousImageButtonJ) != null) {
+          ref1.hide();
         }
         this.dragDropTextJ.hide();
         this.modal.modalJ.find(".modal-footer").show();
@@ -713,6 +842,19 @@
         this.onModalSubmit();
       };
 
+      Tracer.prototype.unzoomToFitRaster = function(snap) {
+        var previousZoom;
+        if (snap == null) {
+          snap = true;
+        }
+        previousZoom = null;
+        while (!P.view.bounds.contains(this.raster.bounds.expand(100)) && previousZoom !== P.view.zoom) {
+          previousZoom = P.view.zoom;
+          R.toolManager.zoom(-1, snap);
+        }
+        return P.view.bounds.contains(this.raster.bounds.expand(100));
+      };
+
       Tracer.prototype.createRasterController = function(bounds) {
         var ref;
         if (bounds == null) {
@@ -723,6 +865,9 @@
         }
         if (this.imageURL == null) {
           return;
+        }
+        if (this.traceAutomatically) {
+          this.tracingAutomatically = true;
         }
         this.imageFile = null;
         this.removeRaster();
@@ -743,6 +888,7 @@
             return _this.rasterOnLoad(bounds);
           };
         })(this);
+        R.view.moveTo(this.raster.bounds.center);
       };
 
       Tracer.prototype.appendSVG = function(svgstr) {
@@ -752,69 +898,92 @@
         svgContainer.innerHTML = svgstr;
       };
 
-      Tracer.prototype.createRasterParts = function() {
-        var j, k, maxDraftSize, nRectanglesHeight, nRectanglesWidth, nx, ny, rectangle, rectanglePath, ref, ref1, ref2, totalRectangle;
+      Tracer.prototype.setRasterCrop = function(event) {
+        this.rasterCropCenter = event.point;
+        this.createRasterCrop();
+      };
+
+      Tracer.prototype.getRasterCropRectangle = function() {
+        var height, maxDraftSize, rectangle, width;
+        if (this.raster.bounds.width < R.Tools.Path.maxDraftSize && this.raster.bounds.height < R.Tools.Path.maxDraftSize) {
+          return null;
+        }
         maxDraftSize = R.Tools.Path.maxDraftSize;
-        nRectanglesWidth = Math.floor(this.raster.bounds.width / maxDraftSize) + 1;
-        nRectanglesHeight = Math.floor(this.raster.bounds.height / maxDraftSize) + 1;
-        totalRectangle = new P.Rectangle(this.raster.bounds.left, this.raster.bounds.top, nRectanglesWidth * maxDraftSize, nRectanglesHeight * maxDraftSize);
-        totalRectangle.center = this.raster.bounds.center;
+        width = Math.min(maxDraftSize, this.raster.bounds.width);
+        height = Math.min(maxDraftSize, this.raster.bounds.height);
+        rectangle = new P.Rectangle(this.rasterCropCenter.subtract(width / 2, height / 2), new P.Size(width, height));
+        return rectangle;
+      };
+
+      Tracer.prototype.createRasterCrop = function(warnIfTooBig) {
+        var bounds, delay, frame, rectangle, ref;
+        if (warnIfTooBig == null) {
+          warnIfTooBig = false;
+        }
+        if (!this.traceAutomatically) {
+          return;
+        }
         if ((ref = this.rasterParts) != null) {
           ref.remove();
         }
-        this.rasterParts = new P.Group();
-        for (nx = j = 0, ref1 = nRectanglesWidth - 1; 0 <= ref1 ? j <= ref1 : j >= ref1; nx = 0 <= ref1 ? ++j : --j) {
-          for (ny = k = 0, ref2 = nRectanglesHeight - 1; 0 <= ref2 ? k <= ref2 : k >= ref2; ny = 0 <= ref2 ? ++k : --k) {
-            rectangle = new P.Rectangle(totalRectangle.left + nx * maxDraftSize, totalRectangle.top + ny * maxDraftSize, maxDraftSize, maxDraftSize);
-            rectangle = this.raster.bounds.intersect(rectangle);
-            rectanglePath = P.Path.Rectangle(rectangle);
-            rectanglePath.fillColor = this.constructor.handleColor;
-            rectanglePath.strokeColor = 'white';
-            rectanglePath.opacity = 0.8;
-            rectanglePath.on('mouseenter', (function(_this) {
-              return function(event) {
-                event.target.opacity = 0.05;
-                R.stageJ.css('cursor', 'pointer');
-              };
-            })(this));
-            rectanglePath.on('mouseleave', (function(_this) {
-              return function(event) {
-                var ref3;
-                if ((ref3 = R.selectedTool) != null) {
-                  ref3.updateCursor();
-                }
-                event.target.opacity = 0.8;
-              };
-            })(this));
-            rectanglePath.on('mousedown', (function(_this) {
-              return function(event) {
-                _this.draggingImage = true;
-              };
-            })(this));
-            rectanglePath.on('click', (function(_this) {
-              return function(event) {
-                _this.autoTraceSized(event.target.bounds);
-                _this.rasterParts.remove();
-                _this.draggingImage = false;
-              };
-            })(this));
-            this.rasterParts.addChild(rectanglePath);
-          }
+        if (this.raster.bounds.width < R.Tools.Path.maxDraftSize && this.raster.bounds.height < R.Tools.Path.maxDraftSize) {
+          return;
         }
+        if (warnIfTooBig && (this.cropPositionAlertTimeout == null)) {
+          delay = 10000;
+          this.cropPositionAlertTimeout = setTimeout(((function(_this) {
+            return function() {
+              return _this.cropPositionAlertTimeout = null;
+            };
+          })(this)), delay);
+          R.alertManager.alert('Click on the image where you want to crop it', "info", delay);
+        }
+        this.rasterParts = new P.Group();
+        bounds = new P.Path.Rectangle(this.raster.bounds);
+        if (this.rasterCropCenter == null) {
+          this.rasterCropCenter = this.raster.bounds.center;
+        }
+        rectangle = new P.Path.Rectangle(this.getRasterCropRectangle());
+        frame = bounds.subtract(rectangle);
+        frame.strokeWidth = 1;
+        frame.fillColor = this.constructor.handleColor;
+        frame.strokeColor = 'white';
+        frame.opacity = 0.8;
+        this.rasterParts.addChild(frame);
+        bounds.fillColor = 'black';
+        bounds.opacity = 0;
+        bounds.on('mouseenter', (function(_this) {
+          return function(event) {
+            R.stageJ.css('cursor', 'pointer');
+          };
+        })(this));
+        bounds.on('mouseleave', (function(_this) {
+          return function(event) {
+            var ref1;
+            if ((ref1 = R.selectedTool) != null) {
+              ref1.updateCursor();
+            }
+          };
+        })(this));
+        R.stageJ.css('cursor', 'pointer');
+        bounds.on('mousedown', this.setRasterCrop);
+        bounds.on('mousedrag', this.setRasterCrop);
+        this.rasterParts.addChild(bounds);
+        rectangle.remove();
         this.tracerGroup.addChild(this.rasterParts);
       };
 
       Tracer.prototype.autoTrace = function() {
-        if (this.raster.bounds.width > R.Tools.Path.maxDraftSize || this.raster.bounds.height > R.Tools.Path.maxDraftSize) {
-          R.alertManager.alert('The image is too big to fit in one drawing', 'info');
-          this.createRasterParts();
-          return;
+        var rectangle;
+        rectangle = this.getRasterCropRectangle();
+        if (rectangle != null) {
+          rectangle = this.raster.bounds.intersect(rectangle);
         }
-        this.autoTraceSized();
+        this.autoTraceSized(rectangle);
       };
 
       Tracer.prototype.autoTraceSized = function(bounds) {
-        var args, c, color, colors, err, error, j, len, modal, png, ref, ref1;
+        var args, c, color, colors, err, error, j, len, maxRasterSize, modal, png, ref, ref1;
         if (bounds == null) {
           bounds = null;
         }
@@ -830,21 +999,30 @@
         this.rasterPart = null;
         try {
           this.rasterPart = this.raster.getSubRaster(this.subRasterRectangle);
+          maxRasterSize = this.constructor.maxRasterSize;
+          if (this.rasterPart.width > maxRasterSize || this.rasterPart.height > maxRasterSize) {
+            this.scaleRatio = this.rasterPart.width > this.rasterPart.height ? maxRasterSize / this.rasterPart.width : maxRasterSize / this.rasterPart.height;
+            this.rasterPart.width *= this.scaleRatio;
+            this.rasterPart.height *= this.scaleRatio;
+          }
           console.log(this.rasterPart.width);
           png = this.rasterPart.toDataURL();
           this.rasterPart.remove();
           this.rasterPart = null;
           colors = [];
-          ref = R.toolManager.colors;
-          for (j = 0, len = ref.length; j < len; j++) {
-            color = ref[j];
-            c = new paper.Color(color);
-            colors.push([Math.round(c.red * 255), Math.round(c.green * 255), Math.round(c.blue * 255), 255]);
+          if (R.useColors) {
+            ref = R.toolManager.colors;
+            for (j = 0, len = ref.length; j < len; j++) {
+              color = ref[j];
+              c = new paper.Color(color);
+              colors.push([Math.round(c.red * 255), Math.round(c.green * 255), Math.round(c.blue * 255), 255]);
+            }
           }
           args = {
             png: png,
             colors: colors
           };
+          R.loader.showLoadingBar();
           $.ajax({
             method: "POST",
             url: "ajaxCall/",
@@ -879,17 +1057,19 @@
 
       Tracer.prototype.autoTraceCallback = function(result) {
         var ref, ref1;
+        R.loader.hideLoadingBar();
         if (result.state === "error") {
           if ((ref = this.modal) != null) {
             ref.hide();
           }
-          R.alertManager.alert(result.error, "error");
+          R.alertManager.alert(result.message, "error");
           return;
         }
         if ((ref1 = this.modal) != null) {
           ref1.hide();
         }
         this.addSvgToDraft(result.svg, result.colors);
+        this.closeRaster();
       };
 
       Tracer.prototype.addPathsToDraft = function(item, draft) {
@@ -942,6 +1122,10 @@
           string: true
         }));
         svgPaper.translate(this.rasterPartRectangle.topLeft);
+        if (this.scaleRatio != null) {
+          svgPaper.scale(1 / this.scaleRatio, this.rasterPartRectangle.topLeft);
+          this.scaleRatio = null;
+        }
         svgPaper.scale(this.rasterPartRectangle.width / this.subRasterRectangle.width, this.rasterPartRectangle.topLeft);
         svgPaper.strokeCap = 'round';
         svgPaper.strokeJoin = 'round';
@@ -975,7 +1159,7 @@
             reader.onload = (function(_this) {
               return function(readerEvent) {
                 _this.imageURL = readerEvent.target.result;
-                _this.setEditImageMode();
+                _this.openTraceTypeModal(true, false, true);
               };
             })(this);
             reader.readAsDataURL(file);
@@ -995,7 +1179,7 @@
             reader.onload = (function(_this) {
               return function(readerEvent) {
                 _this.imageURL = readerEvent.target.result;
-                _this.setEditImageMode();
+                _this.onModalSubmit();
               };
             })(this);
             reader.readAsDataURL(file);
@@ -1009,7 +1193,7 @@
         if ((ref = this.tracerBtn) != null) {
           ref.show();
         }
-        if (this.tracerGroup != null) {
+        if ((this.tracerGroup != null) && this.traceAutomatically) {
           if ((ref1 = R.toolManager) != null) {
             ref1.showTracerButtons();
           }
@@ -1049,8 +1233,10 @@
         var ref;
         this.draggingImage = false;
         this.scalingImage = false;
-        if ((ref = R.selectedTool) != null) {
-          ref.updateCursor();
+        if (!this.traceAutomatically) {
+          if ((ref = R.selectedTool) != null) {
+            ref.updateCursor();
+          }
         }
       };
 

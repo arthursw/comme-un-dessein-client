@@ -135,8 +135,16 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Modal', 'i18next'], (P, R, Utils, Modal
 			return not tile.visible and draftInTile
 		
 		createChooseTileModal: (event, tile)=>
+			if not R.userAuthenticated
+				R.alertManager.alert 'Log in before choosing a tile', 'info'
+				return
+			emailConfirmed = R.canvasJ.attr('data-email-confirmed') == 'True'
+			if not emailConfirmed
+				R.alertManager.alert 'Please confirm your email', 'error'
+				return
+			
 			nTiles = R.userProfile?.nTiles or 0
-			nTilesLeft = R.city.nTilesMax - R.userProfile.nTiles
+			nTilesLeft = R.city.nTilesMax - nTiles
 			
 			if nTilesLeft <= 0
 

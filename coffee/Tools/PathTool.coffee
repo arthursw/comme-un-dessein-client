@@ -158,6 +158,10 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 			@hideDraftLimits()
 
 			R.view.tool.onMouseMove = null
+			
+			if R.tracer?.traceAutomatically
+				R.tracer.closeRaster()
+			
 			# R.toolManager.leaveDrawingMode()
 			return
 
@@ -225,11 +229,17 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 		begin: (event, from=R.me, data=null) ->
 			if event.event.which == 2 then return 			# if middle mouse button (wheel) pressed: return
 			if R.tracer?.draggingImage then return
+			if R.tracer?.tracingAutomatically then return
 			
 			if P.view.zoom < 0.5
 				R.alertManager.alert 'Please zoom before drawing', 'info'
 				return
-
+			
+			draftIsOutsideFrame = not R.view.contains(event.point)
+			if draftIsOutsideFrame
+				R.alertManager.alert 'Your path must be in the drawing area', 'error'
+				return
+			
 			if @draftLimit? and not @draftLimit.contains(event.point)
 				@constructor.displayDraftIsTooBigError()
 				bounds = R.Drawing.getDraft()?.getBounds()
@@ -248,9 +258,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 				@currentPath.strokeColor = R.selectedColor
 				@currentPath.strokeCap = 'round'
 				@currentPath.strokeJoin = 'round'
-				@currentPath.shadowColor = 'lightblue'
-				@currentPath.shadowBlur = 10
-				@currentPath.shadowOffset = new P.Point(0, 0)
+				# @currentPath.shadowColor = 'lightblue'
+				# @currentPath.shadowBlur = 10
+				# @currentPath.shadowOffset = new P.Point(0, 0)
 				@currentPath.add(event.point)
 
 			@using = true
@@ -289,7 +299,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 			
 			if not draftBounds? or draftBounds.area == 0 then return null
 
-			viewBounds = R.view.grid.limitCD.bounds.clone()
+			viewBounds = R.view.grid.frameRectangle
 			@draftLimit = draftBounds.expand(2 * (@constructor.maxDraftSize * R.city.pixelPerMm - draftBounds.width), 2 * (@constructor.maxDraftSize  * R.city.pixelPerMm - draftBounds.height))
 			
 			# draftLimitRectangle = new P.Path.Rectangle(@draftLimit)
@@ -575,7 +585,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 
 			@using = false
 
-			@currentPath.add(event.point)
+			if @currentPath.segments.length > 0
+				@currentPath.add(event.point)
 
 			draftLimit = @showDraftLimits()
 			

@@ -9,7 +9,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			# @alertsContainer.on( "blur", ()=> @hide() ) # not working... done in window.mouseup event in view
 			
 			@alertsContainer.find('button.show').click @show
-			@alertsContainer.on( touchstart: @show )
+			@alertsContainer.find('button.show').on( touchstart: @show )
 			# @alertsContainer.mouseleave @hideDeferred
 
 			@alerts = []
@@ -27,6 +27,10 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			
 			return
 
+		scrollAlert: (alertJ)->
+			# alertJ.animate({scrollTop: 100}, 5000)
+			return
+		
 		showAlert: (index)->
 			if @alerts.length<=0 || index<0 || index>=@alerts.length then return  	# check that index is valid
 
@@ -54,6 +58,8 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			alertJ.remove()
 
 			@alertsContainer.find(".alert-number").text(@currentAlert+1)
+			
+			@scrollAlert(newAlertJ)
 			return
 
 		alert: (message, type="", delay=@constructor.hideDelay, messageOptions=null) ->
@@ -75,6 +81,8 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 			if @alerts.length>0 		# activate alert box (required for the first time)
 				@alertsContainer.addClass("activated")
 				$('body').addClass("alert-activated")
+				if @alertsContainer.hasClass('top')
+					$('body').addClass("r-alert-top")
 
 			@showAlert(@alerts.length-1)
 
@@ -119,13 +127,15 @@ define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 
 				backgroundColor = alertJ.css('background-color')
 				alertJ.css('background-color': 'white')
-				alertJ.animate('background-color': backgroundColor, 250)
+				setTimeout( (()->alertJ.css('background-color': backgroundColor)) , 150)
 				return
 			
 			blink()
 
 			@blinkIntervalID = setInterval(blink, 300)
 
+			@scrollAlert(alertJ)
+			
 			return
 
 		hideDeferred: (delay=@constructor.hideDelay)=>
