@@ -916,7 +916,7 @@
       };
 
       Tracer.prototype.createRasterCrop = function(warnIfTooBig) {
-        var bounds, delay, frame, rectangle, ref;
+        var bounds, frame, rectangle, ref;
         if (warnIfTooBig == null) {
           warnIfTooBig = false;
         }
@@ -930,13 +930,8 @@
           return;
         }
         if (warnIfTooBig && (this.cropPositionAlertTimeout == null)) {
-          delay = 10000;
-          this.cropPositionAlertTimeout = setTimeout(((function(_this) {
-            return function() {
-              return _this.cropPositionAlertTimeout = null;
-            };
-          })(this)), delay);
-          R.alertManager.alert('Click on the image where you want to crop it', "info", delay);
+          this.cropPositionAlertTimeout = true;
+          R.alertManager.alert('Click on the image where you want to crop it', "info");
         }
         this.rasterParts = new P.Group();
         bounds = new P.Path.Rectangle(this.raster.bounds);

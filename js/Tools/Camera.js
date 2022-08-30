@@ -248,7 +248,6 @@
 
       Camera.takePhoto = function() {
         Camera.thresholdShaderPass.enabled = true;
-        Camera.stripesShaderPass.enabled = true;
         Camera.effectComposer.render();
         R.tracer.imageURL = Camera.renderer.domElement.toDataURL();
         Camera.remove();

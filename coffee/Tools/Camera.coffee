@@ -240,7 +240,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             # @erodeShaderPass.enabled = true
             # @adaptiveThresholdShaderPass.enabled = true
             @thresholdShaderPass.enabled = true
-            @stripesShaderPass.enabled = true
+            # @stripesShaderPass.enabled = true
 
             @effectComposer.render()
             R.tracer.imageURL = @renderer.domElement.toDataURL()

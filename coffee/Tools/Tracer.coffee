@@ -903,9 +903,10 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				return
 			
 			if warnIfTooBig and not @cropPositionAlertTimeout?
-				delay = 10000
-				@cropPositionAlertTimeout = setTimeout (()=> @cropPositionAlertTimeout = null), delay
-				R.alertManager.alert('Click on the image where you want to crop it', "info", delay)
+				# delay = 10000
+				# @cropPositionAlertTimeout = setTimeout (()=> @cropPositionAlertTimeout = null), 1200000
+				@cropPositionAlertTimeout = true
+				R.alertManager.alert('Click on the image where you want to crop it', "info")
 			
 			@rasterParts = new P.Group()
 
