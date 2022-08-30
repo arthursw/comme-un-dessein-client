@@ -1145,7 +1145,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 
 			foundPath = @addPathsToDraft(svgPaper, draft)
 			if not foundPath
-				R.alertManager.alert 'The traced image is empty', 'error'
+				R.alertManager.alert 'The traced image is empty, please retry with a contrasted black and white image', 'error'
 			draft.computeRectangle()
 			
 			draft.updatePaths()

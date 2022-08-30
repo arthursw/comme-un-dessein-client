@@ -1136,7 +1136,7 @@
         R.commandManager.add(new Command.ModifyDrawing(draft));
         foundPath = this.addPathsToDraft(svgPaper, draft);
         if (!foundPath) {
-          R.alertManager.alert('The traced image is empty', 'error');
+          R.alertManager.alert('The traced image is empty, please retry with a contrasted black and white image', 'error');
         }
         draft.computeRectangle();
         draft.updatePaths();

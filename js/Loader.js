@@ -765,7 +765,7 @@
           if (result.message === 'invalid_url') {
             R.alertManager.alert("Your URL is invalid or does not point to an existing page", "error");
           } else {
-            if (result.message === 'Please confirm your email') {
+            if (result.message === 'Please confirm your email by clicking on the activation link that was sent to your mailbox') {
               this.hideLoadingBar();
               modal = Modal.createModal({
                 title: 'Please confirm your email',

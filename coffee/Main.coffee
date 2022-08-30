@@ -264,6 +264,17 @@ define [
 		R.me = if username.length > 0 then username else null
 		userAuthenticated = canvasJ.attr("data-is-authenticated")
 		R.userAuthenticated = userAuthenticated == 'True'
+		
+		emailConfirmed = canvasJ.attr('data-email-confirmed') == 'True'
+		if R.userAuthenticated and not emailConfirmed
+			modal = Modal.createModal( title: 'Welcome to Comme un Dessein', submit: (()=>console.log('confirm')) )
+			modal.addText('Thanks for signing up')
+			manageEmails = ()=>
+				window.location = '/accounts/email/'
+				return
+			modal.addButton(name: 'Manage emails', icon: 'glyphicon-envelope', type: 'info', submit: manageEmails)
+			modal.modalJ.find('[name="cancel"]').hide()
+			modal.show()
 
 		if R.style?
 			$('body').addClass(R.style)

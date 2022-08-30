@@ -36,7 +36,7 @@
     };
     R.loadActiveDrawings = true;
     $(document).ready(function() {
-      var canvasJ, cityName, deleteAccountWarning, isPM, meridiem, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
+      var canvasJ, cityName, deleteAccountWarning, emailConfirmed, isPM, manageEmails, meridiem, modal, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
       canvasJ = $('#canvas');
       R.Modal = Modal;
       R.administrator = canvasJ.attr('data-is-admin') === 'True';
@@ -156,6 +156,31 @@
       R.me = username.length > 0 ? username : null;
       userAuthenticated = canvasJ.attr("data-is-authenticated");
       R.userAuthenticated = userAuthenticated === 'True';
+      emailConfirmed = canvasJ.attr('data-email-confirmed') === 'True';
+      if (R.userAuthenticated && !emailConfirmed) {
+        modal = Modal.createModal({
+          title: 'Welcome to Comme un Dessein',
+          submit: ((function(_this) {
+            return function() {
+              return console.log('confirm');
+            };
+          })(this))
+        });
+        modal.addText('Thanks for signing up');
+        manageEmails = (function(_this) {
+          return function() {
+            window.location = '/accounts/email/';
+          };
+        })(this);
+        modal.addButton({
+          name: 'Manage emails',
+          icon: 'glyphicon-envelope',
+          type: 'info',
+          submit: manageEmails
+        });
+        modal.modalJ.find('[name="cancel"]').hide();
+        modal.show();
+      }
       if (R.style != null) {
         $('body').addClass(R.style);
       }
@@ -230,7 +255,7 @@
         });
       }
       $('#about-link').click(function(event) {
-        var divJ, modal;
+        var divJ;
         modal = Modal.createModal({
           title: 'About Comme Un Dessein',
           postSubmit: 'hide',
@@ -266,7 +291,6 @@
         return -1;
       });
       $('#user-login-group').click(function(event) {
-        var modal;
         modal = Modal.createModal({
           title: 'Sign in / up',
           postSubmit: 'hide'
@@ -321,7 +345,6 @@
             }).done(deleteAccountCallback);
           };
           previousModal.modalJ.on('hidden.bs.modal', function() {
-            var modal;
             modal = Modal.createModal({
               title: 'Delete account',
               submitButtonText: 'Delete account',
@@ -338,7 +361,7 @@
         };
       })(this);
       $('#modify-user-profile').click(function(event) {
-        var changeUserCallback, confirmedText, dailyText, emailConfirmed, emailFrequencyLabel, emailFrequencyLabelJ, emailFrequencyPJ, emailFrequencySelectJ, emailFrequencySelectorJ, emailJ, manageEmails, modal, monthlyText, neverText, onlyIfRelevant, resetPassword, submitChangeProfile, userEmail, usernameJ, weeklyText;
+        var changeUserCallback, confirmedText, dailyText, emailFrequencyLabel, emailFrequencyLabelJ, emailFrequencyPJ, emailFrequencySelectJ, emailFrequencySelectorJ, emailJ, monthlyText, neverText, onlyIfRelevant, resetPassword, submitChangeProfile, userEmail, usernameJ, weeklyText;
         event.preventDefault();
         event.stopPropagation();
         changeUserCallback = function(result) {
