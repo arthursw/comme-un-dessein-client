@@ -143,6 +143,8 @@
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           constraints = {
             video: {
+              width: 300,
+              height: 300,
               facingMode: 'environment'
             }
           };
