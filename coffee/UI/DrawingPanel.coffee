@@ -486,7 +486,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 		shareOnTwitter: (event, drawing=@currentItem)=>
 			twitterText = '' + drawing.title + ' ' + i18next.t('by') + ' ' + drawing.owner + ', ' + i18next.t('on') + ' Comme un Dessein'
 			twitterURL = @getItemLink(drawing)
-			twitterHashTags = 'CommeUnDessein,idlv,Maintenant2017'
+			twitterHashTags = 'CommeUnDessein,idlv'
 			twitterLink = 'http://twitter.com/share?text=' + twitterText + '&url=' + twitterURL + '&hashtags=' + twitterHashTags
 			window.open(twitterLink, 'popup', 'width=600, height=400')
 			return
