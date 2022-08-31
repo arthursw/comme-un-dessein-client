@@ -51,6 +51,11 @@
         Camera.renderer.setSize(minDimension, minDimension);
         document.body.appendChild(Camera.renderer.domElement);
         Camera.video = document.createElement('video');
+        Camera.video.addEventListener("loadedmetadata", (function(e) {
+          Camera.cameraWidth = Camera.video.videoWidth;
+          Camera.cameraHeight = Camera.video.videoHeight;
+          return Camera.setRendererSize();
+        }), false);
         Camera.texture = new THREE.VideoTexture(Camera.video);
         red = '#F44336';
         blue = '#448AFF';
@@ -184,6 +189,12 @@
       Camera.setRendererSize = function() {
         var height, settings, videoRatio, width, windowRatio;
         settings = this.stream.getVideoTracks()[0].getSettings();
+        if (this.cameraWidth != null) {
+          settings.width = this.cameraWidth;
+        }
+        if (this.cameraHeight != null) {
+          settings.height = this.cameraHeight;
+        }
         videoRatio = settings.width / settings.height;
         windowRatio = window.innerWidth / window.innerHeight;
         width = videoRatio > windowRatio ? window.innerWidth : window.innerHeight * settings.width / settings.height;

@@ -58,6 +58,10 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             document.body.appendChild(@renderer.domElement)
 
             @video = document.createElement('video')
+            @video.addEventListener( "loadedmetadata", ((e)=>
+                @cameraWidth = @video.videoWidth
+                @cameraHeight = @video.videoHeight
+                @setRendererSize()), false)
 
             # @texture = new THREE.TextureLoader().load('dessin.jpg', resizePlane)
 
@@ -192,6 +196,8 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
         
         @setRendererSize: ()->
             settings = @stream.getVideoTracks()[0].getSettings()
+            if @cameraWidth? then settings.width = @cameraWidth
+            if @cameraHeight? then settings.height = @cameraHeight
             videoRatio = settings.width / settings.height
             windowRatio = window.innerWidth / window.innerHeight
             width = if videoRatio > windowRatio then window.innerWidth else window.innerHeight * settings.width / settings.height
