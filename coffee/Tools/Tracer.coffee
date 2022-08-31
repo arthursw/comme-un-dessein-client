@@ -1088,6 +1088,10 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 						child.strokeColor = item.strokeColor
 					child.strokeCap = 'round'
 					child.strokeJoin = 'round'
+					child.fillColor = null
+					if item.strokeColor?.equals('white')
+						console.log('WARNING: ignoring white stroke')
+						continue
 					# draft.computeRectangle()
 					# console.log(child.strokeColor, child.strokeWidth)
 					draft.addChild(child, false, false)
@@ -1122,8 +1126,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			# // The substituted value will be contained in the result variable
 			svg = svg.replace(regex, subst)
 			
-			svgPaper = P.project.importSVG(svg)
-			console.log(svgPaper.exportSVG( string: true ))
+			svgPaper = P.project.importSVG(svg, {insert: false})
+			# console.log(svgPaper.exportSVG( string: true ))
 
 			# @setStrokeColor(svgPaper, @rasterPart)
 			# @rasterPart?.remove()
@@ -1140,7 +1144,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			svgPaper.strokeCap = 'round'
 			svgPaper.strokeJoin = 'round'
 			svgPaper.strokeWidth = R.Path.strokeWidth
-
+			
 			draft = R.Item.Drawing.getDraft()
 			R.commandManager.add(new Command.ModifyDrawing(draft))
 
@@ -1152,6 +1156,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			draft.updatePaths()
 
 			svgPaper.remove()
+			R.svgPaper = svgPaper
 			R.toolManager.updateButtonsVisibility()
 			
 			R.tools["Precise path"].showDraftLimits()

@@ -1070,7 +1070,7 @@
       };
 
       Tracer.prototype.addPathsToDraft = function(item, draft) {
-        var child, foundPath, j, len, ref;
+        var child, foundPath, j, len, ref, ref1;
         foundPath = false;
         ref = item.children.slice();
         for (j = 0, len = ref.length; j < len; j++) {
@@ -1083,6 +1083,11 @@
             }
             child.strokeCap = 'round';
             child.strokeJoin = 'round';
+            child.fillColor = null;
+            if ((ref1 = item.strokeColor) != null ? ref1.equals('white') : void 0) {
+              console.log('WARNING: ignoring white stroke');
+              continue;
+            }
             draft.addChild(child, false, false);
           } else if (child.children != null) {
             foundPath = foundPath || this.addPathsToDraft(child, draft);
@@ -1117,10 +1122,9 @@
         regex = /style="stroke:([#\d\w]+); fill:none;"/gm;
         subst = 'stroke="$1" stroke-width="' + R.Path.strokeWidth + '"';
         svg = svg.replace(regex, subst);
-        svgPaper = P.project.importSVG(svg);
-        console.log(svgPaper.exportSVG({
-          string: true
-        }));
+        svgPaper = P.project.importSVG(svg, {
+          insert: false
+        });
         svgPaper.translate(this.rasterPartRectangle.topLeft);
         svgPaper.scale(1 / this.scaleRatio, this.rasterPartRectangle.topLeft);
         svgPaper.scale(this.rasterPartRectangle.width / this.subRasterRectangle.width, this.rasterPartRectangle.topLeft);
@@ -1136,6 +1140,7 @@
         draft.computeRectangle();
         draft.updatePaths();
         svgPaper.remove();
+        R.svgPaper = svgPaper;
         R.toolManager.updateButtonsVisibility();
         R.tools["Precise path"].showDraftLimits();
       };
