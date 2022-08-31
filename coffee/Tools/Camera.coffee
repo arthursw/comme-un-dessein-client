@@ -23,6 +23,8 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             $('#camera').show()
             $('#camera').addClass('active')
 
+            R.loader.showLoadingBar()
+
             # Initialize the scene and our camera
             @scene = new THREE.Scene()
             @camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
@@ -166,7 +168,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
 
                     @video.srcObject = stream
                     @video.play()
-                    
+                    R.loader.hideLoadingBar()
                 ).catch( ( error ) ->
                     console.error( 'Unable to access the camera/webcam.', error )
                 )

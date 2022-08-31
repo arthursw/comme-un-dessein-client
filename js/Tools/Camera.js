@@ -26,6 +26,7 @@
         console.log('initializeThreeJS');
         $('#camera').show();
         $('#camera').addClass('active');
+        R.loader.showLoadingBar();
         Camera.scene = new THREE.Scene();
         Camera.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
         Camera.stream = null;
@@ -164,7 +165,8 @@
             Camera.stream = stream;
             Camera.setRendererSize();
             Camera.video.srcObject = stream;
-            return Camera.video.play();
+            Camera.video.play();
+            return R.loader.hideLoadingBar();
           })["catch"](function(error) {
             return console.error('Unable to access the camera/webcam.', error);
           });
