@@ -143,13 +143,21 @@
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           constraints = {
             video: {
-              width: 300,
-              height: 300,
-              facingMode: 'environment'
+              facingMode: 'environment',
+              width: {
+                max: 1024
+              },
+              height: {
+                max: 1024
+              },
+              aspectRatio: {
+                ideal: 1
+              }
             }
           };
           navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
             Camera.stream = stream;
+            Camera.setRendererSize();
             Camera.video.srcObject = stream;
             return Camera.video.play();
           })["catch"](function(error) {
@@ -171,6 +179,18 @@
             return -1;
           });
         }
+      };
+
+      Camera.setRendererSize = function() {
+        var height, settings, videoRatio, width, windowRatio;
+        settings = this.stream.getVideoTracks()[0].getSettings();
+        videoRatio = settings.width / settings.height;
+        windowRatio = window.innerWidth / window.innerHeight;
+        width = videoRatio > windowRatio ? window.innerWidth : window.innerHeight * settings.width / settings.height;
+        height = videoRatio > windowRatio ? window.innerWidth * settings.height / settings.width : window.innerHeight;
+        this.uniforms.resolution.value = new THREE.Vector2(width, height);
+        this.renderer.setSize(width, height);
+        this.effectComposer.setSize(width, height);
       };
 
       Camera.initializeSliders = function(name) {
@@ -267,12 +287,7 @@
       };
 
       Camera.onWindowResize = function() {
-        var minDimension, threeHeight, threeWidth;
-        threeWidth = window.innerWidth;
-        threeHeight = window.innerHeight;
-        minDimension = Math.min(threeWidth, threeHeight);
-        Camera.renderer.setSize(minDimension, minDimension);
-        Camera.effectComposer.setSize(minDimension, minDimension);
+        Camera.setRendererSize();
         Camera.resizePlane();
       };
 

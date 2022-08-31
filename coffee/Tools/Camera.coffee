@@ -30,8 +30,6 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
 
             threeWidth = window.innerWidth
             threeHeight = window.innerHeight
-            # threeWidth = @threeSize
-            # threeHeight = @threeSize
             minDimension = Math.min(threeWidth, threeHeight)
 
             # Create the WebGL renderer and add it to the document
@@ -149,14 +147,22 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             
             if navigator.mediaDevices and navigator.mediaDevices.getUserMedia
 
-                constraints = { video: { width: 300, height: 300, facingMode: 'environment' } }
-                # constraints = { video: { facingMode: 'environment' } }
+                # constraints = { video: { width: 300, height: 300, facingMode: 'environment' } }
+                constraints = { video: { 
+                    facingMode: 'environment',
+                    width: {max: 1024},
+                    height: {max: 1024},
+                    aspectRatio: {ideal: 1}} }
 
                 navigator.mediaDevices.getUserMedia( constraints ).then( ( stream ) =>
                     # apply the stream to the video element used in the texture
                     @stream = stream
+                        
+                    @setRendererSize()
+
                     @video.srcObject = stream
                     @video.play()
+                    
                 ).catch( ( error ) ->
                     console.error( 'Unable to access the camera/webcam.', error )
                 )
@@ -182,6 +188,17 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
                     event.preventDefault()
                     event.stopPropagation()
                     return -1)
+            return
+        
+        @setRendererSize: ()->
+            settings = @stream.getVideoTracks()[0].getSettings()
+            videoRatio = settings.width / settings.height
+            windowRatio = window.innerWidth / window.innerHeight
+            width = if videoRatio > windowRatio then window.innerWidth else window.innerHeight * settings.width / settings.height
+            height = if videoRatio > windowRatio then window.innerWidth * settings.height / settings.width else window.innerHeight
+            @uniforms.resolution.value = new THREE.Vector2(width, height)
+            @renderer.setSize(width, height)
+            @effectComposer.setSize(width, height)
             return
 
         @initializeSliders: (name)=>
@@ -293,13 +310,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             return
 
         @onWindowResize: ()=>
-            threeWidth = window.innerWidth
-            threeHeight = window.innerHeight
-            # threeWidth = @threeSize
-            # threeHeight = @threeSize
-            minDimension = Math.min(threeWidth, threeHeight)
-            @renderer.setSize(minDimension, minDimension)
-            @effectComposer.setSize(minDimension, minDimension)
+            @setRendererSize()
             @resizePlane()
             return
         
