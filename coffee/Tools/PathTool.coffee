@@ -24,7 +24,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 		@drawItems = true
 
 		@emitSocket = false
-		@maxDraftSize = 500
+		@maxDraftSize = 1500
 
 		@computeDraftBounds: (paths=null)->
 			bounds = R.Drawing.getDraft()?.getBounds()
