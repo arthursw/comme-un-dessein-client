@@ -7,8 +7,6 @@
     Tracer = (function() {
       Tracer.handleColor = '#42b3f4';
 
-      Tracer.maxRasterSize = 3 * R.Tools.Path.maxDraftSize;
-
       function Tracer() {
         this.handleFiles = bind(this.handleFiles, this);
         this.fileDropped = bind(this.fileDropped, this);
@@ -905,10 +903,10 @@
 
       Tracer.prototype.getRasterCropRectangle = function() {
         var height, maxDraftSize, rectangle, width;
-        if (this.raster.bounds.width < R.Tools.Path.maxDraftSize && this.raster.bounds.height < R.Tools.Path.maxDraftSize) {
+        maxDraftSize = R.Tools.Path.maxDraftSize * R.city.pixelPerMm;
+        if (this.raster.bounds.width < maxDraftSize && this.raster.bounds.height < maxDraftSize) {
           return null;
         }
-        maxDraftSize = R.Tools.Path.maxDraftSize;
         width = Math.min(maxDraftSize, this.raster.bounds.width);
         height = Math.min(maxDraftSize, this.raster.bounds.height);
         rectangle = new P.Rectangle(this.rasterCropCenter.subtract(width / 2, height / 2), new P.Size(width, height));
@@ -916,7 +914,7 @@
       };
 
       Tracer.prototype.createRasterCrop = function(warnIfTooBig) {
-        var bounds, frame, rectangle, ref;
+        var bounds, frame, maxDraftSize, rectangle, ref;
         if (warnIfTooBig == null) {
           warnIfTooBig = false;
         }
@@ -926,7 +924,8 @@
         if ((ref = this.rasterParts) != null) {
           ref.remove();
         }
-        if (this.raster.bounds.width < R.Tools.Path.maxDraftSize && this.raster.bounds.height < R.Tools.Path.maxDraftSize) {
+        maxDraftSize = R.Tools.Path.maxDraftSize * R.city.pixelPerMm;
+        if (this.raster.bounds.width < maxDraftSize && this.raster.bounds.height < maxDraftSize) {
           return;
         }
         if (warnIfTooBig && (this.cropPositionAlertTimeout == null)) {

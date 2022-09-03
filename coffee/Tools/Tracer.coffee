@@ -3,7 +3,6 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 	class Tracer
 		
 		@handleColor = '#42b3f4'
-		@maxRasterSize = 3 * R.Tools.Path.maxDraftSize
 
 		constructor: ()->
 			@tracerGroup = null
@@ -886,9 +885,9 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			return
 
 		getRasterCropRectangle: ()->
-			if @raster.bounds.width < R.Tools.Path.maxDraftSize and @raster.bounds.height < R.Tools.Path.maxDraftSize
+			maxDraftSize = R.Tools.Path.maxDraftSize * R.city.pixelPerMm
+			if @raster.bounds.width < maxDraftSize and @raster.bounds.height < maxDraftSize
 				return null
-			maxDraftSize = R.Tools.Path.maxDraftSize
 			width = Math.min(maxDraftSize, @raster.bounds.width)
 			height = Math.min(maxDraftSize, @raster.bounds.height)
 			rectangle = new P.Rectangle(@rasterCropCenter.subtract(width/2, height/2), new P.Size(width, height))
@@ -899,7 +898,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				return
 			
 			@rasterParts?.remove()
-			if @raster.bounds.width < R.Tools.Path.maxDraftSize and @raster.bounds.height < R.Tools.Path.maxDraftSize
+			maxDraftSize = R.Tools.Path.maxDraftSize * R.city.pixelPerMm
+			if @raster.bounds.width < maxDraftSize and @raster.bounds.height < maxDraftSize
 				return
 			
 			if warnIfTooBig and not @cropPositionAlertTimeout?
