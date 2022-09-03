@@ -614,6 +614,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				R.commandManager.add(new R.Command.ModifyDrawing(@))
 			for path in @paths
 				path.remove()
+			if @svg? and R.useSVG
+				@svg.remove()
 			@paths = []
 			if @status == 'draft'
 				R.toolManager.updateButtonsVisibility(@)

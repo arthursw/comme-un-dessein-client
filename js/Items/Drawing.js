@@ -676,6 +676,9 @@
           path = ref[j];
           path.remove();
         }
+        if ((this.svg != null) && R.useSVG) {
+          this.svg.remove();
+        }
         this.paths = [];
         if (this.status === 'draft') {
           R.toolManager.updateButtonsVisibility(this);
