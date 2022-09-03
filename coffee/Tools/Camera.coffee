@@ -99,7 +99,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
                 saturation: { value: 0.0 },
                 lightness: { value: 0.0 },
                 C: { value: 0.05 },
-                threshold: { value: 0.5 },
+                threshold: { value: 0.4 },
                 windowSize: { value: 15 },
                 stripeWidth: { value: 5 },
                 mousePosition: { value: new THREE.Vector2(0.5, 0.5) }

@@ -7,6 +7,8 @@
     Tracer = (function() {
       Tracer.handleColor = '#42b3f4';
 
+      Tracer.maxRasterSize = 1500;
+
       function Tracer() {
         this.handleFiles = bind(this.handleFiles, this);
         this.fileDropped = bind(this.fileDropped, this);

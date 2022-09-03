@@ -3,6 +3,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 	class Tracer
 		
 		@handleColor = '#42b3f4'
+		@maxRasterSize = 1500
 
 		constructor: ()->
 			@tracerGroup = null

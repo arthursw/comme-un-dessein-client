@@ -104,7 +104,7 @@
             value: 0.05
           },
           threshold: {
-            value: 0.5
+            value: 0.4
           },
           windowSize: {
             value: 15
