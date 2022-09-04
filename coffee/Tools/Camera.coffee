@@ -188,6 +188,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
                 @sliders ?= {}
                 # @initializeSliders('saturation')
                 # @initializeSliders('lightness')
+                @initializeSliders('threshold')
                 @initialized = true
 
                 $('#camera').mousemove((event)=> 
@@ -227,7 +228,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
 
         @updateSlider: (name, value)=>
             iconJ = $('.cd-slider.' + name + ' .cd-inline .glyphicon')
-            percent = Math.round((1 + value) * 0.5 * 100)
+            percent = value * 100 # Math.round((1 + value) * 0.5 * 100)
             iconJ.css(left: percent + '%')
             line1J = $('.cd-slider.' + name + ' .cd-inline .cd-line:first-child')
             line1J.css(width: 'calc(' + percent + '% - 20px)')
@@ -236,20 +237,30 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             return
 
         @addParameter: (name, delta)=>
-            value = @paletteShaderPass.uniforms[name].value + (delta / 100) * 2
-            if value < -1
-                value = -1
+            value = @thresholdShaderPass.uniforms[name].value + (delta / 100) # * 2
+            # if value < -1
+            #     value = -1
+            if value < 0
+                value = 0
             if value > 1
                 value = 1
-            @paletteShaderPass.uniforms[name].value = value 
+            @thresholdShaderPass.uniforms[name].value = value 
             @updateSlider(name, value)
             return
         
         @setParameter: (name, event)=>
             lineJ = $('.cd-slider.' + name + ' .cd-inline')
-            value = (event.clientX - lineJ.offset().left) / lineJ.width()
-            value = -1 + 2 * value
-            @paletteShaderPass.uniforms[name].value = value
+            cursorJ = $('.cd-slider.' + name + ' span.cursor')
+            x = event.clientX #cursorJ.offset().left + cursorJ.width() / 2
+            # console.log(cursorJ.offset().left, cursorJ.width() / 2, x)
+            value = (x - lineJ.offset().left) / lineJ.width()
+            if value < 0
+                value = 0
+            if value > 1
+                value = 1
+            # value = -1 + 2 * value
+            console.log(value)
+            @thresholdShaderPass.uniforms[name].value = value
             @updateSlider(name, value)
             return
 

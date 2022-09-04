@@ -179,6 +179,7 @@
           if (Camera.sliders == null) {
             Camera.sliders = {};
           }
+          Camera.initializeSliders('threshold');
           Camera.initialized = true;
           $('#camera').mousemove(function(event) {
             event.preventDefault();
@@ -240,7 +241,7 @@
       Camera.updateSlider = function(name, value) {
         var iconJ, line1J, line2J, percent;
         iconJ = $('.cd-slider.' + name + ' .cd-inline .glyphicon');
-        percent = Math.round((1 + value) * 0.5 * 100);
+        percent = value * 100;
         iconJ.css({
           left: percent + '%'
         });
@@ -257,23 +258,31 @@
 
       Camera.addParameter = function(name, delta) {
         var value;
-        value = Camera.paletteShaderPass.uniforms[name].value + (delta / 100) * 2;
-        if (value < -1) {
-          value = -1;
+        value = Camera.thresholdShaderPass.uniforms[name].value + (delta / 100);
+        if (value < 0) {
+          value = 0;
         }
         if (value > 1) {
           value = 1;
         }
-        Camera.paletteShaderPass.uniforms[name].value = value;
+        Camera.thresholdShaderPass.uniforms[name].value = value;
         Camera.updateSlider(name, value);
       };
 
       Camera.setParameter = function(name, event) {
-        var lineJ, value;
+        var cursorJ, lineJ, value, x;
         lineJ = $('.cd-slider.' + name + ' .cd-inline');
-        value = (event.clientX - lineJ.offset().left) / lineJ.width();
-        value = -1 + 2 * value;
-        Camera.paletteShaderPass.uniforms[name].value = value;
+        cursorJ = $('.cd-slider.' + name + ' span.cursor');
+        x = event.clientX;
+        value = (x - lineJ.offset().left) / lineJ.width();
+        if (value < 0) {
+          value = 0;
+        }
+        if (value > 1) {
+          value = 1;
+        }
+        console.log(value);
+        Camera.thresholdShaderPass.uniforms[name].value = value;
         Camera.updateSlider(name, value);
       };
 

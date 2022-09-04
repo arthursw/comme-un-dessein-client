@@ -823,7 +823,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				for path in @paths
 					draft.addChild(path)
 				draft.addPathsFromPathList(result.pathList)
-
+				draft.pk = result.pk
 				for path in @paths.slice()
 					@removeChild(path)
 

@@ -69,6 +69,10 @@
         if (draft != null) {
           this.dragging = true;
         }
+        if (R.useSVG && (draft.svg != null)) {
+          draft.svg.remove();
+          draft.svg = null;
+        }
       };
 
       MoveDrawingTool.prototype.update = function(event) {
@@ -94,6 +98,7 @@
             R.commandManager.add(modifyDrawingCommand, false);
           }
           draft.updatePaths();
+          draft.createSVG();
         }
       };
 
