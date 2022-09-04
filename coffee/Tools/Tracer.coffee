@@ -4,6 +4,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 		
 		@handleColor = '#42b3f4'
 		@maxRasterSize = 1500
+		@defaultSize = ()=> 210 * R.city.pixelPerMm
 
 		constructor: ()->
 			@tracerGroup = null
@@ -662,10 +663,13 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				# viewBounds = R.view.getViewBounds()
 
 				@raster.position = viewBounds.center
-				if @raster.bounds.width > viewBounds.width
-					@raster.scaling = new paper.Point(viewBounds.width / (@raster.bounds.width + @raster.bounds.width * 0.25) )
-				if @raster.bounds.height > viewBounds.height
-					@raster.scaling = @raster.scaling.multiply( viewBounds.height / (@raster.bounds.height + @raster.bounds.height * 0.25) )
+
+				@raster.scaling = @raster.scaling.multiply(@constructor.defaultSize() / Math.min(@raster.bounds.width, @raster.bounds.height))
+
+				# if @raster.bounds.width > viewBounds.width
+				# 	@raster.scaling = new paper.Point(viewBounds.width / (@raster.bounds.width + @raster.bounds.width * 0.25) )
+				# if @raster.bounds.height > viewBounds.height
+				# 	@raster.scaling = @raster.scaling.multiply( viewBounds.height / (@raster.bounds.height + @raster.bounds.height * 0.25) )
 
 			@raster.applyMatrix = false
 
@@ -722,7 +726,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 		
 		createImagePreview: ()=>
 
-			@image ?= new Image()
+			@image = new Image()
 			@image.src = @imageURL
 			
 			@imageContainerJ.css(
@@ -751,22 +755,22 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@dragDropTextJ.hide()
 			@modal.modalJ.find(".modal-footer").show()
 
-			@onModalSubmit()
+			# @onModalSubmit()
 
-			# @createImagePreview()
+			@createImagePreview()
 
-			# @imageURL = null
-			# @image.onload = ()=>
-			# 	$(@image).css( 
-			# 		display: 'block', 
-			# 		'max-width': '100%', 
-			# 		'max-height': '100%', 
-			# 		display: 'flex'
-			# 		'object-fit': 'contain'
-			# 	)
-			# 	@cropper = new Cropper(@image)
-			# 	@cropButtonJ.show()
-			# 	@ignoreCropButtonJ.show()
+			@imageURL = null
+			@image.onload = ()=>
+				$(@image).css( 
+					display: 'block', 
+					'max-width': '100%', 
+					'max-height': '100%', 
+					display: 'flex'
+					'object-fit': 'contain'
+				)
+				@cropper = new Cropper(@image)
+				@cropButtonJ.show()
+				@ignoreCropButtonJ.show()
 			return
 		
 		# not used anymore
@@ -829,6 +833,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@modal.modalJ.find('.modal-footer button[name="submit"]').show()
 
 			@imageProcessor.processImage(@filterCanvas)
+			
 			@onModalSubmit()
 			return
 
@@ -861,6 +866,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				@raster.position = bounds.center
 			else
 				@raster.position = R.view.getViewBounds().center
+
 			R.loader.showLoadingBar()
 
 			# @raster.source = data.imageURL
@@ -1211,8 +1217,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 						# @imageContainerJ.append(@image)
 						# $(@image).css( 'max-width': '500px', display: 'block', margin: 'auto' )
 						# @submitURL(imageURL: readerEvent.target.result)
-						# @setEditImageMode()
-						@onModalSubmit()
+						@setEditImageMode()
+						# @onModalSubmit()
 						return
 					reader.readAsDataURL(file)
 

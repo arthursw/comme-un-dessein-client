@@ -90,10 +90,11 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@initialImage = context.getImageData(0, 0, @filterCanvas.width, @filterCanvas.height)
 			console.log('start grayscale')
 			@grayscale()
-			@adaptiveThreshold()
+			# @adaptiveThreshold()
 			console.log('grayscale finished')
 			# @filterCanvas.width *= 2
 			# @filterCanvas.height *= 2
+			R.tracer.imageURL = @filterCanvas.toDataURL()
 			return
 
 	return ImageProcessor

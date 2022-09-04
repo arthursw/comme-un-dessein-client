@@ -77,8 +77,8 @@
         this.initialImage = context.getImageData(0, 0, this.filterCanvas.width, this.filterCanvas.height);
         console.log('start grayscale');
         this.grayscale();
-        this.adaptiveThreshold();
         console.log('grayscale finished');
+        R.tracer.imageURL = this.filterCanvas.toDataURL();
       };
 
       return ImageProcessor;

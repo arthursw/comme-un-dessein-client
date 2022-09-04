@@ -210,19 +210,25 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             @effectComposer.setSize(width, height)
             return
 
+        onSliderDrag: (event)=>
+            if @sliders[name].dragging 
+                @setParameter(name, event) 
+                event.preventDefault()
+                event.stopPropagation()
+            return -1
+        
         @initializeSliders: (name)=>
             sliderJ = $('.cd-slider.' + name)
             sliderJ.find('.btn.minus').click(()=> @addParameter(name, -5))
             sliderJ.find('.btn.plus').click(()=> @addParameter(name, 5))
             sliderJ.find('.cd-inline').click((event)=> @setParameter(name, event))
+            sliderJ.find('.cd-inline').click((event)=> @setParameter(name, event))
+            
             @sliders[name] = { dragging: false }
             sliderJ.find('.cd-inline').mousedown(()=> @sliders[name].dragging = true)
-            sliderJ.find('.cd-inline').mousemove((event)=> 
-                if @sliders[name].dragging 
-                    @setParameter(name, event) 
-                    event.preventDefault()
-                    event.stopPropagation()
-                return -1)
+            sliderJ.find('.cd-inline').mousemove(@onSliderDrag)
+            sliderJ.find('.cd-inline').on('touchmove', @onSliderDrag)
+
             $(window).mouseup(()=> @sliders[name].dragging = false)
             return
 
@@ -259,7 +265,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             if value > 1
                 value = 1
             # value = -1 + 2 * value
-            console.log(value)
+            # console.log(value)
             @thresholdShaderPass.uniforms[name].value = value
             @updateSlider(name, value)
             return

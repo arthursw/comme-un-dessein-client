@@ -9,6 +9,10 @@
 
       Tracer.maxRasterSize = 1500;
 
+      Tracer.defaultSize = function() {
+        return 210 * R.city.pixelPerMm;
+      };
+
       function Tracer() {
         this.handleFiles = bind(this.handleFiles, this);
         this.fileDropped = bind(this.fileDropped, this);
@@ -663,12 +667,7 @@
         } else {
           viewBounds = R.view.grid.limitCDRectangle.intersect(R.view.getViewBounds());
           this.raster.position = viewBounds.center;
-          if (this.raster.bounds.width > viewBounds.width) {
-            this.raster.scaling = new paper.Point(viewBounds.width / (this.raster.bounds.width + this.raster.bounds.width * 0.25));
-          }
-          if (this.raster.bounds.height > viewBounds.height) {
-            this.raster.scaling = this.raster.scaling.multiply(viewBounds.height / (this.raster.bounds.height + this.raster.bounds.height * 0.25));
-          }
+          this.raster.scaling = this.raster.scaling.multiply(this.constructor.defaultSize() / Math.min(this.raster.bounds.width, this.raster.bounds.height));
         }
         this.raster.applyMatrix = false;
         localStorage.setItem('rater-url', this.raster.source);
@@ -757,9 +756,7 @@
       };
 
       Tracer.prototype.createImagePreview = function() {
-        if (this.image == null) {
-          this.image = new Image();
-        }
+        this.image = new Image();
         this.image.src = this.imageURL;
         this.imageContainerJ.css({
           'margin': 'auto',
@@ -788,7 +785,22 @@
         }
         this.dragDropTextJ.hide();
         this.modal.modalJ.find(".modal-footer").show();
-        this.onModalSubmit();
+        this.createImagePreview();
+        this.imageURL = null;
+        this.image.onload = (function(_this) {
+          return function() {
+            $(_this.image).css({
+              display: 'block',
+              'max-width': '100%',
+              'max-height': '100%',
+              display: 'flex',
+              'object-fit': 'contain'
+            });
+            _this.cropper = new Cropper(_this.image);
+            _this.cropButtonJ.show();
+            return _this.ignoreCropButtonJ.show();
+          };
+        })(this);
       };
 
       Tracer.prototype.cropImage = function(cropData) {
@@ -1185,7 +1197,7 @@
             reader.onload = (function(_this) {
               return function(readerEvent) {
                 _this.imageURL = readerEvent.target.result;
-                _this.onModalSubmit();
+                _this.setEditImageMode();
               };
             })(this);
             reader.readAsDataURL(file);

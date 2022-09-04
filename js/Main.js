@@ -37,6 +37,34 @@
     R.loadActiveDrawings = true;
     $(document).ready(function() {
       var canvasJ, cityName, deleteAccountWarning, emailConfirmed, isPM, manageEmails, meridiem, modal, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
+      jQuery.event.special.touchstart = {
+        setup: function(_, ns, handle) {
+          return this.addEventListener("touchstart", handle, {
+            passive: !ns.includes("noPreventDefault")
+          });
+        }
+      };
+      jQuery.event.special.touchmove = {
+        setup: function(_, ns, handle) {
+          return this.addEventListener("touchmove", handle, {
+            passive: !ns.includes("noPreventDefault")
+          });
+        }
+      };
+      jQuery.event.special.wheel = {
+        setup: function(_, ns, handle) {
+          return this.addEventListener("wheel", handle, {
+            passive: true
+          });
+        }
+      };
+      jQuery.event.special.mousewheel = {
+        setup: function(_, ns, handle) {
+          return this.addEventListener("mousewheel", handle, {
+            passive: true
+          });
+        }
+      };
       canvasJ = $('#canvas');
       R.Modal = Modal;
       R.administrator = canvasJ.attr('data-is-admin') === 'True';

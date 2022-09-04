@@ -84,7 +84,23 @@ define [
 
 	# Initialize CommeUnDessein and handlers
 	$(document).ready () ->
-		
+		jQuery.event.special.touchstart = {
+			setup: ( _, ns, handle )->
+				@addEventListener("touchstart", handle, { passive: !ns.includes("noPreventDefault") });
+		};
+		jQuery.event.special.touchmove = {
+			setup: ( _, ns, handle )->
+				@addEventListener("touchmove", handle, { passive: !ns.includes("noPreventDefault") });
+		};
+		jQuery.event.special.wheel = {
+			setup: ( _, ns, handle )->
+				@addEventListener("wheel", handle, { passive: true });
+		};
+		jQuery.event.special.mousewheel = {
+			setup: ( _, ns, handle )->
+				@addEventListener("mousewheel", handle, { passive: true });
+		}
+
 		canvasJ = $('#canvas')
 		
 		R.Modal = Modal
