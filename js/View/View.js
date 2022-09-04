@@ -79,7 +79,6 @@
         this.tool.onMouseDown = this.onMouseDown;
         this.tool.onMouseDrag = this.onMouseDrag;
         this.tool.onMouseUp = this.onMouseUp;
-        this.tool.onKeyDown = this.onKeyDown;
         this.tool.onKeyUp = this.onKeyUp;
         P.view.onFrame = this.onFrame;
         R.stageJ.mousewheel(this.mousewheel);
@@ -100,6 +99,11 @@
           }
         });
         if (typeof window !== "undefined" && window !== null) {
+          $(window).keydown((function(_this) {
+            return function(event) {
+              return _this.onKeyDown(Utils.Event.jEventToPaperEvent(event));
+            };
+          })(this));
           $(window).mousemove(this.mousemove);
           $(window).mouseup(this.mouseup);
           $(window).on({
@@ -921,13 +925,13 @@
         if (event.key === 'space' && ((ref = R.selectedTool) != null ? ref.name : void 0) !== 'Move') {
           R.tools.move.select(null, null, null, 'spaceKey');
         }
-        if (event.key === 'z' && (event.modifiers.control || event.modifiers.meta)) {
+        if (event.key === 'z' && (event.modifiers.control || event.modifiers.meta || event.modifiers.command)) {
           R.commandManager.undo();
           event.event.preventDefault();
           event.event.stopPropagation();
           return -1;
         }
-        if (event.key === 'y' && (event.modifiers.control || event.modifiers.meta)) {
+        if (event.key === 'y' && (event.modifiers.control || event.modifiers.meta || event.modifiers.command)) {
           R.commandManager["do"]();
           event.event.preventDefault();
           event.event.stopPropagation();

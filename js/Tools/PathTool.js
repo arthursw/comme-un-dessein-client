@@ -447,7 +447,7 @@
         draft = R.Item.Drawing.getDraft();
         R.commandManager.add(new Command.ModifyDrawing(draft));
         if (!(this.currentPath.segments.length === 2 && this.currentPath.firstSegment.point.equals(this.currentPath.lastSegment.point))) {
-          this.currentPath.simplify();
+          this.currentPath.simplify(R.simplifyTolerance);
         }
         draft.addChild(this.currentPath, true);
         this.currentPath = null;

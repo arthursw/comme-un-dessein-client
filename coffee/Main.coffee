@@ -54,6 +54,9 @@ define [
 
 	R.loadActiveDrawings = true
 
+	simplifyTolerance = localStorage.getItem('simplify-tolerance')
+	R.simplifyTolerance = simplifyTolerance or 5
+
 	# loadCity = (cityName)->
 	# 	R.city.name = cityName
 
@@ -598,6 +601,19 @@ define [
 				return)
 
 			modal.addCustomContent(divJ: emailFrequencySelectorJ)
+
+			simplifyToleranceJ = $("""<div>
+			<label for="simplify-tolerance">Simplify tolerance:</label>
+			<input type="number" id="simplify-tolerance" name="simplify-tolerance" min="1" max="100">
+			</div>
+			""")
+			simplifyToleranceInput = simplifyToleranceJ.find('input').get(0)
+			simplifyToleranceInput.value = R.simplifyTolerance
+			simplifyToleranceInput.addEventListener('input', ((event)=>
+				R.simplifyTolerance = simplifyToleranceInput.value
+				localStorage.setItem('simplify-tolerance', R.simplifyTolerance)
+			))
+			modal.addCustomContent(divJ: simplifyToleranceJ)
 
 			manageEmails = ()=>
 				window.location = '/accounts/email/'

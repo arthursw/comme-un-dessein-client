@@ -602,7 +602,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 			
 			# Simplify if there is more than one point (a path with twice the same point)	
 			if not (@currentPath.segments.length == 2 and @currentPath.firstSegment.point.equals(@currentPath.lastSegment.point))
-				@currentPath.simplify()
+				@currentPath.simplify(R.simplifyTolerance)
 
 			# @currentPath.smooth()
 			draft.addChild(@currentPath, true)

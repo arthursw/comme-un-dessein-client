@@ -73,7 +73,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 			@tool.onMouseDown = @onMouseDown
 			@tool.onMouseDrag = @onMouseDrag
 			@tool.onMouseUp = @onMouseUp
-			@tool.onKeyDown = @onKeyDown
+			# @tool.onKeyDown = @onKeyDown
 			@tool.onKeyUp = @onKeyUp
 			P.view.onFrame = @onFrame
 
@@ -92,6 +92,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 			# R.stageJ[0].addEventListener('touchstart', @mousedown, false)
 
 			if window?
+				$(window).keydown((event)=>@onKeyDown(Utils.Event.jEventToPaperEvent(event)))
 				$(window).mousemove( @mousemove )
 				# $(window).on( touchmove: @mousemove )
 
@@ -1003,13 +1004,13 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 			if event.key == 'space' and R.selectedTool?.name != 'Move'
 				R.tools.move.select(null, null, null, 'spaceKey')
 
-			if event.key == 'z' and (event.modifiers.control or event.modifiers.meta)
+			if event.key == 'z' and (event.modifiers.control or event.modifiers.meta or event.modifiers.command)
 				R.commandManager.undo()
 				event.event.preventDefault()
 				event.event.stopPropagation()
 				return -1
 
-			if event.key == 'y' and (event.modifiers.control or event.modifiers.meta)
+			if event.key == 'y' and (event.modifiers.control or event.modifiers.meta or event.modifiers.command)
 				R.commandManager.do()
 				event.event.preventDefault()
 				event.event.stopPropagation()

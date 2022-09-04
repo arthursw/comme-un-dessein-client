@@ -495,11 +495,13 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 		initialPosition ?= currentPosition
 		delta = currentPosition.subtract(previousPosition)
 		paperEvent =
+			key: event.key
 			modifiers:
 				shift: event.shiftKey
 				control: event.ctrlKey
 				option: event.altKey
 				command: event.metaKey
+				meta: event.metaKey
 			point: currentPosition
 			downPoint: initialPosition
 			delta: delta

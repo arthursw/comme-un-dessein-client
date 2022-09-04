@@ -473,11 +473,13 @@
       }
       delta = currentPosition.subtract(previousPosition);
       paperEvent = {
+        key: event.key,
         modifiers: {
           shift: event.shiftKey,
           control: event.ctrlKey,
           option: event.altKey,
-          command: event.metaKey
+          command: event.metaKey,
+          meta: event.metaKey
         },
         point: currentPosition,
         downPoint: initialPosition,
