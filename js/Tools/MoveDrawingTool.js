@@ -98,7 +98,6 @@
             R.commandManager.add(modifyDrawingCommand, false);
           }
           draft.updatePaths();
-          draft.createSVG();
         }
       };
 

@@ -246,28 +246,29 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				doc = parser.parseFromString(svg, "image/svg+xml")
 			else
 				doc = svg
-			doc.documentElement.removeAttribute('visibility')
-			doc.documentElement.removeAttribute('xmlns')
-			# doc.documentElement.removeAttribute('stroke')
-			# doc.documentElement.removeAttribute('stroke-width')
-			if @status == 'draft'
-				doc.documentElement.setAttribute('id', 'draftDrawing')
+			if doc.documentElement?
+				doc.documentElement.removeAttribute('visibility')
+				doc.documentElement.removeAttribute('xmlns')
+				# doc.documentElement.removeAttribute('stroke')
+				# doc.documentElement.removeAttribute('stroke-width')
+				if @status == 'draft'
+					doc.documentElement.setAttribute('id', 'draftDrawing')
 			
-			# @svg = doc.documentElement
+				# @svg = doc.documentElement
 
-			@svg = layer.appendChild(doc.documentElement)
-			
-			@svg.addEventListener("click",  ((event) => 
-				R.tools.select.deselectAll()
-				@select()
-				event.stopPropagation()
-				return -1
-			))
+				@svg = layer.appendChild(doc.documentElement)
+				
+				@svg.addEventListener("click",  ((event) => 
+					R.tools.select.deselectAll()
+					@select()
+					event.stopPropagation()
+					return -1
+				))
 
-			if hide
-				@svg.setAttribute('visibility', 'hidden')
+				if hide
+					@svg.setAttribute('visibility', 'hidden')
 
-			@setStrokeColorFromStatus()
+				@setStrokeColorFromStatus()
 			callback?(@svg)
 
 			return
@@ -814,22 +815,27 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			R.commandManager.clearHistory()
 
-			R.loader.reloadRasters(@rectangle)
 
 			# we will add them with result.pathList
 			
 			draft = Drawing.getDraft()
 			if draft?
+				
 				for path in @paths
 					draft.addChild(path)
 				draft.addPathsFromPathList(result.pathList)
-				draft.pk = result.pk
 				for path in @paths.slice()
 					@removeChild(path)
 
 				draft.updateStatus(result.status)
-
+			
 			@remove()
+			
+			draft.setPK(result.pk)
+			R.items[result.clientId] = draft
+
+			R.loader.reloadRasters(@rectangle)
+			
 			return
 
 		setRectangle: (rectangle, update=true)->

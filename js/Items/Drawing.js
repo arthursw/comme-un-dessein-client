@@ -324,24 +324,26 @@
         } else {
           doc = svg;
         }
-        doc.documentElement.removeAttribute('visibility');
-        doc.documentElement.removeAttribute('xmlns');
-        if (this.status === 'draft') {
-          doc.documentElement.setAttribute('id', 'draftDrawing');
+        if (doc.documentElement != null) {
+          doc.documentElement.removeAttribute('visibility');
+          doc.documentElement.removeAttribute('xmlns');
+          if (this.status === 'draft') {
+            doc.documentElement.setAttribute('id', 'draftDrawing');
+          }
+          this.svg = layer.appendChild(doc.documentElement);
+          this.svg.addEventListener("click", ((function(_this) {
+            return function(event) {
+              R.tools.select.deselectAll();
+              _this.select();
+              event.stopPropagation();
+              return -1;
+            };
+          })(this)));
+          if (hide) {
+            this.svg.setAttribute('visibility', 'hidden');
+          }
+          this.setStrokeColorFromStatus();
         }
-        this.svg = layer.appendChild(doc.documentElement);
-        this.svg.addEventListener("click", ((function(_this) {
-          return function(event) {
-            R.tools.select.deselectAll();
-            _this.select();
-            event.stopPropagation();
-            return -1;
-          };
-        })(this)));
-        if (hide) {
-          this.svg.setAttribute('visibility', 'hidden');
-        }
-        this.setStrokeColorFromStatus();
         if (typeof callback === "function") {
           callback(this.svg);
         }
@@ -906,7 +908,6 @@
           return;
         }
         R.commandManager.clearHistory();
-        R.loader.reloadRasters(this.rectangle);
         draft = Drawing.getDraft();
         if (draft != null) {
           ref = this.paths;
@@ -915,7 +916,6 @@
             draft.addChild(path);
           }
           draft.addPathsFromPathList(result.pathList);
-          draft.pk = result.pk;
           ref1 = this.paths.slice();
           for (k = 0, len1 = ref1.length; k < len1; k++) {
             path = ref1[k];
@@ -924,6 +924,9 @@
           draft.updateStatus(result.status);
         }
         this.remove();
+        draft.setPK(result.pk);
+        R.items[result.clientId] = draft;
+        R.loader.reloadRasters(this.rectangle);
       };
 
       Drawing.prototype.setRectangle = function(rectangle, update) {

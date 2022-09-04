@@ -79,7 +79,7 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command' ], (P, R, 
 					R.commandManager.add(modifyDrawingCommand, false)
 
 				draft.updatePaths()
-				draft.createSVG()
+				# draft.createSVG()
 				# R.tools['Precise path'].showDraftLimits()
 				# R.tools['Precise path'].hideDraftLimits()
 
