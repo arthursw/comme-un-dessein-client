@@ -922,7 +922,7 @@
           event.preventDefault();
           return false;
         }
-        if (event.key === 'space' && ((ref = R.selectedTool) != null ? ref.name : void 0) !== 'Move') {
+        if ((event.key === 'space' || event.key === ' ') && ((ref = R.selectedTool) != null ? ref.name : void 0) !== 'Move') {
           R.tools.move.select(null, null, null, 'spaceKey');
         }
         if (event.key === 'z' && (event.modifiers.control || event.modifiers.meta || event.modifiers.command)) {
@@ -949,6 +949,7 @@
         }
         switch (event.key) {
           case 'space':
+          case ' ':
             if ((ref1 = R.previousTool) != null) {
               ref1.select(null, null, null, 'spaceKey');
             }

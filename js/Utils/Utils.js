@@ -487,7 +487,8 @@
         middlePoint: previousPosition.add(delta.divide(2)),
         type: type,
         count: count,
-        originalEvent: event
+        originalEvent: event,
+        event: event
       };
       return paperEvent;
     };

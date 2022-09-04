@@ -1001,7 +1001,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 				return false
 
 			# select 'Move' tool when user press space key (and reselect previous tool after)
-			if event.key == 'space' and R.selectedTool?.name != 'Move'
+			if (event.key == 'space' or event.key == ' ') and R.selectedTool?.name != 'Move'
 				R.tools.move.select(null, null, null, 'spaceKey')
 
 			if event.key == 'z' and (event.modifiers.control or event.modifiers.meta or event.modifiers.command)
@@ -1025,7 +1025,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 			R.selectedTool?.keyUp(event)
 
 			switch event.key
-				when 'space'
+				when 'space', ' '
 					R.previousTool?.select(null, null, null, 'spaceKey')
 				when 'v'
 					R.tools.select.select()

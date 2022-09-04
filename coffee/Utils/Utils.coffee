@@ -509,6 +509,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 			type: type
 			count: count
 			originalEvent: event
+			event: event
 		return paperEvent
 
 	# Test if the special key is pressed. Special key is command key on a mac, and control key on other systems.
