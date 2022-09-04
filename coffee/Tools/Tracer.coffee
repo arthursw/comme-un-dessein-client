@@ -118,7 +118,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			autoTraceInputJ = $('''
 			<button class="trace-type-btn cd-row cd-center btn-primary">
 				<label>'''+autoTraceLabel+'''</label>
-				<video autoplay loop width="200">
+				<video autoplay playsinline loop width="200">
 
 					<source src="/static/videos/AutoTrace.webm"
 							type="video/webm">
@@ -146,7 +146,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			manualTraceInputJ = $('''
 			<button class="trace-type-btn cd-row cd-center btn-primary">
 				<label>'''+manualTraceLabel+'''</label>
-				<video autoplay loop width="200">
+				<video autoplay playsinline loop width="200">
 
 					<source src="/static/videos/ManualTrace.webm"
 							type="video/webm">

@@ -133,7 +133,7 @@
           title: "Trace"
         });
         autoTraceLabel = i18next.t('Trace automatically');
-        autoTraceInputJ = $('<button class="trace-type-btn cd-row cd-center btn-primary">\n	<label>' + autoTraceLabel + '</label>\n	<video autoplay loop width="200">\n\n		<source src="/static/videos/AutoTrace.webm"\n				type="video/webm">\n\n		<source src="/static/videos/AutoTrace.mp4"\n				type="video/mp4">\n	</video>\n</button>');
+        autoTraceInputJ = $('<button class="trace-type-btn cd-row cd-center btn-primary">\n	<label>' + autoTraceLabel + '</label>\n	<video autoplay playsinline loop width="200">\n\n		<source src="/static/videos/AutoTrace.webm"\n				type="video/webm">\n\n		<source src="/static/videos/AutoTrace.mp4"\n				type="video/mp4">\n	</video>\n</button>');
         this.modal.addCustomContent({
           name: 'autotrace-choice',
           divJ: autoTraceInputJ
@@ -151,7 +151,7 @@
           };
         })(this));
         manualTraceLabel = i18next.t('Trace manually');
-        manualTraceInputJ = $('<button class="trace-type-btn cd-row cd-center btn-primary">\n	<label>' + manualTraceLabel + '</label>\n	<video autoplay loop width="200">\n\n		<source src="/static/videos/ManualTrace.webm"\n				type="video/webm">\n\n		<source src="/static/videos/ManualTrace.mp4"\n				type="video/mp4">\n	</video>\n</button>');
+        manualTraceInputJ = $('<button class="trace-type-btn cd-row cd-center btn-primary">\n	<label>' + manualTraceLabel + '</label>\n	<video autoplay playsinline loop width="200">\n\n		<source src="/static/videos/ManualTrace.webm"\n				type="video/webm">\n\n		<source src="/static/videos/ManualTrace.mp4"\n				type="video/mp4">\n	</video>\n</button>');
         this.modal.addCustomContent({
           name: 'manual-choice',
           divJ: manualTraceInputJ
