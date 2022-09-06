@@ -61,7 +61,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				@group.shadowOffset = new P.Point(0, 0)
 
 			if (@status == 'draft' or @status == 'flagged_pending' or @status == 'flagged') and pathList
-				@addPathsFromPathList(pathList)
+				if @status == 'flagged_pending' or @status == 'flagged' and pathList.length == 0
+					@loadPathList()
+					@loadSVG()
+				else
+					@addPathsFromPathList(pathList)
 			else if @pk? and R.useSVG
 				@loadSVG()
 

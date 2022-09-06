@@ -87,22 +87,7 @@ define [
 
 	# Initialize CommeUnDessein and handlers
 	$(document).ready () ->
-		jQuery.event.special.touchstart = {
-			setup: ( _, ns, handle )->
-				@addEventListener("touchstart", handle, { passive: !ns.includes("noPreventDefault") });
-		};
-		jQuery.event.special.touchmove = {
-			setup: ( _, ns, handle )->
-				@addEventListener("touchmove", handle, { passive: !ns.includes("noPreventDefault") });
-		};
-		jQuery.event.special.wheel = {
-			setup: ( _, ns, handle )->
-				@addEventListener("wheel", handle, { passive: true });
-		};
-		jQuery.event.special.mousewheel = {
-			setup: ( _, ns, handle )->
-				@addEventListener("mousewheel", handle, { passive: true });
-		}
+		
 
 		canvasJ = $('#canvas')
 		
@@ -418,6 +403,7 @@ define [
 
 		# 	modal.show()
 		
+		
 		R.commandManager.updateButtons()
 
 		window?.setPageFullyLoaded?(true)
@@ -437,26 +423,26 @@ define [
 
 		# Improve about links
 
-		$('#about-link').click (event)->
+		# $('#about-link').click (event)->
 			
-			modal = Modal.createModal( 
-				title: 'About Comme Un Dessein', 
-				postSubmit: 'hide', 
-				submitButtonText: 'Close', 
-				submitButtonIcon: 'glyphicon-remove')
-			divJ = $('<iframe>')
-			divJ.attr('style', 'width: 100%; border: none;')
-			divJ.attr('src', 'about.html')
-			divJ.html(i18next.t('welcome message 1', { interpolation: { escapeValue: false } }))
-			divJ.html(i18next.t('welcome message 2', { interpolation: { escapeValue: false } }))
-			divJ.html(i18next.t('welcome message 3', { interpolation: { escapeValue: false } }))
-			modal.addCustomContent(divJ: divJ, name: 'about-page')
-			modal.modalJ.find('[name="cancel"]').hide()
-			modal.show()
+		# 	modal = Modal.createModal( 
+		# 		title: 'About Comme Un Dessein', 
+		# 		postSubmit: 'hide', 
+		# 		submitButtonText: 'Close', 
+		# 		submitButtonIcon: 'glyphicon-remove')
+		# 	divJ = $('<iframe>')
+		# 	divJ.attr('style', 'width: 100%; border: none;')
+		# 	divJ.attr('src', 'about.html')
+		# 	divJ.html(i18next.t('welcome message 1', { interpolation: { escapeValue: false } }))
+		# 	divJ.html(i18next.t('welcome message 2', { interpolation: { escapeValue: false } }))
+		# 	divJ.html(i18next.t('welcome message 3', { interpolation: { escapeValue: false } }))
+		# 	modal.addCustomContent(divJ: divJ, name: 'about-page')
+		# 	modal.modalJ.find('[name="cancel"]').hide()
+		# 	modal.show()
 
-			event.preventDefault()
-			event.stopPropagation()
-			return -1
+		# 	event.preventDefault()
+		# 	event.stopPropagation()
+		# 	return -1
 
 		# Sign in / up popup
 
@@ -601,9 +587,10 @@ define [
 				return)
 
 			modal.addCustomContent(divJ: emailFrequencySelectorJ)
-
+			
+			simplifyToleranceLabel = i18next.t('Simplify path strenght')
 			simplifyToleranceJ = $("""<div>
-			<label for="simplify-tolerance">Simplify tolerance:</label>
+			<label for="simplify-tolerance">"""+simplifyToleranceLabel+""":</label>
 			<input type="number" id="simplify-tolerance" name="simplify-tolerance" min="1" max="100">
 			</div>
 			""")

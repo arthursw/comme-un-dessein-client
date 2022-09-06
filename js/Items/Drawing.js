@@ -79,7 +79,12 @@
           this.group.shadowOffset = new P.Point(0, 0);
         }
         if ((this.status === 'draft' || this.status === 'flagged_pending' || this.status === 'flagged') && pathList) {
-          this.addPathsFromPathList(pathList);
+          if (this.status === 'flagged_pending' || this.status === 'flagged' && pathList.length === 0) {
+            this.loadPathList();
+            this.loadSVG();
+          } else {
+            this.addPathsFromPathList(pathList);
+          }
         } else if ((this.pk != null) && R.useSVG) {
           this.loadSVG();
         }

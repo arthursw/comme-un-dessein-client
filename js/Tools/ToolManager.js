@@ -268,6 +268,31 @@
             divJ: mailJ
           });
           modal.show();
+          $('#faq-link').click((function(_this) {
+            return function(event) {
+              var faqTextJ;
+              console.log('click');
+              faqTextJ = $('#faq-text');
+              modal = Modal.createModal({
+                id: 'info',
+                title: 'Comme un Dessein FAQ',
+                submit: (function() {})
+              });
+              modal.addCustomContent({
+                divJ: faqTextJ.clone(),
+                name: 'faq-text'
+              });
+              modal.modalJ.find('[name="cancel"]').hide();
+              mailJ = $('<div>' + i18next.t('Contact us at') + ' <a href="mailto:idlv.contact@gmail.com">idlv.contact@gmail.com</a></div>');
+              modal.addCustomContent({
+                divJ: mailJ
+              });
+              modal.show();
+              event.preventDefault();
+              event.stopPropagation();
+              return -1;
+            };
+          })(this));
         });
       };
 

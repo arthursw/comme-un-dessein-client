@@ -540,6 +540,59 @@ define 'Tools/ToolManager',  dependencies, (R, Utils, Tool, Button, MoveTool, Se
 				modal.addCustomContent(divJ: mailJ)
 
 				modal.show()
+				$('#faq-link').click((event)=> 
+					console.log('click')
+					faqTextJ = $('#faq-text')
+
+					# liveJ = $("""<iframe width="560" height="315" src="https://www.youtube.com/embed/live_stream?channel=UCRMrTkJJYvGAerb1j-H-Miw" frameborder="0" allowfullscreen></iframe>""")
+					# faqTextJ.find('#tipibot-live').append(liveJ)
+
+					# layersJ = $('#RItems')
+					# layersParentJ = layersJ.parent()
+					modal = Modal.createModal( 
+						id: 'info',
+						title: 'Comme un Dessein FAQ', 
+						submit: ( ()-> return ), 
+						# postSubmit: 'load', 
+						# submitButtonText: 'Sign up', 
+						# submitButtonIcon: 'glyphicon-user', 
+						# cancelButtonText: 'Just visit', 
+						# cancelButtonIcon: 'glyphicon-sunglasses' 
+						)
+					# modal.addText('''
+					# 	Comme un dessein is a participative piece created by the french collective IDLV (Indiens dans la Ville). 
+					# 	With the help of a simple web interface and a monumental plotter, everyone can submit a drawing which takes part of a larger pictural composition, thus compose a collective utopian artwork.
+					# ''', 'welcome message 1', false)
+					# modal.addText('', 'welcome message 2', false)
+					# modal.addText('', 'welcome message 3', false)
+					modal.addCustomContent(divJ: faqTextJ.clone(), name: 'faq-text')
+					
+					# modal.addCustomContent(divJ: layersJ)
+					modal.modalJ.find('[name="cancel"]').hide()
+					# modal.addButton( type: 'info', name: 'Sign in', submit: (()-> return location.pathname = '/accounts/login/'), icon: 'glyphicon-log-in' )
+					# modal.addButton( type: 'info', name: 'Sign in', icon: 'glyphicon-log-in' )
+
+					# modal.modalJ.find('[name="Sign in"]').attr('data-toggle', 'dropdown').after($('#user-profile').find('.dropdown-menu').clone())
+					# modal.modalJ.find('.dropdown-menu').find('li.sign-up').hide()
+
+					# modal.modalJ.on 'hide.bs.modal', (event)->
+					# 	layersParentJ.append($('#RItems'))
+					# 	return
+
+					# termsOfServiceJ = $('<div><a id="terms-of-service-link" href="/terms-of-service.html" data-i18n="Terms of Service">'+i18next.t('Terms of Service')+'</a></div>')
+					# PrivacyPolicyJ = $('<div><a id="privacy-policy-link" href="/privacy-policy.html" data-i18n="Privacy Policy">'+i18next.t('Privacy Policy')+'</a></div>')
+					
+					# modal.addCustomContent(divJ: termsOfServiceJ)
+					# modal.addCustomContent(divJ: PrivacyPolicyJ)
+					mailJ = $('<div>'+i18next.t('Contact us at')+' <a href="mailto:idlv.contact@gmail.com">idlv.contact@gmail.com</a></div>')
+					modal.addCustomContent(divJ: mailJ)
+
+					modal.show()
+
+					event.preventDefault()
+					event.stopPropagation()
+					return -1
+				)
 				return
 
 			return

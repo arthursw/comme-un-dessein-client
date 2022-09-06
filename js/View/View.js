@@ -117,11 +117,13 @@
           });
           $(window).resize(this.onWindowResize);
           document.addEventListener('wheel', (function(event) {
+            var delta;
             if (event.target !== R.canvasJ.get(0)) {
               return;
             }
             if (!(event.metaKey || event.shiftKey || event.ctrlKey)) {
-              R.toolManager.zoom(Math.pow(1.005, -event.deltaY), false);
+              delta = Math.sign(event.deltaY);
+              R.toolManager.zoom(Math.pow(1.02, -delta), false);
             }
             return event.preventDefault();
           }), {
@@ -134,8 +136,10 @@
           });
           hammertime.on('pinch', (function(_this) {
             return function(event) {
+              var delta;
               console.log(event.scale);
-              R.toolManager.zoom(event.scale, false);
+              delta = Math.sign(event.scale);
+              R.toolManager.zoom(Math.pow(1.02, delta), false);
             };
           })(this));
         }
@@ -980,8 +984,6 @@
       View.prototype.onWindowResize = function(event) {
         var ref;
         P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight());
-        R.svgJ.attr('width', R.stageJ.innerWidth());
-        R.svgJ.attr('height', R.stageJ.innerHeight());
         this.grid.update();
         this.moveBy(new P.Point());
         R.toolbar.updateArrowsVisibility();

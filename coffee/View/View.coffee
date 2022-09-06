@@ -106,7 +106,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 				document.addEventListener('wheel', ((event)-> 
 					if event.target != R.canvasJ.get(0) then return
 					if not (event.metaKey or event.shiftKey or event.ctrlKey)
-						R.toolManager.zoom(Math.pow(1.005, -event.deltaY), false)
+						delta = Math.sign(event.deltaY)
+						R.toolManager.zoom(Math.pow(1.02, -delta), false)
+						# R.toolManager.zoom(Math.pow(1.005, -event.deltaY), false)
 					event.preventDefault()), {passive: false})
 
 				window.onhashchange = @onHashChange
@@ -115,7 +117,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 				hammertime.get('pinch').set({ enable: true })
 				hammertime.on 'pinch', (event)=>
 					console.log(event.scale)
-					R.toolManager.zoom(event.scale, false)
+					delta = Math.sign(event.scale)
+					R.toolManager.zoom(Math.pow(1.02, delta), false)
 					return
 
 			@mousePosition = new P.Point() 			# the mouse position in window coordinates (updated everytime the mouse moves)
@@ -1061,8 +1064,8 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 			# R.backgroundCanvas.height = window.innerHeight
 			# R.backgroundCanvasJ.width(window.innerWidth)
 			# R.backgroundCanvasJ.height(window.innerHeight)
-			R.svgJ.attr('width', R.stageJ.innerWidth())
-			R.svgJ.attr('height', R.stageJ.innerHeight())
+			# R.svgJ.attr('width', R.stageJ.innerWidth())
+			# R.svgJ.attr('height', R.stageJ.innerHeight())
 			
 			@grid.update()
 			# $(".mCustomScrollbar").mCustomScrollbar("update")

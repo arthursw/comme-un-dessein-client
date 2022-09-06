@@ -121,7 +121,7 @@
       };
 
       Tracer.prototype.openTraceTypeModal = function(closedRaster, keepRaster, imageDropped) {
-        var autoTraceInputJ, autoTraceLabel, divJ, elemJ, j, len, manualTraceInputJ, manualTraceLabel, ref, ref1, ref2, svg;
+        var autoTraceInputJ, autoTraceLabel, autoTraceVideo, divJ, elemJ, isIOS, j, len, manualTraceInputJ, manualTraceLabel, manualTraceVideo, ref, ref1, ref2, svg;
         if (keepRaster == null) {
           keepRaster = false;
         }
@@ -133,7 +133,9 @@
           title: "Trace"
         });
         autoTraceLabel = i18next.t('Trace automatically');
-        autoTraceInputJ = $('<button class="trace-type-btn cd-row cd-center btn-primary">\n	<label>' + autoTraceLabel + '</label>\n	<video autoplay playsinline loop width="200">\n\n		<source src="/static/videos/AutoTrace.webm"\n				type="video/webm">\n\n		<source src="/static/videos/AutoTrace.mp4"\n				type="video/mp4">\n	</video>\n</button>');
+        isIOS = (/iPad|iPhone|iPod/.test(navigator.platform) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) && !window.MSStream;
+        autoTraceVideo = isIOS ? '' : '<video autoplay playsinline loop width="200">\n\n	<source src="/static/videos/AutoTrace.webm"\n			type="video/webm">\n\n	<source src="/static/videos/AutoTrace.mp4"\n			type="video/mp4">\n</video>';
+        autoTraceInputJ = $('<button class="trace-type-btn cd-row cd-center btn-primary">\n	<label>' + autoTraceLabel + '</label>' + autoTraceVideo + '</button>');
         this.modal.addCustomContent({
           name: 'autotrace-choice',
           divJ: autoTraceInputJ
@@ -151,7 +153,8 @@
           };
         })(this));
         manualTraceLabel = i18next.t('Trace manually');
-        manualTraceInputJ = $('<button class="trace-type-btn cd-row cd-center btn-primary">\n	<label>' + manualTraceLabel + '</label>\n	<video autoplay playsinline loop width="200">\n\n		<source src="/static/videos/ManualTrace.webm"\n				type="video/webm">\n\n		<source src="/static/videos/ManualTrace.mp4"\n				type="video/mp4">\n	</video>\n</button>');
+        manualTraceVideo = isIOS ? '' : '<video autoplay playsinline loop width="200">\n\n	<source src="/static/videos/ManualTrace.webm"\n			type="video/webm">\n\n	<source src="/static/videos/ManualTrace.mp4"\n			type="video/mp4">\n</video>';
+        manualTraceInputJ = $('<button class="trace-type-btn cd-row cd-center btn-primary">\n	<label>' + manualTraceLabel + '</label>' + manualTraceVideo + '</button>');
         this.modal.addCustomContent({
           name: 'manual-choice',
           divJ: manualTraceInputJ

@@ -39,34 +39,6 @@
     R.simplifyTolerance = simplifyTolerance || 5;
     $(document).ready(function() {
       var canvasJ, cityName, deleteAccountWarning, emailConfirmed, isPM, manageEmails, meridiem, modal, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
-      jQuery.event.special.touchstart = {
-        setup: function(_, ns, handle) {
-          return this.addEventListener("touchstart", handle, {
-            passive: !ns.includes("noPreventDefault")
-          });
-        }
-      };
-      jQuery.event.special.touchmove = {
-        setup: function(_, ns, handle) {
-          return this.addEventListener("touchmove", handle, {
-            passive: !ns.includes("noPreventDefault")
-          });
-        }
-      };
-      jQuery.event.special.wheel = {
-        setup: function(_, ns, handle) {
-          return this.addEventListener("wheel", handle, {
-            passive: true
-          });
-        }
-      };
-      jQuery.event.special.mousewheel = {
-        setup: function(_, ns, handle) {
-          return this.addEventListener("mousewheel", handle, {
-            passive: true
-          });
-        }
-      };
       canvasJ = $('#canvas');
       R.Modal = Modal;
       R.administrator = canvasJ.attr('data-is-admin') === 'True';
@@ -284,42 +256,6 @@
           R.loader.loadVotes();
         });
       }
-      $('#about-link').click(function(event) {
-        var divJ;
-        modal = Modal.createModal({
-          title: 'About Comme Un Dessein',
-          postSubmit: 'hide',
-          submitButtonText: 'Close',
-          submitButtonIcon: 'glyphicon-remove'
-        });
-        divJ = $('<iframe>');
-        divJ.attr('style', 'width: 100%; border: none;');
-        divJ.attr('src', 'about.html');
-        divJ.html(i18next.t('welcome message 1', {
-          interpolation: {
-            escapeValue: false
-          }
-        }));
-        divJ.html(i18next.t('welcome message 2', {
-          interpolation: {
-            escapeValue: false
-          }
-        }));
-        divJ.html(i18next.t('welcome message 3', {
-          interpolation: {
-            escapeValue: false
-          }
-        }));
-        modal.addCustomContent({
-          divJ: divJ,
-          name: 'about-page'
-        });
-        modal.modalJ.find('[name="cancel"]').hide();
-        modal.show();
-        event.preventDefault();
-        event.stopPropagation();
-        return -1;
-      });
       $('#user-login-group').click(function(event) {
         modal = Modal.createModal({
           title: 'Sign in / up',
@@ -391,7 +327,7 @@
         };
       })(this);
       $('#modify-user-profile').click(function(event) {
-        var changeUserCallback, confirmedText, dailyText, emailFrequencyLabel, emailFrequencyLabelJ, emailFrequencyPJ, emailFrequencySelectJ, emailFrequencySelectorJ, emailJ, monthlyText, neverText, onlyIfRelevant, resetPassword, simplifyToleranceInput, simplifyToleranceJ, submitChangeProfile, userEmail, usernameJ, weeklyText;
+        var changeUserCallback, confirmedText, dailyText, emailFrequencyLabel, emailFrequencyLabelJ, emailFrequencyPJ, emailFrequencySelectJ, emailFrequencySelectorJ, emailJ, monthlyText, neverText, onlyIfRelevant, resetPassword, simplifyToleranceInput, simplifyToleranceJ, simplifyToleranceLabel, submitChangeProfile, userEmail, usernameJ, weeklyText;
         event.preventDefault();
         event.stopPropagation();
         changeUserCallback = function(result) {
@@ -484,7 +420,8 @@
         modal.addCustomContent({
           divJ: emailFrequencySelectorJ
         });
-        simplifyToleranceJ = $("<div>\n<label for=\"simplify-tolerance\">Simplify tolerance:</label>\n<input type=\"number\" id=\"simplify-tolerance\" name=\"simplify-tolerance\" min=\"1\" max=\"100\">\n</div>");
+        simplifyToleranceLabel = i18next.t('Simplify path strenght');
+        simplifyToleranceJ = $("<div>\n<label for=\"simplify-tolerance\">" + simplifyToleranceLabel + ":</label>\n<input type=\"number\" id=\"simplify-tolerance\" name=\"simplify-tolerance\" min=\"1\" max=\"100\">\n</div>");
         simplifyToleranceInput = simplifyToleranceJ.find('input').get(0);
         simplifyToleranceInput.value = R.simplifyTolerance;
         simplifyToleranceInput.addEventListener('input', ((function(_this) {

@@ -114,18 +114,19 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			
 			# autoTraceInputJ = $('''
 			# <button class="trace-type-btn cd-row cd-center btn-success">
-
-			autoTraceInputJ = $('''
-			<button class="trace-type-btn cd-row cd-center btn-primary">
-				<label>'''+autoTraceLabel+'''</label>
-				<video autoplay playsinline loop width="200">
+			isIOS = (/iPad|iPhone|iPod/.test(navigator.platform) or (navigator.platform == 'MacIntel' and navigator.maxTouchPoints > 1)) and !window.MSStream
+			autoTraceVideo = if isIOS then '' else '''<video autoplay playsinline loop width="200">
 
 					<source src="/static/videos/AutoTrace.webm"
 							type="video/webm">
 
 					<source src="/static/videos/AutoTrace.mp4"
 							type="video/mp4">
-				</video>
+				</video>'''
+			autoTraceInputJ = $('''
+			<button class="trace-type-btn cd-row cd-center btn-primary">
+				<label>'''+autoTraceLabel+'''</label>
+				'''+autoTraceVideo+'''
 			</button>
 			''')
 			@modal.addCustomContent( { name: 'autotrace-choice', divJ: autoTraceInputJ } )
@@ -142,18 +143,18 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				return
 			
 			manualTraceLabel = i18next.t('Trace manually')
-
-			manualTraceInputJ = $('''
-			<button class="trace-type-btn cd-row cd-center btn-primary">
-				<label>'''+manualTraceLabel+'''</label>
-				<video autoplay playsinline loop width="200">
+			manualTraceVideo = if isIOS then '' else '''<video autoplay playsinline loop width="200">
 
 					<source src="/static/videos/ManualTrace.webm"
 							type="video/webm">
 
 					<source src="/static/videos/ManualTrace.mp4"
 							type="video/mp4">
-				</video>
+				</video>'''
+			manualTraceInputJ = $('''
+			<button class="trace-type-btn cd-row cd-center btn-primary">
+				<label>'''+manualTraceLabel+'''</label>
+				'''+manualTraceVideo+'''
 			</button>
 			''')
 			@modal.addCustomContent( { name: 'manual-choice', divJ: manualTraceInputJ } )
