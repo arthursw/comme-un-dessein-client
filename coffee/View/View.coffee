@@ -455,7 +455,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 				R.view.draftLayer.visible = activeRasterGroup.visible
 				visibility = if activeRasterGroup.visible then 'visible' else 'hidden'
 				document.getElementById('pendingLayer').setAttribute('visibility', visibility)
-				document.getElementById('drawingLayer').setAttribute('visibility', visibility)
+				document.getElementById('validatedLayer').setAttribute('visibility', visibility)
 				document.getElementById('drawnLayer').setAttribute('visibility', visibility)
 				document.getElementById('draftLayer').setAttribute('visibility', visibility)
 				if activeRasterGroup.visible

@@ -457,7 +457,7 @@
             R.view.draftLayer.visible = activeRasterGroup.visible;
             visibility = activeRasterGroup.visible ? 'visible' : 'hidden';
             document.getElementById('pendingLayer').setAttribute('visibility', visibility);
-            document.getElementById('drawingLayer').setAttribute('visibility', visibility);
+            document.getElementById('validatedLayer').setAttribute('visibility', visibility);
             document.getElementById('drawnLayer').setAttribute('visibility', visibility);
             document.getElementById('draftLayer').setAttribute('visibility', visibility);
             if (activeRasterGroup.visible) {
