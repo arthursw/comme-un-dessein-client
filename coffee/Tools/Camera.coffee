@@ -60,6 +60,7 @@ define ['paper', 'R', 'Utils/Utils', 'i18next' ], (P, R, Utils, i18next) ->
             document.body.appendChild(@renderer.domElement)
 
             @video = document.createElement('video')
+            @video.setAttribute('playsinline', true)
             @video.addEventListener( "loadedmetadata", ((e)=>
                 @cameraWidth = @video.videoWidth
                 @cameraHeight = @video.videoHeight

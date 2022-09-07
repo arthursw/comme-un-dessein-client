@@ -56,6 +56,7 @@
         Camera.renderer.setSize(minDimension, minDimension);
         document.body.appendChild(Camera.renderer.domElement);
         Camera.video = document.createElement('video');
+        Camera.video.setAttribute('playsinline', true);
         Camera.video.addEventListener("loadedmetadata", (function(e) {
           Camera.cameraWidth = Camera.video.videoWidth;
           Camera.cameraHeight = Camera.video.videoHeight;

@@ -7,7 +7,7 @@
     Tracer = (function() {
       Tracer.handleColor = '#42b3f4';
 
-      Tracer.maxRasterSize = 1500;
+      Tracer.maxRasterSize = 300;
 
       Tracer.defaultSize = function() {
         return 210 * R.city.pixelPerMm;
