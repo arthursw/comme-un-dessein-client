@@ -1159,6 +1159,9 @@
         R.svgPaper = svgPaper;
         R.toolManager.updateButtonsVisibility();
         R.tools["Precise path"].showDraftLimits();
+        if (R.administrator) {
+          draft.selectPaths();
+        }
       };
 
       Tracer.prototype.fileDropped = function(event) {

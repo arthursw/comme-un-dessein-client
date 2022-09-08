@@ -1169,6 +1169,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			
 			R.tools["Precise path"].showDraftLimits()
 
+			if R.administrator
+				draft.selectPaths()
 			return
 
 		fileDropped: (event)=>

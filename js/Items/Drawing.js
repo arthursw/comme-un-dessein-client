@@ -58,6 +58,7 @@
         this.submitCallback = bind(this.submitCallback, this);
         this.savePathCallback = bind(this.savePathCallback, this);
         this.onLiClick = bind(this.onLiClick, this);
+        this.selectPaths = bind(this.selectPaths, this);
         Drawing.__super__.constructor.call(this, this.data, this.id, this.pk);
         if (this.pk != null) {
           this.constructor.pkToId[this.pk] = this.id;
@@ -96,6 +97,38 @@
         }
         return;
       }
+
+      Drawing.prototype.selectPaths = function() {
+        var j, len, path, ref;
+        if ((this.paths == null) || this.paths.length === 0) {
+          return this.loadPathList((function(_this) {
+            return function() {
+              if (_this.paths != null) {
+                return _this.selectPaths();
+              } else {
+                return null;
+              }
+            };
+          })(this));
+        }
+        ref = this.paths;
+        for (j = 0, len = ref.length; j < len; j++) {
+          path = ref[j];
+          path.selected = true;
+        }
+      };
+
+      Drawing.prototype.deselectPaths = function() {
+        var j, len, path, ref;
+        if (this.paths == null) {
+          return;
+        }
+        ref = this.paths;
+        for (j = 0, len = ref.length; j < len; j++) {
+          path = ref[j];
+          path.selected = false;
+        }
+      };
 
       Drawing.prototype.drawVoteFlag = function(flagged) {
         var bounds;
@@ -246,7 +279,8 @@
           return function(result) {
             var drawingData;
             drawingData = JSON.parse(result.drawing);
-            return _this.addPathsFromPathList(drawingData.pathList);
+            _this.addPathsFromPathList(drawingData.pathList);
+            return typeof callback === "function" ? callback() : void 0;
           };
         })(this));
       };
@@ -995,7 +1029,7 @@
       };
 
       Drawing.prototype.select = function(updateOptions, showPanelAndLoad, force) {
-        var drawing, j, len, ref, ref1;
+        var draft, drawing, j, len, ref, ref1;
         if (updateOptions == null) {
           updateOptions = true;
         }
@@ -1021,6 +1055,10 @@
             drawing.hideVoteFlag();
           }
         }
+        draft = Drawing.getDraft();
+        if (R.administrator && this === draft) {
+          this.selectPaths();
+        }
         return true;
       };
 
@@ -1033,6 +1071,7 @@
         }
         R.drawingPanel.deselectDrawing(this);
         this.showVoteFlag();
+        this.deselectPaths();
         return true;
       };
 

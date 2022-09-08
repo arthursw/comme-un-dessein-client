@@ -77,6 +77,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			return
 		
+		selectPaths: ()=>
+			if (not @paths?) or @paths.length == 0
+				return @loadPathList(()=>if @paths? then @selectPaths() else null)
+			for path in @paths
+				path.selected = true
+			return
+		
+		deselectPaths: ()->
+			if not @paths? then return
+			for path in @paths
+				path.selected = false
+			return
+
 		drawVoteFlag: (flagged=false)->
 			if R.useSVG then return
 
@@ -174,6 +187,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				drawingData = JSON.parse(result.drawing)
 				# @setSVG(drawing.svg, true, callback)
 				@addPathsFromPathList(drawingData.pathList)
+				callback?()
 			)
 
 			return
@@ -898,12 +912,17 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				if drawing.getBoundsWithFlag()?.intersects(@rectangle) and drawing.isVisible()
 					drawing.hideVoteFlag()
 
+			draft = Drawing.getDraft()
+			if R.administrator and @ == draft
+				@selectPaths()
+			
 			return true
 		
 		deselect: (updateOptions=true)->
 			if not super(updateOptions) then return false
 			R.drawingPanel.deselectDrawing(@)
 			@showVoteFlag()
+			@deselectPaths()
 			return true
 
 		# removeChildren: () ->
