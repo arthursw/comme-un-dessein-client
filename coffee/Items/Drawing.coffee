@@ -734,7 +734,13 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				return)
 
 			return
-
+		
+		updateSVG: ()->
+			args = 
+				pk: @pk
+				svg: @getSVG()
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawingSVG', args: args } ).done(R.loader.checkError)
+		
 		updatePaths: ()->
 			@computeRectangle()
 
@@ -746,9 +752,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			}
 
 			R.loader.showLoadingBar(500)
-			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPathsToDrawing', args: args } ).done(()->
+			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPathsToDrawing', args: args } ).done((result)->
 				R.loader.hideLoadingBar()
-				R.loader.checkError()
+				R.loader.checkError(result)
 				return)
 
 			return

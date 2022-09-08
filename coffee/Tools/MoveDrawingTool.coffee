@@ -41,26 +41,26 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command' ], (P, R, 
 
 		begin: (event) ->
 			# @dragging = true
-			draft = R.Drawing.getDraft()
-			@duplicateData = draft?.getDuplicateData()
-			if draft?
+			drawing = if not @moveSelectedDrawing then R.Drawing.getDraft() else R.s
+			@duplicateData = drawing?.getDuplicateData()
+			if drawing?
 				@dragging = true
 
-			if R.useSVG and draft.svg?
-				draft.svg.remove()
-				draft.svg = null
+			if R.useSVG and drawing.svg?
+				drawing.svg.remove()
+				drawing.svg = null
 			
 			return
 
 		update: (event) ->
 			if @dragging
-				draft = R.Drawing.getDraft()
-				if draft? and draft.rectangle? and draft.group?.children.length > 0
-					draft.rectangle.x += event.delta.x
-					draft.rectangle.y += event.delta.y
-					draft.group.position.x += event.delta.x
-					draft.group.position.y += event.delta.y
-					# for path in draft.paths
+				drawing = if not @moveSelectedDrawing then R.Drawing.getDraft() else R.s
+				if drawing? and drawing.rectangle? and drawing.group?.children.length > 0
+					drawing.rectangle.x += event.delta.x
+					drawing.rectangle.y += event.delta.y
+					drawing.group.position.x += event.delta.x
+					drawing.group.position.y += event.delta.y
+					# for path in drawing.paths
 					# 	path.position.x += event.delta.x
 					# 	path.position.y += event.delta.y
 			return
@@ -70,16 +70,21 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command' ], (P, R, 
 			# 	R.commandManager.add(new MoveViewCommand())
 			@dragging = false
 
-			draft = R.Drawing.getDraft()
+			drawing = if not @moveSelectedDrawing then R.Drawing.getDraft() else R.s
 			
-			if draft?
+			if drawing?
 				
 				if @duplicateData?
-					modifyDrawingCommand = new Command.ModifyDrawing(draft, @duplicateData)
-					R.commandManager.add(modifyDrawingCommand, false)
+					if not @moveSelectedDrawing
+						modifyDrawingCommand = new Command.ModifyDrawing(drawing, @duplicateData)
+						R.commandManager.add(modifyDrawingCommand, false)
 
-				draft.updatePaths()
-				# draft.createSVG()
+				drawing.updatePaths()
+				if @moveSelectedDrawing
+					drawing.updateSVG()
+				
+				# drawing.updateBox()
+				# drawing.createSVG()
 				# R.tools['Precise path'].showDraftLimits()
 				# R.tools['Precise path'].hideDraftLimits()
 

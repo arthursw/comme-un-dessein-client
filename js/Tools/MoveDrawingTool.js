@@ -63,41 +63,46 @@
       };
 
       MoveDrawingTool.prototype.begin = function(event) {
-        var draft;
-        draft = R.Drawing.getDraft();
-        this.duplicateData = draft != null ? draft.getDuplicateData() : void 0;
-        if (draft != null) {
+        var drawing;
+        drawing = !this.moveSelectedDrawing ? R.Drawing.getDraft() : R.s;
+        this.duplicateData = drawing != null ? drawing.getDuplicateData() : void 0;
+        if (drawing != null) {
           this.dragging = true;
         }
-        if (R.useSVG && (draft.svg != null)) {
-          draft.svg.remove();
-          draft.svg = null;
+        if (R.useSVG && (drawing.svg != null)) {
+          drawing.svg.remove();
+          drawing.svg = null;
         }
       };
 
       MoveDrawingTool.prototype.update = function(event) {
-        var draft, ref;
+        var drawing, ref;
         if (this.dragging) {
-          draft = R.Drawing.getDraft();
-          if ((draft != null) && (draft.rectangle != null) && ((ref = draft.group) != null ? ref.children.length : void 0) > 0) {
-            draft.rectangle.x += event.delta.x;
-            draft.rectangle.y += event.delta.y;
-            draft.group.position.x += event.delta.x;
-            draft.group.position.y += event.delta.y;
+          drawing = !this.moveSelectedDrawing ? R.Drawing.getDraft() : R.s;
+          if ((drawing != null) && (drawing.rectangle != null) && ((ref = drawing.group) != null ? ref.children.length : void 0) > 0) {
+            drawing.rectangle.x += event.delta.x;
+            drawing.rectangle.y += event.delta.y;
+            drawing.group.position.x += event.delta.x;
+            drawing.group.position.y += event.delta.y;
           }
         }
       };
 
       MoveDrawingTool.prototype.end = function(moved) {
-        var draft, modifyDrawingCommand;
+        var drawing, modifyDrawingCommand;
         this.dragging = false;
-        draft = R.Drawing.getDraft();
-        if (draft != null) {
+        drawing = !this.moveSelectedDrawing ? R.Drawing.getDraft() : R.s;
+        if (drawing != null) {
           if (this.duplicateData != null) {
-            modifyDrawingCommand = new Command.ModifyDrawing(draft, this.duplicateData);
-            R.commandManager.add(modifyDrawingCommand, false);
+            if (!this.moveSelectedDrawing) {
+              modifyDrawingCommand = new Command.ModifyDrawing(drawing, this.duplicateData);
+              R.commandManager.add(modifyDrawingCommand, false);
+            }
           }
-          draft.updatePaths();
+          drawing.updatePaths();
+          if (this.moveSelectedDrawing) {
+            drawing.updateSVG();
+          }
         }
       };
 

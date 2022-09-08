@@ -107,6 +107,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			@submitBtnJ = @drawingPanelJ.find('.action-buttons button.submit')
 			@modifyBtnJ = @drawingPanelJ.find('.action-buttons button.modify')
+			@moveBtnJ = @drawingPanelJ.find('.action-buttons button.move')
+			if R.administrator
+				@moveBtnJ.removeClass('hidden')
+			
+			@moveBtnJ.click(@moveDrawing)
 			@cancelBtnJ = @drawingPanelJ.find('.action-buttons button.cancel')
 			# @deleteBtnJ = @drawingPanelJ.find('.action-buttons button.delete')
 
@@ -1991,6 +1996,19 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			
 			return
 
+		moveDrawing: ()=>
+			if not @currentItem? then return
+			if not R.administrator then return
+
+			if not R.me? or not _.isString(R.me)
+				R.alertManager.alert "You must be logged in to submit a " + @currentItem.itemType, "error"
+				return
+			R.s.loadPathList(()=>
+				R.tools.moveDrawing.select()
+				R.tools.moveDrawing.moveSelectedDrawing = true
+			)
+			return
+		
 		cancelDrawing: ()=>
 			if @currentItem.itemType == 'discussion'
 				@cancelDiscussion()

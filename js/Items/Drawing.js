@@ -815,6 +815,24 @@
         });
       };
 
+      Drawing.prototype.updateSVG = function() {
+        var args;
+        args = {
+          pk: this.pk,
+          svg: this.getSVG()
+        };
+        return $.ajax({
+          method: "POST",
+          url: "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'updateDrawingSVG',
+              args: args
+            })
+          }
+        }).done(R.loader.checkError);
+      };
+
       Drawing.prototype.updatePaths = function() {
         var args;
         this.computeRectangle();
@@ -834,9 +852,9 @@
               args: args
             })
           }
-        }).done(function() {
+        }).done(function(result) {
           R.loader.hideLoadingBar();
-          R.loader.checkError();
+          R.loader.checkError(result);
         });
       };
 

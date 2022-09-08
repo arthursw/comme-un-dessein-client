@@ -8,6 +8,7 @@
       function DrawingPanel() {
         this.cancelTile = bind(this.cancelTile, this);
         this.cancelDrawing = bind(this.cancelDrawing, this);
+        this.moveDrawing = bind(this.moveDrawing, this);
         this.modifyDrawing = bind(this.modifyDrawing, this);
         this.submitDrawing = bind(this.submitDrawing, this);
         this.voteDown = bind(this.voteDown, this);
@@ -108,6 +109,11 @@
         this.voteDownBtnJ.click(this.voteDown);
         this.submitBtnJ = this.drawingPanelJ.find('.action-buttons button.submit');
         this.modifyBtnJ = this.drawingPanelJ.find('.action-buttons button.modify');
+        this.moveBtnJ = this.drawingPanelJ.find('.action-buttons button.move');
+        if (R.administrator) {
+          this.moveBtnJ.removeClass('hidden');
+        }
+        this.moveBtnJ.click(this.moveDrawing);
         this.cancelBtnJ = this.drawingPanelJ.find('.action-buttons button.cancel');
         this.submitBtnJ.click(this.submitDrawing);
         this.modifyBtnJ.click(this.modifyDrawing);
@@ -2033,6 +2039,25 @@
           title: this.contentJ.find('#drawing-title').val(),
           data: this.contentJ.find('#drawing-description').val()
         });
+      };
+
+      DrawingPanel.prototype.moveDrawing = function() {
+        if (this.currentItem == null) {
+          return;
+        }
+        if (!R.administrator) {
+          return;
+        }
+        if ((R.me == null) || !_.isString(R.me)) {
+          R.alertManager.alert("You must be logged in to submit a " + this.currentItem.itemType, "error");
+          return;
+        }
+        R.s.loadPathList((function(_this) {
+          return function() {
+            R.tools.moveDrawing.select();
+            return R.tools.moveDrawing.moveSelectedDrawing = true;
+          };
+        })(this));
       };
 
       DrawingPanel.prototype.cancelDrawing = function() {
