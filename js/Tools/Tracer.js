@@ -120,8 +120,12 @@
         this.removeDraftButtonJ.hide();
       };
 
+      Tracer.prototype.isIOS = function() {
+        return (/iPad|iPhone|iPod/.test(navigator.platform) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) && !window.MSStream;
+      };
+
       Tracer.prototype.openTraceTypeModal = function(closedRaster, keepRaster, imageDropped) {
-        var autoTraceInputJ, autoTraceLabel, autoTraceVideo, divJ, elemJ, isIOS, j, len, manualTraceInputJ, manualTraceLabel, manualTraceVideo, ref, ref1, ref2, svg;
+        var autoTraceInputJ, autoTraceLabel, autoTraceVideo, divJ, elemJ, j, len, manualTraceInputJ, manualTraceLabel, manualTraceVideo, ref, ref1, ref2, svg;
         if (keepRaster == null) {
           keepRaster = false;
         }
@@ -133,8 +137,7 @@
           title: "Trace"
         });
         autoTraceLabel = i18next.t('Trace automatically');
-        isIOS = (/iPad|iPhone|iPod/.test(navigator.platform) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) && !window.MSStream;
-        autoTraceVideo = isIOS ? '' : '<video autoplay playsinline loop width="200">\n\n	<source src="/static/videos/AutoTrace.webm"\n			type="video/webm">\n\n	<source src="/static/videos/AutoTrace.mp4"\n			type="video/mp4">\n</video>';
+        autoTraceVideo = this.isIOS() ? '' : '<video autoplay playsinline loop width="200">\n\n	<source src="/static/videos/AutoTrace.webm"\n			type="video/webm">\n\n	<source src="/static/videos/AutoTrace.mp4"\n			type="video/mp4">\n</video>';
         autoTraceInputJ = $('<button class="trace-type-btn cd-row cd-center btn-primary">\n	<label>' + autoTraceLabel + '</label>' + autoTraceVideo + '</button>');
         this.modal.addCustomContent({
           name: 'autotrace-choice',
@@ -153,7 +156,7 @@
           };
         })(this));
         manualTraceLabel = i18next.t('Trace manually');
-        manualTraceVideo = isIOS ? '' : '<video autoplay playsinline loop width="200">\n\n	<source src="/static/videos/ManualTrace.webm"\n			type="video/webm">\n\n	<source src="/static/videos/ManualTrace.mp4"\n			type="video/mp4">\n</video>';
+        manualTraceVideo = this.isIOS() ? '' : '<video autoplay playsinline loop width="200">\n\n	<source src="/static/videos/ManualTrace.webm"\n			type="video/webm">\n\n	<source src="/static/videos/ManualTrace.mp4"\n			type="video/mp4">\n</video>';
         manualTraceInputJ = $('<button class="trace-type-btn cd-row cd-center btn-primary">\n	<label>' + manualTraceLabel + '</label>' + manualTraceVideo + '</button>');
         this.modal.addCustomContent({
           name: 'manual-choice',
@@ -247,7 +250,7 @@
       };
 
       Tracer.prototype.openImageModal = function(closedRaster, keepRaster) {
-        var deviceType, elemJ, inputJ, j, len, marginContainerJ, ref, ref1;
+        var deviceType, elemJ, inputJ, isSafari, j, len, marginContainerJ, ref, ref1;
         if (keepRaster == null) {
           keepRaster = false;
         }
@@ -273,7 +276,14 @@
           name: 'Take a photo with the camera',
           icon: 'glyphicon-facetime-video'
         });
-        this.photoFromCameraButtonJ.click(Camera.initialize);
+        isSafari = /constructor/i.test(window.HTMLElement) || (function(p) {
+          return p.toString() === "[object SafariRemoteNotification]";
+        })(!window['safari'] || (typeof safari !== 'undefined' && window['safari'].pushNotification));
+        if (this.isIOS() || isSafari) {
+          this.photoFromCameraButtonJ.hide();
+        } else {
+          this.photoFromCameraButtonJ.click(Camera.initialize);
+        }
         this.imageFromComputerButtonJ = this.modal.addButton({
           addToBody: true,
           type: 'primary',
@@ -723,19 +733,19 @@
         this.rotateImageButtonJ = this.modal.addButton({
           addToBody: true,
           type: 'info',
-          name: 'Rotate',
+          name: i18next.t('Rotate'),
           icon: 'glyphicon-repeat'
         });
         this.flipVImageButtonJ = this.modal.addButton({
           addToBody: true,
           type: 'info',
-          name: 'Flip Vertical',
+          name: i18next.t('Flip Vertical'),
           icon: 'glyphicon-resize-vertical'
         });
         this.flipHImageButtonJ = this.modal.addButton({
           addToBody: true,
           type: 'info',
-          name: 'Flip Horizontal',
+          name: i18next.t('Flip Horizontal'),
           icon: 'glyphicon-resize-horizontal'
         });
         this.rotateImageButtonJ.click((function(_this) {
@@ -837,7 +847,6 @@
           height: imageData.height
         });
         this.cropImage();
-        this.filterImage();
       };
 
       Tracer.prototype.filterImage = function() {

@@ -70,14 +70,36 @@
         context.putImageData(sourceImageData, 0, 0);
       };
 
+      ImageProcessor.prototype.threshold = function(context) {
+        var height, i, index, j, k, l, n, ref, ref1, sourceData, sourceImageData, sum, width, x, y;
+        width = this.filterCanvas.width;
+        height = this.filterCanvas.height;
+        context = this.filterCanvas.getContext('2d');
+        sourceImageData = context.getImageData(0, 0, width, height);
+        sourceData = sourceImageData.data;
+        for (y = i = 0, ref = height - 1; 0 <= ref ? i <= ref : i >= ref; y = 0 <= ref ? ++i : --i) {
+          for (x = j = 0, ref1 = width - 1; 0 <= ref1 ? j <= ref1 : j >= ref1; x = 0 <= ref1 ? ++j : --j) {
+            index = x + y * width;
+            sum = 0;
+            for (n = k = 0; k <= 2; n = ++k) {
+              sum += sourceData[4 * index + n];
+            }
+            for (n = l = 0; l <= 2; n = ++l) {
+              sourceData[4 * index + n] = (sum / 3) > 0.4 * 255 ? 255 : 0;
+            }
+          }
+        }
+        context.putImageData(sourceImageData, 0, 0);
+      };
+
       ImageProcessor.prototype.processImage = function(filterCanvas) {
         var context;
         this.filterCanvas = filterCanvas;
         context = this.filterCanvas.getContext('2d');
         this.initialImage = context.getImageData(0, 0, this.filterCanvas.width, this.filterCanvas.height);
-        console.log('start grayscale');
-        this.grayscale();
-        console.log('grayscale finished');
+        console.log('start threshold');
+        this.threshold();
+        console.log('threshold finished');
         R.tracer.imageURL = this.filterCanvas.toDataURL();
       };
 

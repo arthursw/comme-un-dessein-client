@@ -101,6 +101,9 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@removeDraftButtonJ.hide()
 			return
 
+		isIOS: ()->
+			return (/iPad|iPhone|iPod/.test(navigator.platform) or (navigator.platform == 'MacIntel' and navigator.maxTouchPoints > 1)) and !window.MSStream
+		
 		openTraceTypeModal: (closedRaster, keepRaster=false, imageDropped=false)=>
 			
 			@modal = Modal.createModal( 
@@ -114,8 +117,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			
 			# autoTraceInputJ = $('''
 			# <button class="trace-type-btn cd-row cd-center btn-success">
-			isIOS = (/iPad|iPhone|iPod/.test(navigator.platform) or (navigator.platform == 'MacIntel' and navigator.maxTouchPoints > 1)) and !window.MSStream
-			autoTraceVideo = if isIOS then '' else '''<video autoplay playsinline loop width="200">
+			autoTraceVideo = if @isIOS() then '' else '''<video autoplay playsinline loop width="200">
 
 					<source src="/static/videos/AutoTrace.webm"
 							type="video/webm">
@@ -143,7 +145,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 				return
 			
 			manualTraceLabel = i18next.t('Trace manually')
-			manualTraceVideo = if isIOS then '' else '''<video autoplay playsinline loop width="200">
+			manualTraceVideo = if @isIOS() then '' else '''<video autoplay playsinline loop width="200">
 
 					<source src="/static/videos/ManualTrace.webm"
 							type="video/webm">
@@ -229,7 +231,12 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			
 			deviceType = Utils.getDeviceType()
 			@photoFromCameraButtonJ = @modal.addButton( addToBody: true, type: 'primary', name: 'Take a photo with the camera', icon: 'glyphicon-facetime-video' ) # 'glyphicon-camera' )
-			@photoFromCameraButtonJ.click Camera.initialize
+			isSafari = /constructor/i.test(window.HTMLElement) or ( (p)-> ( p.toString() == "[object SafariRemoteNotification]" ))(!window['safari'] || (typeof safari != 'undefined' and window['safari'].pushNotification))
+
+			if @isIOS() or isSafari
+				@photoFromCameraButtonJ.hide()
+			else
+				@photoFromCameraButtonJ.click Camera.initialize
 			@imageFromComputerButtonJ = @modal.addButton( addToBody: true, type: 'primary', name: 'Choose an image on your ' + deviceType, icon: 'glyphicon-folder-open' )
 			@imageFromComputerButtonJ.click ()=> 
 				inputJ.click()
@@ -717,9 +724,10 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			return
 		
 		addRasterCropControls: ()=>
-			@rotateImageButtonJ = @modal.addButton( addToBody: true, type: 'info', name: 'Rotate', icon: 'glyphicon-repeat' )
-			@flipVImageButtonJ = @modal.addButton( addToBody: true, type: 'info', name: 'Flip Vertical', icon: 'glyphicon-resize-vertical' )
-			@flipHImageButtonJ = @modal.addButton( addToBody: true, type: 'info', name: 'Flip Horizontal', icon: 'glyphicon-resize-horizontal' )
+
+			@rotateImageButtonJ = @modal.addButton( addToBody: true, type: 'info', name: i18next.t('Rotate'), icon: 'glyphicon-repeat' )
+			@flipVImageButtonJ = @modal.addButton( addToBody: true, type: 'info', name: i18next.t('Flip Vertical'), icon: 'glyphicon-resize-vertical' )
+			@flipHImageButtonJ = @modal.addButton( addToBody: true, type: 'info', name: i18next.t('Flip Horizontal'), icon: 'glyphicon-resize-horizontal' )
 			@rotateImageButtonJ.click ()=> @cropper?.rotate(90)
 			@flipVImageButtonJ.click ()=> @cropper?.scale(1, -1 * @cropper.getData().scaleY )
 			@flipHImageButtonJ.click ()=> @cropper?.scale(-1 * @cropper.getData().scaleX, 1)
@@ -814,7 +822,7 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			imageData = @cropper.getCanvasData()
 			@cropper.setCropBoxData( { left: imageData.left, top: imageData.top, width: imageData.width, height: imageData.height } )
 			@cropImage()
-			@filterImage()
+			# @filterImage()
 			return
 		
 		# not used anymore
@@ -834,6 +842,8 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			@modal.modalJ.find('.modal-footer button[name="submit"]').show()
 
 			@imageProcessor.processImage(@filterCanvas)
+
+			# @imageURL = @filterCanvas.toDataURL()
 			
 			@onModalSubmit()
 			return

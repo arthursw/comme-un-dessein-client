@@ -81,6 +81,27 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			context.putImageData(sourceImageData, 0, 0)
 			return
 		
+		threshold: (context)->
+
+			width = @filterCanvas.width
+			height = @filterCanvas.height
+
+			context = @filterCanvas.getContext('2d')
+			sourceImageData = context.getImageData(0, 0, width, height)
+			sourceData = sourceImageData.data
+			for y in [0 .. height-1]
+				for x in [0 .. width-1]
+
+					index = x + y * width
+					sum = 0
+					for n in [0 .. 2]
+						sum += sourceData[4 * index + n]
+					for n in [0 .. 2]
+						sourceData[4 * index + n] = if (sum/3) > 0.4*255 then 255 else 0
+
+			context.putImageData(sourceImageData, 0, 0)
+			return
+		
 		processImage: (@filterCanvas)=>
 			context = @filterCanvas.getContext('2d')
 			# if not @initialImage?
@@ -88,10 +109,11 @@ define ['paper', 'R', 'Utils/Utils', 'UI/Button', 'UI/Modal', 'Tools/Vectorizer'
 			# else
 			# 	context.putImageData(@initialImage, 0, 0)
 			@initialImage = context.getImageData(0, 0, @filterCanvas.width, @filterCanvas.height)
-			console.log('start grayscale')
-			@grayscale()
+			console.log('start threshold')
+			# @grayscale()
+			@threshold()
 			# @adaptiveThreshold()
-			console.log('grayscale finished')
+			console.log('threshold finished')
 			# @filterCanvas.width *= 2
 			# @filterCanvas.height *= 2
 			R.tracer.imageURL = @filterCanvas.toDataURL()
