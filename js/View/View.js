@@ -982,10 +982,20 @@
       };
 
       View.prototype.onWindowResize = function(event) {
-        var ref;
-        P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight());
+        var centerPosition, height, newCenterPosition, ref, width;
+        centerPosition = P.view.bounds.center;
+        width = R.stageJ.innerWidth();
+        height = R.stageJ.innerHeight();
+        R.svgJ.attr('width', width);
+        R.svgJ.attr('height', height);
+        R.discussionJ.attr('width', width);
+        R.discussionJ.attr('height', height);
+        R.svgJ.get(0).setAttribute('viewBox', '0,0,' + width + ',' + height);
+        R.discussionJ.get(0).setAttribute('viewBox', '0,0,' + width + ',' + height);
+        P.view.viewSize = new P.Size(width, height);
         this.grid.update();
-        this.moveBy(new P.Point());
+        newCenterPosition = P.view.bounds.center;
+        this.moveBy(centerPosition.subtract(newCenterPosition));
         R.toolbar.updateArrowsVisibility();
         R.drawingPanel.onWindowResize();
         if ((ref = R.timelapse) != null) {

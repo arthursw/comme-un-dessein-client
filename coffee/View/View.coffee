@@ -1057,19 +1057,36 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 			return
 
 		onWindowResize: (event)=>
-			P.view.viewSize = new P.Size(R.stageJ.innerWidth(), R.stageJ.innerHeight())
+			# centerPosition = P.view.viewToProject(P.view.bounds.center)
+			centerPosition = P.view.bounds.center
+
+			width = R.stageJ.innerWidth()
+			height = R.stageJ.innerHeight()
+
+			R.svgJ.attr('width', width)
+			R.svgJ.attr('height', height)
+			R.discussionJ.attr('width', width)
+			R.discussionJ.attr('height', height)
+
+			R.svgJ.get(0).setAttribute('viewBox', '0,0,'+width+','+height)
+			R.discussionJ.get(0).setAttribute('viewBox', '0,0,'+width+','+height)
+
+			P.view.viewSize = new P.Size(width, height)
 			
 			# update grid and mCustomScrollbar when window is resized
 			# R.backgroundCanvas.width = window.innerWidth
 			# R.backgroundCanvas.height = window.innerHeight
 			# R.backgroundCanvasJ.width(window.innerWidth)
 			# R.backgroundCanvasJ.height(window.innerHeight)
-			# R.svgJ.attr('width', R.stageJ.innerWidth())
-			# R.svgJ.attr('height', R.stageJ.innerHeight())
+			
 			
 			@grid.update()
 			# $(".mCustomScrollbar").mCustomScrollbar("update")
-			@moveBy(new P.Point())
+			
+			# newCenterPosition = P.view.viewToProject(P.view.bounds.center)
+			newCenterPosition = P.view.bounds.center
+
+			@moveBy(centerPosition.subtract(newCenterPosition))
 
 			# R.canvasJ.width(window.innerWidth)
 			# R.canvasJ.height(window.innerHeight-50)
