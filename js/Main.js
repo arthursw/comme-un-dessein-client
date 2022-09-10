@@ -36,7 +36,7 @@
     };
     R.loadActiveDrawings = true;
     simplifyTolerance = localStorage.getItem('simplify-tolerance');
-    R.simplifyTolerance = simplifyTolerance || 5;
+    R.simplifyTolerance = simplifyTolerance != null ? simplifyTolerance : 5;
     $(document).ready(function() {
       var canvasJ, cityName, deleteAccountWarning, emailConfirmed, isPM, manageEmails, meridiem, modal, ordinal, updateContent, userAuthenticated, userWhoClosedLastTime, username;
       canvasJ = $('#canvas');

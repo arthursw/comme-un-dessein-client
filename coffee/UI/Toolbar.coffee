@@ -50,7 +50,7 @@ define ['paper', 'R', 'Utils/Utils' ], (P, R, Utils) ->
 			# event.preventDefault()
 			# event.stopPropagation()
 			@dragging = true
-			@draggingPosition = event.pageX or event.originalEvent.touches[0].pageX
+			@draggingPosition = if event.pageX? then event.pageX else event.originalEvent.touches[0].pageX
 			return
 
 		nullifySpeedIfNotMoved: ()=>
@@ -63,7 +63,7 @@ define ['paper', 'R', 'Utils/Utils' ], (P, R, Utils) ->
 			if @dragging
 				# event.preventDefault()
 				# event.stopPropagation()
-				position = event.pageX or event.originalEvent.touches[0].pageX
+				position = if event.pageX? then event.pageX else event.originalEvent.touches[0].pageX
 				@draggingSpeed = position - @draggingPosition
 				@moveToolbar(@draggingSpeed)
 				@draggingPosition = position

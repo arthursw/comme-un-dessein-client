@@ -63,7 +63,7 @@
 
       Toolbar.prototype.startDrag = function(event) {
         this.dragging = true;
-        this.draggingPosition = event.pageX || event.originalEvent.touches[0].pageX;
+        this.draggingPosition = event.pageX != null ? event.pageX : event.originalEvent.touches[0].pageX;
       };
 
       Toolbar.prototype.nullifySpeedIfNotMoved = function() {
@@ -76,7 +76,7 @@
       Toolbar.prototype.drag = function(event) {
         var position;
         if (this.dragging) {
-          position = event.pageX || event.originalEvent.touches[0].pageX;
+          position = event.pageX != null ? event.pageX : event.originalEvent.touches[0].pageX;
           this.draggingSpeed = position - this.draggingPosition;
           this.moveToolbar(this.draggingSpeed);
           this.draggingPosition = position;

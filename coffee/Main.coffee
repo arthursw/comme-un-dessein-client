@@ -55,7 +55,7 @@ define [
 	R.loadActiveDrawings = true
 
 	simplifyTolerance = localStorage.getItem('simplify-tolerance')
-	R.simplifyTolerance = simplifyTolerance or 5
+	R.simplifyTolerance = if simplifyTolerance? then simplifyTolerance else 5
 
 	# loadCity = (cityName)->
 	# 	R.city.name = cityName
