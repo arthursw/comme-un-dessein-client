@@ -580,6 +580,13 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 
 		# 	return
 		
+		allPointsAreEqual: (path)->
+			firstPoint = path.firstSegment.point
+			for segment in path.segments
+				if not segment.point.equals(firstPoint)
+					return false
+			return true
+		
 		end: (event, from=R.me) ->
 			if not @currentPath? then return
 
@@ -599,9 +606,9 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command', 'UI/Butto
 			draft = R.Item.Drawing.getDraft()
 
 			R.commandManager.add(new Command.ModifyDrawing(draft))
-			
+
 			# Simplify if there is more than one point (a path with twice the same point)	
-			if not (@currentPath.segments.length == 2 and @currentPath.firstSegment.point.equals(@currentPath.lastSegment.point))
+			if not @allPointsAreEqual(@currentPath)
 				@currentPath.simplify(R.simplifyTolerance)
 
 			# @currentPath.smooth()

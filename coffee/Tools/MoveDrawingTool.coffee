@@ -60,6 +60,8 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command' ], (P, R, 
 					drawing.rectangle.y += event.delta.y
 					drawing.group.position.x += event.delta.x
 					drawing.group.position.y += event.delta.y
+					R.tools.select.updateSelectionRectangle()
+					# R.tools.select.selectionRectangle?.remove()
 					# for path in drawing.paths
 					# 	path.position.x += event.delta.x
 					# 	path.position.y += event.delta.y
@@ -73,15 +75,14 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command' ], (P, R, 
 			drawing = if not @moveSelectedDrawing then R.Drawing.getDraft() else R.s
 			
 			if drawing?
+				R.tools.select.updateSelectionRectangle()
 				
 				if @duplicateData?
 					if not @moveSelectedDrawing
 						modifyDrawingCommand = new Command.ModifyDrawing(drawing, @duplicateData)
 						R.commandManager.add(modifyDrawingCommand, false)
 
-				drawing.updatePaths()
-				if @moveSelectedDrawing
-					drawing.updateSVG()
+				drawing.updatePaths(@moveSelectedDrawing)
 				
 				# drawing.updateBox()
 				# drawing.createSVG()

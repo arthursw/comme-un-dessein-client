@@ -8,12 +8,14 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command' ], (P, R, Utils, Command
 			@itemToCommands = {}
 			@currentCommand = -1
 			@historyJ = $("#History ul.history")
-			@add(new Command('Loaded CommeUnDessein'), true)
+			@add(new Command('Loaded CommeUnDessein'), true, false)
+			@loadHistoryFromLocalStorage()
 			return
 
 		# twin: see Command.twin
-		add: (command, execute=false)->
+		add: (command, execute=false, saveHistory=true)->
 			if @currentCommand >= @constructor.maxCommandNumber - 1
+				console.log('delete first command')
 				firstCommand = @history.shift()
 				firstCommand.delete()
 				@currentCommand--
@@ -27,10 +29,36 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command' ], (P, R, Utils, Command
 			@mapItemsToCommand(command)
 
 			@updateButtons()
+			
+			if saveHistory
+				@saveHistoryToLocalStorage()
 
 			if execute then command.do()
 			return
-
+		
+		saveHistoryToLocalStorage: ()=>
+			historyJSON = []
+			for command in @history
+				if command.name == 'Modify drawing'
+					historyJSON.push({name: command.name, drawingPk: command.drawing?.pk, duplicateData: command.duplicateData, done: command.done})
+			localStorage.setItem('cud-history', JSON.stringify(historyJSON))
+			localStorage.setItem('cud-history-currentCommand', @currentCommand)
+			return
+		
+		loadHistoryFromLocalStorage: ()=>
+			historyJSON = localStorage.getItem('cud-history')
+			if historyJSON?
+				historyJSON = JSON.parse(historyJSON)
+			if not historyJSON? then return
+			for command in historyJSON
+				if command.name == 'Modify drawing'
+					draft = R.Drawing.getDraft()
+					c = new Command.ModifyDrawing(draft, command.duplicateData)
+					c.done = command.done
+					@add(c, false, false)
+			@currentCommand = parseInt(localStorage.getItem('cud-history-currentCommand'))
+			return
+		
 		toggleCurrentCommand: (event)=>
 			if event? and event.detail?
 				if event.detail != @waitingCommand then return
@@ -53,6 +81,8 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command' ], (P, R, Utils, Command
 			@waitingCommand = @history[@currentCommand+@offset]
 			
 			@currentCommand += @direction
+			
+			@saveHistoryToLocalStorage()
 
 			if @waitingCommand.twin == @history[@currentCommand+@offset] && @currentCommand == @commandIndex
 				@commandIndex += @direction

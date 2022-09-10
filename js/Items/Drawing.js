@@ -260,12 +260,19 @@
         this.computeRectangle();
       };
 
-      Drawing.prototype.loadPathList = function(callback) {
+      Drawing.prototype.loadPathList = function(callback, force) {
         var args;
+        if (force == null) {
+          force = false;
+        }
+        if (this.paths.length > 0 && !force) {
+          return;
+        }
         args = {
           pk: this.pk,
           loadPathList: true
         };
+        R.loader.showLoadingBar();
         $.ajax({
           method: "POST",
           url: "ajaxCall/",
@@ -280,6 +287,7 @@
             var drawingData;
             drawingData = JSON.parse(result.drawing);
             _this.addPathsFromPathList(drawingData.pathList);
+            R.loader.hideLoadingBar();
             return typeof callback === "function" ? callback() : void 0;
           };
         })(this));
@@ -833,8 +841,11 @@
         }).done(R.loader.checkError);
       };
 
-      Drawing.prototype.updatePaths = function() {
+      Drawing.prototype.updatePaths = function(svg) {
         var args;
+        if (svg == null) {
+          svg = false;
+        }
         this.computeRectangle();
         args = {
           clientId: this.id,
@@ -842,6 +853,9 @@
           pointLists: this.getPointLists(),
           bounds: this.getBounds()
         };
+        if (svg) {
+          args.svg = this.getSVG();
+        }
         R.loader.showLoadingBar(500);
         $.ajax({
           method: "POST",

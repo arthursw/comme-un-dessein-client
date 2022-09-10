@@ -84,6 +84,7 @@
             drawing.rectangle.y += event.delta.y;
             drawing.group.position.x += event.delta.x;
             drawing.group.position.y += event.delta.y;
+            R.tools.select.updateSelectionRectangle();
           }
         }
       };
@@ -93,16 +94,14 @@
         this.dragging = false;
         drawing = !this.moveSelectedDrawing ? R.Drawing.getDraft() : R.s;
         if (drawing != null) {
+          R.tools.select.updateSelectionRectangle();
           if (this.duplicateData != null) {
             if (!this.moveSelectedDrawing) {
               modifyDrawingCommand = new Command.ModifyDrawing(drawing, this.duplicateData);
               R.commandManager.add(modifyDrawingCommand, false);
             }
           }
-          drawing.updatePaths();
-          if (this.moveSelectedDrawing) {
-            drawing.updateSVG();
-          }
+          drawing.updatePaths(this.moveSelectedDrawing);
         }
       };
 

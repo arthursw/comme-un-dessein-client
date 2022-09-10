@@ -1029,6 +1029,9 @@
 
       ModifyDrawing.prototype.modifiy = function() {
         var duplicateData;
+        if (this.drawing == null) {
+          this.drawing = R.Drawing.getDraft();
+        }
         duplicateData = this.drawing.getDuplicateData();
         this.drawing.setData(this.duplicateData);
         this.duplicateData = duplicateData;

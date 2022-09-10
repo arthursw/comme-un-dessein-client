@@ -865,6 +865,7 @@ define ['paper', 'R',  'Utils/Utils'], (P, R, Utils) ->
 			return
 
 		modifiy: ()->
+			@drawing ?= R.Drawing.getDraft()
 			duplicateData = @drawing.getDuplicateData()
 			@drawing.setData(@duplicateData)
 			@duplicateData = duplicateData

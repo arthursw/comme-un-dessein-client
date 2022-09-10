@@ -425,6 +425,19 @@
 
       PathTool.prototype.move = function(event) {};
 
+      PathTool.prototype.allPointsAreEqual = function(path) {
+        var firstPoint, i, len, ref, segment;
+        firstPoint = path.firstSegment.point;
+        ref = path.segments;
+        for (i = 0, len = ref.length; i < len; i++) {
+          segment = ref[i];
+          if (!segment.point.equals(firstPoint)) {
+            return false;
+          }
+        }
+        return true;
+      };
+
       PathTool.prototype.end = function(event, from) {
         var draft, draftLimit;
         if (from == null) {
@@ -446,7 +459,7 @@
         }
         draft = R.Item.Drawing.getDraft();
         R.commandManager.add(new Command.ModifyDrawing(draft));
-        if (!(this.currentPath.segments.length === 2 && this.currentPath.firstSegment.point.equals(this.currentPath.lastSegment.point))) {
+        if (!this.allPointsAreEqual(this.currentPath)) {
           this.currentPath.simplify(R.simplifyTolerance);
         }
         draft.addChild(this.currentPath, true);

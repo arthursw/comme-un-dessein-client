@@ -177,16 +177,20 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 		
 		# Used to warn admin that the drawing has been flagged by websocket (in DrawingPanel.onDrawingChange() => status changed)
-		loadPathList: (callback)->
+		loadPathList: (callback, force=false)->
+			
+			if @paths.length > 0 and not force then return
 
 			args =
 				pk: @pk
 				loadPathList: true
-
+			
+			R.loader.showLoadingBar()
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDrawing', args: args } ).done((result)=>
 				drawingData = JSON.parse(result.drawing)
 				# @setSVG(drawing.svg, true, callback)
 				@addPathsFromPathList(drawingData.pathList)
+				R.loader.hideLoadingBar()
 				callback?()
 			)
 
@@ -741,7 +745,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				svg: @getSVG()
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawingSVG', args: args } ).done(R.loader.checkError)
 		
-		updatePaths: ()->
+		updatePaths: (svg=false)->
 			@computeRectangle()
 
 			args = {
@@ -750,6 +754,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				pointLists: @getPointLists()
 				bounds: @getBounds()
 			}
+			if svg
+				args.svg = @getSVG()
 
 			R.loader.showLoadingBar(500)
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setPathsToDrawing', args: args } ).done((result)->

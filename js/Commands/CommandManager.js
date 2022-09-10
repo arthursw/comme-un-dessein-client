@@ -12,20 +12,27 @@
         this.endAction = bind(this.endAction, this);
         this.nullifyWaitingCommand = bind(this.nullifyWaitingCommand, this);
         this.toggleCurrentCommand = bind(this.toggleCurrentCommand, this);
+        this.loadHistoryFromLocalStorage = bind(this.loadHistoryFromLocalStorage, this);
+        this.saveHistoryToLocalStorage = bind(this.saveHistoryToLocalStorage, this);
         this.history = [];
         this.itemToCommands = {};
         this.currentCommand = -1;
         this.historyJ = $("#History ul.history");
-        this.add(new Command('Loaded CommeUnDessein'), true);
+        this.add(new Command('Loaded CommeUnDessein'), true, false);
+        this.loadHistoryFromLocalStorage();
         return;
       }
 
-      CommandManager.prototype.add = function(command, execute) {
+      CommandManager.prototype.add = function(command, execute, saveHistory) {
         var currentLiJ, firstCommand, ref;
         if (execute == null) {
           execute = false;
         }
+        if (saveHistory == null) {
+          saveHistory = true;
+        }
         if (this.currentCommand >= this.constructor.maxCommandNumber - 1) {
+          console.log('delete first command');
           firstCommand = this.history.shift();
           firstCommand["delete"]();
           this.currentCommand--;
@@ -39,9 +46,52 @@
         this.history.splice(this.currentCommand, this.history.length - this.currentCommand, command);
         this.mapItemsToCommand(command);
         this.updateButtons();
+        if (saveHistory) {
+          this.saveHistoryToLocalStorage();
+        }
         if (execute) {
           command["do"]();
         }
+      };
+
+      CommandManager.prototype.saveHistoryToLocalStorage = function() {
+        var command, historyJSON, j, len, ref, ref1;
+        historyJSON = [];
+        ref = this.history;
+        for (j = 0, len = ref.length; j < len; j++) {
+          command = ref[j];
+          if (command.name === 'Modify drawing') {
+            historyJSON.push({
+              name: command.name,
+              drawingPk: (ref1 = command.drawing) != null ? ref1.pk : void 0,
+              duplicateData: command.duplicateData,
+              done: command.done
+            });
+          }
+        }
+        localStorage.setItem('cud-history', JSON.stringify(historyJSON));
+        localStorage.setItem('cud-history-currentCommand', this.currentCommand);
+      };
+
+      CommandManager.prototype.loadHistoryFromLocalStorage = function() {
+        var c, command, draft, historyJSON, j, len;
+        historyJSON = localStorage.getItem('cud-history');
+        if (historyJSON != null) {
+          historyJSON = JSON.parse(historyJSON);
+        }
+        if (historyJSON == null) {
+          return;
+        }
+        for (j = 0, len = historyJSON.length; j < len; j++) {
+          command = historyJSON[j];
+          if (command.name === 'Modify drawing') {
+            draft = R.Drawing.getDraft();
+            c = new Command.ModifyDrawing(draft, command.duplicateData);
+            c.done = command.done;
+            this.add(c, false, false);
+          }
+        }
+        this.currentCommand = parseInt(localStorage.getItem('cud-history-currentCommand'));
       };
 
       CommandManager.prototype.toggleCurrentCommand = function(event) {
@@ -65,6 +115,7 @@
         deferred = this.history[this.currentCommand + this.offset].toggle();
         this.waitingCommand = this.history[this.currentCommand + this.offset];
         this.currentCommand += this.direction;
+        this.saveHistoryToLocalStorage();
         if (this.waitingCommand.twin === this.history[this.currentCommand + this.offset] && this.currentCommand === this.commandIndex) {
           this.commandIndex += this.direction;
         }
