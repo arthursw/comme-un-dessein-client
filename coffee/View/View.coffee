@@ -115,6 +115,40 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 
 				hammertime = new Hammer(R.canvas)
 				hammertime.get('pinch').set({ enable: true })
+
+				getCenterPoint = (e)->
+					canvasElement = P.view.element
+					box = canvasElement.getBoundingClientRect()
+					offset = new P.Point(box.left, box.top)
+					return new P.Point(e.center.x, e.center.y).subtract(offset)
+				
+				startZoom = P.view.zoom
+				startMatrix = P.view.matrix.clone()
+				startMatrixInverted = startMatrix.inverted()
+				p0 = getCenterPoint(e)
+				p0ProjectCoorpds = P.view.viewToProject(p0)
+
+				hammer.on('pinchstart', e =>
+					startZoom = P.view.zoom
+					startMatrix = P.view.matrix.clone()
+					startMatrixInverted = startMatrix.inverted()
+					p0 = getCenterPoint(e)
+					p0ProjectCoorpds = P.view.viewToProject(p0)
+				)
+
+				hammer.on('pinch', e =>
+					# Translate and scale view using pinch event's 'center' and 'scale' properties.
+					# Translation computes center's distance from initial center (considering current scale).
+					p = getCenterPoint(e)
+					pProject0 = p.transform(startMatrixInverted)
+					delta = pProject0.subtract(p0ProjectCoords).divide(e.scale)
+					
+					R.toolManager.zoom(startZoom * e.scale / P.view.zoom, false)
+					@moveBy(delta)
+					# P.view.matrix = startMatrix.clone().scale(e.scale, p0ProjectCoords).translate(delta)
+				)
+
+
 				hammertime.on 'pinch', (event)=>
 					console.log(event.scale)
 					delta = Math.sign(event.scale)

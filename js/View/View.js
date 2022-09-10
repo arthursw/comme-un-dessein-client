@@ -34,7 +34,7 @@
         this.addMoveCommand = bind(this.addMoveCommand, this);
         this.showDraftLayer = bind(this.showDraftLayer, this);
         this.hideDraftLayer = bind(this.hideDraftLayer, this);
-        var hammertime;
+        var getCenterPoint, hammertime, p0, p0ProjectCoorpds, startMatrix, startMatrixInverted, startZoom;
         R.stageJ = $("#stage");
         R.canvasJ = R.stageJ.find("#canvas");
         R.canvas = R.canvasJ[0];
@@ -134,6 +134,37 @@
           hammertime.get('pinch').set({
             enable: true
           });
+          getCenterPoint = function(e) {
+            var box, canvasElement, offset;
+            canvasElement = P.view.element;
+            box = canvasElement.getBoundingClientRect();
+            offset = new P.Point(box.left, box.top);
+            return new P.Point(e.center.x, e.center.y).subtract(offset);
+          };
+          startZoom = P.view.zoom;
+          startMatrix = P.view.matrix.clone();
+          startMatrixInverted = startMatrix.inverted();
+          p0 = getCenterPoint(e);
+          p0ProjectCoorpds = P.view.viewToProject(p0);
+          hammer.on('pinchstart', e((function(_this) {
+            return function() {
+              startZoom = P.view.zoom;
+              startMatrix = P.view.matrix.clone();
+              startMatrixInverted = startMatrix.inverted();
+              p0 = getCenterPoint(e);
+              return p0ProjectCoorpds = P.view.viewToProject(p0);
+            };
+          })(this)));
+          hammer.on('pinch', e((function(_this) {
+            return function() {
+              var delta, p, pProject0;
+              p = getCenterPoint(e);
+              pProject0 = p.transform(startMatrixInverted);
+              delta = pProject0.subtract(p0ProjectCoords).divide(e.scale);
+              R.toolManager.zoom(startZoom * e.scale / P.view.zoom, false);
+              return _this.moveBy(delta);
+            };
+          })(this)));
           hammertime.on('pinch', (function(_this) {
             return function(event) {
               var delta;
