@@ -160,7 +160,7 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 				
 				zt = new ZingTouch.Region(R.canvas)
 
-				zt.bind(R.canvas, 'distance', (event)=>
+				zt.bind(R.canvas, new ZingTouch.Distance(), (event)=>
 					ratio = event.distance / (event.distance + event.change)
 					R.alertManager.alert(''+ratio.toFixed(1)+','+event.distance.toFixed(1)+','+event.change.toFixed(1), 'info')
 					return R.toolManager.zoom(ratio, false)
