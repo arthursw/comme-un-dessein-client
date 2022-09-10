@@ -118,7 +118,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 				hammertime.on 'pinch', (event)=>
 					console.log(event.scale)
 					delta = Math.sign(event.scale)
-					R.toolManager.zoom(Math.pow(1.02, delta), false)
+					R.alertManager.alert(''+event.scale, 'info')
+					# R.toolManager.zoom(Math.pow(1.02, delta), false)
+					R.toolManager.zoom(event.scale / 10, false)
 					return
 
 			@mousePosition = new P.Point() 			# the mouse position in window coordinates (updated everytime the mouse moves)

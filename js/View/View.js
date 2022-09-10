@@ -139,7 +139,8 @@
               var delta;
               console.log(event.scale);
               delta = Math.sign(event.scale);
-              R.toolManager.zoom(Math.pow(1.02, delta), false);
+              R.alertManager.alert('' + event.scale, 'info');
+              R.toolManager.zoom(event.scale / 10, false);
             };
           })(this));
         }
