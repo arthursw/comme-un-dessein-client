@@ -142,8 +142,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 					p = getCenterPoint(event)
 					pProject0 = p.transform(startMatrixInverted)
 					delta = pProject0.subtract(p0ProjectCoords).divide(event.scale)
-					
-					R.toolManager.zoom(startZoom * event.scale / P.view.zoom, false)
+					res = startZoom * event.scale / P.view.zoom
+					R.alertManager.alert('startZoom:'+startZoom.toFixed(2)+',e.scale'+event.scale.toFixed(2)+',zoom:'+P.view.zoom.toFixed(2)+',res:'+res.toFixed(2))
+					R.toolManager.zoom(res, false)
 					@moveBy(delta)
 					# P.view.matrix = startMatrix.clone().scale(e.scale, p0ProjectCoords).translate(delta)
 				)

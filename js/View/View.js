@@ -157,11 +157,13 @@
           })(this));
           hammertime.on('pinch', (function(_this) {
             return function(event) {
-              var delta, p, pProject0;
+              var delta, p, pProject0, res;
               p = getCenterPoint(event);
               pProject0 = p.transform(startMatrixInverted);
               delta = pProject0.subtract(p0ProjectCoords).divide(event.scale);
-              R.toolManager.zoom(startZoom * event.scale / P.view.zoom, false);
+              res = startZoom * event.scale / P.view.zoom;
+              R.alertManager.alert('startZoom:' + startZoom.toFixed(2) + ',e.scale' + event.scale.toFixed(2) + ',zoom:' + P.view.zoom.toFixed(2) + ',res:' + res.toFixed(2));
+              R.toolManager.zoom(res, false);
               return _this.moveBy(delta);
             };
           })(this));
