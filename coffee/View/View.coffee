@@ -158,9 +158,9 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 				# 	# R.toolManager.zoom(event.scale / 10, false)
 				# 	return
 				
-				zt = new ZingTouch.Region(document.body)
+				zt = new ZingTouch.Region(R.canvas)
 
-				zt.bind(document.body, 'distance', (event)=>
+				zt.bind(R.canvas, 'distance', (event)=>
 					ratio = event.distance / (event.distance + event.change)
 					R.alertManager.alert(''+ratio.toFixed(1)+','+event.distance.toFixed(1)+','+event.change.toFixed(1), 'info')
 					return R.toolManager.zoom(ratio, false)

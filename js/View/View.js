@@ -130,8 +130,8 @@
             passive: false
           });
           window.onhashchange = this.onHashChange;
-          zt = new ZingTouch.Region(document.body);
-          zt.bind(document.body, 'distance', (function(_this) {
+          zt = new ZingTouch.Region(R.canvas);
+          zt.bind(R.canvas, 'distance', (function(_this) {
             return function(event) {
               var ratio;
               ratio = event.distance / (event.distance + event.change);
