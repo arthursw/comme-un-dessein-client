@@ -130,6 +130,7 @@
             passive: false
           });
           window.onhashchange = this.onHashChange;
+          R.alertManager.alert('Bienvenue', 'info');
           hammertime = new Hammer(R.canvas);
           hammertime.get('pinch').set({
             enable: true
