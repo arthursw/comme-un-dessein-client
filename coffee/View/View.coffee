@@ -128,34 +128,34 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 				p0 = getCenterPoint(P.view)
 				p0ProjectCoorpds = P.view.viewToProject(p0)
 
-				hammer.on('pinchstart', e =>
+				hammertime.on('pinchstart', (event)=>
 					startZoom = P.view.zoom
 					startMatrix = P.view.matrix.clone()
 					startMatrixInverted = startMatrix.inverted()
-					p0 = getCenterPoint(e)
+					p0 = getCenterPoint(event)
 					p0ProjectCoorpds = P.view.viewToProject(p0)
 				)
 
-				hammer.on('pinch', e =>
+				hammertime.on('pinch', (event) =>
 					# Translate and scale view using pinch event's 'center' and 'scale' properties.
 					# Translation computes center's distance from initial center (considering current scale).
-					p = getCenterPoint(e)
+					p = getCenterPoint(event)
 					pProject0 = p.transform(startMatrixInverted)
-					delta = pProject0.subtract(p0ProjectCoords).divide(e.scale)
+					delta = pProject0.subtract(p0ProjectCoords).divide(event.scale)
 					
-					R.toolManager.zoom(startZoom * e.scale / P.view.zoom, false)
+					R.toolManager.zoom(startZoom * event.scale / P.view.zoom, false)
 					@moveBy(delta)
 					# P.view.matrix = startMatrix.clone().scale(e.scale, p0ProjectCoords).translate(delta)
 				)
 
 
-				hammertime.on 'pinch', (event)=>
-					console.log(event.scale)
-					delta = Math.sign(event.scale)
-					R.alertManager.alert(''+event.scale, 'info')
-					# R.toolManager.zoom(Math.pow(1.02, delta), false)
-					R.toolManager.zoom(event.scale / 10, false)
-					return
+				# hammertime.on 'pinch', (event)=>
+				# 	console.log(event.scale)
+				# 	delta = Math.sign(event.scale)
+				# 	R.alertManager.alert(''+event.scale, 'info')
+				# 	# R.toolManager.zoom(Math.pow(1.02, delta), false)
+				# 	R.toolManager.zoom(event.scale / 10, false)
+				# 	return
 
 			@mousePosition = new P.Point() 			# the mouse position in window coordinates (updated everytime the mouse moves)
 			@previousMousePosition = null 			# the previous position of the mouse in the mousedown/move/up

@@ -146,32 +146,23 @@
           startMatrixInverted = startMatrix.inverted();
           p0 = getCenterPoint(P.view);
           p0ProjectCoorpds = P.view.viewToProject(p0);
-          hammer.on('pinchstart', e((function(_this) {
-            return function() {
+          hammertime.on('pinchstart', (function(_this) {
+            return function(event) {
               startZoom = P.view.zoom;
               startMatrix = P.view.matrix.clone();
               startMatrixInverted = startMatrix.inverted();
-              p0 = getCenterPoint(e);
+              p0 = getCenterPoint(event);
               return p0ProjectCoorpds = P.view.viewToProject(p0);
             };
-          })(this)));
-          hammer.on('pinch', e((function(_this) {
-            return function() {
-              var delta, p, pProject0;
-              p = getCenterPoint(e);
-              pProject0 = p.transform(startMatrixInverted);
-              delta = pProject0.subtract(p0ProjectCoords).divide(e.scale);
-              R.toolManager.zoom(startZoom * e.scale / P.view.zoom, false);
-              return _this.moveBy(delta);
-            };
-          })(this)));
+          })(this));
           hammertime.on('pinch', (function(_this) {
             return function(event) {
-              var delta;
-              console.log(event.scale);
-              delta = Math.sign(event.scale);
-              R.alertManager.alert('' + event.scale, 'info');
-              R.toolManager.zoom(event.scale / 10, false);
+              var delta, p, pProject0;
+              p = getCenterPoint(event);
+              pProject0 = p.transform(startMatrixInverted);
+              delta = pProject0.subtract(p0ProjectCoords).divide(event.scale);
+              R.toolManager.zoom(startZoom * event.scale / P.view.zoom, false);
+              return _this.moveBy(delta);
             };
           })(this));
         }
