@@ -144,7 +144,7 @@
           startZoom = P.view.zoom;
           startMatrix = P.view.matrix.clone();
           startMatrixInverted = startMatrix.inverted();
-          p0 = getCenterPoint(e);
+          p0 = getCenterPoint(P.view);
           p0ProjectCoorpds = P.view.viewToProject(p0);
           hammer.on('pinchstart', e((function(_this) {
             return function() {
