@@ -34,7 +34,6 @@
         this.addMoveCommand = bind(this.addMoveCommand, this);
         this.showDraftLayer = bind(this.showDraftLayer, this);
         this.hideDraftLayer = bind(this.hideDraftLayer, this);
-        var zt;
         R.stageJ = $("#stage");
         R.canvasJ = R.stageJ.find("#canvas");
         R.canvas = R.canvasJ[0];
@@ -130,15 +129,6 @@
             passive: false
           });
           window.onhashchange = this.onHashChange;
-          zt = new ZingTouch.Region(R.canvas);
-          zt.bind(R.canvas, new ZingTouch.Distance(), (function(_this) {
-            return function(event) {
-              var ratio;
-              ratio = event.distance / (event.distance + event.change);
-              R.alertManager.alert('' + ratio.toFixed(1) + ',' + event.distance.toFixed(1) + ',' + event.change.toFixed(1), 'info');
-              return R.toolManager.zoom(ratio, false);
-            };
-          })(this));
         }
         this.mousePosition = new P.Point();
         this.previousMousePosition = null;

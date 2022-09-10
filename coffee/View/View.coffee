@@ -158,13 +158,13 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 				# 	# R.toolManager.zoom(event.scale / 10, false)
 				# 	return
 				
-				zt = new ZingTouch.Region(R.canvas)
+				# zt = new ZingTouch.Region(R.canvas)
 
-				zt.bind(R.canvas, new ZingTouch.Distance(), (event)=>
-					ratio = event.distance / (event.distance + event.change)
-					R.alertManager.alert(''+ratio.toFixed(1)+','+event.distance.toFixed(1)+','+event.change.toFixed(1), 'info')
-					return R.toolManager.zoom(ratio, false)
-				)
+				# zt.bind(R.canvas, new ZingTouch.Distance(), (event)=>
+				# 	ratio = event.distance / (event.distance + event.change)
+				# 	R.alertManager.alert(''+ratio.toFixed(1)+','+event.distance.toFixed(1)+','+event.change.toFixed(1), 'info')
+				# 	return R.toolManager.zoom(ratio, false)
+				# )
 
 			@mousePosition = new P.Point() 			# the mouse position in window coordinates (updated everytime the mouse moves)
 			@previousMousePosition = null 			# the previous position of the mouse in the mousedown/move/up
