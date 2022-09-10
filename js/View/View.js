@@ -34,7 +34,7 @@
         this.addMoveCommand = bind(this.addMoveCommand, this);
         this.showDraftLayer = bind(this.showDraftLayer, this);
         this.hideDraftLayer = bind(this.hideDraftLayer, this);
-        var getCenterPoint, hammertime, p0, p0ProjectCoorpds, startMatrix, startMatrixInverted, startZoom;
+        var hammertime;
         R.stageJ = $("#stage");
         R.canvasJ = R.stageJ.find("#canvas");
         R.canvas = R.canvasJ[0];
@@ -134,37 +134,9 @@
           hammertime.get('pinch').set({
             enable: true
           });
-          getCenterPoint = function(e) {
-            var box, canvasElement, offset;
-            canvasElement = P.view.element;
-            box = canvasElement.getBoundingClientRect();
-            offset = new P.Point(box.left, box.top);
-            return new P.Point(e.center.x, e.center.y).subtract(offset);
-          };
-          startZoom = P.view.zoom;
-          startMatrix = P.view.matrix.clone();
-          startMatrixInverted = startMatrix.inverted();
-          p0 = getCenterPoint(P.view);
-          p0ProjectCoorpds = P.view.viewToProject(p0);
-          hammertime.on('pinchstart', (function(_this) {
-            return function(event) {
-              startZoom = P.view.zoom;
-              startMatrix = P.view.matrix.clone();
-              startMatrixInverted = startMatrix.inverted();
-              p0 = getCenterPoint(event);
-              return p0ProjectCoorpds = P.view.viewToProject(p0);
-            };
-          })(this));
           hammertime.on('pinch', (function(_this) {
             return function(event) {
-              var delta, p, pProject0, res;
-              p = getCenterPoint(event);
-              pProject0 = p.transform(startMatrixInverted);
-              delta = pProject0.subtract(p0ProjectCoords).divide(event.scale);
-              res = startZoom * event.scale / P.view.zoom;
-              R.alertManager.alert('startZoom:' + startZoom.toFixed(2) + ',e.scale' + event.scale.toFixed(2) + ',zoom:' + P.view.zoom.toFixed(2) + ',res:' + res.toFixed(2));
-              R.toolManager.zoom(res, false);
-              return _this.moveBy(delta);
+              R.alertManager.alert('' + Objects.keys(event), 'info');
             };
           })(this));
         }
