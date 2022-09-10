@@ -112,8 +112,6 @@ define 'View/View', dependencies, (P, R, Utils, Grid, ExquisiteCorpseMask, Comma
 					event.preventDefault()), {passive: false})
 
 				window.onhashchange = @onHashChange
-				
-				R.alertManager.alert('Bienvenue', 'info')
 
 				hammertime = new Hammer(R.canvas)
 				hammertime.get('pinch').set({ enable: true })
