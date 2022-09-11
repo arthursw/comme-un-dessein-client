@@ -326,7 +326,7 @@
 
       Drawing.prototype.loadSVG = function(callback) {
         var jqxhr;
-        jqxhr = $.get(location.origin + '/static/drawings/' + this.pk + '.svg', ((function(_this) {
+        jqxhr = $.get(location.origin + '/static/drawings/' + this.pk + '.svg?v=1', ((function(_this) {
           return function(result) {
             return _this.setSVG(result, false, callback);
           };

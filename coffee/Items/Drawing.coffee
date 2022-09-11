@@ -217,7 +217,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		loadSVG: (callback)->
-			jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg', ((result)=>
+			jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg?v=1', ((result)=>
 				@setSVG(result, false, callback)
 			))
 			.fail(()=>
