@@ -77,6 +77,22 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 			return
 		
+		scale: (newScale)=>
+			@loadPathList(()=>
+				for p in @paths
+					p.scale(newScale, @rectangle.center)
+				@updatePaths(true)
+				return)
+			return
+		
+		flipX: ()=>
+			@scale(new P.Point(-1,1))
+			return
+
+		flipY: ()=>
+			@scale(new P.Point(-1,1))
+			return
+
 		selectPaths: ()=>
 			if (not @paths?) or @paths.length == 0
 				return @loadPathList(()=>if @paths? then @selectPaths() else null)

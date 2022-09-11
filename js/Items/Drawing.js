@@ -59,6 +59,9 @@
         this.savePathCallback = bind(this.savePathCallback, this);
         this.onLiClick = bind(this.onLiClick, this);
         this.selectPaths = bind(this.selectPaths, this);
+        this.flipY = bind(this.flipY, this);
+        this.flipX = bind(this.flipX, this);
+        this.scale = bind(this.scale, this);
         Drawing.__super__.constructor.call(this, this.data, this.id, this.pk);
         if (this.pk != null) {
           this.constructor.pkToId[this.pk] = this.id;
@@ -97,6 +100,28 @@
         }
         return;
       }
+
+      Drawing.prototype.scale = function(newScale) {
+        this.loadPathList((function(_this) {
+          return function() {
+            var j, len, p, ref;
+            ref = _this.paths;
+            for (j = 0, len = ref.length; j < len; j++) {
+              p = ref[j];
+              p.scale(newScale, _this.rectangle.center);
+            }
+            _this.updatePaths(true);
+          };
+        })(this));
+      };
+
+      Drawing.prototype.flipX = function() {
+        this.scale(new P.Point(-1, 1));
+      };
+
+      Drawing.prototype.flipY = function() {
+        this.scale(new P.Point(-1, 1));
+      };
 
       Drawing.prototype.selectPaths = function() {
         var j, len, path, ref;
