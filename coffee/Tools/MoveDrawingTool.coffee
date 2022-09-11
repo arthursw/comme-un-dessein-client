@@ -56,11 +56,25 @@ define ['paper', 'R', 'Utils/Utils', 'Tools/Tool', 'Commands/Command' ], (P, R, 
 			if @dragging
 				drawing = if not @moveSelectedDrawing then R.Drawing.getDraft() else R.s
 				if drawing? and drawing.rectangle? and drawing.group?.children.length > 0
+
 					drawing.rectangle.x += event.delta.x
 					drawing.rectangle.y += event.delta.y
 					drawing.group.position.x += event.delta.x
 					drawing.group.position.y += event.delta.y
+
+					if not( R.view.grid.limitCD.bounds.contains(drawing.rectangle) and R.view.grid.limitCD.bounds.contains(drawing.rectangle) )
+						
+						drawing.rectangle.x -= event.delta.x
+						drawing.rectangle.y -= event.delta.y
+						drawing.group.position.x -= event.delta.x
+						drawing.group.position.y -= event.delta.y
+						
+						if not @drawingOutsideAlertTimeout?
+							R.alertManager.alert 'Your path must be in the drawing area', 'error'
+							@drawingOutsideAlertTimeout = setTimeout((()=> @drawingOutsideAlertTimeout = null), 2000)
+
 					R.tools.select.updateSelectionRectangle()
+					
 					# R.tools.select.selectionRectangle?.remove()
 					# for path in drawing.paths
 					# 	path.position.x += event.delta.x

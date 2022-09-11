@@ -84,6 +84,20 @@
             drawing.rectangle.y += event.delta.y;
             drawing.group.position.x += event.delta.x;
             drawing.group.position.y += event.delta.y;
+            if (!(R.view.grid.limitCD.bounds.contains(drawing.rectangle) && R.view.grid.limitCD.bounds.contains(drawing.rectangle))) {
+              drawing.rectangle.x -= event.delta.x;
+              drawing.rectangle.y -= event.delta.y;
+              drawing.group.position.x -= event.delta.x;
+              drawing.group.position.y -= event.delta.y;
+              if (this.drawingOutsideAlertTimeout == null) {
+                R.alertManager.alert('Your path must be in the drawing area', 'error');
+                this.drawingOutsideAlertTimeout = setTimeout(((function(_this) {
+                  return function() {
+                    return _this.drawingOutsideAlertTimeout = null;
+                  };
+                })(this)), 2000);
+              }
+            }
             R.tools.select.updateSelectionRectangle();
           }
         }
