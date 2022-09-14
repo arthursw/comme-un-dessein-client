@@ -1,4 +1,4 @@
-define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
+define ['paper', 'R', 'Utils/Utils', 'i18next'], (P, R, Utils, i18next) ->
 
 	class Grid
 
@@ -28,6 +28,13 @@ define ['paper', 'R', 'Utils/Utils'], (P, R, Utils) ->
 			
 			@layer.addChild(@limitCD)
 			@layer.sendToBack()
+
+			@continueDrawingsText = new P.PointText(@limitCDRectangle.bottomCenter.add(0,250))
+			@continueDrawingsText.fillColor = 'white'
+			@continueDrawingsText.content = i18next.t("N'hésitez pas à continuer les dessins existants, ou à les augmenter ;-)")
+			@continueDrawingsText.fontSize = 200
+			@continueDrawingsText.justification = 'center'
+			@layer.addChild(@continueDrawingsText)
 
 			@update()
 
