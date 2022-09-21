@@ -1789,11 +1789,6 @@
                     R.alertManager.alert('The drawing you selected was cancelled', 'info');
                   }
                   drawing.remove();
-                } else if (!drawing.cancelling) {
-                  R.alertManager.alert('One of your drawing was cancelled by an administrator, the page will reload', 'info');
-                  setTimeout((function() {
-                    return window.location.reload();
-                  }), 2000);
                 }
               }
             } else {
