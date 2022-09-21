@@ -898,7 +898,6 @@
         this.contentJ.find('#drawing-description').val('');
         this.submitBtnJ.show();
         this.modifyBtnJ.hide();
-        this.cancelBtnJ.show();
         this.cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel').text(i18next.t('Cancel'));
         this.contentJ.find('#drawing-title').removeAttr('readonly');
         this.contentJ.find('#drawing-description').removeAttr('readonly');
@@ -937,7 +936,6 @@
         this.contentJ.find('.title-group').show();
         this.submitBtnJ.show();
         this.modifyBtnJ.hide();
-        this.cancelBtnJ.show();
         this.cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel').text(i18next.t('Cancel'));
         this.votesJ.hide();
         this.contentJ.find('.share-buttons').hide();
@@ -971,8 +969,6 @@
         if (discussion.owner === R.me) {
           drawingTitleJ.removeAttr('readonly');
           this.submitBtnJ.hide();
-          this.modifyBtnJ.show();
-          this.cancelBtnJ.show();
           this.cancelBtnJ.find('span.text').attr('data-i18n', 'Delete discussion').text(i18next.t('Delete discussion'));
         } else {
           this.submitBtnJ.show();
@@ -1298,8 +1294,6 @@
         if (this.currentItem.owner === R.me || R.administrator) {
           if (latestDrawing.status === 'pending' || latestDrawing.status === 'emailNotConfirmed' || latestDrawing.status === 'notConfirmed') {
             this.contentJ.find('.title-group').show();
-            this.modifyBtnJ.show();
-            this.cancelBtnJ.show();
             this.cancelBtnJ.find('span.text').attr('data-i18n', 'Modify drawing').text(i18next.t('Modify drawing'));
           }
           this.contentJ.find('#drawing-title').removeAttr('readonly');
@@ -1459,7 +1453,6 @@
         this.thumbnailFooterTitle.hide();
         this.contentJ.find('#drawing-description').hide();
         if (this.currentItem.author === R.me || R.administrator) {
-          this.cancelBtnJ.show();
           this.cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel tile').text(i18next.t('Cancel tile'));
         }
         if (tile.status === 'created') {

@@ -955,7 +955,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@contentJ.find('#drawing-description').val('')
 			@submitBtnJ.show()
 			@modifyBtnJ.hide()
-			@cancelBtnJ.show()
+			# @cancelBtnJ.show()
 			@cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel').text(i18next.t('Cancel'))
 			# @deleteBtnJ.show()
 
@@ -1006,7 +1006,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			@submitBtnJ.show()
 			@modifyBtnJ.hide()
-			@cancelBtnJ.show()
+			# @cancelBtnJ.show()
 			@cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel').text(i18next.t('Cancel'))
 
 			@votesJ.hide()
@@ -1040,8 +1040,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 				drawingTitleJ.removeAttr('readonly')
 
 				@submitBtnJ.hide()
-				@modifyBtnJ.show()
-				@cancelBtnJ.show()
+				# @modifyBtnJ.show()
+				# @cancelBtnJ.show()
 				@cancelBtnJ.find('span.text').attr('data-i18n', 'Delete discussion').text(i18next.t('Delete discussion'))
 			else 
 				@submitBtnJ.show()
@@ -1377,8 +1377,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			if @currentItem.owner == R.me || R.administrator
 				if latestDrawing.status == 'pending' || latestDrawing.status == 'emailNotConfirmed' || latestDrawing.status == 'notConfirmed'
 					@contentJ.find('.title-group').show()
-					@modifyBtnJ.show()
-					@cancelBtnJ.show()
+					# @modifyBtnJ.show()
+					# @cancelBtnJ.show()
 					@cancelBtnJ.find('span.text').attr('data-i18n', 'Modify drawing').text(i18next.t('Modify drawing'))
 				@contentJ.find('#drawing-title').removeAttr('readonly')
 				@contentJ.find('#drawing-description').removeAttr('readonly')
@@ -1558,7 +1558,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			if @currentItem.author == R.me || R.administrator
 				# if tile.status == 'pending'
-				@cancelBtnJ.show()
+				# @cancelBtnJ.show()
 				@cancelBtnJ.find('span.text').attr('data-i18n', 'Cancel tile').text(i18next.t('Cancel tile'))
 
 			if tile.status == 'created'
