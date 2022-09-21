@@ -109,6 +109,7 @@
         this.voteDownBtnJ.click(this.voteDown);
         this.submitBtnJ = this.drawingPanelJ.find('.action-buttons button.submit');
         this.modifyBtnJ = this.drawingPanelJ.find('.action-buttons button.modify');
+        this.modifyBtnJ.addClass('hidden');
         this.moveBtnJ = this.drawingPanelJ.find('.action-buttons button.move');
         if (R.administrator) {
           this.moveBtnJ.removeClass('hidden');

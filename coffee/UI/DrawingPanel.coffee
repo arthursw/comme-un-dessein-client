@@ -107,6 +107,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 
 			@submitBtnJ = @drawingPanelJ.find('.action-buttons button.submit')
 			@modifyBtnJ = @drawingPanelJ.find('.action-buttons button.modify')
+			@modifyBtnJ.addClass('hidden')
 			@moveBtnJ = @drawingPanelJ.find('.action-buttons button.move')
 			if R.administrator
 				@moveBtnJ.removeClass('hidden')
