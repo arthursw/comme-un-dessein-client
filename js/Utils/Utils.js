@@ -836,9 +836,10 @@
             "function": 'setVoteThresholds',
             args: {
               cityName: cityName,
-              negativeVoteThreshold: negativeVoteThresholdTile,
+              negativeVoteThreshold: negativeVoteThreshold,
               positiveVoteThreshold: positiveVoteThreshold,
-              negativeVoteThresholdTile: negativeVoteThresholdTile
+              negativeVoteThresholdTile: negativeVoteThresholdTile,
+              positiveVoteThresholdTile: positiveVoteThresholdTile
             }
           })
         }

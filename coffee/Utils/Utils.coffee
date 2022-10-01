@@ -804,7 +804,7 @@ define [ 'paper', 'R', 'Utils/CoordinateSystems', 'underscore', 'jquery', 'tinyc
 
 	R.setVoteThresholds = (negativeVoteThreshold=2, positiveVoteThreshold=2, negativeVoteThresholdTile=2, positiveVoteThresholdTile=2, cityName=R.city.name)->
 		if not R.administrator then return false
-		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteThresholds', args: { cityName: cityName, negativeVoteThreshold: negativeVoteThresholdTile, positiveVoteThreshold: positiveVoteThreshold, negativeVoteThresholdTile: negativeVoteThresholdTile } } ).done(checkError)
+		$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'setVoteThresholds', args: { cityName: cityName, negativeVoteThreshold: negativeVoteThreshold, positiveVoteThreshold: positiveVoteThreshold, negativeVoteThresholdTile: negativeVoteThresholdTile, positiveVoteThresholdTile: positiveVoteThresholdTile } } ).done(checkError)
 		return
 
 	R.setVoteValidationDelay = (hours, minutes, seconds, cityName=R.city.name)->
