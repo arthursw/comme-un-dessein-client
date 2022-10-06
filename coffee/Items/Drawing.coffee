@@ -617,6 +617,111 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			# @computeRectangle()
 			return if @voteFlag? then @rectangle.unite(@voteFlag.bounds) else @rectangle
 
+
+
+
+		itemMustBeDrawn: (item)->
+			return (item.strokeWidth > 0 and item.strokeColor != null) # or item.fillColor != null
+
+		convertShapeToPath: (shape)->
+			if shape.className != 'Shape' or !@itemMustBeDrawn(shape)
+				return shape
+			path = shape.toPath(true)
+			shape.parent.addChildren(shape.children)
+			shape.remove()
+			return path
+	
+		collapseItem: (item, parent, group=null, parentStrokeBounds=null)->
+			item.applyMatrix = true
+
+			# if(group != null and @checkBackground(<paper.Path>item, parent, group, parentStrokeBounds)) {
+			# 	return
+			# }
+
+			item = @convertShapeToPath(item)
+
+			if item.className == 'CompoundPath'
+				for child in item.children
+					child.strokeColor = item.strokeColor
+
+			item.remove()
+
+			if item.className == 'Path' and @itemMustBeDrawn(item)
+				parent.addChild(item)
+
+			while item.children != null and item.children.length > 0
+				@collapseItem(item.firstChild, parent, group, parentStrokeBounds)
+			return
+
+		collapse: (item, group = null, parentStrokeBounds=null)->
+			if item.children == null or item.children.length == 0
+				return
+			children = item.children.slice() # since we will remove and / or add children in collapse item
+			for child in children
+				@collapseItem(child, item, group, parentStrokeBounds)
+			return
+
+		subdividePath: (path, maxSegmentLength)->
+			if path.segments != null
+				for segment in path.segments
+					curve = segment.curve
+					# do
+					# 	curve = curve.divideAt(maxSegmentLength)
+					# while(curve != null)
+					while true
+						curve = curve.divideAt(maxSegmentLength)
+						if curve == null then break
+			return
+
+		filter: (item)->
+			for child in item.children
+				if child.className != 'Path' 	# can be Shape if it is the background
+					continue
+				path = child
+				if Settings.plot.flatten
+					if path.segments.length > 2 or !path.firstSegment.point.isClose(path.lastSegment.point, 0.1)
+						path.flatten(Settings.plot.flattenPrecision)
+				
+				if Settings.plot.subdivide
+					if path.segments.length > 2 or !path.firstSegment.point.isClose(path.lastSegment.point, 0.1)
+						@subdividePath(path, Settings.plot.maxSegmentLength)
+			return
+
+		testDrawable: ()->
+			svg = @getSVG()
+			
+			newItem = P.project.importSVG(svg, (item, svg)=>
+				drawing = new P.Group()
+				console.log('imported svg...')
+				if item.visible == false
+					console.error('When receiving next validated drawing: while importing SVG: the imported item is not visible: ignore.')
+					return
+				for path in item.children
+
+					if path.className != 'Path'
+						continue
+
+					# Ignore anything that humans can't see to avoid hacks
+					strokeColo = path.strokeColor
+					if path.strokeWidth <= 0.2 or path.strokeColor.equals(new P.Color(1,1,1)) or path.strokeColor == null or path.opacity <= 0.1 or strokeColor.alpha <= 0.2 or !path.visible
+						continue
+
+					controlPath = path.clone()
+					if controlPath.segments.length > 2 or !controlPath.firstSegment.point.isClose(controlPath.lastSegment.point, 0.1)
+						controlPath.flatten(Settings.plot.flattenPrecision)
+					
+					# // now that controlPath is flattened: convert in draw area coordinates
+					# for segment in controlPath.segments
+					# 	segment.point = commeUnDesseinToDrawArea(segment.point, response.cityWidth, response.cityHeight, response.cityPixelPerMm)
+					drawing.addChild(controlPath)
+					group = new P.Group()
+					group.addChild(drawing)
+					@collapse(drawing, group, drawing.strokeBounds)
+					@filter(drawing)
+				return)
+			newItem.remove()
+			return
+		
 		getSVG: (asString=true) ->
 			if @paths? and @paths.length > 0
 				for path in @paths

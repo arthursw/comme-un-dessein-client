@@ -689,6 +689,141 @@
         }
       };
 
+      Drawing.prototype.itemMustBeDrawn = function(item) {
+        return item.strokeWidth > 0 && item.strokeColor !== null;
+      };
+
+      Drawing.prototype.convertShapeToPath = function(shape) {
+        var path;
+        if (shape.className !== 'Shape' || !this.itemMustBeDrawn(shape)) {
+          return shape;
+        }
+        path = shape.toPath(true);
+        shape.parent.addChildren(shape.children);
+        shape.remove();
+        return path;
+      };
+
+      Drawing.prototype.collapseItem = function(item, parent, group, parentStrokeBounds) {
+        var child, j, len, ref;
+        if (group == null) {
+          group = null;
+        }
+        if (parentStrokeBounds == null) {
+          parentStrokeBounds = null;
+        }
+        item.applyMatrix = true;
+        item = this.convertShapeToPath(item);
+        if (item.className === 'CompoundPath') {
+          ref = item.children;
+          for (j = 0, len = ref.length; j < len; j++) {
+            child = ref[j];
+            child.strokeColor = item.strokeColor;
+          }
+        }
+        item.remove();
+        if (item.className === 'Path' && this.itemMustBeDrawn(item)) {
+          parent.addChild(item);
+        }
+        while (item.children !== null && item.children.length > 0) {
+          this.collapseItem(item.firstChild, parent, group, parentStrokeBounds);
+        }
+      };
+
+      Drawing.prototype.collapse = function(item, group, parentStrokeBounds) {
+        var child, children, j, len;
+        if (group == null) {
+          group = null;
+        }
+        if (parentStrokeBounds == null) {
+          parentStrokeBounds = null;
+        }
+        if (item.children === null || item.children.length === 0) {
+          return;
+        }
+        children = item.children.slice();
+        for (j = 0, len = children.length; j < len; j++) {
+          child = children[j];
+          this.collapseItem(child, item, group, parentStrokeBounds);
+        }
+      };
+
+      Drawing.prototype.subdividePath = function(path, maxSegmentLength) {
+        var curve, j, len, ref, segment;
+        if (path.segments !== null) {
+          ref = path.segments;
+          for (j = 0, len = ref.length; j < len; j++) {
+            segment = ref[j];
+            curve = segment.curve;
+            while (true) {
+              curve = curve.divideAt(maxSegmentLength);
+              if (curve === null) {
+                break;
+              }
+            }
+          }
+        }
+      };
+
+      Drawing.prototype.filter = function(item) {
+        var child, j, len, path, ref;
+        ref = item.children;
+        for (j = 0, len = ref.length; j < len; j++) {
+          child = ref[j];
+          if (child.className !== 'Path') {
+            continue;
+          }
+          path = child;
+          if (Settings.plot.flatten) {
+            if (path.segments.length > 2 || !path.firstSegment.point.isClose(path.lastSegment.point, 0.1)) {
+              path.flatten(Settings.plot.flattenPrecision);
+            }
+          }
+          if (Settings.plot.subdivide) {
+            if (path.segments.length > 2 || !path.firstSegment.point.isClose(path.lastSegment.point, 0.1)) {
+              this.subdividePath(path, Settings.plot.maxSegmentLength);
+            }
+          }
+        }
+      };
+
+      Drawing.prototype.testDrawable = function() {
+        var newItem, svg;
+        svg = this.getSVG();
+        newItem = P.project.importSVG(svg, (function(_this) {
+          return function(item, svg) {
+            var controlPath, drawing, group, j, len, path, ref, strokeColo;
+            drawing = new P.Group();
+            console.log('imported svg...');
+            if (item.visible === false) {
+              console.error('When receiving next validated drawing: while importing SVG: the imported item is not visible: ignore.');
+              return;
+            }
+            ref = item.children;
+            for (j = 0, len = ref.length; j < len; j++) {
+              path = ref[j];
+              if (path.className !== 'Path') {
+                continue;
+              }
+              strokeColo = path.strokeColor;
+              if (path.strokeWidth <= 0.2 || path.strokeColor.equals(new P.Color(1, 1, 1)) || path.strokeColor === null || path.opacity <= 0.1 || strokeColor.alpha <= 0.2 || !path.visible) {
+                continue;
+              }
+              controlPath = path.clone();
+              if (controlPath.segments.length > 2 || !controlPath.firstSegment.point.isClose(controlPath.lastSegment.point, 0.1)) {
+                controlPath.flatten(Settings.plot.flattenPrecision);
+              }
+              drawing.addChild(controlPath);
+              group = new P.Group();
+              group.addChild(drawing);
+              _this.collapse(drawing, group, drawing.strokeBounds);
+              _this.filter(drawing);
+            }
+          };
+        })(this));
+        newItem.remove();
+      };
+
       Drawing.prototype.getSVG = function(asString) {
         var j, len, path, ref;
         if (asString == null) {

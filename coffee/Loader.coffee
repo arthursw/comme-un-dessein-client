@@ -152,6 +152,17 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 				cityName: R.city.name
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'loadDraft', args: args } ).done(@loadDraftCallback)
 			return
+		
+		loadCity: (cityName, url='')->
+			args = 
+				cityName: cityName
+				bounds: P.view.bounds
+				rejected: R.loadRejectedDrawings
+			
+			$.ajax( method: "POST", url: url+"ajaxCall/", data: data: JSON.stringify { function: 'loadDrawingsAndTilesFromBounds', args: args } ).done((results)=>
+				@loadDrawingsAndTilesCallback(results)
+				callback?())
+			return
 
 		loadDraftCallback: (results)=>
 			if not @checkError(results) then return

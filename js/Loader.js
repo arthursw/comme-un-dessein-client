@@ -183,6 +183,33 @@
         }).done(this.loadDraftCallback);
       };
 
+      Loader.prototype.loadCity = function(cityName, url) {
+        var args;
+        if (url == null) {
+          url = '';
+        }
+        args = {
+          cityName: cityName,
+          bounds: P.view.bounds,
+          rejected: R.loadRejectedDrawings
+        };
+        $.ajax({
+          method: "POST",
+          url: url + "ajaxCall/",
+          data: {
+            data: JSON.stringify({
+              "function": 'loadDrawingsAndTilesFromBounds',
+              args: args
+            })
+          }
+        }).done((function(_this) {
+          return function(results) {
+            _this.loadDrawingsAndTilesCallback(results);
+            return typeof callback === "function" ? callback() : void 0;
+          };
+        })(this));
+      };
+
       Loader.prototype.loadDraftCallback = function(results) {
         if (!this.checkError(results)) {
           return;
