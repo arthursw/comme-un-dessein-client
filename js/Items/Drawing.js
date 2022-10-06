@@ -775,12 +775,12 @@
             continue;
           }
           path = child;
-          if (Settings.plot.flatten) {
+          if (true) {
             if (path.segments.length > 2 || !path.firstSegment.point.isClose(path.lastSegment.point, 0.1)) {
               path.flatten(Settings.plot.flattenPrecision);
             }
           }
-          if (Settings.plot.subdivide) {
+          if (false) {
             if (path.segments.length > 2 || !path.firstSegment.point.isClose(path.lastSegment.point, 0.1)) {
               this.subdividePath(path, Settings.plot.maxSegmentLength);
             }
@@ -821,7 +821,7 @@
           }
           controlPath = path.clone();
           if (controlPath.segments.length > 2 || !controlPath.firstSegment.point.isClose(controlPath.lastSegment.point, 0.1)) {
-            controlPath.flatten(Settings.plot.flattenPrecision);
+            controlPath.flatten(0.25);
           }
           drawing.addChild(controlPath);
           group = new P.Group();

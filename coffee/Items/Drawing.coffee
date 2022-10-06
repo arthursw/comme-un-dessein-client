@@ -679,11 +679,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				if child.className != 'Path' 	# can be Shape if it is the background
 					continue
 				path = child
-				if Settings.plot.flatten
+				
+				if true # Settings.plot.flatten
 					if path.segments.length > 2 or !path.firstSegment.point.isClose(path.lastSegment.point, 0.1)
 						path.flatten(Settings.plot.flattenPrecision)
 				
-				if Settings.plot.subdivide
+				if false # Settings.plot.subdivide
 					if path.segments.length > 2 or !path.firstSegment.point.isClose(path.lastSegment.point, 0.1)
 						@subdividePath(path, Settings.plot.maxSegmentLength)
 			return
@@ -716,7 +717,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 				controlPath = path.clone()
 				if controlPath.segments.length > 2 or !controlPath.firstSegment.point.isClose(controlPath.lastSegment.point, 0.1)
-					controlPath.flatten(Settings.plot.flattenPrecision)
+					controlPath.flatten(0.25) #Settings.plot.flattenPrecision)
 				
 				# // now that controlPath is flattened: convert in draw area coordinates
 				# for segment in controlPath.segments
