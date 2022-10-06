@@ -154,12 +154,13 @@ define ['paper', 'R', 'Utils/Utils', 'Commands/Command', 'Items/Item', 'UI/Modul
 			return
 		
 		loadCity: (cityName, url='')->
+			R.loadFromOtherCity = url
 			args = 
 				cityName: cityName
 				bounds: P.view.bounds
 				rejected: R.loadRejectedDrawings
 			
-			$.ajax( method: "POST", url: url+"ajaxCall/", data: data: JSON.stringify { function: 'loadDrawingsAndTilesFromBounds', args: args } ).done((results)=>
+			$.ajax( method: "POST", url: url+"ajaxCallNoCSRF/", data: data: JSON.stringify { function: 'loadDrawingsAndTilesFromBounds', args: args } ).done((results)=>
 				@loadDrawingsAndTilesCallback(results)
 				callback?())
 			return

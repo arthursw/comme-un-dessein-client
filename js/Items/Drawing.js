@@ -325,8 +325,9 @@
       };
 
       Drawing.prototype.loadSVG = function(callback) {
-        var jqxhr;
-        jqxhr = $.get(location.origin + '/static/drawings/' + this.pk + '.svg?v=1', ((function(_this) {
+        var jqxhr, origin;
+        origin = R.loadFromOtherCity != null ? R.loadFromOtherCity : location.origin + '/';
+        jqxhr = $.get(origin + 'static/drawings/' + this.pk + '.svg?v=1', ((function(_this) {
           return function(result) {
             return _this.setSVG(result, false, callback);
           };
@@ -787,41 +788,47 @@
         }
       };
 
-      Drawing.prototype.testDrawable = function() {
-        var newItem, svg;
+      Drawing.prototype.importSVG = function() {
+        var svg;
         svg = this.getSVG();
-        newItem = P.project.importSVG(svg, (function(_this) {
+        P.project.importSVG(svg, (function(_this) {
           return function(item, svg) {
-            var controlPath, drawing, group, j, len, path, ref, strokeColo;
-            drawing = new P.Group();
-            console.log('imported svg...');
-            if (item.visible === false) {
-              console.error('When receiving next validated drawing: while importing SVG: the imported item is not visible: ignore.');
-              return;
-            }
-            ref = item.children;
-            for (j = 0, len = ref.length; j < len; j++) {
-              path = ref[j];
-              if (path.className !== 'Path') {
-                continue;
-              }
-              strokeColo = path.strokeColor;
-              if (path.strokeWidth <= 0.2 || path.strokeColor.equals(new P.Color(1, 1, 1)) || path.strokeColor === null || path.opacity <= 0.1 || strokeColor.alpha <= 0.2 || !path.visible) {
-                continue;
-              }
-              controlPath = path.clone();
-              if (controlPath.segments.length > 2 || !controlPath.firstSegment.point.isClose(controlPath.lastSegment.point, 0.1)) {
-                controlPath.flatten(Settings.plot.flattenPrecision);
-              }
-              drawing.addChild(controlPath);
-              group = new P.Group();
-              group.addChild(drawing);
-              _this.collapse(drawing, group, drawing.strokeBounds);
-              _this.filter(drawing);
-            }
+            _this.testItem = item;
+            _this.testSvg = svg;
           };
         })(this));
-        newItem.remove();
+      };
+
+      Drawing.prototype.testDrawable = function() {
+        var controlPath, drawing, group, item, j, len, path, ref, strokeColor, svg;
+        item = this.testItem;
+        svg = this.testSvg;
+        drawing = new P.Group();
+        console.log('imported svg...');
+        if (item.visible === false) {
+          console.error('When receiving next validated drawing: while importing SVG: the imported item is not visible: ignore.');
+          return;
+        }
+        ref = item.children;
+        for (j = 0, len = ref.length; j < len; j++) {
+          path = ref[j];
+          if (path.className !== 'Path') {
+            continue;
+          }
+          strokeColor = path.strokeColor;
+          if (path.strokeWidth <= 0.2 || path.strokeColor.equals(new P.Color(1, 1, 1)) || path.strokeColor === null || path.opacity <= 0.1 || strokeColor.alpha <= 0.2 || !path.visible) {
+            continue;
+          }
+          controlPath = path.clone();
+          if (controlPath.segments.length > 2 || !controlPath.firstSegment.point.isClose(controlPath.lastSegment.point, 0.1)) {
+            controlPath.flatten(Settings.plot.flattenPrecision);
+          }
+          drawing.addChild(controlPath);
+          group = new P.Group();
+          group.addChild(drawing);
+          this.collapse(drawing, group, drawing.strokeBounds);
+          this.filter(drawing);
+        }
       };
 
       Drawing.prototype.getSVG = function(asString) {

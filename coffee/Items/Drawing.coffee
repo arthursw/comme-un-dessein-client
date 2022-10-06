@@ -217,7 +217,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 
 		loadSVG: (callback)->
-			jqxhr = $.get( location.origin + '/static/drawings/' + @pk + '.svg?v=1', ((result)=>
+			origin = if R.loadFromOtherCity? then R.loadFromOtherCity else location.origin + '/'
+			jqxhr = $.get( origin + 'static/drawings/' + @pk + '.svg?v=1', ((result)=>
 				@setSVG(result, false, callback)
 			))
 			.fail(()=>
@@ -687,40 +688,46 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 						@subdividePath(path, Settings.plot.maxSegmentLength)
 			return
 
-		testDrawable: ()->
+		importSVG: ()->
 			svg = @getSVG()
-			
-			newItem = P.project.importSVG(svg, (item, svg)=>
-				drawing = new P.Group()
-				console.log('imported svg...')
-				if item.visible == false
-					console.error('When receiving next validated drawing: while importing SVG: the imported item is not visible: ignore.')
-					return
-				for path in item.children
-
-					if path.className != 'Path'
-						continue
-
-					# Ignore anything that humans can't see to avoid hacks
-					strokeColo = path.strokeColor
-					if path.strokeWidth <= 0.2 or path.strokeColor.equals(new P.Color(1,1,1)) or path.strokeColor == null or path.opacity <= 0.1 or strokeColor.alpha <= 0.2 or !path.visible
-						continue
-
-					controlPath = path.clone()
-					if controlPath.segments.length > 2 or !controlPath.firstSegment.point.isClose(controlPath.lastSegment.point, 0.1)
-						controlPath.flatten(Settings.plot.flattenPrecision)
-					
-					# // now that controlPath is flattened: convert in draw area coordinates
-					# for segment in controlPath.segments
-					# 	segment.point = commeUnDesseinToDrawArea(segment.point, response.cityWidth, response.cityHeight, response.cityPixelPerMm)
-					drawing.addChild(controlPath)
-					group = new P.Group()
-					group.addChild(drawing)
-					@collapse(drawing, group, drawing.strokeBounds)
-					@filter(drawing)
+			P.project.importSVG(svg, (item, svg)=>
+				@testItem = item
+				@testSvg = svg
 				return)
-			newItem.remove()
 			return
+		
+		testDrawable: ()->
+			item = @testItem
+			svg = @testSvg
+			drawing = new P.Group()
+			console.log('imported svg...')
+			if item.visible == false
+				console.error('When receiving next validated drawing: while importing SVG: the imported item is not visible: ignore.')
+				return
+			for path in item.children
+
+				if path.className != 'Path'
+					continue
+
+				# Ignore anything that humans can't see to avoid hacks
+				strokeColor = path.strokeColor
+				if path.strokeWidth <= 0.2 or path.strokeColor.equals(new P.Color(1,1,1)) or path.strokeColor == null or path.opacity <= 0.1 or strokeColor.alpha <= 0.2 or !path.visible
+					continue
+
+				controlPath = path.clone()
+				if controlPath.segments.length > 2 or !controlPath.firstSegment.point.isClose(controlPath.lastSegment.point, 0.1)
+					controlPath.flatten(Settings.plot.flattenPrecision)
+				
+				# // now that controlPath is flattened: convert in draw area coordinates
+				# for segment in controlPath.segments
+				# 	segment.point = commeUnDesseinToDrawArea(segment.point, response.cityWidth, response.cityHeight, response.cityPixelPerMm)
+				drawing.addChild(controlPath)
+				group = new P.Group()
+				group.addChild(drawing)
+				@collapse(drawing, group, drawing.strokeBounds)
+				@filter(drawing)
+			return
+		
 		
 		getSVG: (asString=true) ->
 			if @paths? and @paths.length > 0

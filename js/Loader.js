@@ -188,6 +188,7 @@
         if (url == null) {
           url = '';
         }
+        R.loadFromOtherCity = url;
         args = {
           cityName: cityName,
           bounds: P.view.bounds,
@@ -195,7 +196,7 @@
         };
         $.ajax({
           method: "POST",
-          url: url + "ajaxCall/",
+          url: url + "ajaxCallNoCSRF/",
           data: {
             data: JSON.stringify({
               "function": 'loadDrawingsAndTilesFromBounds',
