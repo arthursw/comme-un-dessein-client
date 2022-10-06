@@ -726,7 +726,7 @@
         if (item.className === 'Path' && this.itemMustBeDrawn(item)) {
           parent.addChild(item);
         }
-        while (item.children !== null && item.children.length > 0) {
+        while (item.children !== void 0 && item.children.length > 0) {
           this.collapseItem(item.firstChild, parent, group, parentStrokeBounds);
         }
       };
@@ -777,12 +777,12 @@
           path = child;
           if (true) {
             if (path.segments.length > 2 || !path.firstSegment.point.isClose(path.lastSegment.point, 0.1)) {
-              path.flatten(Settings.plot.flattenPrecision);
+              path.flatten(0.25);
             }
           }
           if (false) {
             if (path.segments.length > 2 || !path.firstSegment.point.isClose(path.lastSegment.point, 0.1)) {
-              this.subdividePath(path, Settings.plot.maxSegmentLength);
+              this.subdividePath(path, 10);
             }
           }
         }

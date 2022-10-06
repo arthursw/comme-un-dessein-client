@@ -650,7 +650,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			if item.className == 'Path' and @itemMustBeDrawn(item)
 				parent.addChild(item)
 
-			while item.children != null and item.children.length > 0
+			while item.children != undefined and item.children.length > 0
 				@collapseItem(item.firstChild, parent, group, parentStrokeBounds)
 			return
 
@@ -682,11 +682,11 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				
 				if true # Settings.plot.flatten
 					if path.segments.length > 2 or !path.firstSegment.point.isClose(path.lastSegment.point, 0.1)
-						path.flatten(Settings.plot.flattenPrecision)
+						path.flatten(0.25) # Settings.plot.flattenPrecision)
 				
 				if false # Settings.plot.subdivide
 					if path.segments.length > 2 or !path.firstSegment.point.isClose(path.lastSegment.point, 0.1)
-						@subdividePath(path, Settings.plot.maxSegmentLength)
+						@subdividePath(path, 10) # Settings.plot.maxSegmentLength)
 			return
 
 		importSVG: ()->
