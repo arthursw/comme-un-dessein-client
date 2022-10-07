@@ -44,8 +44,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 						drawing.testDrawable()
 					catch
 						console.log('ERROR: drawing cannot be drawn!', drawing.pk, drawing.clientId, drawing.title)
-						drawing.removeMultiPointPaths()
-						drawing.importSVG()
+						drawing.loadPathList(()=>
+							drawing.removeMultiPointPaths()
+							drawing.importSVG())
 			return
 		
 		@removeMultiPointPaths: ()->
@@ -724,9 +725,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				return)
 			return
 		
-		testDrawable: (svg=null)->
+		testDrawable: ()->
 			item = @testItem
-			svg ?= @testSvg
+			svg = @testSvg
 			drawing = new P.Group()
 			console.log('imported svg...')
 			if item.visible == false

@@ -53,8 +53,12 @@
               drawing.testDrawable();
             } catch (error) {
               console.log('ERROR: drawing cannot be drawn!', drawing.pk, drawing.clientId, drawing.title);
-              drawing.removeMultiPointPaths();
-              drawing.importSVG();
+              drawing.loadPathList((function(_this) {
+                return function() {
+                  drawing.removeMultiPointPaths();
+                  return drawing.importSVG();
+                };
+              })(this));
             }
           }
         }
@@ -845,15 +849,10 @@
         })(this));
       };
 
-      Drawing.prototype.testDrawable = function(svg) {
-        var controlPath, drawing, group, item, j, len, path, ref, strokeColor;
-        if (svg == null) {
-          svg = null;
-        }
+      Drawing.prototype.testDrawable = function() {
+        var controlPath, drawing, group, item, j, len, path, ref, strokeColor, svg;
         item = this.testItem;
-        if (svg == null) {
-          svg = this.testSvg;
-        }
+        svg = this.testSvg;
         drawing = new P.Group();
         console.log('imported svg...');
         if (item.visible === false) {
