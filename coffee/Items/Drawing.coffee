@@ -246,7 +246,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 		loadSVG: (callback)->
 			origin = if R.loadFromOtherCity? then R.loadFromOtherCity else location.origin + '/'
-			jqxhr = $.get( origin + 'static/drawings/' + @pk + '.svg?v=1', ((result)=>
+			jqxhr = $.get( origin + 'static/drawings/' + @pk + '.svg?v=2', ((result)=>
 				@setSVG(result, false, callback)
 			))
 			.fail(()=>

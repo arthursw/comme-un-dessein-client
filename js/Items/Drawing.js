@@ -378,7 +378,7 @@
       Drawing.prototype.loadSVG = function(callback) {
         var jqxhr, origin;
         origin = R.loadFromOtherCity != null ? R.loadFromOtherCity : location.origin + '/';
-        jqxhr = $.get(origin + 'static/drawings/' + this.pk + '.svg?v=1', ((function(_this) {
+        jqxhr = $.get(origin + 'static/drawings/' + this.pk + '.svg?v=2', ((function(_this) {
           return function(result) {
             return _this.setSVG(result, false, callback);
           };
