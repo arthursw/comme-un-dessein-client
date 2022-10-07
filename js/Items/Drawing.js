@@ -44,12 +44,18 @@
       };
 
       Drawing.testDrawable = function() {
-        var drawing, j, len, ref;
+        var drawing, error, j, len, ref;
         ref = R.drawings;
         for (j = 0, len = ref.length; j < len; j++) {
           drawing = ref[j];
           if (drawing.status === 'pending' || drawing.status === 'validated') {
-            drawing.testDrawable();
+            try {
+              drawing.testDrawable();
+            } catch (error) {
+              console.log('ERROR: drawing cannot be drawn!', drawing.pk, drawing.clientId, drawing.title);
+              drawing.removeMultiPointPaths();
+              drawing.importSVG();
+            }
           }
         }
       };
@@ -839,10 +845,15 @@
         })(this));
       };
 
-      Drawing.prototype.testDrawable = function() {
-        var controlPath, drawing, group, item, j, len, path, ref, strokeColor, svg;
+      Drawing.prototype.testDrawable = function(svg) {
+        var controlPath, drawing, group, item, j, len, path, ref, strokeColor;
+        if (svg == null) {
+          svg = null;
+        }
         item = this.testItem;
-        svg = this.testSvg;
+        if (svg == null) {
+          svg = this.testSvg;
+        }
         drawing = new P.Group();
         console.log('imported svg...');
         if (item.visible === false) {
@@ -872,14 +883,15 @@
       };
 
       Drawing.prototype.removeMultiPointPaths = function() {
-        var changed, i, j, k, l, len, len1, len2, multiPoint, p1, path, ref, ref1, segment;
+        var changed, i, j, k, l, len, len1, len2, multiPoint, p1, path, ref, ref1, ref2, segment;
         changed = false;
         ref = this.paths;
         for (j = 0, len = ref.length; j < len; j++) {
           path = ref[j];
           multiPoint = path.segments.length > 2;
-          for (k = 0, len1 = segments.length; k < len1; k++) {
-            segment = segments[k];
+          ref1 = path.segments;
+          for (k = 0, len1 = ref1.length; k < len1; k++) {
+            segment = ref1[k];
             if (!multiPoint || !segment.point.isClose(segment.firstPoint, 0.1)) {
               multiPoint = false;
               break;
@@ -890,14 +902,14 @@
             changed = true;
           }
           p1 = path.clone();
-          ref1 = [0, 1];
-          for (l = 0, len2 = ref1.length; l < len2; l++) {
-            i = ref1[l];
+          ref2 = [0, 1];
+          for (l = 0, len2 = ref2.length; l < len2; l++) {
+            i = ref2[l];
             if (p1.segments.length > 2) {
               p1.flatten(0.25);
             }
             if (p1.segments.length < 2) {
-              print('ERROR: drawing cannot be drawn!', this.pk, this.clientId, path.index, this.paths.indexOf(path));
+              console.log('ERROR: drawing cannot be drawn!', this.pk, this.clientId, path.index, this.paths.indexOf(path));
             }
           }
         }

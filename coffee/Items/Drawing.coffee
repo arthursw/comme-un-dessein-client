@@ -40,7 +40,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		@testDrawable: ()->
 			for drawing in R.drawings
 				if drawing.status == 'pending' or drawing.status == 'validated'
-					drawing.testDrawable()
+					try
+						drawing.testDrawable()
+					catch
+						console.log('ERROR: drawing cannot be drawn!', drawing.pk, drawing.clientId, drawing.title)
+						drawing.removeMultiPointPaths()
+						drawing.importSVG()
 			return
 		
 		@removeMultiPointPaths: ()->
@@ -719,9 +724,9 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				return)
 			return
 		
-		testDrawable: ()->
+		testDrawable: (svg=null)->
 			item = @testItem
-			svg = @testSvg
+			svg ?= @testSvg
 			drawing = new P.Group()
 			console.log('imported svg...')
 			if item.visible == false
@@ -756,7 +761,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			changed = false
 			for path in @paths
 				multiPoint = path.segments.length > 2
-				for segment in segments
+				for segment in path.segments
 					if not multiPoint or not segment.point.isClose(segment.firstPoint, 0.1)
 						multiPoint = false
 						break
@@ -768,7 +773,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 					if p1.segments.length > 2
 						p1.flatten(0.25)
 					if p1.segments.length < 2
-						print('ERROR: drawing cannot be drawn!', @pk, @clientId, path.index, @paths.indexOf(path))
+						console.log('ERROR: drawing cannot be drawn!', @pk, @clientId, path.index, @paths.indexOf(path))
 			return changed
 
 		getSVG: (asString=true) ->
