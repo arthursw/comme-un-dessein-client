@@ -52,7 +52,7 @@
             try {
               drawing.testDrawable();
             } catch (error) {
-              console.log('ERROR: drawing cannot be drawn!', drawing.pk, drawing.clientId, drawing.title);
+              console.log('ERROR: drawing cannot be drawn!', R.drawings.indexOf(drawing), drawing.pk, drawing.title);
               drawing.loadPathList((function(_this) {
                 return function() {
                   drawing.removeMultiPointPaths();
@@ -378,7 +378,7 @@
       Drawing.prototype.loadSVG = function(callback) {
         var jqxhr, origin;
         origin = R.loadFromOtherCity != null ? R.loadFromOtherCity : location.origin + '/';
-        jqxhr = $.get(origin + 'static/drawings/' + this.pk + '.svg?v=3', ((function(_this) {
+        jqxhr = $.get(origin + 'static/drawings/' + this.pk + '.svg?v=4', ((function(_this) {
           return function(result) {
             return _this.setSVG(result, false, callback);
           };
@@ -884,6 +884,9 @@
 
       Drawing.prototype.removeMultiPointPaths = function() {
         var changed, i, j, k, l, len, len1, len2, multiPoint, p1, path, ref, ref1, ref2, segment;
+        if ((this.paths == null) || this.paths.length === 0) {
+          return;
+        }
         changed = false;
         ref = this.paths;
         for (j = 0, len = ref.length; j < len; j++) {
@@ -938,6 +941,7 @@
       Drawing.prototype.submit = function() {
         var args, bounds, imageData, svg;
         bounds = this.getBounds();
+        this.removeMultiPointPaths();
         svg = this.getSVG();
         this.svgString = svg;
         imageData = R.view.getThumbnail(this, bounds.width, bounds.height, true, false);
@@ -1077,6 +1081,7 @@
 
       Drawing.prototype.updateSVG = function() {
         var args;
+        this.removeMultiPointPaths();
         args = {
           pk: this.pk,
           svg: this.getSVG()
@@ -1098,6 +1103,7 @@
         if (svg == null) {
           svg = false;
         }
+        this.removeMultiPointPaths();
         this.computeRectangle();
         args = {
           clientId: this.id,

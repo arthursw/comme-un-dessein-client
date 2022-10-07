@@ -43,7 +43,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 					try
 						drawing.testDrawable()
 					catch
-						console.log('ERROR: drawing cannot be drawn!', drawing.pk, drawing.clientId, drawing.title)
+						console.log('ERROR: drawing cannot be drawn!', R.drawings.indexOf(drawing), drawing.pk, drawing.title)
 						drawing.loadPathList(()=>
 							drawing.removeMultiPointPaths()
 							drawing.importSVG())
@@ -246,7 +246,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 		loadSVG: (callback)->
 			origin = if R.loadFromOtherCity? then R.loadFromOtherCity else location.origin + '/'
-			jqxhr = $.get( origin + 'static/drawings/' + @pk + '.svg?v=3', ((result)=>
+			jqxhr = $.get( origin + 'static/drawings/' + @pk + '.svg?v=4', ((result)=>
 				@setSVG(result, false, callback)
 			))
 			.fail(()=>
@@ -759,6 +759,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		
 		# Remove paths which have more than 2 points at the same place (otherwise they will be deleted during the flatten() process when drawn)
 		removeMultiPointPaths: ()->
+			if not @paths? or @paths.length == 0 then return
 			changed = false
 			for path in @paths
 				multiPoint = path.segments.length > 2
@@ -787,6 +788,8 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 
 		submit: () ->
 			bounds = @getBounds()
+			
+			@removeMultiPointPaths()
 
 			svg = @getSVG()
 			@svgString = svg
@@ -916,12 +919,16 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			return
 		
 		updateSVG: ()->
+			@removeMultiPointPaths()
 			args = 
 				pk: @pk
 				svg: @getSVG()
 			$.ajax( method: "POST", url: "ajaxCall/", data: data: JSON.stringify { function: 'updateDrawingSVG', args: args } ).done(R.loader.checkError)
 		
 		updatePaths: (svg=false)->
+			
+			@removeMultiPointPaths()
+
 			@computeRectangle()
 
 			args = {
