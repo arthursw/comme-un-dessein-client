@@ -31,6 +31,28 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		@getDraft: ()->
 			return @draft
 
+		@importSVG: ()->
+			for drawing in R.drawings
+				if drawing.status == 'pending' or drawing.status == 'validated'
+					drawing.importSVG()
+			return
+
+		@testDrawable: ()->
+			for drawing in R.drawings
+				if drawing.status == 'pending' or drawing.status == 'validated'
+					drawing.testDrawable()
+			return
+		
+		@removeMultiPointPaths: ()->
+			for drawing in R.drawings
+				drawing.loadPathList(()=>
+					changed = drawing.removeMultiPointPaths()
+					if changed
+						drawing.testDrawable()
+						drawing.updatePaths(true)
+				)
+			return
+
 		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @title, @description, @status='pending', pathList=[], svg=null, bounds=null) ->
 
 			super(@data, @id, @pk)
@@ -729,7 +751,26 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				@filter(drawing)
 			return
 		
-		
+		# Remove paths which have more than 2 points at the same place (otherwise they will be deleted during the flatten() process when drawn)
+		removeMultiPointPaths: ()->
+			changed = false
+			for path in @paths
+				multiPoint = path.segments.length > 2
+				for segment in segments
+					if not multiPoint or not segment.point.isClose(segment.firstPoint, 0.1)
+						multiPoint = false
+						break
+				if multiPoint
+					path.removeSegments(2)
+					changed = true
+				p1 = path.clone()
+				for i in [0, 1]
+					if p1.segments.length > 2
+						p1.flatten(0.25)
+					if p1.segments.length < 2
+						print('ERROR: drawing cannot be drawn!', @pk, @clientId, path.index, @paths.indexOf(path))
+			return changed
+
 		getSVG: (asString=true) ->
 			if @paths? and @paths.length > 0
 				for path in @paths

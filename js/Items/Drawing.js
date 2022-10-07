@@ -32,6 +32,46 @@
         return this.draft;
       };
 
+      Drawing.importSVG = function() {
+        var drawing, j, len, ref;
+        ref = R.drawings;
+        for (j = 0, len = ref.length; j < len; j++) {
+          drawing = ref[j];
+          if (drawing.status === 'pending' || drawing.status === 'validated') {
+            drawing.importSVG();
+          }
+        }
+      };
+
+      Drawing.testDrawable = function() {
+        var drawing, j, len, ref;
+        ref = R.drawings;
+        for (j = 0, len = ref.length; j < len; j++) {
+          drawing = ref[j];
+          if (drawing.status === 'pending' || drawing.status === 'validated') {
+            drawing.testDrawable();
+          }
+        }
+      };
+
+      Drawing.removeMultiPointPaths = function() {
+        var drawing, j, len, ref;
+        ref = R.drawings;
+        for (j = 0, len = ref.length; j < len; j++) {
+          drawing = ref[j];
+          drawing.loadPathList((function(_this) {
+            return function() {
+              var changed;
+              changed = drawing.removeMultiPointPaths();
+              if (changed) {
+                drawing.testDrawable();
+                return drawing.updatePaths(true);
+              }
+            };
+          })(this));
+        }
+      };
+
       function Drawing(rectangle1, data1, id1, pk1, owner, date, title1, description, status1, pathList, svg, bounds) {
         this.rectangle = rectangle1;
         this.data = data1 != null ? data1 : null;
@@ -829,6 +869,39 @@
           this.collapse(drawing, group, drawing.strokeBounds);
           this.filter(drawing);
         }
+      };
+
+      Drawing.prototype.removeMultiPointPaths = function() {
+        var changed, i, j, k, l, len, len1, len2, multiPoint, p1, path, ref, ref1, segment;
+        changed = false;
+        ref = this.paths;
+        for (j = 0, len = ref.length; j < len; j++) {
+          path = ref[j];
+          multiPoint = path.segments.length > 2;
+          for (k = 0, len1 = segments.length; k < len1; k++) {
+            segment = segments[k];
+            if (!multiPoint || !segment.point.isClose(segment.firstPoint, 0.1)) {
+              multiPoint = false;
+              break;
+            }
+          }
+          if (multiPoint) {
+            path.removeSegments(2);
+            changed = true;
+          }
+          p1 = path.clone();
+          ref1 = [0, 1];
+          for (l = 0, len2 = ref1.length; l < len2; l++) {
+            i = ref1[l];
+            if (p1.segments.length > 2) {
+              p1.flatten(0.25);
+            }
+            if (p1.segments.length < 2) {
+              print('ERROR: drawing cannot be drawn!', this.pk, this.clientId, path.index, this.paths.indexOf(path));
+            }
+          }
+        }
+        return changed;
       };
 
       Drawing.prototype.getSVG = function(asString) {
