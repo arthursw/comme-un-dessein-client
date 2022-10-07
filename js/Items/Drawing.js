@@ -69,16 +69,17 @@
         ref = R.drawings;
         for (j = 0, len = ref.length; j < len; j++) {
           drawing = ref[j];
-          drawing.loadPathList((function(_this) {
-            return function() {
-              var changed;
-              changed = drawing.removeMultiPointPaths();
-              if (changed) {
-                drawing.testDrawable();
-                return drawing.updatePaths(true);
-              }
-            };
-          })(this));
+          if (drawing.status === 'pending' || drawing.status === 'validated') {
+            drawing.loadPathList((function(_this) {
+              return function() {
+                var changed;
+                changed = drawing.removeMultiPointPaths();
+                if (changed) {
+                  return drawing.updatePaths(true);
+                }
+              };
+            })(this));
+          }
         }
       };
 

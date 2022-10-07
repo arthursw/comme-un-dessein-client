@@ -51,12 +51,12 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 		
 		@removeMultiPointPaths: ()->
 			for drawing in R.drawings
-				drawing.loadPathList(()=>
-					changed = drawing.removeMultiPointPaths()
-					if changed
-						drawing.testDrawable()
-						drawing.updatePaths(true)
-				)
+				if drawing.status == 'pending' or drawing.status == 'validated'
+					drawing.loadPathList(()=>
+						changed = drawing.removeMultiPointPaths()
+						if changed
+							drawing.updatePaths(true)
+					)
 			return
 
 		constructor: (@rectangle, @data=null, @id=null, @pk=null, @owner=null, @date, @title, @description, @status='pending', pathList=[], svg=null, bounds=null) ->
