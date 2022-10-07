@@ -892,7 +892,7 @@
           ref1 = path.segments;
           for (k = 0, len1 = ref1.length; k < len1; k++) {
             segment = ref1[k];
-            if (!multiPoint || !segment.point.isClose(segment.firstPoint, 0.1)) {
+            if (!multiPoint || !segment.point.isClose(path.firstSegment.point, 0.1)) {
               multiPoint = false;
               break;
             }

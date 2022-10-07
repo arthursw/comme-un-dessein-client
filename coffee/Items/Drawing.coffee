@@ -762,7 +762,7 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			for path in @paths
 				multiPoint = path.segments.length > 2
 				for segment in path.segments
-					if not multiPoint or not segment.point.isClose(segment.firstPoint, 0.1)
+					if not multiPoint or not segment.point.isClose(path.firstSegment.point, 0.1)
 						multiPoint = false
 						break
 				if multiPoint
