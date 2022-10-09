@@ -770,12 +770,6 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 				if multiPoint
 					path.removeSegments(2)
 					changed = true
-				p1 = path.clone()
-				for i in [0, 1]
-					if p1.segments.length > 2
-						p1.flatten(0.25)
-					if p1.segments.length < 2
-						console.log('ERROR: drawing cannot be drawn!', @pk, @clientId, path.index, @paths.indexOf(path))
 			return changed
 
 		getSVG: (asString=true) ->

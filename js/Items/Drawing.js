@@ -883,7 +883,7 @@
       };
 
       Drawing.prototype.removeMultiPointPaths = function() {
-        var changed, i, j, k, l, len, len1, len2, multiPoint, p1, path, ref, ref1, ref2, segment;
+        var changed, j, k, len, len1, multiPoint, path, ref, ref1, segment;
         if ((this.paths == null) || this.paths.length === 0) {
           return;
         }
@@ -903,17 +903,6 @@
           if (multiPoint) {
             path.removeSegments(2);
             changed = true;
-          }
-          p1 = path.clone();
-          ref2 = [0, 1];
-          for (l = 0, len2 = ref2.length; l < len2; l++) {
-            i = ref2[l];
-            if (p1.segments.length > 2) {
-              p1.flatten(0.25);
-            }
-            if (p1.segments.length < 2) {
-              console.log('ERROR: drawing cannot be drawn!', this.pk, this.clientId, path.index, this.paths.indexOf(path));
-            }
           }
         }
         return changed;
