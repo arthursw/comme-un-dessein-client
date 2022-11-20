@@ -444,16 +444,18 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'i18next' ], (P, 
 			@liJ.html(title)
 
 			divJ = $("<div class='cd-row cd-end badge-container'>")
-			# showBtnJ = $('<button type="button" class="btn btn-default show-btn" aria-label="Show">')
-			# @eyeIconJ = $('<span class="glyphicon eye glyphicon-eye-open" aria-hidden="true"></span>')
-			# showBtnJ.append(@eyeIconJ)
-			# showBtnJ.click (event)=>
-			# 	@toggleVisibility()
-			# 	event.preventDefault()
-			# 	event.stopPropagation()
-			# 	return -1
+			if R.useSVG
+				showBtnJ = $('<button type="button" class="btn btn-default show-btn" aria-label="Show">')
+				@eyeIconJ = $('<span class="glyphicon eye glyphicon-eye-open" aria-hidden="true"></span>')
+				showBtnJ.append(@eyeIconJ)
+				showBtnJ.click (event)=>
+					@toggleVisibility()
+					event.preventDefault()
+					event.stopPropagation()
+					return -1
 
-			# divJ.append(showBtnJ)
+				divJ.append(showBtnJ)
+
 			@liJ.append(divJ)
 
 			@liJ.attr("data-id", @id)

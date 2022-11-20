@@ -572,12 +572,26 @@
       };
 
       Drawing.prototype.addToListItem = function(itemListJ1) {
-        var divJ, nChildren, nItemsJ, ref, ref1, title;
+        var divJ, nChildren, nItemsJ, ref, ref1, showBtnJ, title;
         this.itemListJ = itemListJ1 != null ? itemListJ1 : this.getListItem();
         title = '' + this.title + ' <span data-i18n="by">' + i18next.t('by') + '</span> ' + this.owner;
         this.liJ = $("<li>");
         this.liJ.html(title);
         divJ = $("<div class='cd-row cd-end badge-container'>");
+        if (R.useSVG) {
+          showBtnJ = $('<button type="button" class="btn btn-default show-btn" aria-label="Show">');
+          this.eyeIconJ = $('<span class="glyphicon eye glyphicon-eye-open" aria-hidden="true"></span>');
+          showBtnJ.append(this.eyeIconJ);
+          showBtnJ.click((function(_this) {
+            return function(event) {
+              _this.toggleVisibility();
+              event.preventDefault();
+              event.stopPropagation();
+              return -1;
+            };
+          })(this));
+          divJ.append(showBtnJ);
+        }
         this.liJ.append(divJ);
         this.liJ.attr("data-id", this.id);
         this.liJ.click(this.onLiClick);
