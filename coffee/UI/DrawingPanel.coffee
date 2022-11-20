@@ -29,8 +29,14 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			@contentJ.find('.cancel-report').click @cancelReport
 
 			@contentJ.find('.copy-link').click @copyLink
+			
+			if R.useSVG
+				@contentJ.find('.toggle-drawing-visibility').click @toggleDrawingVisibility
+			else
+				@contentJ.find('.toggle-drawing-visibility').hide()
 
 			@contentJ.find('.share-facebook').click @shareOnFacebook
+
 
 			@contentJ.find('button.share-twitter').click @shareOnTwitter
 
@@ -458,6 +464,20 @@ define ['paper', 'R', 'Utils/Utils', 'Items/Item', 'UI/Modal', 'Commands/Command
 			cityName = if R.city?.name? then '/' + R.city.name else ''
 			type = if drawing.itemType == 'tile' then 'tile' else 'drawing'
 			return location.origin + cityName + '/' + type + '-' + drawing.pk
+
+		toggleDrawingVisibility: ()=>
+			buttonJ = @contentJ.find('.toggle-drawing-visibility')
+			eyeIconJ = buttonJ.find('span.glyphicon.eye')
+			if @currentItem.group.visible
+				eyeIconJ.removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open')
+				text = i18next.t('Hide drawing')
+			else
+				eyeIconJ.addClass('glyphicon-eye-close').removeClass('glyphicon-eye-open')
+				text = i18next.t('Show drawing')
+			buttonJ.attr('data-i18n', '[data-content]' + text)
+			buttonJ.attr('data-content', text)
+			@currentItem.toggleVisibility()
+			return
 
 		shareOnFacebook: (event, drawing=@currentItem)=>
 			# FB.init({

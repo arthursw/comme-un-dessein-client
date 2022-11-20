@@ -37,6 +37,7 @@
         this.onHandleDown = bind(this.onHandleDown, this);
         this.shareOnTwitter = bind(this.shareOnTwitter, this);
         this.shareOnFacebook = bind(this.shareOnFacebook, this);
+        this.toggleDrawingVisibility = bind(this.toggleDrawingVisibility, this);
         this.submitComment = bind(this.submitComment, this);
         this.copyLink = bind(this.copyLink, this);
         this.reportAbuse = bind(this.reportAbuse, this);
@@ -63,6 +64,11 @@
         this.contentJ.find('.report-abuse').click(this.reportAbuse);
         this.contentJ.find('.cancel-report').click(this.cancelReport);
         this.contentJ.find('.copy-link').click(this.copyLink);
+        if (R.useSVG) {
+          this.contentJ.find('.toggle-drawing-visibility').click(this.toggleDrawingVisibility);
+        } else {
+          this.contentJ.find('.toggle-drawing-visibility').hide();
+        }
         this.contentJ.find('.share-facebook').click(this.shareOnFacebook);
         this.contentJ.find('button.share-twitter').click(this.shareOnTwitter);
         this.startDiscussionBtnJ = this.contentJ.find('button.start-discussion');
@@ -547,6 +553,22 @@
         cityName = ((ref = R.city) != null ? ref.name : void 0) != null ? '/' + R.city.name : '';
         type = drawing.itemType === 'tile' ? 'tile' : 'drawing';
         return location.origin + cityName + '/' + type + '-' + drawing.pk;
+      };
+
+      DrawingPanel.prototype.toggleDrawingVisibility = function() {
+        var buttonJ, eyeIconJ, text;
+        buttonJ = this.contentJ.find('.toggle-drawing-visibility');
+        eyeIconJ = buttonJ.find('span.glyphicon.eye');
+        if (this.currentItem.group.visible) {
+          eyeIconJ.removeClass('glyphicon-eye-close').addClass('glyphicon-eye-open');
+          text = i18next.t('Hide drawing');
+        } else {
+          eyeIconJ.addClass('glyphicon-eye-close').removeClass('glyphicon-eye-open');
+          text = i18next.t('Show drawing');
+        }
+        buttonJ.attr('data-i18n', '[data-content]' + text);
+        buttonJ.attr('data-content', text);
+        this.currentItem.toggleVisibility();
       };
 
       DrawingPanel.prototype.shareOnFacebook = function(event, drawing) {
